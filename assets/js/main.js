@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = true;
             btn.textContent = 'در حال افزودن...';
 
-            fetch('/cart/add.php', {
+            fetch('/ajax/cart_add.php', {
                 method: 'POST',
                 body: new FormData(addForm),
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }

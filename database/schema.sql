@@ -1,25 +1,17 @@
--- ============================================================
--- فروشگاه جوراب - Database Schema
--- Engine: InnoDB, Charset: utf8mb4 (پشتیبانی کامل فارسی)
--- ============================================================
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ------------------------------------------------------------
--- جدول مدیران (Admin)
--- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS admins (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(60) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    role ENUM('super_admin','admin') NOT NULL DEFAULT 'admin',
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     full_name VARCHAR(120) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- دسته‌بندی محصولات
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS categories (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
@@ -32,20 +24,18 @@ CREATE TABLE IF NOT EXISTS categories (
     INDEX idx_active_sort (is_active, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- محصولات
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS products (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id INT UNSIGNED NOT NULL,
     name VARCHAR(180) NOT NULL,
     slug VARCHAR(200) NOT NULL UNIQUE,
     description TEXT,
-    price DECIMAL(12,0) NOT NULL,              -- تومان، بدون اعشار
-    discount_price DECIMAL(12,0) DEFAULT NULL,  -- اگر تخفیف دارد
+    price DECIMAL(12,0) NOT NULL,
+    discount_price DECIMAL(12,0) DEFAULT NULL,
     sku VARCHAR(60) DEFAULT NULL,
-    stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
-    image VARCHAR(255) DEFAULT NULL,            -- تصویر اصلی
+    stock INT NOT NULL DEFAULT 0,
+    image VARCHAR(255) DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     is_featured TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,9 +45,7 @@ CREATE TABLE IF NOT EXISTS products (
     INDEX idx_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- گالری تصاویر محصول (تصاویر اضافه بر تصویر اصلی)
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS product_images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
@@ -67,13 +55,11 @@ CREATE TABLE IF NOT EXISTS product_images (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- واریانت محصول (سایز/رنگ جوراب) - اختیاری در سطح محصول
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS product_variants (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
-    size VARCHAR(40) DEFAULT NULL,     -- مثلا 39-42
+    size VARCHAR(40) DEFAULT NULL,
     color VARCHAR(40) DEFAULT NULL,
     stock INT NOT NULL DEFAULT 0,
     price_override DECIMAL(12,0) DEFAULT NULL,
@@ -81,9 +67,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- کدهای تخفیف
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS coupons (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(60) NOT NULL UNIQUE,
@@ -97,9 +81,7 @@ CREATE TABLE IF NOT EXISTS coupons (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- سفارش‌ها
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS orders (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_code VARCHAR(20) NOT NULL UNIQUE,
@@ -116,22 +98,24 @@ CREATE TABLE IF NOT EXISTS orders (
     shipping_cost DECIMAL(12,0) NOT NULL DEFAULT 0,
     total DECIMAL(12,0) NOT NULL,
     coupon_code VARCHAR(60) DEFAULT NULL,
+    coupon_id INT UNSIGNED DEFAULT NULL,
     status ENUM('pending','confirmed','processing','shipped','delivered','cancelled') NOT NULL DEFAULT 'pending',
+    payment_status ENUM('unpaid','paid','failed') NOT NULL DEFAULT 'unpaid',
+    payment_authority VARCHAR(64) DEFAULT NULL,
+    payment_ref_id VARCHAR(64) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_status (status),
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- اقلام سفارش
--- ------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS order_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
     product_id INT UNSIGNED DEFAULT NULL,
     variant_id INT UNSIGNED DEFAULT NULL,
-    product_name VARCHAR(180) NOT NULL,   -- snapshot در لحظه خرید
+    product_name VARCHAR(180) NOT NULL,
     variant_label VARCHAR(80) DEFAULT NULL,
     unit_price DECIMAL(12,0) NOT NULL,
     quantity INT NOT NULL,
@@ -143,12 +127,17 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ------------------------------------------------------------
--- داده نمونه اولیه
--- توجه: جدول admins عمداً خالی می‌ماند. بعد از آپلود پروژه روی هاست،
--- یک‌بار به آدرس /install.php بروید تا حساب ادمین اول را با رمز خودتان
--- به‌صورت امن (بدون نیاز به CLI) بسازید. آن صفحه بعد از استفاده خودش را قفل می‌کند.
--- ------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS sms_log (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    phone VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'logged',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
 ('جوراب مردانه', 'mardane', 'انواع جوراب مردانه، ساقدار و ساقکوتاه', 1, 1),

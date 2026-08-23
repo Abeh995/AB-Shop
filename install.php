@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
+
+require_once __DIR__ . '/app/bootstrap.php';
 
 $existingAdminCount = (int) db()->query("SELECT COUNT(*) FROM admins")->fetchColumn();
 $locked = $existingAdminCount > 0;
@@ -21,7 +22,7 @@ if (!$locked && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'تکرار رمز عبور مطابقت ندارد.';
     } else {
         $hash = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = db()->prepare("INSERT INTO admins (username, password_hash, full_name) VALUES (?, ?, ?)");
+        $stmt = db()->prepare("INSERT INTO admins (username, password_hash, full_name, role, is_active) VALUES (?, ?, ?, 'super_admin', 1)");
         $stmt->execute([$username, $hash, 'مدیر فروشگاه']);
         $success = true;
         $locked = true;
