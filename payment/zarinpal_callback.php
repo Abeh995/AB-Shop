@@ -1,7 +1,7 @@
 <?php
 /**
- * نقطه بازگشت از درگاه زرین‌پال بعد از پرداخت (موفق یا ناموفق)
- * زرین‌پال کاربر را با این پارامترها به این آدرس هدایت می‌کند: ?Authority=...&Status=OK|NOK
+ * Callback endpoint for ZarinPal after a successful or failed payment attempt.
+ * ZarinPal redirects the customer here with: ?Authority=...&Status=OK|NOK
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
@@ -18,11 +18,11 @@ $stmt->execute([$authority]);
 $order = $stmt->fetch();
 
 if (!$order) {
-    // چنین سفارشی با این Authority پیدا نشد (لینک نامعتبر/تکراری)
+    // No order was found for this Authority (invalid or duplicate callback).
     redirect('/');
 }
 
-// اگر قبلا verify و paid شده (مثلا کاربر دکمه Back را زده و دوباره این صفحه لود شده)، دوباره از کاربر پول کم نمی‌شود
+// If the transaction was already verified and marked as paid, do not charge the customer again on a repeated callback.
 if ($order['payment_status'] === 'paid') {
     redirect('/order/success/' . $order['order_code']);
 }

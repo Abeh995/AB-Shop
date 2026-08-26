@@ -12,11 +12,19 @@ $statusLabels = [
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+
+    if (($_POST['action'] ?? '') === 'delete') {
+        requireSuperAdmin(); // Enforce authorization server-side even if the UI hides the control.
+        db()->prepare("DELETE FROM orders WHERE id = ?")->execute([$id]); // order_items are removed by the foreign-key CASCADE.
+        setFlash('success', 'سفارش ' . $order['order_code'] . ' حذف شد.');
+        redirect('orders.php');
+    }
+
     $newStatus = $_POST['status'] ?? '';
     if (isset($statusLabels[$newStatus]) && $newStatus !== $order['status']) {
         db()->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$newStatus, $id]);
 
-        // اطلاع‌رسانی پیامکی تغییر وضعیت به مشتری (اگر سرویس پیامک فعال باشد، وگرنه فقط لاگ می‌شود)
+        // Notify the customer about the status change by SMS; otherwise the event is logged only.
         SmsService::notifyOrderStatusChanged($order['phone'], $order['order_code'], $statusLabels[$newStatus]);
 
         setFlash('success', 'وضعیت سفارش به‌روزرسانی شد.');

@@ -1,4 +1,7 @@
 <?php
+/**
+ * Controller for the payment failure page after a failed ZarinPal return or gateway error.
+ */
 
 $code = $_GET['code'] ?? '';
 $errorMessage = $_GET['err'] ?? null;

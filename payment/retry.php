@@ -1,7 +1,7 @@
 <?php
 /**
- * تلاش مجدد برای پرداخت یک سفارش موجود که پرداختش قبلا ناموفق بوده یا کامل نشده.
- * سفارش و اقلامش از قبل ثبت شده‌اند؛ این صفحه فقط دوباره یک درخواست جدید به زرین‌پال می‌زند.
+ * Retry payment for an existing order whose previous payment failed or was not completed.
+ * The order and its items already exist; this endpoint only creates a new ZarinPal payment request.
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';

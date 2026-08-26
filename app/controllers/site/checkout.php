@@ -1,4 +1,8 @@
 <?php
+/**
+ * Checkout controller — full server-side validation, coupon handling, order creation,
+ * and optional ZarinPal integration for online payments.
+ */
 
 $pageTitle = 'تسویه حساب';
 $errors = [];
@@ -8,6 +12,10 @@ if (empty($cart['items'])) {
     redirect('/cart');
 }
 
+// Prefill the form for authenticated customers; all values are still validated server-side.
+$prefillCustomer = isCustomerLoggedIn() ? currentCustomer() : null;
+
+// Previously applied coupon, if one was stored from the cart page.
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
 $couponRow = null;
@@ -42,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($city) < 2) $errors[] = 'شهر را وارد کنید.';
     if (mb_strlen($address) < 10) $errors[] = 'آدرس دقیق را کامل‌تر وارد کنید.';
 
+    // ---------- Reload the cart directly from the database; never trust client-supplied price or stock ----------
     $cart = cartDetails();
     if (empty($cart['items'])) {
         $errors[] = 'سبد خرید شما خالی است.';
@@ -52,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // ---------- Revalidate the coupon immediately before order creation; it may have expired or reached its usage limit ----------
     $discount = 0;
     $couponRow = null;
     if ($appliedCoupon) {
@@ -72,15 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderCode = generateOrderCode();
             $subtotal = $cart['subtotal'];
-            $shippingCost = 0; 
+            $shippingCost = 0; // Phase 1: free shipping; no complex shipping calculation yet.
             $total = max(0, $subtotal - $discount + $shippingCost);
+            $customerId = isCustomerLoggedIn() ? (int) $_SESSION['customer_id'] : null;
 
             $stmt = $pdo->prepare("INSERT INTO orders
-                (order_code, customer_name, phone, email, province, city, address, postal_code, notes,
+                (customer_id, order_code, customer_name, phone, email, province, city, address, postal_code, notes,
                  subtotal, discount_total, shipping_cost, total, coupon_code, coupon_id, status, payment_status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
             $stmt->execute([
-                $orderCode, $name, $phone, $email ?: null, $province, $city, $address, $postalCode ?: null, $notes ?: null,
+                $customerId, $orderCode, $name, $phone, $email ?: null, $province, $city, $address, $postalCode ?: null, $notes ?: null,
                 $subtotal, $discount, $shippingCost, $total,
                 $couponRow ? $couponRow['code'] : null, $couponRow ? $couponRow['id'] : null,
             ]);
@@ -119,10 +130,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['coupon']);
 
             if ($paymentMethod === 'cod') {
+                // Cash on delivery: go directly to the success page.
                 redirect('/order/success/' . $orderCode);
             }
 
-            // ---------- ZarinPal Payment ----------
+            // ---------- Online payment: connect to ZarinPal ----------
             $callbackUrl = rtrim(SITE_URL, '/') . '/payment/zarinpal_callback.php';
             $payResult = ZarinpalService::request((int) $total, 'پرداخت سفارش ' . $orderCode, $callbackUrl, $phone, $email ?: null);
 
@@ -130,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")->execute([$payResult['authority'], $orderId]);
                 redirect($payResult['pay_url']);
             } else {
+                // The order was created successfully, but the gateway request failed; retry is still available.
                 redirect('/order/failed/' . $orderCode . '?err=' . urlencode($payResult['error']));
             }
 
@@ -141,4 +154,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderView('site/checkout', compact('pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount'));
+renderView('site/checkout', compact('pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount', 'prefillCustomer'));

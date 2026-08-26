@@ -15,8 +15,10 @@ if ($id) {
 }
 
 $pageTitle = $product ? 'ویرایش محصول' : 'محصول جدید';
-$categories = db()->query("SELECT id, name FROM categories ORDER BY sort_order ASC")->fetchAll();
+$categories = getCategoriesForDropdown();
 $errors = [];
+// Determine the current variant-enabled state for the initial form checkbox.
+$hasVariantsInitial = count($variants) > 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
@@ -27,15 +29,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = (int) preg_replace('/\D/', '', $_POST['price'] ?? '0');
     $discountPrice = trim($_POST['discount_price'] ?? '');
     $discountPrice = $discountPrice === '' ? null : (int) preg_replace('/\D/', '', $discountPrice);
-    $stock = (int) ($_POST['stock'] ?? 0);
     $sku = trim($_POST['sku'] ?? '');
     $isActive = isset($_POST['is_active']) ? 1 : 0;
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
+    $hasVariants = isset($_POST['has_variants']);
+
+    // When variants are enabled, aggregate stock is not meaningful because each variant has its own stock.
+    // Store zero to avoid misleading totals in reports.
+    $stock = $hasVariants ? 0 : (int) ($_POST['stock'] ?? 0);
 
     if ($name === '') $errors[] = 'نام محصول الزامی است.';
     if ($categoryId < 1) $errors[] = 'دسته‌بندی را انتخاب کنید.';
     if ($price < 1) $errors[] = 'قیمت معتبر وارد کنید.';
     if ($discountPrice !== null && $discountPrice >= $price) $errors[] = 'قیمت با تخفیف باید کمتر از قیمت اصلی باشد.';
+
+    // ---------- SKU: generate one when empty; otherwise validate uniqueness ----------
+    if ($sku === '') {
+        $sku = generateUniqueSku();
+    } else {
+        $skuCheck = db()->prepare("SELECT id FROM products WHERE sku = ? AND id != ?");
+        $skuCheck->execute([$sku, $id]);
+        if ($skuCheck->fetch()) {
+            $errors[] = 'این کد محصول (SKU) قبلاً برای محصول دیگری استفاده شده است.';
+        }
+    }
 
     $newImageName = $product['image'] ?? null;
     if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -60,34 +77,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($product) {
             $stmt = db()->prepare("UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?, discount_price=?, sku=?, stock=?, image=?, is_active=?, is_featured=? WHERE id=?");
-            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku ?: null, $stock, $newImageName, $isActive, $isFeatured, $id]);
+            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured, $id]);
             $productId = $id;
             setFlash('success', 'محصول به‌روزرسانی شد.');
         } else {
             $stmt = db()->prepare("INSERT INTO products (category_id, name, slug, description, price, discount_price, sku, stock, image, is_active, is_featured) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku ?: null, $stock, $newImageName, $isActive, $isFeatured]);
+            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured]);
             $productId = db()->lastInsertId();
             setFlash('success', 'محصول با موفقیت اضافه شد.');
         }
 
+        // ---------- Variants are processed only when variant support is enabled ----------
         db()->prepare("DELETE FROM product_variants WHERE product_id = ?")->execute([$productId]);
-        $sizes = $_POST['variant_size'] ?? [];
-        $colors = $_POST['variant_color'] ?? [];
-        $vstocks = $_POST['variant_stock'] ?? [];
-        for ($i = 0; $i < count($sizes); $i++) {
-            $sz = trim($sizes[$i]);
-            $cl = trim($colors[$i] ?? '');
-            $st = (int) ($vstocks[$i] ?? 0);
-            if ($sz === '' && $cl === '') continue;
-            $vstmt = db()->prepare("INSERT INTO product_variants (product_id, size, color, stock) VALUES (?,?,?,?)");
-            $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st]);
+        if ($hasVariants) {
+            $sizes = $_POST['variant_size'] ?? [];
+            $colors = $_POST['variant_color'] ?? [];
+            $vstocks = $_POST['variant_stock'] ?? [];
+            for ($i = 0; $i < count($sizes); $i++) {
+                $sz = trim($sizes[$i]);
+                $cl = trim($colors[$i] ?? '');
+                $st = (int) ($vstocks[$i] ?? 0);
+                if ($sz === '' && $cl === '') continue;
+                $vstmt = db()->prepare("INSERT INTO product_variants (product_id, size, color, stock) VALUES (?,?,?,?)");
+                $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st]);
+            }
         }
 
         redirect('products.php');
     }
+
+    // Preserve the generated or submitted SKU so it can be shown again after validation errors.
+    if ($product) { $product['sku'] = $sku; } else { $product = ['sku' => $sku]; }
+    $hasVariantsInitial = $hasVariants;
 }
 
-
+/**
+ * Validate and securely store an uploaded file.
+ */
 function handleProductImageUpload(array $file): array
 {
     if ($file['size'] > MAX_UPLOAD_SIZE) {
@@ -117,4 +143,4 @@ function handleProductImageUpload(array $file): array
     return ['ok' => true, 'filename' => $filename];
 }
 
-renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors'));
+renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial'));

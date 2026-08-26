@@ -1,7 +1,7 @@
 <?php
 /**
- * View صفحه اصلی — فقط نمایش. متغیرها ($categories, $featured, $newest, $pageTitle)
- * توسط app/controllers/site/home.php آماده و از طریق renderView() تزریق شده‌اند.
+ * Home page view — presentation only. Variables ($categories, $featured, $newest, $pageTitle)
+ * are prepared by app/controllers/site/home.php and injected through renderView().
  */
 require APP_ROOT . '/views/layout/header.php';
 ?>

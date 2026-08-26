@@ -1,4 +1,7 @@
 <?php
+/**
+ * Controller for the order success page.
+ */
 
 $code = $_GET['code'] ?? '';
 

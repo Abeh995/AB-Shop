@@ -1,4 +1,7 @@
 <?php
+/**
+ * Controller for a category product listing, including subcategories when present.
+ */
 
 $slug = $_GET['slug'] ?? '';
 
@@ -14,7 +17,15 @@ if (!$category) {
 
 $pageTitle = $category['name'];
 
-// ---------- Filter & Sorting ----------
+// Include products from all direct subcategories when this category has children.
+$subCategories = db()->prepare("SELECT id, name, slug FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
+$subCategories->execute([$category['id']]);
+$subCategories = $subCategories->fetchAll();
+
+$categoryIds = getCategoryAndChildIds($category['id']);
+$placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+
+// ---------- Filtering and sorting ----------
 $sort = $_GET['sort'] ?? 'newest';
 $onlyAvailable = isset($_GET['available']);
 
@@ -29,8 +40,8 @@ $page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 12;
 $offset = ($page - 1) * $perPage;
 
-$where = 'category_id = ? AND is_active = 1';
-$params = [$category['id']];
+$where = "category_id IN ($placeholders) AND is_active = 1";
+$params = $categoryIds;
 if ($onlyAvailable) {
     $where .= ' AND stock > 0';
 }
@@ -44,4 +55,4 @@ $stmt = db()->prepare("SELECT * FROM products WHERE $where ORDER BY $orderBy LIM
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 
-renderView('site/category', compact('pageTitle', 'category', 'slug', 'sort', 'onlyAvailable', 'products', 'totalPages', 'page'));
+renderView('site/category', compact('pageTitle', 'category', 'slug', 'sort', 'onlyAvailable', 'products', 'totalPages', 'page', 'subCategories'));

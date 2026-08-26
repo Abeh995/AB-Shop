@@ -1,6 +1,14 @@
+-- ============================================================
+-- AB Socks - Database Schema
+-- Engine: InnoDB, Charset: utf8mb4
+-- ============================================================
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- ------------------------------------------------------------
+-- Admin accounts
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS admins (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(60) NOT NULL UNIQUE,
@@ -11,9 +19,23 @@ CREATE TABLE IF NOT EXISTS admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ------------------------------------------------------------
+-- Customer accounts (identified by mobile number)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customers (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    phone VARCHAR(20) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(150) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ------------------------------------------------------------
+-- Product categories (parent_id enables one-level subcategories)
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS categories (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    parent_id INT UNSIGNED DEFAULT NULL,
     name VARCHAR(120) NOT NULL,
     slug VARCHAR(140) NOT NULL UNIQUE,
     description TEXT,
@@ -21,21 +43,25 @@ CREATE TABLE IF NOT EXISTS categories (
     sort_order INT DEFAULT 0,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_active_sort (is_active, sort_order)
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_active_sort (is_active, sort_order),
+    INDEX idx_parent (parent_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Products
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS products (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id INT UNSIGNED NOT NULL,
     name VARCHAR(180) NOT NULL,
     slug VARCHAR(200) NOT NULL UNIQUE,
     description TEXT,
-    price DECIMAL(12,0) NOT NULL,
-    discount_price DECIMAL(12,0) DEFAULT NULL,
-    sku VARCHAR(60) DEFAULT NULL,
-    stock INT NOT NULL DEFAULT 0,
-    image VARCHAR(255) DEFAULT NULL,
+    price DECIMAL(12,0) NOT NULL,              -- Toman, no decimal places
+    discount_price DECIMAL(12,0) DEFAULT NULL,  -- Discounted price, when applicable
+    sku VARCHAR(60) DEFAULT NULL UNIQUE,
+    stock INT NOT NULL DEFAULT 0,               -- Aggregate stock when variants are not used
+    image VARCHAR(255) DEFAULT NULL,            -- Primary product image
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     is_featured TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +71,9 @@ CREATE TABLE IF NOT EXISTS products (
     INDEX idx_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Product image gallery (additional images beyond the primary image)
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS product_images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
@@ -55,11 +83,13 @@ CREATE TABLE IF NOT EXISTS product_images (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Product variants (sock size/color), optional per product
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS product_variants (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
-    size VARCHAR(40) DEFAULT NULL,
+    size VARCHAR(40) DEFAULT NULL,     -- Example: 39-42
     color VARCHAR(40) DEFAULT NULL,
     stock INT NOT NULL DEFAULT 0,
     price_override DECIMAL(12,0) DEFAULT NULL,
@@ -67,7 +97,9 @@ CREATE TABLE IF NOT EXISTS product_variants (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Discount coupons
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS coupons (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(60) NOT NULL UNIQUE,
@@ -81,9 +113,12 @@ CREATE TABLE IF NOT EXISTS coupons (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Orders
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT UNSIGNED DEFAULT NULL,
     order_code VARCHAR(20) NOT NULL UNIQUE,
     customer_name VARCHAR(150) NOT NULL,
     phone VARCHAR(20) NOT NULL,
@@ -105,17 +140,21 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_ref_id VARCHAR(64) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     INDEX idx_status (status),
+    INDEX idx_customer (customer_id),
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Order items
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS order_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
     product_id INT UNSIGNED DEFAULT NULL,
     variant_id INT UNSIGNED DEFAULT NULL,
-    product_name VARCHAR(180) NOT NULL,
+    product_name VARCHAR(180) NOT NULL,   -- Product name snapshot at purchase time
     variant_label VARCHAR(80) DEFAULT NULL,
     unit_price DECIMAL(12,0) NOT NULL,
     quantity INT NOT NULL,
@@ -127,7 +166,39 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- ------------------------------------------------------------
+-- Persistent cart for authenticated customers
+-- Use variant_id = 0 instead of NULL for products without variants so the UNIQUE KEY works as intended.
+-- MySQL allows multiple NULL values in a UNIQUE KEY.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS cart_items (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    variant_id INT UNSIGNED NOT NULL DEFAULT 0,
+    quantity INT NOT NULL DEFAULT 1,
+    locked_unit_price DECIMAL(12,0) NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_customer_product_variant (customer_id, product_id, variant_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ------------------------------------------------------------
+-- General store settings (key-value), including cart price guarantee
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO settings (setting_key, setting_value) VALUES
+    ('price_guarantee_enabled', '1'),
+    ('price_guarantee_days', '7');
+
+-- ------------------------------------------------------------
+-- SMS delivery log (actual sends and log-only entries)
+-- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS sms_log (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     phone VARCHAR(20) NOT NULL,
@@ -137,7 +208,12 @@ CREATE TABLE IF NOT EXISTS sms_log (
     INDEX idx_phone (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- ------------------------------------------------------------
+-- Seed data
+-- Keep the admins table empty. After deployment,
+-- open /install.php once to create the initial admin account with your own password
+-- without requiring CLI access. The installer locks itself after use.
+-- ------------------------------------------------------------
 
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
 ('جوراب مردانه', 'mardane', 'انواع جوراب مردانه، ساقدار و ساقکوتاه', 1, 1),

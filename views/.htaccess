@@ -1,3 +1,4 @@
+# Block direct browser access; files in this directory should only be loaded through PHP includes.
 <IfModule mod_authz_core.c>
     Require all denied
 </IfModule>

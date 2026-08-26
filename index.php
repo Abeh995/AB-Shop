@@ -1,4 +1,10 @@
 <?php
+/**
+ * Store front controller. All site requests (except admin, ajax, payment, and uploads) are routed here.
+ * .htaccess forwards requests here with the requested path in the route parameter.
+ * This file only dispatches the request to the appropriate controller under app/controllers/site.
+ * Business logic and HTML rendering do not belong in this file.
+ */
 
 require_once __DIR__ . '/app/bootstrap.php';
 
@@ -54,6 +60,22 @@ switch ($page) {
 
     case 'terms':
         require $controllersDir . '/terms.php';
+        break;
+
+    case 'signup':
+        require $controllersDir . '/signup.php';
+        break;
+
+    case 'login':
+        require $controllersDir . '/login.php';
+        break;
+
+    case 'logout':
+        require $controllersDir . '/logout.php';
+        break;
+
+    case 'account':
+        require $controllersDir . '/account.php';
         break;
 
     default:

@@ -1,4 +1,15 @@
 <?php
+/**
+ * ZarinPal payment gateway integration (ZarinPal REST API v4).
+ *
+ * Sandbox mode is enabled by default so the complete payment flow can be tested before obtaining a live merchant ID.
+ * To switch to live mode, update the following values in config.php:
+ *   ZARINPAL_MERCHANT_ID  -> The live merchant ID from the ZarinPal dashboard
+ *   ZARINPAL_SANDBOX      -> false
+ *
+ * Currency note: prices are stored in Toman, while the ZarinPal API expects Rials.
+ * This service performs the Toman-to-Rial conversion automatically by multiplying by 10.
+ */
 
 class ZarinpalService
 {
@@ -16,11 +27,20 @@ class ZarinpalService
             : 'https://payment.zarinpal.com/pg/StartPay/';
     }
 
+    /**
+     * Create a payment transaction request.
+     * @param int    $amountToman Payment amount in Toman.
+     * @param string $description Transaction description, e.g. an order number.
+     * @param string $callbackUrl URL where the customer is redirected after payment.
+     * @param string|null $mobile Optional customer mobile number for prefilling the ZarinPal form.
+     * @param string|null $email Optional customer email.
+     * @return array ['ok'=>bool, 'authority'=>string|null, 'pay_url'=>string|null, 'error'=>string|null]
+     */
     public static function request(int $amountToman, string $description, string $callbackUrl, ?string $mobile = null, ?string $email = null): array
     {
         $payload = [
             'merchant_id'  => ZARINPAL_MERCHANT_ID,
-            'amount'       => $amountToman * 10, // تبدیل تومان به ریال
+            'amount'       => $amountToman * 10, // Convert Toman to Rials.
             'description'  => $description,
             'callback_url' => $callbackUrl,
         ];
@@ -49,9 +69,9 @@ class ZarinpalService
     }
 
     /**
-     * تایید نهایی تراکنش بعد از بازگشت کاربر از درگاه
-     * @param int    $amountToman همان مبلغی که در request() ارسال شده بود (باید دقیقا یکسان باشد)
-     * @param string $authority   مقداری که زرین‌پال در callback برمی‌گرداند
+     * Verify the transaction after the customer returns from the gateway.
+     * @param int    $amountToman The same amount passed to request(); it must match exactly.
+     * @param string $authority   Authority returned by ZarinPal in the callback.
      * @return array ['ok'=>bool, 'ref_id'=>string|null, 'error'=>string|null]
      */
     public static function verify(int $amountToman, string $authority): array
@@ -69,7 +89,7 @@ class ZarinpalService
         }
 
         $data = $result['data']['data'] ?? null;
-        // کد 100 = پرداخت موفق تازه، کد 101 = این تراکنش قبلا verify شده (هم موفق است)
+        // Code 100 = newly verified payment; code 101 = already verified and still considered successful.
         if ($data && in_array((int)($data['code'] ?? 0), [100, 101], true)) {
             return ['ok' => true, 'ref_id' => (string)($data['ref_id'] ?? ''), 'error' => null];
         }
@@ -79,7 +99,7 @@ class ZarinpalService
     }
 
     /**
-     * ارسال درخواست POST با بدنه JSON و خواندن پاسخ JSON
+     * Send a POST request with a JSON body and parse the JSON response.
      */
     private static function postJson(string $url, array $payload): array
     {

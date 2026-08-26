@@ -23,7 +23,17 @@
             <td><span class="status-pill <?= $payClass[$o['payment_status']] ?? '' ?>"><?= e($payLabels[$o['payment_status']] ?? $o['payment_status']) ?></span></td>
             <td><span class="status-pill status-<?= e($o['status']) ?>"><?= e($statusLabels[$o['status']] ?? $o['status']) ?></span></td>
             <td><?= toPersianDigits(date('Y/m/d H:i', strtotime($o['created_at']))) ?></td>
-            <td><a href="order_detail.php?id=<?= (int)$o['id'] ?>" class="btn btn-sm btn-outline">مشاهده</a></td>
+            <td>
+                <a href="order_detail.php?id=<?= (int)$o['id'] ?>" class="btn btn-sm btn-outline">مشاهده</a>
+                <?php if (isSuperAdmin()): ?>
+                <form method="post" onsubmit="return confirm('حذف کامل این سفارش؟ این عملیات قابل بازگشت نیست.');" style="display:inline;">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="id" value="<?= (int)$o['id'] ?>">
+                    <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                </form>
+                <?php endif; ?>
+            </td>
         </tr>
         <?php endforeach; ?>
         <?php if (!$orders): ?><tr><td colspan="8" style="text-align:center; color:var(--color-muted);">سفارشی یافت نشد.</td></tr><?php endif; ?>

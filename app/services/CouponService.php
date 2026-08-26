@@ -1,8 +1,14 @@
 <?php
+/**
+ * Discount coupon validation and calculation service.
+ */
 
 class CouponService
 {
-
+    /**
+     * Validate a coupon for a specific order amount.
+     * @return array ['ok'=>bool, 'coupon'=>array|null, 'discount'=>int, 'message'=>string]
+     */
     public static function validate(string $code, float $subtotal): array
     {
         $code = trim($code);
@@ -43,9 +49,13 @@ class CouponService
         } else {
             $discount = (float) $coupon['value'];
         }
+        // The discount must never exceed the order amount.
         return (int) min($discount, $subtotal);
     }
 
+    /**
+     * Increment the coupon usage counter; call this only after the order is committed.
+     */
     public static function markUsed(int $couponId): void
     {
         db()->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE id = ?")->execute([$couponId]);

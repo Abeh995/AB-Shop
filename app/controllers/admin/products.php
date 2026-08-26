@@ -1,5 +1,6 @@
 <?php
-$pageTitle = 'محصولات';
+$featuredOnly = isset($_GET['featured']);
+$pageTitle = $featuredOnly ? 'محصولات ویژه' : 'محصولات';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     verifyCsrf();
@@ -14,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 
     db()->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
     setFlash('success', 'محصول حذف شد.');
-    redirect('products.php');
+    redirect($featuredOnly ? 'products.php?featured=1' : 'products.php');
 }
 
 $search = trim($_GET['q'] ?? '');
@@ -24,11 +25,21 @@ if ($search !== '') {
     $where .= ' AND p.name LIKE ?';
     $params[] = '%' . $search . '%';
 }
+if ($featuredOnly) {
+    $where .= ' AND p.is_featured = 1';
+}
 
-$stmt = db()->prepare("SELECT p.*, c.name AS category_name FROM products p
-                        JOIN categories c ON c.id = p.category_id
-                        WHERE $where ORDER BY p.created_at DESC");
+// Prepare a compact variant stock summary (size/color:stock) for the product table
+// so each variant stock level is shown instead of a single aggregate quantity.
+$stmt = db()->prepare("SELECT p.*, c.name AS category_name,
+        (SELECT GROUP_CONCAT(
+                CONCAT(TRIM(CONCAT(COALESCE(v.size,''), ' ', COALESCE(v.color,''))), ': ', v.stock)
+                SEPARATOR ' | ')
+         FROM product_variants v WHERE v.product_id = p.id) AS variant_stock_summary
+        FROM products p
+        JOIN categories c ON c.id = p.category_id
+        WHERE $where ORDER BY p.created_at DESC");
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 
-renderView('admin/products', compact('pageTitle', 'search', 'products'));
+renderView('admin/products', compact('pageTitle', 'search', 'products', 'featuredOnly'));

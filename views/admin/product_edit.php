@@ -18,7 +18,9 @@
                 <select class="form-control" name="category_id" required>
                     <option value="">انتخاب کنید</option>
                     <?php foreach ($categories as $c): ?>
-                        <option value="<?= (int)$c['id'] ?>" <?= (($product['category_id'] ?? 0) == $c['id']) ? 'selected' : '' ?>><?= e($c['name']) ?></option>
+                        <option value="<?= (int)$c['id'] ?>" <?= (($product['category_id'] ?? 0) == $c['id']) ? 'selected' : '' ?>>
+                            <?= $c['depth'] > 0 ? str_repeat('— ', $c['depth']) : '' ?><?= e($c['name']) ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -40,15 +42,37 @@
             </div>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>موجودی کلی (اگر واریانت ندارد)</label>
-                <input class="form-control" type="number" name="stock" value="<?= e($product['stock'] ?? '0') ?>">
+        <div class="form-group">
+            <label>کد محصول / SKU</label>
+            <input class="form-control" type="text" name="sku" dir="ltr" value="<?= e($product['sku'] ?? '') ?>" placeholder="اگر خالی بگذارید، به‌صورت خودکار و یکتا ساخته می‌شود">
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <input type="checkbox" id="hasVariantsToggle" name="has_variants" <?= $hasVariantsInitial ? 'checked' : '' ?>>
+            این محصول دارای واریانت (سایز/رنگ) است
+        </label>
+
+        <div class="form-group" id="stockFieldWrap">
+            <label>موجودی کلی</label>
+            <input class="form-control" type="number" id="stockField" name="stock" value="<?= e($product['stock'] ?? '0') ?>">
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">وقتی محصول دارای واریانت باشد، موجودی هر واریانت جدا مدیریت می‌شود و این فیلد غیرفعال می‌شود.</p>
+        </div>
+
+        <div class="form-group" id="variantSection">
+            <label class="group-label">سایزها / رنگ‌ها</label>
+            <div id="variantRows">
+                <?php
+                $variantRows = $variants ?: [['size' => '', 'color' => '', 'stock' => '']];
+                foreach ($variantRows as $v): ?>
+                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;">
+                    <input class="form-control variant-input" type="text" name="variant_size[]" placeholder="سایز (مثلا 39-42)" value="<?= e($v['size'] ?? '') ?>">
+                    <input class="form-control variant-input" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)" value="<?= e($v['color'] ?? '') ?>">
+                    <input class="form-control variant-input" type="number" name="variant_stock[]" placeholder="موجودی" value="<?= e((string)($v['stock'] ?? '')) ?>">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.form-row').remove()">حذف</button>
+                </div>
+                <?php endforeach; ?>
             </div>
-            <div class="form-group">
-                <label>کد محصول / SKU (اختیاری)</label>
-                <input class="form-control" type="text" name="sku" dir="ltr" value="<?= e($product['sku'] ?? '') ?>">
-            </div>
+            <button type="button" class="btn btn-sm btn-outline" id="addVariantRow">+ افزودن ردیف</button>
         </div>
 
         <div class="form-group">
@@ -57,23 +81,6 @@
                 <img src="<?= UPLOAD_URL . e($product['image']) ?>" style="width:90px; height:90px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
             <?php endif; ?>
             <input class="form-control" type="file" name="image" accept="image/png,image/jpeg,image/webp">
-        </div>
-
-        <div class="form-group">
-            <label class="group-label">سایزها / رنگ‌ها (اختیاری — اگر پر نشود، موجودی کلی بالا استفاده می‌شود)</label>
-            <div id="variantRows">
-                <?php
-                $variantRows = $variants ?: [['size' => '', 'color' => '', 'stock' => '']];
-                foreach ($variantRows as $v): ?>
-                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;">
-                    <input class="form-control" type="text" name="variant_size[]" placeholder="سایز (مثلا 39-42)" value="<?= e($v['size'] ?? '') ?>">
-                    <input class="form-control" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)" value="<?= e($v['color'] ?? '') ?>">
-                    <input class="form-control" type="number" name="variant_stock[]" placeholder="موجودی" value="<?= e((string)($v['stock'] ?? '')) ?>">
-                    <button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.form-row').remove()">حذف</button>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline" id="addVariantRow">+ افزودن ردیف</button>
         </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
@@ -94,12 +101,28 @@ document.getElementById('addVariantRow').addEventListener('click', function () {
     var row = document.createElement('div');
     row.className = 'form-row';
     row.style.cssText = 'grid-template-columns: 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;';
-    row.innerHTML = '<input class="form-control" type="text" name="variant_size[]" placeholder="سایز">' +
-        '<input class="form-control" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)">' +
-        '<input class="form-control" type="number" name="variant_stock[]" placeholder="موجودی">' +
+    row.innerHTML = '<input class="form-control variant-input" type="text" name="variant_size[]" placeholder="سایز">' +
+        '<input class="form-control variant-input" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)">' +
+        '<input class="form-control variant-input" type="number" name="variant_stock[]" placeholder="موجودی">' +
         '<button type="button" class="btn btn-sm btn-outline" onclick="this.closest(\'.form-row\').remove()">حذف</button>';
     wrap.appendChild(row);
 });
+
+// ---------- Toggle variant-related fields based on the "Has variants" checkbox ----------
+function syncVariantToggle() {
+    var hasVariants = document.getElementById('hasVariantsToggle').checked;
+    var stockField = document.getElementById('stockField');
+    var stockWrap = document.getElementById('stockFieldWrap');
+    var variantSection = document.getElementById('variantSection');
+
+    stockField.disabled = hasVariants;
+    stockWrap.style.opacity = hasVariants ? '0.5' : '1';
+    variantSection.style.opacity = hasVariants ? '1' : '0.5';
+    variantSection.style.pointerEvents = hasVariants ? 'auto' : 'none';
+    document.querySelectorAll('.variant-input').forEach(function (el) { el.disabled = !hasVariants; });
+}
+document.getElementById('hasVariantsToggle').addEventListener('change', syncVariantToggle);
+syncVariantToggle();
 </script>
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

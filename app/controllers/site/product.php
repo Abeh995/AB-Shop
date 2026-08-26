@@ -1,4 +1,7 @@
 <?php
+/**
+ * Controller for the product details page.
+ */
 
 $slug = $_GET['slug'] ?? '';
 

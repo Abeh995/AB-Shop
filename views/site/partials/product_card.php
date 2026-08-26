@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Product card. Expects $p to contain the product database row.
+ */
 $discount = discountPercent($p);
 $finalPrice = effectivePrice($p);
 $imgSrc = $p['image'] ? UPLOAD_URL . e($p['image']) : '/assets/img/placeholder-sock.svg';

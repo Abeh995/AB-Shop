@@ -1,4 +1,17 @@
 <?php
+/**
+ * SMS delivery service.
+ *
+ * By default, the service runs in log-only mode until a real provider API key
+ * (e.g. Kavenegar or Melipayamak) is configured in config.php.
+ * Messages are still stored in sms_log so they can be reviewed from the admin panel.
+ * Missing SMS configuration therefore never causes the site to fail.
+ *
+ * To enable live delivery (for example, with Kavenegar):
+ *   SMS_ENABLED = true
+ *   SMS_PROVIDER_API_KEY = 'your real API key'
+ *   SMS_SENDER_LINE = 'your sender line'
+ */
 
 class SmsService
 {
@@ -13,6 +26,7 @@ class SmsService
             $status = $result['ok'] ? 'sent' : 'failed: ' . $result['error'];
         }
 
+        // Always record the attempt in the log table, whether sent or log-only.
         try {
             $stmt = db()->prepare("INSERT INTO sms_log (phone, message, status) VALUES (?, ?, ?)");
             $stmt->execute([$phone, $message, $status]);
@@ -23,6 +37,10 @@ class SmsService
         return $sent;
     }
 
+    /**
+     * Send through Kavenegar, a commonly used Iranian SMS provider.
+     * Docs: https://kavenegar.com/rest.html
+     */
     private static function sendViaKavenegar(string $phone, string $message): array
     {
         if (!function_exists('curl_init')) {
@@ -56,6 +74,8 @@ class SmsService
         }
         return ['ok' => false, 'error' => $data['return']['message'] ?? 'خطای نامشخص'];
     }
+
+    // ---------- Predefined messages for order events ----------
 
     public static function notifyOrderConfirmed(string $phone, string $orderCode): void
     {

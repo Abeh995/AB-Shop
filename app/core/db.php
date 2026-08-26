@@ -1,4 +1,7 @@
 <?php
+/**
+ * PDO database connection (Singleton). All queries use prepared statements.
+ */
 
 function db(): PDO
 {

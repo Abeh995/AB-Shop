@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Shared admin header. $pageTitle and the bootstrap file are expected to be loaded beforehand.
+ */
 $pageTitle = $pageTitle ?? 'پنل مدیریت';
 $flash = getFlash();
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
@@ -22,9 +24,11 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
         <div class="admin-logo"><?= e(SITE_NAME) ?><br><small>پنل مدیریت</small></div>
         <nav>
             <a href="index.php" class="<?= $currentPage === 'index.php' ? 'active' : '' ?>">داشبورد</a>
-            <a href="products.php" class="<?= $currentPage === 'products.php' || $currentPage === 'product_edit.php' ? 'active' : '' ?>">محصولات</a>
+            <a href="products.php" class="<?= $currentPage === 'products.php' && empty($_GET['featured']) || $currentPage === 'product_edit.php' ? 'active' : '' ?>">محصولات</a>
+            <a href="products.php?featured=1" class="<?= $currentPage === 'products.php' && !empty($_GET['featured']) ? 'active' : '' ?>">⭐ پیشنهاد ویژه</a>
             <a href="categories.php" class="<?= $currentPage === 'categories.php' ? 'active' : '' ?>">دسته‌بندی‌ها</a>
             <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' ? 'active' : '' ?>">سفارش‌ها</a>
+            <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
             <?php if (isSuperAdmin()): ?>
             <a href="users.php" class="<?= $currentPage === 'users.php' ? 'active' : '' ?>">مدیریت ادمین‌ها</a>
             <?php endif; ?>

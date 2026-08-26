@@ -3,6 +3,18 @@
 <div class="container section">
     <h1 style="margin-bottom:24px;">سبد خرید</h1>
 
+    <?php if (!empty($cart['price_guarantee']) && $cart['price_guarantee']['enabled']): ?>
+        <?php if ($cart['price_guarantee']['active']): ?>
+        <div class="alert alert-info">
+            💰 قیمت کالاهای این سبد تا تاریخ <?= toPersianDigits(date('Y/m/d', strtotime($cart['price_guarantee']['expires_at']))) ?> برای شما تضمین شده است.
+        </div>
+        <?php else: ?>
+        <div class="alert alert-info" style="background:#FEF3C7; color:#92400E;">
+            ⏰ مهلت تضمین قیمت این سبد به پایان رسیده؛ قیمت‌ها بر اساس نرخ لحظه‌ای محاسبه شده‌اند.
+        </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
     <?php if (empty($cart['items'])): ?>
         <div class="empty-state">
             سبد خرید شما خالی است.<br><br>
@@ -24,6 +36,7 @@
                                 <div>
                                     <div class="cart-item-name"><?= e($p['name']) ?></div>
                                     <?php if ($variantLabel): ?><div class="cart-item-variant"><?= e($variantLabel) ?></div><?php endif; ?>
+                                    <?php if (!empty($item['price_locked'])): ?><div class="cart-item-variant" style="color:var(--color-success);">قیمت تضمین‌شده</div><?php endif; ?>
                                 </div>
                             </a>
                         </td>

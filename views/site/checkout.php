@@ -15,13 +15,13 @@
 
             <div class="form-group">
                 <label>نام و نام‌خانوادگی</label>
-                <input class="form-control" type="text" name="customer_name" value="<?= e($_POST['customer_name'] ?? '') ?>" required>
+                <input class="form-control" type="text" name="customer_name" value="<?= e($_POST['customer_name'] ?? ($prefillCustomer['full_name'] ?? '')) ?>" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>شماره موبایل</label>
-                    <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($_POST['phone'] ?? '') ?>" required>
+                    <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($_POST['phone'] ?? ($prefillCustomer['phone'] ?? '')) ?>" required>
                 </div>
                 <div class="form-group">
                     <label>ایمیل (اختیاری)</label>

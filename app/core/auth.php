@@ -1,4 +1,9 @@
 <?php
+/**
+ * Admin panel authentication with support for multiple admins and two access levels:
+ *   super_admin: Full access, including admin account management
+ *   admin:       Full access except admin account management
+ */
 
 function isAdminLoggedIn(): bool
 {
@@ -12,6 +17,9 @@ function requireAdmin(): void
     }
 }
 
+/**
+ * Only super_admin is allowed; other roles are redirected to the dashboard with an error.
+ */
 function requireSuperAdmin(): void
 {
     requireAdmin();
@@ -33,6 +41,7 @@ function attemptAdminLogin(string $username, string $password): bool
     $admin = $stmt->fetch();
 
     if ($admin && (int)$admin['is_active'] === 1 && password_verify($password, $admin['password_hash'])) {
+        // Prevent session fixation.
         session_regenerate_id(true);
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
@@ -40,6 +49,7 @@ function attemptAdminLogin(string $username, string $password): bool
         return true;
     }
 
+    // Small delay to slow down brute-force attempts.
     usleep(400000);
     return false;
 }

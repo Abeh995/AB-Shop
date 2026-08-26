@@ -10,6 +10,14 @@
             <p style="color:var(--color-muted); margin-top:-14px; margin-bottom:24px;"><?= e($category['description']) ?></p>
         <?php endif; ?>
 
+        <?php if ($subCategories): ?>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+            <?php foreach ($subCategories as $sc): ?>
+                <a href="/category/<?= e($sc['slug']) ?>" class="category-card" style="padding:8px 16px; font-size:.88rem;"><?= e($sc['name']) ?></a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
         <form class="toolbar" method="get" action="/category/<?= e($slug) ?>">
             <label style="display:flex; align-items:center; gap:6px; font-size:.9rem;">
                 <input type="checkbox" name="available" value="1" onchange="this.form.submit()" <?= $onlyAvailable ? 'checked' : '' ?>>

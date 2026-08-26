@@ -71,4 +71,18 @@
     </div>
 </div>
 
+<?php if (isSuperAdmin()): ?>
+<div class="admin-card" style="border-color:var(--color-danger);">
+    <h3 style="margin-bottom:10px; color:var(--color-danger);">منطقه خطر</h3>
+    <p style="font-size:.85rem; color:var(--color-muted); margin-bottom:14px;">
+        حذف سفارش غیرقابل بازگشت است و تمام اقلام مرتبط با آن نیز حذف می‌شود. این عملیات فقط برای مدیر کل در دسترس است.
+    </p>
+    <form method="post" onsubmit="return confirm('آیا از حذف کامل این سفارش مطمئن هستید؟ این عملیات قابل بازگشت نیست.');">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn btn-danger">حذف کامل سفارش</button>
+    </form>
+</div>
+<?php endif; ?>
+
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>
