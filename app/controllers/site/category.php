@@ -1,6 +1,6 @@
 <?php
 /**
- * Controller for a category product listing, including subcategories when present.
+ * Category product listing controller, including child categories when present.
  */
 
 $slug = $_GET['slug'] ?? '';
@@ -17,7 +17,7 @@ if (!$category) {
 
 $pageTitle = $category['name'];
 
-// Include products from all direct subcategories when this category has children.
+// Include products from child categories when this category has descendants.
 $subCategories = db()->prepare("SELECT id, name, slug FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
 $subCategories->execute([$category['id']]);
 $subCategories = $subCategories->fetchAll();
@@ -42,8 +42,9 @@ $offset = ($page - 1) * $perPage;
 
 $where = "category_id IN ($placeholders) AND is_active = 1";
 $params = $categoryIds;
+$stockSql = effectiveStockSqlFragment('products');
 if ($onlyAvailable) {
-    $where .= ' AND stock > 0';
+    $where .= " AND $stockSql > 0";
 }
 
 $countStmt = db()->prepare("SELECT COUNT(*) FROM products WHERE $where");
@@ -51,7 +52,7 @@ $countStmt->execute($params);
 $total = (int) $countStmt->fetchColumn();
 $totalPages = max(1, (int) ceil($total / $perPage));
 
-$stmt = db()->prepare("SELECT * FROM products WHERE $where ORDER BY $orderBy LIMIT $perPage OFFSET $offset");
+$stmt = db()->prepare("SELECT *, $stockSql AS effective_stock FROM products WHERE $where ORDER BY $orderBy LIMIT $perPage OFFSET $offset");
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 

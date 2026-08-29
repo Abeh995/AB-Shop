@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Design System — AB Socks store.
-   Warm premium palette, minimal layout, mobile-first, RTL.
+   Design System — Sock Store
+   Warm premium palette, minimal, mobile-first, RTL
    ========================================================================== */
 
 :root {
@@ -89,6 +89,13 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
     align-items: center;
     color: var(--color-text);
 }
+.account-link {
+    display: flex;
+    align-items: center;
+    color: var(--color-text);
+    margin-right: 4px;
+}
+.account-link:hover { color: var(--color-primary); }
 .cart-count {
     position: absolute;
     top: -8px; left: -10px;

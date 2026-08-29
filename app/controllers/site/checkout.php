@@ -1,7 +1,7 @@
 <?php
 /**
- * Checkout controller — full server-side validation, coupon handling, order creation,
- * and optional ZarinPal integration for online payments.
+ * Checkout controller with full server-side validation, coupon handling, and order creation.
+ * Online payments are forwarded to the Zarinpal gateway.
  */
 
 $pageTitle = 'تسویه حساب';
@@ -12,10 +12,10 @@ if (empty($cart['items'])) {
     redirect('/cart');
 }
 
-// Prefill the form for authenticated customers; all values are still validated server-side.
+// Pre-fill the form for logged-in customers; all values are still validated server-side.
 $prefillCustomer = isCustomerLoggedIn() ? currentCustomer() : null;
 
-// Previously applied coupon, if one was stored from the cart page.
+// Applied coupon code, if one was set on the cart page.
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
 $couponRow = null;
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderCode = generateOrderCode();
             $subtotal = $cart['subtotal'];
-            $shippingCost = 0; // Phase 1: free shipping; no complex shipping calculation yet.
+            $shippingCost = 0; // Phase 1: free shipping with no complex shipping calculation.
             $total = max(0, $subtotal - $discount + $shippingCost);
             $customerId = isCustomerLoggedIn() ? (int) $_SESSION['customer_id'] : null;
 
@@ -130,11 +130,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['coupon']);
 
             if ($paymentMethod === 'cod') {
-                // Cash on delivery: go directly to the success page.
+                // Cash on delivery: proceed directly to the success page.
                 redirect('/order/success/' . $orderCode);
             }
 
-            // ---------- Online payment: connect to ZarinPal ----------
+            // ---------- Online payment: connect to Zarinpal ----------
             $callbackUrl = rtrim(SITE_URL, '/') . '/payment/zarinpal_callback.php';
             $payResult = ZarinpalService::request((int) $total, 'پرداخت سفارش ' . $orderCode, $callbackUrl, $phone, $email ?: null);
 
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")->execute([$payResult['authority'], $orderId]);
                 redirect($payResult['pay_url']);
             } else {
-                // The order was created successfully, but the gateway request failed; retry is still available.
+                // The order was created successfully, but the gateway connection failed; allow a payment retry.
                 redirect('/order/failed/' . $orderCode . '?err=' . urlencode($payResult['error']));
             }
 

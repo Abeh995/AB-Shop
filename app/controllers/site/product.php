@@ -1,6 +1,6 @@
 <?php
 /**
- * Controller for the product details page.
+ * Product detail page controller.
  */
 
 $slug = $_GET['slug'] ?? '';
@@ -35,6 +35,31 @@ $totalStock = $hasVariants ? array_sum(array_column($variants, 'stock')) : (int)
 $discount = discountPercent($product);
 $finalPrice = effectivePrice($product);
 
+$showTags = getSetting('show_product_tags', '1') === '1';
+$tags = $showTags ? getProductTags($product['id']) : [];
+
+// ---------- SEO: product-specific description and JSON-LD ----------
+$metaDescription = $product['description']
+    ? mb_substr(strip_tags($product['description']), 0, 160)
+    : ($product['name'] . ' — ' . SITE_NAME);
+$ogImage = rtrim(SITE_URL, '/') . $mainImage;
+$jsonLd = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Product',
+    'name' => $product['name'],
+    'image' => $ogImage,
+    'description' => $metaDescription,
+    'sku' => $product['sku'],
+    'offers' => [
+        '@type' => 'Offer',
+        'priceCurrency' => 'IRR',
+        'price' => (string) ((int) $finalPrice * 10), // Convert toman to rial for schema.org compatibility.
+        'availability' => $totalStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        'url' => rtrim(SITE_URL, '/') . '/product/' . $product['slug'],
+    ],
+];
+
 renderView('site/product', compact(
-    'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice'
+    'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice', 'tags',
+    'metaDescription', 'ogImage', 'jsonLd'
 ));

@@ -1,6 +1,6 @@
 <?php
 /**
- * Controller for the order success page.
+ * Order success page controller.
  */
 
 $code = $_GET['code'] ?? '';

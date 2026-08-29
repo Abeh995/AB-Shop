@@ -1,6 +1,6 @@
 <?php
 /**
- * Shared admin header. $pageTitle and the bootstrap file are expected to be loaded beforehand.
+ * Shared admin panel header. Expects $pageTitle and the application bootstrap to be loaded.
  */
 $pageTitle = $pageTitle ?? 'پنل مدیریت';
 $flash = getFlash();

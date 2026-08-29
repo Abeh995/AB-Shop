@@ -1,7 +1,7 @@
 <?php
 /**
- * Home page view — presentation only. Variables ($categories, $featured, $newest, $pageTitle)
- * are prepared by app/controllers/site/home.php and injected through renderView().
+ * Home page view. Presentation only; data is prepared by app/controllers/site/home.php
+ * and injected through renderView().
  */
 require APP_ROOT . '/views/layout/header.php';
 ?>

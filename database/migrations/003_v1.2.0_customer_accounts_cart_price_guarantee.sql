@@ -1,16 +1,16 @@
 -- ============================================================
--- Migration 003 — upgrade from version 1.1.0 to 1.2.0
+-- Migration 003 — upgrade from v1.1.0 to v1.2.0
 -- Run this script once through phpMyAdmin (SQL tab) against the current database.
--- No data is deleted; only new tables/columns are added and initialized.
+-- No data is deleted; this migration only adds new tables/columns and initializes values.
 --
 -- Changes in this version:
---   1) Customer accounts by mobile number       -> new customers table
---   2) Persistent cart for authenticated users  -> new cart_items table
---   3) Cart price guarantee for a configurable period -> settings table
---   4) Super-admin order deletion                 -> no schema change (application logic only)
---   5) Subcategories                               -> parent_id column in categories
---   6) Required unique SKU for all products       -> backfill + UNIQUE KEY on products.sku
---   7) Optional customer-to-order relation       -> customer_id column in orders
+--   1) Mobile-number customer accounts      -> new customers table
+--   2) Persistent cart for logged-in users  -> new cart_items table
+--   3) Cart price guarantee                  -> new settings entries
+--   4) Super-admin order deletion             -> application logic only
+--   5) Subcategories                           -> parent_id in categories
+--   6) Required unique SKU for all products   -> backfill + UNIQUE KEY on products.sku
+--   7) Optional order-to-customer relation    -> customer_id in orders
 -- ============================================================
 
 SET NAMES utf8mb4;
@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ---------- 2) Persistent cart (authenticated customers only) ----------
--- Note: variant_id uses 0 instead of NULL for products without variants because
--- MySQL does not treat multiple NULL values in a UNIQUE KEY as duplicates,
--- while 0 is a concrete value that prevents duplicate cart rows for the same product.
+-- ---------- 2) Persistent cart (logged-in customers only) ----------
+-- Note: variant_id uses 0 instead of NULL for "no variant" because
+-- MySQL does not consider multiple NULL values duplicates in a UNIQUE KEY,
+-- while 0 is a concrete value that prevents duplicate entries for the same product.
 CREATE TABLE IF NOT EXISTS cart_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     customer_id INT UNSIGNED NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ---------- 3) Store settings (general key/value storage for price guarantees and future options) ----------
+-- ---------- 3) Store settings (general Key-Value configuration) ----------
 CREATE TABLE IF NOT EXISTS settings (
     setting_key VARCHAR(100) PRIMARY KEY,
     setting_value TEXT
@@ -58,13 +58,13 @@ ALTER TABLE categories ADD FOREIGN KEY (parent_id) REFERENCES categories(id) ON 
 ALTER TABLE categories ADD INDEX idx_parent (parent_id);
 
 -- ---------- 6) Required unique SKU ----------
--- Generate a unique fallback SKU for products that do not have one.
+-- Generate unique default SKUs for products that do not have one
 SET @cnt = 0;
 UPDATE products SET sku = CONCAT('SOCK-', LPAD((@cnt:=@cnt+1) + 10000, 6, '0')) WHERE sku IS NULL OR sku = '';
--- Enforce SKU uniqueness at the database level.
+-- Then enforce SKU uniqueness at the database level
 ALTER TABLE products ADD UNIQUE KEY uniq_sku (sku);
 
--- ---------- 7) Optional order-to-customer relation; guest checkout remains supported ----------
+-- ---------- 7) Optional order-to-customer relation (guest checkout remains supported) ----------
 ALTER TABLE orders ADD COLUMN customer_id INT UNSIGNED DEFAULT NULL AFTER id;
 ALTER TABLE orders ADD FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL;
 ALTER TABLE orders ADD INDEX idx_customer (customer_id);

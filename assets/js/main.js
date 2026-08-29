@@ -1,5 +1,10 @@
+// ==========================================================================
+// Lightweight JavaScript with no build step or dependencies.
+// ==========================================================================
+
 document.addEventListener('DOMContentLoaded', function () {
 
+    // ---------- Mobile menu ----------
     var toggle = document.getElementById('navToggle');
     var nav = document.getElementById('mainNav');
     if (toggle && nav) {
@@ -8,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ---------- Product variant selection (size/color) ----------
     document.querySelectorAll('.variant-chip input').forEach(function (input) {
         input.addEventListener('change', function () {
             var group = input.closest('.variant-options');
@@ -20,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ---------- Product quantity controls ----------
     document.querySelectorAll('.qty-selector').forEach(function (box) {
         var input = box.querySelector('input');
         var max = parseInt(input.getAttribute('max') || '99', 10);
@@ -33,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ---------- Add to cart (AJAX) ----------
     var addForm = document.getElementById('addToCartForm');
     if (addForm) {
         addForm.addEventListener('submit', function (e) {
@@ -68,12 +76,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ---------- Cart quantity updates / item removal ----------
     document.querySelectorAll('.cart-qty-input').forEach(function (input) {
         input.addEventListener('change', function () {
             input.closest('form').submit();
         });
     });
 
+    // ---------- Product image gallery ----------
     document.querySelectorAll('.gallery-thumbs img').forEach(function (thumb) {
         thumb.addEventListener('click', function () {
             var mainImg = document.getElementById('mainProductImage');

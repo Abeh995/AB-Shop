@@ -83,6 +83,22 @@
             <input class="form-control" type="file" name="image" accept="image/png,image/jpeg,image/webp">
         </div>
 
+        <div class="form-group">
+            <label class="group-label">تگ‌های محصول (اختیاری — برای پیشنهاد محصولات مشابه و سئو)</label>
+            <?php if ($allTags): ?>
+            <div class="variant-options" style="margin-bottom:10px;">
+                <?php foreach ($allTags as $tag): ?>
+                <label class="variant-chip <?= in_array($tag['id'], $productTagIds) ? 'selected' : '' ?>">
+                    <input type="checkbox" name="tag_ids[]" value="<?= (int)$tag['id'] ?>" <?= in_array($tag['id'], $productTagIds) ? 'checked' : '' ?>
+                           onchange="this.closest('.variant-chip').classList.toggle('selected', this.checked)">
+                    <?= e($tag['name']) ?>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <input class="form-control" type="text" name="new_tags" placeholder="افزودن تگ جدید (با کاما جدا کنید، مثلا: نخی, پاییزه)">
+        </div>
+
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
             <input type="checkbox" name="is_active" <?= (!$product || $product['is_active']) ? 'checked' : '' ?>> فعال (نمایش در فروشگاه)
         </label>
@@ -108,7 +124,7 @@ document.getElementById('addVariantRow').addEventListener('click', function () {
     wrap.appendChild(row);
 });
 
-// ---------- Toggle variant-related fields based on the "Has variants" checkbox ----------
+// ---------- تغییر وضعیت فعال/غیرفعال فیلدها بر اساس چک‌باکس «دارای واریانت» ----------
 function syncVariantToggle() {
     var hasVariants = document.getElementById('hasVariantsToggle').checked;
     var stockField = document.getElementById('stockField');

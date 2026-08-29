@@ -18,6 +18,10 @@
             <input class="form-control" type="text" name="full_name" value="<?= e($_POST['full_name'] ?? '') ?>">
         </div>
         <div class="form-group">
+            <label>ایمیل (اختیاری — در صورت وارد کردن، بعداً باید تایید شود)</label>
+            <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($_POST['email'] ?? '') ?>">
+        </div>
+        <div class="form-group">
             <label>رمز عبور (حداقل ۶ کاراکتر)</label>
             <input class="form-control" type="password" name="password" required minlength="6">
         </div>

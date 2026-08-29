@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categoriesFlat = db()->query("SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS product_count
                             FROM categories c ORDER BY sort_order ASC")->fetchAll();
 
-// Build a hierarchical table view (parent followed by its subcategories).
+// Build a hierarchical table view: parent category followed by its children.
 $byParent = [];
 foreach ($categoriesFlat as $cat) {
     $byParent[$cat['parent_id'] ?? 0][] = $cat;
@@ -77,7 +77,7 @@ $walkCategories = function ($parentId, $depth) use (&$walkCategories, &$byParent
 };
 $walkCategories(0, 0);
 
-// Build the parent selector; only top-level categories can be parents to keep nesting one level deep.
+// Provide parent-category options; only top-level categories are selectable to keep nesting shallow.
 $topLevelCategories = array_values(array_filter($categoriesFlat, fn($c) => $c['parent_id'] === null));
 
 renderView('admin/categories', compact('pageTitle', 'categories', 'topLevelCategories'));

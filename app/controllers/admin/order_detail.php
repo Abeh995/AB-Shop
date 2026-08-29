@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
 
     if (($_POST['action'] ?? '') === 'delete') {
-        requireSuperAdmin(); // Enforce authorization server-side even if the UI hides the control.
-        db()->prepare("DELETE FROM orders WHERE id = ?")->execute([$id]); // order_items are removed by the foreign-key CASCADE.
+        requireSuperAdmin(); // Enforce authorization server-side even if the UI control is hidden.
+        db()->prepare("DELETE FROM orders WHERE id = ?")->execute([$id]); // Related order_items are removed by the database CASCADE constraint.
         setFlash('success', 'سفارش ' . $order['order_code'] . ' حذف شد.');
         redirect('orders.php');
     }
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($statusLabels[$newStatus]) && $newStatus !== $order['status']) {
         db()->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$newStatus, $id]);
 
-        // Notify the customer about the status change by SMS; otherwise the event is logged only.
+        // Notify the customer of the status change by SMS when the provider is enabled; otherwise log only.
         SmsService::notifyOrderStatusChanged($order['phone'], $order['order_code'], $statusLabels[$newStatus]);
 
         setFlash('success', 'وضعیت سفارش به‌روزرسانی شد.');

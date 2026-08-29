@@ -1,21 +1,17 @@
 <?php
 /**
- * Shopping cart logic — supports two modes:
+ * Shopping cart logic supports two modes:
  *
- * 1) Guest: stored in $_SESSION['cart'], as before.
- *    Prices are always read live from the database; no price guarantee applies
- *    because guest carts do not have a persistent account identity.
+ * 1) Guest users: the cart is kept in $_SESSION['cart'], as before. Prices are always read
+ *    live from the database because guests do not have a persistent cart identity.
  *
- * 2) Authenticated customer: stored in `cart_items` and preserved across devices and sessions.
- *    Each item has a `locked_unit_price`, capturing the price when it was added.
- *    For `price_guarantee_days` (7 by default, configurable in the admin panel),
- *    the locked price from the oldest active cart item is used; after that period,
- *    the current database price is used. If the cart becomes empty and a new item is added later,
- *    the guarantee period restarts because MIN(added_at) is recalculated.
+ * 2) Logged-in customers: items are stored in `cart_items` and persist across devices/sessions.
+ *    Each item has a `locked_unit_price`; this price is honored for `price_guarantee_days`
+ *    from the oldest current cart item, after which the live price is used. Clearing the cart
+ *    and adding a new item starts the guarantee window again.
  *
- * cartAdd/cartUpdateQty/cartRemove/cartClear/cartCount/cartDetails expose the same interface in both modes,
- * so controllers and views do not need to know whether the customer is a guest
- * or authenticated.
+ * cartAdd/cartUpdateQty/cartRemove/cartClear/cartCount/cartDetails expose the same interface
+ * in both modes, so controllers and views do not need to know which storage mode is active.
  */
 
 function cartKey(int $productId, ?int $variantId): string
@@ -46,7 +42,7 @@ function cartAdd(int $productId, ?int $variantId, int $qty): void
         return;
     }
 
-    // ---------- Guest: Session ----------
+    // ---------- Guest cart: session storage ----------
     $key = cartKey($productId, $variantId);
     if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
 
@@ -121,7 +117,8 @@ function cartCount(): int
 }
 
 /**
- * Get the current effective price for a product/variant directly from the database (no cache or price lock).
+ * Fetch the current effective price for a product or variant directly from the database.
+ * No cache or price lock is applied.
  */
 function getLiveUnitPrice(int $productId, ?int $variantId): float
 {
@@ -145,12 +142,12 @@ function getLiveUnitPrice(int $productId, ?int $variantId): float
 }
 
 /**
- * Load the cart with complete, current item data.
- * Stock is always read live from the database. For authenticated customers, the price may be locked
- * during the guarantee window; guest prices are always live.
+ * Load the cart with complete, current details.
+ * Stock is always read live from the database. Logged-in customers may receive a locked price
+ * during the guarantee window; guest carts always use the live price.
  *
- * Additional 'price_guarantee' output contains cart price-guarantee status for display.
- * (It applies only to authenticated customers and is always null for guests.)
+ * The optional 'price_guarantee' field contains price-guarantee information for display
+ * and is meaningful only for logged-in customers.
  */
 function cartDetails(): array
 {
@@ -216,10 +213,10 @@ function cartDetailsForCustomer(int $customerId): array
         return ['items' => [], 'subtotal' => 0, 'price_guarantee' => null];
     }
 
-    // ---------- Calculate price guarantee status from the oldest active cart item ----------
+    // ---------- Calculate the price guarantee from the oldest item in the current cart ----------
     $guaranteeEnabled = getSetting('price_guarantee_enabled', '1') === '1';
     $guaranteeDays = max(0, (int) getSetting('price_guarantee_days', '7'));
-    $cartStartedAt = $rows[0]['added_at']; // ORDER BY added_at ASC makes the first row the oldest.
+    $cartStartedAt = $rows[0]['added_at']; // ORDER BY added_at ASC ensures the first row is the oldest item.
     $ageInSeconds = time() - strtotime($cartStartedAt);
     $ageInDays = $ageInSeconds / 86400;
     $withinGuarantee = $guaranteeEnabled && $guaranteeDays > 0 && $ageInDays < $guaranteeDays;
@@ -278,9 +275,8 @@ function cartDetailsForCustomer(int $customerId): array
 }
 
 /**
- * After a successful login/registration, transfer items added as a guest from the session cart
- * into the customer's persistent cart so they are not lost.
- * Their prices are locked at transfer time because they are newly added to the persistent cart.
+ * After successful login or signup, merge any items added as a guest into the customer's persistent cart.
+ * Their prices are locked at merge time because they are newly inserted into the persistent cart.
  */
 function mergeGuestCartIntoCustomerCart(int $customerId): void
 {

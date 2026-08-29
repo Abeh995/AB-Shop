@@ -1,6 +1,6 @@
 <?php
 /**
- * General helper functions.
+ * General-purpose helper functions.
  */
 
 // Escape output to prevent XSS.
@@ -9,7 +9,7 @@ function e(?string $str): string
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// Format prices in Toman with thousands separators and Persian numerals.
+// Format prices in toman with thousands separators and Persian numerals.
 function formatPrice($amount): string
 {
     $amount = (float) $amount;
@@ -17,7 +17,7 @@ function formatPrice($amount): string
     return toPersianDigits($formatted) . ' ' . CURRENCY_LABEL;
 }
 
-// Convert Latin digits to Persian numerals for localized display.
+// Convert Latin digits to Persian numerals for local display.
 function toPersianDigits(string $str): string
 {
     $en = ['0','1','2','3','4','5','6','7','8','9'];
@@ -25,7 +25,7 @@ function toPersianDigits(string $str): string
     return str_replace($en, $fa, $str);
 }
 
-// Generate a slug from Persian or Latin text.
+// Generate a slug from Persian or English text.
 function slugify(string $text): string
 {
     $text = trim($text);
@@ -35,14 +35,14 @@ function slugify(string $text): string
     return trim($text, '-') ?: 'item-' . substr(md5(uniqid('', true)), 0, 8);
 }
 
-// Perform a simple redirect.
+// Simple redirect helper.
 function redirect(string $path): void
 {
     header('Location: ' . $path);
     exit;
 }
 
-// Flash messages persisted across redirects using the session.
+// Flash messages persisted across redirects through the session.
 function setFlash(string $type, string $message): void
 {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
@@ -66,8 +66,8 @@ function generateOrderCode(): string
 
 /**
  * Generate a unique SKU for a new product, e.g. SOCK-042817.
- * Check the database before returning to ensure the SKU has not already been used.
- * The collision probability is low, but multiple attempts are made as a final safeguard.
+ * The database is checked before returning the value; on the unlikely chance of a collision,
+ * the generator retries to guarantee uniqueness.
  */
 function generateUniqueSku(): string
 {
@@ -79,11 +79,11 @@ function generateUniqueSku(): string
             return $candidate;
         }
     }
-    // Extremely unlikely fallback: add microseconds as an extra uniqueness component.
+    // Very unlikely fallback: include microseconds to preserve uniqueness.
     return 'SOCK-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
 }
 
-// Get the effective product price, including discounts.
+// Calculate the effective product price after discounts.
 function effectivePrice(array $product): float
 {
     if (!empty($product['discount_price']) && $product['discount_price'] < $product['price']) {
@@ -108,8 +108,8 @@ function isValidIranPhone(string $phone): bool
 }
 
 /**
- * Build a hierarchical category list (parent categories followed by indented subcategories).
- * Used by the admin <select>. Each item includes a 'depth' field (0 = top-level category).
+ * Return categories in hierarchical order for admin <select> elements.
+ * Each item includes a 'depth' value (0 = top-level category).
  */
 function getCategoriesForDropdown(): array
 {
@@ -135,7 +135,7 @@ function getCategoriesForDropdown(): array
 
 /**
  * Return a category ID together with the IDs of its direct children.
- * This allows a parent category page to include products from its subcategories.
+ * Used so parent category pages can include products from their immediate subcategories.
  */
 function getCategoryAndChildIds(int $categoryId): array
 {
@@ -146,4 +146,72 @@ function getCategoryAndChildIds(int $categoryId): array
         $ids[] = (int) $childId;
     }
     return $ids;
+}
+
+/**
+ * SQL fragment for calculating a product's effective stock in list queries (product cards).
+ * Variant products use the sum of variant stock; products without variants use their stock column.
+ * Fixes the previous behavior where variant products were incorrectly shown as out of stock
+ * because p.stock is intentionally stored as zero for such products.
+ */
+function effectiveStockSqlFragment(string $productAlias = 'p'): string
+{
+    return "COALESCE((SELECT SUM(v.stock) FROM product_variants v WHERE v.product_id = $productAlias.id), $productAlias.stock)";
+}
+
+// ---------- Product tags ----------
+
+// Load all tags used by the site, including those attached to inactive products, for admin forms.
+function getAllTags(): array
+{
+    return db()->query("SELECT id, name, slug FROM tags ORDER BY name ASC")->fetchAll();
+}
+
+// Load tags assigned to a specific product.
+function getProductTags(int $productId): array
+{
+    $stmt = db()->prepare("SELECT t.id, t.name, t.slug FROM tags t
+                            JOIN product_tags pt ON pt.tag_id = t.id
+                            WHERE pt.product_id = ? ORDER BY t.name ASC");
+    $stmt->execute([$productId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Synchronize a product's tags with a new selection and any newly entered tag names.
+ * Missing tags are created automatically.
+ * @param int[] $existingTagIds IDs of existing selected tags.
+ * @param string $newTagsRaw Comma-separated new tag names, e.g. "cotton, autumn".
+ */
+function syncProductTags(int $productId, array $existingTagIds, string $newTagsRaw): void
+{
+    $tagIds = array_map('intval', $existingTagIds);
+
+    foreach (explode(',', $newTagsRaw) as $rawName) {
+        $name = trim($rawName);
+        if ($name === '') continue;
+
+        $slug = slugify($name);
+        $stmt = db()->prepare("SELECT id FROM tags WHERE name = ? OR slug = ?");
+        $stmt->execute([$name, $slug]);
+        $existing = $stmt->fetch();
+
+        if ($existing) {
+            $tagIds[] = (int) $existing['id'];
+        } else {
+            $ins = db()->prepare("INSERT INTO tags (name, slug) VALUES (?, ?)");
+            $ins->execute([$name, $slug]);
+            $tagIds[] = (int) db()->lastInsertId();
+        }
+    }
+
+    $tagIds = array_unique(array_filter($tagIds));
+
+    db()->prepare("DELETE FROM product_tags WHERE product_id = ?")->execute([$productId]);
+    if ($tagIds) {
+        $stmt = db()->prepare("INSERT IGNORE INTO product_tags (product_id, tag_id) VALUES (?, ?)");
+        foreach ($tagIds as $tagId) {
+            $stmt->execute([$productId, $tagId]);
+        }
+    }
 }

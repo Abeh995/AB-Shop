@@ -29,8 +29,8 @@ if ($featuredOnly) {
     $where .= ' AND p.is_featured = 1';
 }
 
-// Prepare a compact variant stock summary (size/color:stock) for the product table
-// so each variant stock level is shown instead of a single aggregate quantity.
+// Precompute variant stock as a compact size/color:stock string for the product table
+// so each variant stock level can be displayed separately instead of one aggregate value.
 $stmt = db()->prepare("SELECT p.*, c.name AS category_name,
         (SELECT GROUP_CONCAT(
                 CONCAT(TRIM(CONCAT(COALESCE(v.size,''), ' ', COALESCE(v.color,''))), ': ', v.stock)

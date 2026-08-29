@@ -7,7 +7,7 @@ $pageTitle = 'سبد خرید';
 $cart = cartDetails();
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 
-// Revalidate the applied coupon when the updated cart no longer matches its original constraints.
+// Revalidate the applied coupon if the updated cart no longer meets its conditions.
 $discount = 0;
 if ($appliedCoupon) {
     $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);

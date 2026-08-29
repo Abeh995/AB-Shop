@@ -6,6 +6,101 @@ Versioning follows `MAJOR.MINOR.PATCH` (Semantic Versioning).
 
 ---
 
+## [1.2.1] — Product Tags, Full Customer Profile, Phone/Email Verification, SEO, and Stock Label Fix
+
+### 🐛 Reported Bug Fix: Incorrect "Out of Stock" Label on Variant-Based Products
+
+**Problem:** On storefront listing pages (home and category pages), every product with variants was incorrectly displayed with an "Out of stock" label, even when one or more variants had inventory.
+
+**Root cause:** Since version 1.2.0, variant-based products intentionally store `0` in `products.stock` because their actual inventory must be calculated from the variant rows. However, `product_card.php` in listing queries still read `stock` directly when determining availability.
+
+**Solution:** Added `effectiveStockSqlFragment()` in `app/core/functions.php`. It returns a SQL fragment that uses the sum of variant inventory when variants exist and otherwise falls back to the product's own `stock` column. The computed `effective_stock` was added to the home page (`home.php`, Featured and Newest queries), category page (`category.php`), and new tag page (`tag.php`). `product_card.php` now checks this value first and falls back to `stock` when unavailable.
+
+**Tested:** A product with `stock=0` and a variant with stock `12` was correctly treated as available. A variant-based product with total variant stock `0` was correctly shown as out of stock. Both cases were verified.
+
+### 🐛 Additional Critical Bug: PHP/MySQL Timezone Mismatch
+
+**Problem:** MySQL on the hosting environment commonly runs with `UTC`, while PHP uses `Asia/Tehran` (`UTC+3:30`). Values generated with MySQL `CURRENT_TIMESTAMP`/`NOW()` could therefore differ from PHP `time()`/`strtotime()` by approximately 3.5 hours.
+
+**Affected areas:**
+- **Cart Price Guarantee:** the seven-day, daily-granularity logic rarely produced an incorrect final result, but the comparison was technically wrong.
+- **Verification-code resend interval:** the 60-second limit introduced in 1.2.1 was effectively disabled because PHP interpreted a newly created code as having been sent hours earlier. This was reproduced directly in testing.
+
+**Solution:** `app/core/db.php` now runs `SET time_zone = '+03:30'` immediately after connecting, with the offset calculated from the project's configured `date_default_timezone_get()` rather than hardcoded.
+
+**Tested:** MySQL `NOW()` and PHP `date('Y-m-d H:i:s')` matched after the fix. The first verification request succeeded, an immediate second request was rejected, and the cart price guarantee remained active immediately after adding an item.
+
+### ✨ New Feature: Product Tags
+
+- Added `tags` (unique name/slug) and `product_tags` (many-to-many) tables.
+- The add/edit product form displays all existing tags, including tags attached to active or inactive products, as checkboxes.
+- **Any admin can modify any product's tags at any time.**
+- New tags can be entered as comma-separated text and are created immediately when missing.
+- Added `show_product_tags` store setting (default: enabled) to control tag visibility on product pages.
+- Added `/tag/{slug}` to list products associated with a tag, serving both product discovery and SEO.
+- Product pages display small `#tag` links to the corresponding tag pages.
+
+### ✨ New Feature: Full Customer Profile
+
+- `/account` was fully redesigned with editable name/email fields, phone/email verification badges, a current-cart summary, and order history.
+- Added `/account/order/{order_code}` for complete order details, including items, amounts, and shipping address.
+- Server-side ownership validation returns `404` when the requested order does not belong to the authenticated customer.
+- Changing the email address automatically resets email verification.
+
+### ✨ New Feature: Phone Verification via SMS (Faraz SMS)
+
+- **Registration flow changed:** registration no longer logs the customer in immediately. The account is created, a six-digit SMS code is sent, and the customer must enter it at `/verify-phone` before a full authenticated Session is established.
+- Correct-password login for an unverified account redirects to `/verify-phone` and sends a new code.
+- Customers created in versions 1.2.0 and earlier are automatically marked as phone-verified during migration because phone verification was not previously required.
+- Added `app/services/FarazSmsService.php` for the pattern-based Faraz SMS / Iran Payamak API.
+- `FARAZ_OTP_PATTERN_CODE` and `FARAZ_OTP_PATTERN_VAR` are configurable because the provider requires a pre-approved pattern.
+- ⚠️ **Manual configuration required:** `FARAZ_LINE_NUMBER` must be filled from the Faraz panel under "Lines". This value was not available in the supplied configuration information.
+- Fail-Safe by default: real SMS is not sent until `FARAZ_SMS_ENABLED` is enabled and the API key, pattern, and line are configured; messages remain logged and the site does not crash.
+
+### ✨ New Feature: Email Verification via SMTP
+
+- Added `app/services/EmailService.php` using **PHPMailer v6.9.1**, bundled under `app/vendor/PHPMailer/` without Composer.
+- SMTP was chosen over PHP `mail()` to provide more reliable delivery on shared hosting.
+- Added `/verify-email`. Customers can verify an email after phone verification or later from their profile.
+- Email verification is optional and never blocks login; phone verification remains mandatory.
+- Fail-Safe by default: real email is not sent until `SMTP_ENABLED` and real SMTP credentials are configured.
+
+### 🔒 Shared Verification-Code Service (`app/services/VerificationService.php`)
+
+- Verification codes are six digits, valid for 10 minutes.
+- Maximum five incorrect attempts are allowed; a new code is then required.
+- At least 60 seconds must pass between send requests.
+- Codes are stored as `sha256` hashes rather than plaintext.
+- Direct service tests confirmed incorrect-code rejection, one-time use, reuse prevention, and resend throttling.
+
+### ✨ New Feature: SEO and Google Indexing Controls
+
+- Added `seo_indexing_enabled` (default: disabled) to the admin settings.
+- `robots.txt` and `sitemap.xml` are generated dynamically by `robots.php` and `sitemap.php`.
+- When indexing is disabled, `robots.txt` returns `Disallow: /`.
+- When enabled, public storefront pages are allowed, while admin, AJAX, cart, checkout, and account areas remain disallowed. The sitemap URL is also advertised.
+- `sitemap.xml` includes active categories and products with `lastmod`.
+- Added `robots`, `canonical`, and basic Open Graph tags to page `<head>` sections.
+- Product pages now provide product descriptions, Open Graph images, and **Schema.org Product JSON-LD** containing name, image, SKU, price in Rials, and effective inventory status.
+
+### 🗄️ Database Changes (`database/migrations/004_v1.2.1_tags_verification_seo.sql`)
+
+- New tables: `tags`, `product_tags`, `verification_codes`.
+- `customers`: added `email`, `phone_verified_at`, `email_verified_at`.
+- Existing customers receive `phone_verified_at = created_at` during migration.
+- New settings: `show_product_tags` (default `1`) and `seo_indexing_enabled` (default `0`).
+- **Tested:** migration was executed against a simulated 1.2.0 database containing customer and order data. No data was lost, and existing customers were automatically marked as phone-verified.
+
+### ⚙️ New `config.php` Settings
+
+All of the following are disabled/empty by default for Fail-Safe operation:
+
+`FARAZ_SMS_ENABLED`, `FARAZ_API_KEY`, `FARAZ_OTP_PATTERN_CODE`, `FARAZ_OTP_PATTERN_VAR`, `FARAZ_LINE_NUMBER`, `SMTP_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`.
+
+Full configuration instructions are documented in `README-DEPLOY.md`.
+
+---
+
 ## [1.2.0] — Customer Accounts, Persistent Cart, Price Guarantee, Child Categories, and Product Management Improvements
 
 ### Summary

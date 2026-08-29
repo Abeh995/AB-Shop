@@ -1,17 +1,17 @@
 <?php
 /**
  * Shared application bootstrap.
- * All entry points (site index.php, admin/*.php, ajax/*.php, payment/*.php) require this file.
+ * All entry points (index.php, admin/*.php, ajax/*.php, payment/*.php) require this file.
  *
- * Bootstrap order:
- * 1) Define base constants (version and project root).
- * 2) Configure secure session settings and start the session.
- * 3) Load application configuration.
- * 4) Load the application core (app/core).
- * 5) Load application services (app/services), including payment, SMS, and coupon services.
+ * Initialization order:
+ * 1) Define base constants such as version and root path.
+ * 2) Configure and start the session securely.
+ * 3) Load configuration.
+ * 4) Load core application logic.
+ * 5) Load services for payments, SMS, coupons, and related features.
  */
 
-define('APP_VERSION', '1.2.0');
+define('APP_VERSION', '1.2.1');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session configuration before session_start() ----------
@@ -27,7 +27,7 @@ session_start();
 // ---------- Config ----------
 require_once __DIR__ . '/../config/config.php';
 
-// ---------- Core ----------
+// ---------- Core application logic ----------
 require_once __DIR__ . '/core/db.php';
 require_once __DIR__ . '/core/functions.php';
 require_once __DIR__ . '/core/csrf.php';
@@ -40,11 +40,14 @@ require_once __DIR__ . '/core/cart.php';
 require_once __DIR__ . '/services/ZarinpalService.php';
 require_once __DIR__ . '/services/SmsService.php';
 require_once __DIR__ . '/services/CouponService.php';
+require_once __DIR__ . '/services/FarazSmsService.php';
+require_once __DIR__ . '/services/EmailService.php';
+require_once __DIR__ . '/services/VerificationService.php';
 
 /**
- * Render a view with the provided variables to keep business logic separate from presentation.
- * @param string $__view Relative path under views/ without the file extension, e.g. 'site/home' or 'admin/products'
- * @param array  $__data Associative array of variables exposed to the view
+ * Render a view with a defined set of variables to keep application logic separate from presentation.
+ * @param string $__view Relative path under views/ without the extension, e.g. 'site/home' or 'admin/products'.
+ * @param array  $__data Associative array of variables exposed to the view.
  */
 function renderView(string $__view, array $__data = []): void
 {

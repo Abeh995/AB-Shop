@@ -1,9 +1,9 @@
 <?php
 /**
- * Store front controller. All site requests (except admin, ajax, payment, and uploads) are routed here.
- * .htaccess forwards requests here with the requested path in the route parameter.
- * This file only dispatches the request to the appropriate controller under app/controllers/site.
- * Business logic and HTML rendering do not belong in this file.
+ * Store front controller. All site requests except admin, ajax, payment, and uploads pass through here.
+ * .htaccess forwards requests to this file using the route parameter.
+ * This file only dispatches requests to the appropriate controller under app/controllers/site;
+ * business logic and HTML should not be placed here.
  */
 
 require_once __DIR__ . '/app/bootstrap.php';
@@ -66,6 +66,14 @@ switch ($page) {
         require $controllersDir . '/signup.php';
         break;
 
+    case 'verify-phone':
+        require $controllersDir . '/verify_phone.php';
+        break;
+
+    case 'verify-email':
+        require $controllersDir . '/verify_email.php';
+        break;
+
     case 'login':
         require $controllersDir . '/login.php';
         break;
@@ -75,7 +83,17 @@ switch ($page) {
         break;
 
     case 'account':
-        require $controllersDir . '/account.php';
+        if (($segments[1] ?? '') === 'order') {
+            $_GET['code'] = $segments[2] ?? '';
+            require $controllersDir . '/account_order.php';
+        } else {
+            require $controllersDir . '/account.php';
+        }
+        break;
+
+    case 'tag':
+        $_GET['slug'] = $segments[1] ?? '';
+        require $controllersDir . '/tag.php';
         break;
 
     default:

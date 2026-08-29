@@ -11,13 +11,13 @@ function csrfToken(): string
     return $_SESSION['csrf_token'];
 }
 
-// Ready-to-use token field for HTML forms.
+// Return a ready-to-render hidden input for HTML forms.
 function csrfField(): string
 {
     return '<input type="hidden" name="csrf_token" value="' . e(csrfToken()) . '">';
 }
 
-// Validate the submitted token and reject the request when it is invalid.
+// Validate the submitted form token and abort invalid requests.
 function verifyCsrf(): void
 {
     $token = $_POST['csrf_token'] ?? '';

@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer login by mobile number.
+ * Customer login using a mobile number.
  */
 
 if (isCustomerLoggedIn()) {
@@ -10,7 +10,7 @@ if (isCustomerLoggedIn()) {
 $pageTitle = 'ورود به حساب کاربری';
 $error = '';
 $next = $_GET['next'] ?? $_POST['next'] ?? '/account';
-// Prevent open redirects: accept only internal paths that start with /.
+// Prevent open redirects by accepting only internal paths starting with /.
 if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) {
     $next = '/account';
 }
@@ -20,10 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim($_POST['phone'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if (attemptCustomerLogin($phone, $password)) {
+    $result = attemptCustomerLogin($phone, $password);
+    if ($result['ok']) {
         redirect($next);
+    } elseif ($result['needs_verification']) {
+        VerificationService::sendCode($result['customer_id'], 'phone', $phone);
+        setFlash('info', 'حساب شما هنوز احراز نشده؛ کد تایید مجدد برای شما پیامک شد.');
+        redirect('/verify-phone');
     } else {
-        $error = 'شماره موبایل یا رمز عبور اشتباه است.';
+        $error = $result['error'];
     }
 }
 

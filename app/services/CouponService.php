@@ -1,12 +1,12 @@
 <?php
 /**
- * Discount coupon validation and calculation service.
+ * Coupon validation and discount calculation service.
  */
 
 class CouponService
 {
     /**
-     * Validate a coupon for a specific order amount.
+     * Validate a coupon code for a given order amount.
      * @return array ['ok'=>bool, 'coupon'=>array|null, 'discount'=>int, 'message'=>string]
      */
     public static function validate(string $code, float $subtotal): array
@@ -49,12 +49,12 @@ class CouponService
         } else {
             $discount = (float) $coupon['value'];
         }
-        // The discount must never exceed the order amount.
+        // Never allow the discount to exceed the order amount.
         return (int) min($discount, $subtotal);
     }
 
     /**
-     * Increment the coupon usage counter; call this only after the order is committed.
+     * Increment the coupon usage counter after the order is finalized.
      */
     public static function markUsed(int $couponId): void
     {

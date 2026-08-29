@@ -1,7 +1,7 @@
 <?php
 /**
- * General store settings (settings table) — simple key/value storage for options
- * that do not require dedicated columns in other tables, such as cart price guarantees.
+ * General store settings backed by the settings table using a simple key/value structure.
+ * Suitable for configuration that does not require dedicated columns in other tables, such as cart price guarantees.
  */
 
 function getSetting(string $key, $default = null)

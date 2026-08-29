@@ -16,6 +16,8 @@ if ($id) {
 
 $pageTitle = $product ? 'ویرایش محصول' : 'محصول جدید';
 $categories = getCategoriesForDropdown();
+$allTags = getAllTags();
+$productTagIds = $id ? array_column(getProductTags($id), 'id') : [];
 $errors = [];
 // Determine the current variant-enabled state for the initial form checkbox.
 $hasVariantsInitial = count($variants) > 0;
@@ -34,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
     $hasVariants = isset($_POST['has_variants']);
 
-    // When variants are enabled, aggregate stock is not meaningful because each variant has its own stock.
-    // Store zero to avoid misleading totals in reports.
+    // Products with variants do not use a meaningful aggregate stock value; each variant tracks its own stock.
+    // Store zero so aggregate stock values are not misleading in reports.
     $stock = $hasVariants ? 0 : (int) ($_POST['stock'] ?? 0);
 
     if ($name === '') $errors[] = 'نام محصول الزامی است.';
@@ -87,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', 'محصول با موفقیت اضافه شد.');
         }
 
-        // ---------- Variants are processed only when variant support is enabled ----------
+        // ---------- Variants: process only when variant support is enabled ----------
         db()->prepare("DELETE FROM product_variants WHERE product_id = ?")->execute([$productId]);
         if ($hasVariants) {
             $sizes = $_POST['variant_size'] ?? [];
@@ -103,10 +105,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // ---------- Tags: editable by any admin at any time ----------
+        $selectedTagIds = array_map('intval', $_POST['tag_ids'] ?? []);
+        $newTagsRaw = trim($_POST['new_tags'] ?? '');
+        syncProductTags($productId, $selectedTagIds, $newTagsRaw);
+
         redirect('products.php');
     }
 
-    // Preserve the generated or submitted SKU so it can be shown again after validation errors.
+    // Preserve the current tag selection when re-rendering the form after validation errors.
+    $productTagIds = array_map('intval', $_POST['tag_ids'] ?? []);
+
+    // Preserve the generated or submitted SKU when re-rendering the form after validation errors.
     if ($product) { $product['sku'] = $sku; } else { $product = ['sku' => $sku]; }
     $hasVariantsInitial = $hasVariants;
 }
@@ -143,4 +153,4 @@ function handleProductImageUpload(array $file): array
     return ['ok' => true, 'filename' => $filename];
 }
 
-renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial'));
+renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds'));

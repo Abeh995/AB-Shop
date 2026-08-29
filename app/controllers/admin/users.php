@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin account management — available only to super_admin.
+ * Admin account management; available only to super_admin.
  * Supports creating admins, changing passwords, enabling/disabling accounts, and deletion.
  */
 
