@@ -1,6 +1,7 @@
 <?php
 /**
- * Shared admin panel header. Expects $pageTitle and the application bootstrap to be loaded.
+ * Shared admin panel header — expects $pageTitle to be set and bootstrap to
+ * already be loaded
  */
 $pageTitle = $pageTitle ?? 'پنل مدیریت';
 $flash = getFlash();
@@ -31,6 +32,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
             <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
             <?php if (isSuperAdmin()): ?>
             <a href="users.php" class="<?= $currentPage === 'users.php' ? 'active' : '' ?>">مدیریت ادمین‌ها</a>
+            <a href="diagnostics.php" class="<?= $currentPage === 'diagnostics.php' || $currentPage === 'notifications_log.php' ? 'active' : '' ?>">🔧 عیب‌یابی پیامک/ایمیل</a>
             <?php endif; ?>
             <a href="/" target="_blank">مشاهده فروشگاه ↗</a>
             <a href="logout.php" class="logout-link">خروج</a>

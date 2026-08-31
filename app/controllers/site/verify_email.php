@@ -1,6 +1,7 @@
 <?php
 /**
- * Email verification page, accessible after mobile verification during signup and from the customer profile.
+ * Email-verification page — reachable both from the signup flow (after
+ * phone verification) and from the customer's profile page.
  */
 
 requireCustomer();
@@ -17,6 +18,19 @@ if (!empty($customer['email_verified_at'])) {
 $pageTitle = 'احراز ایمیل';
 $error = '';
 $info = '';
+
+// Auto-send the code only on the first visit to this page (GET), not on
+// every request — if this also ran on every POST (whether resending or
+// submitting the entered code), a fresh code could replace the previous
+// one at the exact moment the user submits it, wrongly rejecting their
+// correct code (if more than 60 seconds passed between receiving the code
+// and submitting the form).
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $result = VerificationService::sendCode($customer['id'], 'email', $customer['email']);
+    if (!$result['ok'] && $result['error']) {
+        $error = $result['error'];
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();

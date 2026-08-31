@@ -1,7 +1,8 @@
 <?php
 /**
- * Checkout controller with full server-side validation, coupon handling, and order creation.
- * Online payments are forwarded to the Zarinpal gateway.
+ * Checkout controller — full server-side validation, applying a coupon,
+ * creating the order, and, when online payment is chosen, connecting to
+ * the Zarinpal gateway.
  */
 
 $pageTitle = 'تسویه حساب';
@@ -12,10 +13,10 @@ if (empty($cart['items'])) {
     redirect('/cart');
 }
 
-// Pre-fill the form for logged-in customers; all values are still validated server-side.
+// Pre-fill the form for a logged-in customer (just a convenience; everything is still validated server-side)
 $prefillCustomer = isCustomerLoggedIn() ? currentCustomer() : null;
 
-// Applied coupon code, if one was set on the cart page.
+// The coupon applied earlier (if any was set on the cart page)
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
 $couponRow = null;
@@ -50,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($city) < 2) $errors[] = 'شهر را وارد کنید.';
     if (mb_strlen($address) < 10) $errors[] = 'آدرس دقیق را کامل‌تر وارد کنید.';
 
-    // ---------- Reload the cart directly from the database; never trust client-supplied price or stock ----------
+    // ---------- Re-read the cart straight from the DB (price/stock are never taken from the client) ----------
     $cart = cartDetails();
     if (empty($cart['items'])) {
         $errors[] = 'سبد خرید شما خالی است.';
@@ -61,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ---------- Revalidate the coupon immediately before order creation; it may have expired or reached its usage limit ----------
+    // ---------- Re-validate the coupon right before placing the order (it may have expired/hit its limit in the meantime) ----------
     $discount = 0;
     $couponRow = null;
     if ($appliedCoupon) {
@@ -82,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderCode = generateOrderCode();
             $subtotal = $cart['subtotal'];
-            $shippingCost = 0; // Phase 1: free shipping with no complex shipping calculation.
+            $shippingCost = 0; // Phase 1: free shipping / no complex calculation yet
             $total = max(0, $subtotal - $discount + $shippingCost);
             $customerId = isCustomerLoggedIn() ? (int) $_SESSION['customer_id'] : null;
 
@@ -130,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['coupon']);
 
             if ($paymentMethod === 'cod') {
-                // Cash on delivery: proceed directly to the success page.
+                // Cash on delivery: go straight to the success page
                 redirect('/order/success/' . $orderCode);
             }
 
@@ -142,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")->execute([$payResult['authority'], $orderId]);
                 redirect($payResult['pay_url']);
             } else {
-                // The order was created successfully, but the gateway connection failed; allow a payment retry.
+                // The order was created successfully; only the gateway connection failed — a retry is available
                 redirect('/order/failed/' . $orderCode . '?err=' . urlencode($payResult['error']));
             }
 

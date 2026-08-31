@@ -1,6 +1,6 @@
 <?php
 /**
- * Home page controller; data fetching only. HTML belongs in the view layer.
+ * Home page controller — data fetching only; no HTML is written here.
  */
 
 $pageTitle = 'خانه';

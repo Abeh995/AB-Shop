@@ -1,6 +1,6 @@
 <?php
 /**
- * CSRF protection for all storefront and admin forms.
+ * CSRF protection for all forms (storefront and admin)
  */
 
 function csrfToken(): string
@@ -11,13 +11,13 @@ function csrfToken(): string
     return $_SESSION['csrf_token'];
 }
 
-// Return a ready-to-render hidden input for HTML forms.
+// Ready-to-use markup for inside an HTML form
 function csrfField(): string
 {
     return '<input type="hidden" name="csrf_token" value="' . e(csrfToken()) . '">';
 }
 
-// Validate the submitted form token and abort invalid requests.
+// Check the token submitted by the form; halts the request if it's invalid
 function verifyCsrf(): void
 {
     $token = $_POST['csrf_token'] ?? '';

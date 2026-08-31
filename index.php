@@ -1,9 +1,10 @@
 <?php
 /**
- * Store front controller. All site requests except admin, ajax, payment, and uploads pass through here.
- * .htaccess forwards requests to this file using the route parameter.
- * This file only dispatches requests to the appropriate controller under app/controllers/site;
- * business logic and HTML should not be placed here.
+ * Storefront front controller — every site request (other than admin, ajax,
+ * payment, uploads) is routed through here.
+ * .htaccess forwards requests to this file as index.php?route=path.
+ * This file only dispatches the route to the right controller under
+ * app/controllers/site; no business logic or HTML belongs in this file.
  */
 
 require_once __DIR__ . '/app/bootstrap.php';
@@ -94,6 +95,10 @@ switch ($page) {
     case 'tag':
         $_GET['slug'] = $segments[1] ?? '';
         require $controllersDir . '/tag.php';
+        break;
+
+    case 'search':
+        require $controllersDir . '/search.php';
         break;
 
     default:

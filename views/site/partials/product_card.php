@@ -1,7 +1,10 @@
 <?php
 /**
- * Product card. Expects $p to contain the product database row.
- * Uses effective_stock when the parent query provides it; otherwise falls back to the product's stock column.
+ * Product card — expects the $p variable (a product row from the database)
+ * to be available.
+ * If the parent query computed the effective_stock column (the sum of
+ * variants, when present), that's used; otherwise it falls back to the
+ * plain stock column, just to be safe.
  */
 $discount = discountPercent($p);
 $finalPrice = effectivePrice($p);

@@ -80,9 +80,9 @@
             <?php endif; ?>
 
             <?php if ($tags): ?>
-            <div style="margin-top:20px; display:flex; flex-wrap:wrap; gap:8px;">
+            <div class="product-tags">
                 <?php foreach ($tags as $tag): ?>
-                    <a href="/tag/<?= e($tag['slug']) ?>" style="font-size:.8rem; background:var(--color-primary-light); color:var(--color-primary-dark); padding:5px 12px; border-radius:20px;">#<?= e($tag['name']) ?></a>
+                    <a href="/tag/<?= e($tag['slug']) ?>" class="tag-pill" rel="tag"><?= e($tag['name']) ?></a>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>

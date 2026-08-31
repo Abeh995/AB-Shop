@@ -1,291 +1,509 @@
 # Changelog
 
-This document provides a detailed history of all project releases. Each version records the changes made **relative to the previous version**.
+This document lists all project releases in detail. Each new release documents its changes **step by step against the previous version**.
 
-Versioning follows `MAJOR.MINOR.PATCH` (Semantic Versioning).
+Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
-## [1.2.1] — Product Tags, Full Customer Profile, Phone/Email Verification, SEO, and Stock Label Fix
+## [1.3.0] — Site Branding, Header/Footer Overhaul, Storefront Search, Tag SEO, and Two Admin-Panel Bug Fixes
 
-### 🐛 Reported Bug Fix: Incorrect "Out of Stock" Label on Variant-Based Products
+### Summary
 
-**Problem:** On storefront listing pages (home and category pages), every product with variants was incorrectly displayed with an "Out of stock" label, even when one or more variants had inventory.
+This release covers six separate requests: showing which product variant was ordered directly in the admin order list, letting the store logo be uploaded from the admin panel, a full header/footer rebuild (search, announcement bar, footer content, social links, an eNamad slot), a small but real SEO fix for how product tags are linked, and a CSS bug that misaligned the actions column on tall admin-table rows. As part of this pass, every Persian-language *code comment* across the project (not user-facing text) was translated to English, and `app/controllers/admin/settings.php` was refactored to a more robust per-section save pattern.
 
-**Root cause:** Since version 1.2.0, variant-based products intentionally store `0` in `products.stock` because their actual inventory must be calculated from the variant rows. However, `product_card.php` in listing queries still read `stock` directly when determining availability.
+### 🐛 Bug Fix: Ordered Variant Not Visible in the Admin Order List
 
-**Solution:** Added `effectiveStockSqlFragment()` in `app/core/functions.php`. It returns a SQL fragment that uses the sum of variant inventory when variants exist and otherwise falls back to the product's own `stock` column. The computed `effective_stock` was added to the home page (`home.php`, Featured and Newest queries), category page (`category.php`), and new tag page (`tag.php`). `product_card.php` now checks this value first and falls back to `stock` when unavailable.
+**Problem:** `order_items.variant_label` was already being saved correctly at checkout, and `order_detail.php` already displayed it — but the order **list** (`admin/orders.php`) showed only order-level fields (code, customer, total, status). Seeing which size/color variant was purchased required opening every single order individually.
 
-**Tested:** A product with `stock=0` and a variant with stock `12` was correctly treated as available. A variant-based product with total variant stock `0` was correctly shown as out of stock. Both cases were verified.
+**Fix:** `app/controllers/admin/orders.php` now runs one grouped query (`order_items WHERE order_id IN (...)`) to load every visible order's items up front, and `views/admin/orders.php` renders them in a new "Order items" column as `Product name (variant) × qty`.
 
-### 🐛 Additional Critical Bug: PHP/MySQL Timezone Mismatch
+### ✨ New Feature: Site Logo Upload
 
-**Problem:** MySQL on the hosting environment commonly runs with `UTC`, while PHP uses `Asia/Tehran` (`UTC+3:30`). Values generated with MySQL `CURRENT_TIMESTAMP`/`NOW()` could therefore differ from PHP `time()`/`strtotime()` by approximately 3.5 hours.
+- New "Store logo" section in `admin/settings.php`: upload (JPG/PNG/WEBP/SVG, 2 MB limit, real MIME-type check via `finfo`) and remove.
+- Stored under `uploads/branding/`, derived from the existing `UPLOAD_DIR`/`UPLOAD_URL` constants (`BRANDING_UPLOAD_DIR`/`BRANDING_UPLOAD_URL`, computed once in `app/bootstrap.php`) — no new constant needs to be added to an already-deployed `config.php`.
+- `siteLogoUrl()` (`app/core/functions.php`) returns the logo's URL or `null`; both `views/layout/header.php` and `views/layout/footer.php` fall back to the text `SITE_NAME` when no logo is set.
+
+### ✨ New Feature: Header — Search Bar and Announcement Bar
+
+- A single collapsible search panel, toggled by a magnifier icon, rendered identically on mobile and desktop (deliberately avoiding two separate responsive layouts, which is what causes flexbox `order` bugs at breakpoints). New route `search` → `app/controllers/site/search.php` / `views/site/search.php`, a paginated `LIKE` match against product name and description.
+- A site-wide announcement bar directly under the header (`announcement_bar_enabled/text/link` settings), shown on every page, optionally wrapped in a link (e.g. to a Telegram channel).
+
+### ✨ New Feature: Footer Rebuild
+
+- A teaser line above the footer linking to `/about` (`footer_about_teaser_text`).
+- Brand column: logo, tagline, phone number (`store_phone`, also used on `/contact`), shipping-note text (`footer_shipping_badge_text`).
+- Social links for Instagram, Telegram, Bale, and Torob — each independently toggleable with its own URL from the admin panel; only enabled links with a non-empty URL are rendered, using generic (non-trademarked) line icons.
+- An eNamad slot: admins paste their own badge code from enamad.ir after certification (`enamad_embed_code`); nothing is rendered, and no placeholder badge is invented, until a real code is provided.
+- `/about` now contains the store's real founding story instead of placeholder copy.
+
+### 🔍 Product Tag SEO Review
+
+- Tag slugs already used hyphens (`slugify()`), which is the correct, Google-recommended word separator — unlike underscores, which most search engines don't split into separate keywords. No change was needed there.
+- The visible `#` in front of each tag on the product page was literal anchor text (`#<?= e($tag['name']) ?>`); it's now a CSS `::before` decoration (`.tag-pill` in `assets/css/style.css`), so the actual link text search engines and screen readers see is just the tag name. Added `rel="tag"`.
+- `app/controllers/site/tag.php` now sets a tag-specific `$metaDescription` instead of falling back to the generic site-wide one, and `views/site/tag.php` uses `<h1>` instead of `<h2>` for its main heading.
+
+### 🐛 Bug Fix: Admin Table Actions Column Misaligned on Tall Rows
+
+**Problem:** In `admin/products.php`, a row whose variant-stock summary wrapped onto several lines grew noticeably taller than other rows, but the "Actions" buttons in that row stayed pinned to the top instead of staying vertically centered like every other column.
+
+**Root cause:** `<td class="admin-actions">` applied `display: flex` directly to the table cell. This overrides the cell's internal `display: table-cell` type, which is what `vertical-align: middle` requires to have any effect — so that one cell silently stopped honoring the row's vertical centering.
+
+**Fix:** the actions `<td>` stays a plain cell; `class="admin-actions"` moved to an inner `<div>` in `products.php`, `categories.php`, and `users.php`. Also added an explicit `vertical-align: middle` on `.admin-table th, .admin-table td` in `assets/css/admin.css` so the same class of bug can't reappear from a browser default difference.
+
+### 🔧 Admin Settings Architecture
+
+`app/controllers/admin/settings.php` was refactored so each settings section is its own `<form>` posting a hidden `section` field, and the controller only writes that section's keys. This replaces the previous pattern where every form had to re-submit every other section's values as hidden inputs to avoid resetting them — a pattern that gets more fragile (and easier to silently break) every time a new setting is added, which this release does a lot of.
+
+### 🗄️ Database Changes (`database/migrations/006_v1.3.0_header_footer_branding_social.sql`)
+
+No new tables or columns — `settings` is already a generic key/value store. The migration only seeds the new keys (logo, announcement bar, footer content, social links, eNamad) with safe, disabled/empty defaults using `INSERT IGNORE`, so it's safe to re-run and never overwrites values an admin has already configured.
+
+### 🧹 Housekeeping: Code Comments Translated to English
+
+Every Persian-language comment in PHP/JS/CSS/SQL source files (controllers, core, services, views, `schema.sql`, migrations) was translated to English, so the codebase reads consistently for anyone reviewing it on GitHub. This did **not** touch any user-facing Persian text (page content, labels, admin UI strings) or the Persian documents in `docs/`, per the project's stated convention.
+
+---
+
+## [1.2.2] — SMS/Email Diagnostics, Notification Debug Logging, and Multi-Image Product Gallery
+
+### Summary
+
+This release addresses a real-world deployment issue where neither SMS OTP messages nor email verification messages were being delivered after `config.php` was populated with real credentials.
+
+Because the development environment could not establish live network connections to the Faraz SMS API or the project's mail server, the implementation avoids guesswork and instead introduces a set of **real server-side diagnostics tools** that run directly on the production server and identify the actual failure point. In addition, every notification delivery attempt—successful, failed, or intentionally log-only—is now persisted with detailed diagnostic information.
+
+### 🔍 Initial `config.php` Finding
+
+```text
+FARAZ_LINE_NUMBER = '+9820008280158989'
+```
+
+This value is unusual. SMS sender line numbers are typically 9–11 digits and are normally configured without the `+98` country prefix. The current value is a 17-character string and may therefore have been rejected by the Faraz API.
+
+The new Diagnostics page automatically detects and warns about this kind of suspicious value.
+
+### ✨ New Feature: Live Diagnostics (`/admin/diagnostics.php`, `super_admin` only)
+
+Three real diagnostics run directly on the production server rather than simulating requests:
+
+1. **Faraz API Key Test**  
+   Reads the account balance without sending an SMS or generating a charge. If the API key is invalid or the connection fails, the exact API error is displayed.
+
+2. **Pattern Details Check**  
+   Retrieves the actual variable name(s) of the registered Faraz SMS pattern so they can be compared directly against `FARAZ_OTP_PATTERN_VAR` in `config.php`. The names must match exactly or the request will fail.
+
+   The previous default value `'code'` was only an assumption based on the information available during the original implementation. This test provides the authoritative value from the Faraz account.
+
+3. **SMTP Connection Test**  
+   Tests the SMTP connection, STARTTLS negotiation, and authentication without sending an actual email. The raw SMTP conversation is exposed so failures such as network timeouts or authentication rejection can be diagnosed precisely.
+
+The page also displays the current configuration values with sensitive values partially masked (for example, `Eb0c••••••••••1Eg4bJ`) so configuration mistakes can be spotted quickly.
+
+### ✨ New Feature: Complete Notification Attempt Logging (`/admin/notifications_log.php`)
+
+From this release onward, every real OTP delivery attempt—successful, failed, or log-only because the service is not configured—is stored with detailed diagnostic information.
+
+- `sms_log` and the new `email_log` table now contain a `debug_info` column.
+- `debug_info` stores request URL, request payload, HTTP response code, cURL errors (when present), and the raw server response for SMS; or the complete line-by-line SMTP conversation for email.
+- A new admin page contains separate SMS and Email tabs and displays the latest 100 records with expandable `<details>` sections.
+- This allows store administrators to determine why a specific SMS or email was not delivered without requiring SSH access or direct access to server logs.
+
+### 🧪 Important Limitation of This Release
+
+The development environment could not access the Faraz SMS servers or `mail.absocks.ir`. This is a **Sandbox network limitation**, not a code limitation.
+
+Therefore:
+
+- All three diagnostics were tested to ensure they execute correctly, handle actual network failures without crashing, and expose the resulting errors.
+- With the same network restriction in the development environment, the diagnostics produced genuine connection failures such as unreachable hosts and connection timeouts, confirming that their error-reporting paths work as intended.
+- Final confirmation that SMS and email are actually delivered can only be performed on the production server.
+
+After deployment, all three diagnostics should be executed on the real server. If delivery still fails, the Technical Details output from the diagnostics page provides the concrete API/SMTP evidence required for further troubleshooting.
+
+### ✨ New Feature: Multi-Image Product Gallery (Unlimited Images)
+
+- The `product_images` table has existed since version 1.0.0, and the storefront product gallery already read from it, but the admin panel previously had no management UI for the table. Only one primary product image could be uploaded.
+- The product form now includes a `multiple` file input named `gallery_images[]`, allowing any number of images to be selected and uploaded in one submission.
+- Every gallery file is validated securely using the real file type detected by `finfo`, rather than trusting the file extension or the client-provided Content-Type.
+- Existing gallery images are displayed with a Delete checkbox. Images can be removed and new images can be added in the same submission.
+- The primary cover image remains independent. It is still the image used by product cards, the homepage, and JSON-LD.
+- **Tested:** uploading three images at once to a new product, displaying all three in the storefront gallery, deleting one image while adding another in the same submission, preserving `sort_order`, removing the deleted file from disk, and rejecting a malicious PHP file disguised with `image/jpeg`.
+
+### 🗄️ Database Changes (`database/migrations/005_v1.2.2_debug_logging.sql`)
+
+- `sms_log`: added nullable `debug_info` (`TEXT`)
+- Added new `email_log` table with the same general structure as `sms_log`, plus `debug_info`
+- No schema change was required for `product_images`; only application logic and UI were added
+- **Tested:** the migration was run against a simulated copy of the v1.2.1 database containing a real `sms_log` record. Existing data remained intact and the new column/table were added successfully.
+
+### 🐛 Two Additional Delivery Bugs Found and Fixed After Deployment
+
+After this release was deployed and the new diagnostics were used, two additional root causes were identified and fixed directly in the code. They are recorded here for completeness.
+
+#### 1. Incorrect `number_format` Value in Faraz SMS Requests
+
+In `app/services/FarazSmsService.php`, the API request incorrectly used:
+
+```php
+// Before (incorrect):
+'number_format' => 'en',
+// After (correct):
+'number_format' => 'english',
+```
+
+The Faraz API expects `'english'`, not the short code `'en'`. The invalid parameter caused the API to reject the request, which explains why SMS delivery continued to fail even after `FARAZ_LINE_NUMBER` was corrected.
+
+#### 2. Email Verification Code Was Only Sent After Clicking “Resend”
+
+In `app/controllers/site/verify_email.php`, the original behavior called `VerificationService::sendCode()` only when the user explicitly clicked the “Resend” button.
+
+Therefore, the first time a user opened `/verify-email`—either from registration or from the account profile—no verification code was sent.
+
+The fix adds an `else` branch to the existing “already verified?” check so that the first visit immediately sends a code:
+
+```php
+if (!empty($customer['email_verified_at'])) {
+    setFlash('info', 'Your email is already verified.');
+    redirect('/account');
+} else {
+    $result = VerificationService::sendCode($customer['id'], 'email', $customer['email']);
+    if ($result['ok']) {
+        $info = 'A new verification code has been emailed.';
+    } else {
+        $error = $result['error'] ?: 'Email delivery is currently unavailable. Please contact support.';
+    }
+}
+```
+
+This changes the behavior from “only clicking Resend sends a code” to “both the first page visit and Resend can send a code.”
+
+The existing 60-second resend limit in `VerificationService::sendCode()` prevents duplicate/expensive sends. If the user refreshes or revisits the page within 60 seconds, the service returns the wait message instead of sending another message.
+
+---
+
+## [1.2.1] — Product Tags, Full Customer Profile, Phone/Email Verification, SEO, and Effective Stock Fix
+
+### 🐛 Reported Bug Fix: Incorrect “Out of Stock” Label for Products with Variants
+
+**Problem:** On storefront product listings such as the homepage and category pages, every product with variants was incorrectly marked “Out of Stock”, even when one or more variants still had inventory.
+
+**Root cause:** Since version 1.2.0, products with variants intentionally store `products.stock = 0`, because actual inventory is derived from the sum of variant stock. However, `product_card.php` still read the `stock` column directly when deciding whether to display the “Out of Stock” label.
+
+**Fix:** A new helper, `effectiveStockSqlFragment()`, was added to `app/core/functions.php`. It returns a SQL fragment that uses the sum of variant stock when a product has variants, and otherwise uses the product's own `stock` value.
+
+The calculated `effective_stock` column was added to the relevant product list queries in:
+
+- `home.php` (Featured and Newest queries)
+- `category.php`
+- the new `tag.php`
+
+`product_card.php` now checks `effective_stock` first and falls back to `stock` when that calculated field is unavailable.
+
+**Tested:** a product with `stock = 0` and a variant with stock `12` no longer shows “Out of Stock”; a product with variants whose total stock is zero correctly shows the label.
+
+### 🐛 Important Bug Fix: PHP/MySQL Timezone Mismatch
+
+**Problem:** MySQL on the hosting environment typically runs in UTC, while PHP in this project was configured for `Asia/Tehran` (`UTC+3:30`). Values written using MySQL `CURRENT_TIMESTAMP`/`NOW()` therefore differed from values interpreted with PHP `time()`/`strtotime()` by approximately 3.5 hours.
 
 **Affected areas:**
-- **Cart Price Guarantee:** the seven-day, daily-granularity logic rarely produced an incorrect final result, but the comparison was technically wrong.
-- **Verification-code resend interval:** the 60-second limit introduced in 1.2.1 was effectively disabled because PHP interpreted a newly created code as having been sent hours earlier. This was reproduced directly in testing.
 
-**Solution:** `app/core/db.php` now runs `SET time_zone = '+03:30'` immediately after connecting, with the offset calculated from the project's configured `date_default_timezone_get()` rather than hardcoded.
+- **Cart price guarantee (introduced in 1.2.0):** the cart age calculation relied on comparing timestamps generated by MySQL and PHP. Because the threshold is measured in days, the 3.5-hour difference rarely changed the final result, but the comparison was technically incorrect.
+- **Verification-code resend throttling (introduced in 1.2.1):** the threshold is only 60 seconds, so the mismatch effectively disabled the protection. PHP could see the previous code as several hours old and therefore allow another send immediately.
 
-**Tested:** MySQL `NOW()` and PHP `date('Y-m-d H:i:s')` matched after the fix. The first verification request succeeded, an immediate second request was rejected, and the cart price guarantee remained active immediately after adding an item.
+**Fix:** In `app/core/db.php`, immediately after creating the PDO connection, the database session timezone is set with:
+
+```sql
+SET time_zone = '+03:30'
+```
+
+The offset is calculated from the project's `date_default_timezone_get()` rather than hardcoded.
+
+**Tested:** MySQL `NOW()` and PHP `date('Y-m-d H:i:s')` now match exactly. Immediate resend attempts are rejected as expected, and the price guarantee remains active immediately after adding a cart item.
 
 ### ✨ New Feature: Product Tags
 
-- Added `tags` (unique name/slug) and `product_tags` (many-to-many) tables.
-- The add/edit product form displays all existing tags, including tags attached to active or inactive products, as checkboxes.
-- **Any admin can modify any product's tags at any time.**
-- New tags can be entered as comma-separated text and are created immediately when missing.
-- Added `show_product_tags` store setting (default: enabled) to control tag visibility on product pages.
-- Added `/tag/{slug}` to list products associated with a tag, serving both product discovery and SEO.
-- Product pages display small `#tag` links to the corresponding tag pages.
+- Added `tags` and `product_tags` tables.
+- The product create/edit form displays all existing tags as checkboxes, regardless of whether they are currently assigned to an active or inactive product.
+- Any admin can modify tags for any product at any time; there is no ownership model.
+- A text field accepts new tags separated by commas. Missing tags are created immediately.
+- New store setting `show_product_tags` (default: enabled) controls whether product tags are displayed on product pages.
+- Added `/tag/{slug}` to list products assigned to a tag. This serves both product discovery and SEO by giving every tag its own indexable URL.
+- Product pages display tags as compact `#tag` links pointing to the corresponding tag page.
 
 ### ✨ New Feature: Full Customer Profile
 
-- `/account` was fully redesigned with editable name/email fields, phone/email verification badges, a current-cart summary, and order history.
-- Added `/account/order/{order_code}` for complete order details, including items, amounts, and shipping address.
-- Server-side ownership validation returns `404` when the requested order does not belong to the authenticated customer.
-- Changing the email address automatically resets email verification.
+- `/account` was redesigned with an editable personal-information card for name and email.
+- Mobile and email verification states are shown with “Verified ✓” / “Not verified ⚠” indicators.
+- The page includes the current cart summary and order history.
+- Added `/account/order/{order-code}` for detailed access to an individual order, including items, totals, and shipping address.
+- Server-side ownership checks ensure the requested order belongs to the currently authenticated customer; otherwise the response is 404 rather than exposing another user's order.
+- Changing the email address automatically resets email verification status.
 
-### ✨ New Feature: Phone Verification via SMS (Faraz SMS)
+### ✨ New Feature: SMS-Based Phone Verification via Faraz SMS
 
-- **Registration flow changed:** registration no longer logs the customer in immediately. The account is created, a six-digit SMS code is sent, and the customer must enter it at `/verify-phone` before a full authenticated Session is established.
-- Correct-password login for an unverified account redirects to `/verify-phone` and sends a new code.
-- Customers created in versions 1.2.0 and earlier are automatically marked as phone-verified during migration because phone verification was not previously required.
-- Added `app/services/FarazSmsService.php` for the pattern-based Faraz SMS / Iran Payamak API.
-- `FARAZ_OTP_PATTERN_CODE` and `FARAZ_OTP_PATTERN_VAR` are configurable because the provider requires a pre-approved pattern.
-- ⚠️ **Manual configuration required:** `FARAZ_LINE_NUMBER` must be filled from the Faraz panel under "Lines". This value was not available in the supplied configuration information.
-- Fail-Safe by default: real SMS is not sent until `FARAZ_SMS_ENABLED` is enabled and the API key, pattern, and line are configured; messages remain logged and the site does not crash.
+- **Important registration-flow change:** registration no longer immediately creates a fully authenticated session.
+- A customer account is created, a six-digit SMS code is sent, and the customer must enter the code on `/verify-phone` before a full authenticated session is established.
+- If an unverified customer logs in with the correct password, they are redirected to `/verify-phone` and a fresh verification code is requested.
+- Customers created before v1.2.1 are automatically marked as phone-verified during migration so existing accounts are not locked out by a requirement that did not exist when they were created.
+- Added `app/services/FarazSmsService.php`, which connects to the pattern-based Faraz SMS / Iran Payamak API.
+- `FARAZ_OTP_PATTERN_CODE` and `FARAZ_OTP_PATTERN_VAR` are configurable because pattern-based messages require a pre-approved pattern.
+- **Manual configuration required:** `FARAZ_LINE_NUMBER` must be filled from the Faraz account's Lines section. The previously supplied project configuration did not contain a confirmed sender-line value.
+- Fail-safe behavior: until `FARAZ_SMS_ENABLED` is `true` and the API key, pattern, and line are configured, no real SMS is sent; the attempt is logged to `sms_log` instead and the site does not crash.
 
-### ✨ New Feature: Email Verification via SMTP
+### ✨ New Feature: Email Verification via Authenticated SMTP
 
-- Added `app/services/EmailService.php` using **PHPMailer v6.9.1**, bundled under `app/vendor/PHPMailer/` without Composer.
-- SMTP was chosen over PHP `mail()` to provide more reliable delivery on shared hosting.
-- Added `/verify-email`. Customers can verify an email after phone verification or later from their profile.
-- Email verification is optional and never blocks login; phone verification remains mandatory.
-- Fail-Safe by default: real email is not sent until `SMTP_ENABLED` and real SMTP credentials are configured.
+- Added `app/services/EmailService.php` using the official PHPMailer package (`v6.9.1`), stored directly under `app/vendor/PHPMailer/` without Composer.
+- PHPMailer was selected instead of PHP's built-in `mail()` because shared-hosting email sent via `mail()` is often more likely to be rejected as spam by providers such as Gmail and Outlook. Authenticated SMTP through `mail.absocks.ir` provides a more reliable delivery path.
+- Added `/verify-email`. After phone verification (when an email address was provided during registration), or later from the account profile, the customer can verify the email using a six-digit code.
+- Email verification is optional when an email address is present and is not required for login; phone verification remains mandatory.
+- Fail-safe behavior: until `SMTP_ENABLED` is `true` and real SMTP credentials are configured, no real email is sent and the service returns a readable error without crashing the site.
 
 ### 🔒 Shared Verification-Code Service (`app/services/VerificationService.php`)
 
-- Verification codes are six digits, valid for 10 minutes.
-- Maximum five incorrect attempts are allowed; a new code is then required.
-- At least 60 seconds must pass between send requests.
-- Codes are stored as `sha256` hashes rather than plaintext.
-- Direct service tests confirmed incorrect-code rejection, one-time use, reuse prevention, and resend throttling.
+Verification logic for both phone and email is centralized in one service:
 
-### ✨ New Feature: SEO and Google Indexing Controls
+- Each code remains valid for 10 minutes.
+- A maximum of 5 incorrect attempts is allowed; after that, a new code must be requested.
+- A minimum 60-second interval is required between code-sending requests.
+- Verification codes are stored as `sha256` hashes rather than plaintext.
+- The behavior was tested directly through service calls: invalid codes are rejected, valid codes work once, reusing the same code is rejected, and resend throttling is enforced.
 
-- Added `seo_indexing_enabled` (default: disabled) to the admin settings.
-- `robots.txt` and `sitemap.xml` are generated dynamically by `robots.php` and `sitemap.php`.
+### ✨ New Feature: SEO and Google Indexing Control
+
+- Added `seo_indexing_enabled` in the admin settings panel. It is **disabled by default** until the store's real products and final content are ready.
+- `robots.txt` and `sitemap.xml` are now dynamic through `robots.php` and `sitemap.php` with rewrite rules in `.htaccess`.
 - When indexing is disabled, `robots.txt` returns `Disallow: /`.
-- When enabled, public storefront pages are allowed, while admin, AJAX, cart, checkout, and account areas remain disallowed. The sitemap URL is also advertised.
-- `sitemap.xml` includes active categories and products with `lastmod`.
-- Added `robots`, `canonical`, and basic Open Graph tags to page `<head>` sections.
-- Product pages now provide product descriptions, Open Graph images, and **Schema.org Product JSON-LD** containing name, image, SKU, price in Rials, and effective inventory status.
+- When enabled, public pages such as the homepage, about/contact pages, categories, and active products are allowed.
+- Private or low-value areas such as admin pages, AJAX endpoints, cart, checkout, and customer account pages remain disallowed.
+- The sitemap lists all active categories and products with `lastmod`.
+- Every page now includes a `robots` meta tag, a canonical URL, and basic Open Graph metadata (`og:title`, `og:description`, and `og:image` when available).
+- Product pages additionally provide a dedicated description, Open Graph image support, and a complete `schema.org/Product` JSON-LD block including product name, image, SKU, price in rials, and availability derived from effective variant-aware stock logic.
 
 ### 🗄️ Database Changes (`database/migrations/004_v1.2.1_tags_verification_seo.sql`)
 
-- New tables: `tags`, `product_tags`, `verification_codes`.
-- `customers`: added `email`, `phone_verified_at`, `email_verified_at`.
-- Existing customers receive `phone_verified_at = created_at` during migration.
-- New settings: `show_product_tags` (default `1`) and `seo_indexing_enabled` (default `0`).
-- **Tested:** migration was executed against a simulated 1.2.0 database containing customer and order data. No data was lost, and existing customers were automatically marked as phone-verified.
+- New tables: `tags`, `product_tags`, `verification_codes`
+- `customers`: new `email`, `phone_verified_at`, and `email_verified_at` columns
+- Existing customers receive `phone_verified_at = created_at` automatically
+- New settings: `show_product_tags` (default `1`) and `seo_indexing_enabled` (default `0`)
+- **Tested:** migration was executed against a simulated v1.2.0 database containing an existing customer and order. No data was lost and the existing customer was automatically marked as verified.
 
 ### ⚙️ New `config.php` Settings
 
-All of the following are disabled/empty by default for Fail-Safe operation:
+This release adds several configuration constants, all disabled or empty by default for fail-safe behavior:
 
 `FARAZ_SMS_ENABLED`, `FARAZ_API_KEY`, `FARAZ_OTP_PATTERN_CODE`, `FARAZ_OTP_PATTERN_VAR`, `FARAZ_LINE_NUMBER`, `SMTP_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`.
 
-Full configuration instructions are documented in `README-DEPLOY.md`.
+Detailed configuration instructions are documented in `README-DEPLOY.md`.
 
 ---
 
-## [1.2.0] — Customer Accounts, Persistent Cart, Price Guarantee, Child Categories, and Product Management Improvements
+## [1.2.0] — Customer Accounts, Persistent Cart, Price Guarantee, Subcategories, and Product Management Improvements
 
 ### Summary
 
-This release evolves the store from a **Guest Checkout-only** model into a store with full customer accounts, while also adding several management capabilities such as child categories, smarter multi-variant products, automatic SKUs, order deletion, and quick access to featured products. None of these changes disrupt the `v1.1.0` architecture (the `app`/`views` separation); everything is built on top of the existing foundation.
+This release evolves the store from a **Guest Checkout-only** model into a store with real customer accounts. It also adds several administration capabilities including subcategories, smart variant management, automatic SKU generation, order deletion, and quick access to featured products.
 
-### ✨ New Feature: Customer Accounts via Mobile Number
+All 1.2.0 changes build on the v1.1.0 `app/views` separation without breaking that architecture.
 
-- Added the `customers` table with unique `phone`, `password_hash`, and `full_name`.
-- Added new storefront pages: `/signup`, `/login`, `/logout`, and `/account` (profile + order history for orders associated with the account).
-- **Important design decision:** customer authentication uses mobile number + **password**, rather than SMS one-time passwords (OTP). `SmsService` is Log-Only by default until a real SMS provider is connected, which would make OTP authentication unusable out of the box. This decision is documented in `app/core/customer_auth.php`, and OTP can be added later as an alternative.
-- Security includes `password_hash`/`password_verify`, `session_regenerate_id` after login/registration to prevent Session Fixation, throttling of failed attempts via `usleep`, and Open Redirect prevention for the login `next` parameter (only internal paths are accepted).
-- Checkout for authenticated users is pre-filled with the account name and mobile number for convenience; full server-side validation still applies.
-- Added nullable `customer_id` to `orders`; guest orders remain fully supported.
+### ✨ New Feature: Customer Accounts by Mobile Number
 
-### ✨ New Feature: Persistent Cart for Authenticated Users
+- Added `customers` table with unique phone number, `password_hash`, and `full_name`.
+- Added `/signup`, `/login`, `/logout`, and `/account`.
+- **Important design decision:** customer authentication uses mobile number + password rather than SMS OTP. At the time, `SmsService` was log-only by default until a real SMS provider was connected, so OTP-based login would not have been usable out of the box.
+- Security includes `password_hash`/`password_verify`, `session_regenerate_id()` after registration/login to prevent session fixation, artificial delay for failed login attempts, and protection against open redirects in the `next` parameter.
+- Logged-in users have checkout fields prefilled from their account for convenience, while full server-side validation still applies.
+- Added nullable `customer_id` to `orders`. Guest orders remain fully supported.
 
-- Added `cart_items` (`customer_id + product_id + variant_id` with a composite `UNIQUE KEY`). `variant_id` uses `0` instead of `NULL` to represent "no variant" because MySQL permits multiple `NULL` values in a unique key.
-- Completely rewrote `app/core/cart.php` to support two distinct storage paths:
-  - **Guest:** stored in `$_SESSION['cart']`.
-  - **Authenticated user:** stored in the database and persisted across devices and sessions.
-- The function interface (`cartAdd`, `cartUpdateQty`, `cartRemove`, `cartClear`, `cartCount`, `cartDetails`) is identical in both modes, so controllers and views do not need to know the user's authentication state.
-- **Guest cart merge after authentication:** when a guest adds items before logging in, `mergeGuestCartIntoCustomerCart()` transfers them to the account's persistent cart using a merge rather than replacement, so existing cart items are not lost.
-- **Tested:** an authenticated user was able to view the same cart contents from a completely new Session (new Cookie, simulating another device), confirming that the persistent cart is linked to the account rather than the browser.
+### ✨ New Feature: Persistent Cart for Logged-In Customers
+
+- Added `cart_items` with a composite unique key on `customer_id`, `product_id`, and `variant_id`.
+- `variant_id = 0` represents “no variant” because MySQL allows multiple `NULL` values inside a unique key.
+- `app/core/cart.php` was rewritten to maintain two separate storage strategies:
+  - **Guest:** `$_SESSION['cart']`
+  - **Logged-in customer:** persistent database storage
+- The public cart API (`cartAdd`, `cartUpdateQty`, `cartRemove`, `cartClear`, `cartCount`, `cartDetails`) remains identical for both user types.
+- `mergeGuestCartIntoCustomerCart()` merges a guest cart into the customer's persistent cart after login/registration instead of replacing the existing cart.
+- **Tested:** an item added in one browser session remained visible after logging in from a completely new session, demonstrating that the cart is associated with the account rather than the browser.
 
 ### ✨ New Feature: Cart Price Guarantee
 
-This is the most involved piece of business logic introduced in this release and was therefore tested more extensively.
+This was the most complex logic introduced in this release and was therefore tested in detail.
 
-- Each `cart_items` row stores a `locked_unit_price`: the effective product/variant price **at the moment the item was added**.
-- The cart's guarantee start time is `MIN(added_at)` across the user's current cart items (the oldest remaining item). Because it is derived from the current rows, completely emptying the cart and later adding a new item automatically starts a new guarantee period; no dedicated reset column or logic is required.
-- Configuration is manageable through `admin/settings.php` and the new Key-Value `settings` table:
+- Each `cart_items` row stores `locked_unit_price`, representing the effective product/variant price at the time the item was added.
+- The cart guarantee start time is `MIN(added_at)` across the user's current cart items.
+- Because the start time is calculated dynamically from current rows, emptying the cart and adding a new item later automatically starts a new guarantee period.
+- Admin settings:
   - `price_guarantee_enabled`
   - `price_guarantee_days` (default: 7)
-- In `cartDetailsForCustomer()`, if the cart age is within the guarantee period, `locked_unit_price` is used. Otherwise, the live product price replaces it permanently for that cart until the cart is emptied and populated again.
-- The cart page displays a status banner such as "Price guaranteed until X" or "Guarantee period expired; prices have been recalculated", and items using a locked price receive a "Guaranteed Price" label.
-- **Three scenarios were tested in practice**, not only by code review:
-  1. Increasing the product price during the seven-day guarantee period → the cart total **remained unchanged** and continued using the old price.
-  2. The same cart was simulated with `added_at` set to eight days ago → the total immediately switched to the current live price.
-  3. Disabling the feature completely from the admin panel → even a newly created cart immediately used live prices.
+- In `cartDetailsForCustomer()`, the locked price is used while the cart age is within the guarantee period. After expiration, the live product/variant price is used permanently for that cart cycle until the cart becomes empty and a new cycle begins.
+- The cart UI shows either the guarantee expiration date or a message that live prices are being used.
+- Items using a locked price receive a “Guaranteed Price” label.
+- **Tested:** price increases within the seven-day period did not change the cart total; moving `added_at` beyond the guarantee period immediately switched the cart to the live price; disabling the feature caused even fresh carts to use live pricing.
 
-### ✨ New Feature: Super Admin Order Deletion
+### ✨ New Feature: Order Deletion by Super Admin
 
-- Added a "Delete Order Permanently" action to both the order list and order detail pages; it is visible only to `super_admin`.
-- **Server-side protection** is enforced through `requireSuperAdmin()`, not merely by hiding the button in the UI. A normal admin sending a manually crafted POST request is rejected (tested).
-- Deleting an order also removes its `order_items` through `ON DELETE CASCADE`; no manual cleanup query is required.
+- Added full-order deletion to both the order list and order-detail screens.
+- The controls are visible only to `super_admin`.
+- Server-side enforcement uses `requireSuperAdmin()`; UI hiding is not the security boundary.
+- `order_items` are removed through `ON DELETE CASCADE`.
 
-### ✨ New Feature: Product Child Categories
+### ✨ New Feature: Product Subcategories
 
-- Added nullable, self-referencing `parent_id` to `categories`.
-- In `admin/categories.php`, each category can select a parent category. Only top-level categories are offered as parents to intentionally limit the hierarchy to one nested level and keep the structure simple.
-- On the storefront, a parent category page displays its child categories as clickable chips **and includes products belonging to those child categories** through `getCategoryAndChildIds()`. For example, opening "Men's Socks" also includes products from "Ankle Socks" without requiring the customer to enter the child category page directly.
-- The top navigation displays only top-level categories to avoid clutter; child categories remain available from the parent category page.
+- Added nullable self-referencing `parent_id` to `categories`.
+- The admin UI allows a category to select a parent, but only top-level categories can be selected as parents, intentionally keeping nesting to one level.
+- Parent category pages display child categories as clickable chips and include products assigned to those direct child categories through `getCategoryAndChildIds()`.
+- The main navigation shows only top-level categories to avoid visual clutter.
 
 ### ✨ New Feature: Automatic Unique SKU Generation
 
-- Added `generateUniqueSku()` in `app/core/functions.php`. It generates an SKU in the `SOCK-XXXXXX` format using a random hexadecimal string, checks the database for collisions, and retries up to 10 times before falling back to `uniqid`.
-- If the SKU field is empty when adding a product, one is generated automatically. A manually entered SKU is validated for uniqueness and rejected if it already exists (tested).
-- Added a real database `UNIQUE KEY` to `products.sku`; uniqueness is no longer enforced only at the application layer.
-- **Migration for existing data:** products without an SKU (empty/`NULL`) are backfilled during migration with default values such as `SOCK-010001`, `SOCK-010002`, etc. Existing manually assigned SKUs remain untouched. Tested with a sample manual SKU `MYOWN-001`, which remained unchanged after migration.
+- Added `generateUniqueSku()` in `app/core/functions.php`.
+- Generated SKUs use the `SOCK-XXXXXX` format.
+- The generator checks database uniqueness before accepting a value, with up to 10 attempts and a final `uniqid` fallback.
+- Empty SKU values are generated automatically; manually supplied SKUs are validated for uniqueness.
+- `products.sku` now has a real database `UNIQUE KEY`.
+- Migration backfills blank/NULL SKUs with values such as `SOCK-010001`, while preserving existing manual SKUs. This behavior was tested with a sample custom SKU `MYOWN-001`.
 
-### ✨ New Feature: `has_variants` Product Checkbox
+### ✨ New Feature: `has_variants` Product Option
 
-- Added the `has_variants` checkbox to the add/edit product form.
-- When enabled through client-side JavaScript:
-  - "Overall Stock" is disabled and visually de-emphasized because inventory is managed through variant rows.
-  - The size/color variants section becomes enabled and highlighted.
-- Server-side behavior is independent of JavaScript as defense in depth:
-  - If `has_variants` is absent, submitted variant rows are completely ignored.
-  - If `has_variants` is present, "Overall Stock" is always stored as `0` regardless of the submitted value because actual inventory is derived from the variants.
+- Added a `has_variants` checkbox to the product form.
+- When enabled, JavaScript disables and visually de-emphasizes the global stock field and activates the variant management section.
+- The server does not trust JavaScript. If `has_variants` is not present in the request, variant rows are ignored. If it is present, `products.stock` is always stored as `0`, because true inventory is the sum of variant stock.
 
-### ✨ New Feature: Per-Variant Stock in the Admin Product List
+### ✨ New Feature: Variant Inventory in Admin Product Lists
 
-- In `admin/products.php`, products with variants now show stock per variant rather than a single overall number, for example `39-42 Black: 15` and `43-46 Black: 8` on separate lines.
-- Instead of issuing an N+1 query for every product, the implementation uses a `GROUP_CONCAT` subquery within the main product-list query to preserve performance.
+- Products with variants now display per-variant inventory in `admin/products.php`.
+- Example: `39-42 Black: 15` and `43-46 Black: 8`.
+- A single SQL query with a `GROUP_CONCAT` subquery avoids an N+1 query pattern.
 
-### ✨ New Feature: Quick Access to Featured Products in Admin
+### ✨ New Feature: Quick Access to Featured Products
 
-- Added a new admin sidebar link ("⭐ Featured") pointing directly to `products.php?featured=1`.
-- It reuses the existing product list controller/view rather than duplicating code and adds only a `WHERE is_featured = 1` condition to the existing query.
+- Added a sidebar shortcut to `products.php?featured=1`.
+- The existing product-list controller/view are reused; only an additional `WHERE is_featured = 1` condition is applied.
 
 ### 🗄️ Database Changes (`database/migrations/003_v1.2.0_customer_accounts_cart_price_guarantee.sql`)
 
-- New table: `customers`
-- New table: `cart_items`
-- New table: `settings` (with initial values `price_guarantee_enabled=1` and `price_guarantee_days=7`)
-- `categories`: added `parent_id` (nullable, self-referencing foreign key)
-- `products`: backfilled missing `sku` values + added a `UNIQUE KEY` on `sku`
-- `orders`: added nullable `customer_id` foreign key referencing `customers`
-- **Tested:** the migration was executed against a simulated copy of the v1.1.0 database containing real-like data (orders, products, and admins) with no data loss; existing manual SKUs were preserved.
+- New `customers` table
+- New `cart_items` table
+- New `settings` table with `price_guarantee_enabled=1` and `price_guarantee_days=7`
+- `categories.parent_id` added as a nullable self-referencing foreign key
+- Existing blank/NULL product SKUs backfilled and a unique constraint added to `products.sku`
+- Nullable `orders.customer_id` foreign key added
+- **Tested:** migration was executed against a simulated v1.1.0 database containing real-looking order, product, and admin data; no data was lost and existing manual SKUs were preserved.
 
 ### 🎨 UI Changes
 
-- Added a login/account icon next to the cart icon in the storefront header. Depending on authentication state, it links to `/login` or `/account`.
-- The main navigation now displays only top-level categories; child categories are accessible within the parent category page.
-- Added the price-guarantee status banner and "Guaranteed Price" labels to the cart page.
+- Added login/account icon next to the cart icon in the site header.
+- Main navigation now shows only top-level categories.
+- Added price-guarantee status banner and “Guaranteed Price” labels to the cart page.
 
 ### 📌 Backward Compatibility
 
-- No breaking changes were introduced to existing storefront or admin routes. Guest users continue to work exactly as before.
-- After the migration, running the old `install.php` (if it still exists) does not affect the `admins` table; the installer is intended only for the initial installation and automatically locks itself once an admin already exists.
+- No breaking changes were introduced to existing storefront or admin routes.
+- Guest users continue to work exactly as before.
+- After applying the migration, the old `install.php` remains harmless if it is still present; it is only intended for first-time setup and stays locked when an admin already exists.
 
 ---
 
-## [1.1.0] — Payment Gateway, SMS, Coupons, Multi-Admin, and Codebase Restructuring
+## [1.1.0] — Payment Gateway, SMS, Coupons, Multi-Admin Support, and Codebase Refactor
 
 ### Summary
 
-This release contains three groups of changes: (a) a critical live-site bug fix, (b) a complete directory/codebase restructuring to separate application logic from presentation, and (c) new capabilities including Zarinpal payments (Sandbox), SMS infrastructure, coupon support in the purchase flow, and multi-admin role support.
+This release contains three major categories of changes:
+
+1. A critical production bug fix.
+2. A complete project directory refactor to separate application logic from presentation.
+3. New features including Zarinpal Sandbox payments, SMS infrastructure, checkout coupon support, and multi-admin role management.
 
 ### 🐛 Bug Fixes
 
-- **[Critical] `/cart` Forbidden Error**
-  - **Root cause:** a physical `cart/` directory containing `add.php`, `update.php`, and `remove.php` for AJAX operations had the same name as the storefront `/cart` route. When `.htaccess` sees a requested path that maps to a real directory, the rewrite is bypassed. Because directory listing is disabled via `Options -Indexes`, Apache returned `403 Forbidden` instead of reaching the cart-page routing logic.
-  - **Fix:** renamed `cart/` to `ajax/` and renamed the endpoint files to `cart_add.php`, `cart_update.php`, and `cart_remove.php` so they cannot collide with defined routes. All references in `assets/js/main.js` and `views/site/cart.php` were updated.
-  - **Lesson learned:** this rule was added to `docs/ARCHITECTURE.md` section 6: **no physical directory should share the name of a route defined in `index.php`.**
+#### [Critical] Forbidden Error on `/cart`
 
-- **[Minor] Incorrect Database Table Count**
-  - Previous documentation incorrectly stated that the 1.0.0 schema contained nine tables. The actual count was **eight** (`admins, categories, coupons, orders, order_items, product_images, product_variants, products`). With the addition of `sms_log` in 1.1.0, the actual total became **nine**. This was a documentation/reporting error, not a code defect.
+- The physical `cart/` directory contained AJAX endpoints (`add.php`, `update.php`, `remove.php`) and conflicted with the `/cart` storefront route.
+- Apache stopped rewriting because the requested path matched a real directory.
+- Since directory listing was disabled with `Options -Indexes`, Apache returned HTTP 403 instead of routing to the storefront cart page.
+- The directory was renamed to `ajax/`, and the files became `cart_add.php`, `cart_update.php`, and `cart_remove.php`.
+- All frontend references were updated.
+- The architectural rule was documented: **no physical directory should share the same name as a route handled by `index.php`.**
 
-### ♻️ Refactor — Separation of Application Logic and Presentation
+#### [Minor] Incorrect Database Table Count in Previous Documentation
 
-- Removed `includes/` and redistributed its contents:
-  - `db.php`, `functions.php`, `csrf.php`, `auth.php`, `cart.php`, `bootstrap.php` → moved into `app/core/` and `app/bootstrap.php`.
-  - Site `header.php` and `footer.php` → moved into `views/layout/`.
-  - `admin_header.php` and `admin_footer.php` → moved into `views/admin/layout/`.
-- Removed `pages/`. Each page was split into two files:
-  - **Controller** (logic/query/form processing) → `app/controllers/site/{page}.php`
-  - **View** (HTML only) → `views/site/{page}.php`
-- The same pattern was applied to all admin pages: `app/controllers/admin/{page}.php` + `views/admin/{page}.php`.
-- `admin/` no longer contains application logic; it only contains **thin entry points** that load the bootstrap, enforce access control, and require the actual controller.
-- Added `renderView($view, $data)` to `app/bootstrap.php` so controllers can render a view with explicit data without directly handling the view filesystem.
-- Both `app/` and `views/` are protected from direct browser access with `.htaccess` (`Require all denied`); these directories are accessed only through server-side `require`.
-- **Reason for the change:** future development (for example, modifying a page's appearance) can be done without touching business logic, and vice versa. It also greatly reduces the risk of route/directory collisions like the one described above because application logic is no longer colocated with directly accessible files.
+The previous release documentation incorrectly stated that the v1.0.0 schema contained 9 tables. The correct count was 8:
+
+`admins, categories, coupons, orders, order_items, product_images, product_variants, products`
+
+After adding `sms_log`, v1.1.0 contains 9 tables.
+
+### ♻️ Refactor — Logic / Presentation Separation
+
+- Removed `includes/` and redistributed its content:
+  - `db.php`, `functions.php`, `csrf.php`, `auth.php`, `cart.php`, `bootstrap.php` → `app/core/` and `app/bootstrap.php`
+  - site `header.php`, `footer.php` → `views/layout/`
+  - `admin_header.php`, `admin_footer.php` → `views/admin/layout/`
+- Removed `pages/`.
+- Storefront pages were split into:
+  - controller: `app/controllers/site/{page}.php`
+  - view: `views/site/{page}.php`
+- Admin pages follow the same controller/view separation.
+- `admin/` now contains only thin entry points that load bootstrap, enforce authentication, and require the appropriate controller.
+- Added `renderView($view, $data)` to `app/bootstrap.php`.
+- Both `app/` and `views/` are protected by `.htaccess` using `Require all denied`.
+- The goal is to allow presentation changes without modifying business logic and vice versa.
 
 ### ✨ New Feature: Zarinpal Payment Gateway (Sandbox)
 
 - Added `app/services/ZarinpalService.php` based on Zarinpal REST API v4.
-- Configured for **Sandbox** by default (test mode with no real-money transactions). Live mode can be enabled by changing `ZARINPAL_MERCHANT_ID` and `ZARINPAL_SANDBOX` in `config/config.php`.
-- Added "Online Payment (Zarinpal)" as a checkout option alongside Cash on Delivery (COD).
-- Added `payment/zarinpal_callback.php` to handle gateway callbacks and finalize transactions.
-- Added `payment/retry.php` to retry payment for an existing order whose previous payment attempt failed, without losing the order or already-deducted stock.
-- Added `/order/failed/{code}` for failed payment states with a retry action.
-- Added `payment_status`, `payment_authority`, and `payment_ref_id` columns to `orders`.
+- Sandbox mode is enabled by default to avoid real-money transactions.
+- Online payment via Zarinpal was added alongside Cash on Delivery during checkout.
+- Added `payment/zarinpal_callback.php` for gateway callbacks.
+- Added `payment/retry.php` for retrying failed payments without losing the existing order.
+- Added `/order/failed/{code}`.
+- Added `payment_status`, `payment_authority`, and `payment_ref_id` to `orders`.
 
-### ✨ New Feature: SMS System
+### ✨ New Feature: SMS Service
 
-- Added `app/services/SmsService.php`, prepared for Kavenegar integration.
-- Designed as Fail-Safe: if the API key is missing or `SMS_ENABLED=false`, no real SMS is sent and the event is logged to the new `sms_log` table. The site never fails simply because SMS configuration is incomplete.
-- Automatic SMS messages are triggered for two events: successful online payment confirmation and order status changes made by an admin.
+- Added `app/services/SmsService.php`, initially prepared for Kavenegar.
+- Fail-safe behavior: without an API key or when `SMS_ENABLED=false`, no real message is sent and the attempt is only logged to `sms_log`.
+- Automatic SMS notifications are triggered for successful online payment confirmation and admin-driven order-status changes.
 
-### ✨ New Feature: Coupon Support in the Checkout Flow
+### ✨ New Feature: Checkout Coupon Support
 
-- Added `app/services/CouponService.php` for validation and discount calculation.
-- Added a coupon field to the cart page (`views/site/cart.php`).
-- The applied coupon is stored in `$_SESSION['coupon']` and validated again during checkout to protect against expiration or usage-limit changes between application and order placement.
-- Added endpoints: `ajax/coupon_apply.php` and `ajax/coupon_remove.php`.
-- Added nullable `coupon_id` to `orders` for a precise relationship to the coupon record, separate from the existing textual `coupon_code`.
+- Added `app/services/CouponService.php`.
+- Added coupon application UI to `views/site/cart.php`.
+- Applied coupons are stored in `$_SESSION['coupon']` and revalidated during checkout.
+- Added `ajax/coupon_apply.php` and `ajax/coupon_remove.php`.
+- Added `coupon_id` to `orders`.
 
-### ✨ New Feature: Multi-Admin Role Support
+### ✨ New Feature: Multi-Admin Roles
 
-- Added `role` (`super_admin` | `admin`, default `admin`) and `is_active` columns to `admins`.
-- Added `admin/users.php`, restricted to `super_admin`, with:
-  - Creating new admins with role selection
-  - Changing another admin's password
-  - Activating/deactivating accounts without deleting them
-  - Deleting accounts with safeguards: the last `super_admin` cannot be deleted/deactivated, and admins cannot delete/deactivate their own account
-- Added `requireSuperAdmin()` and `isSuperAdmin()` to `app/core/auth.php`.
-- The first admin created through `install.php` is automatically assigned the `super_admin` role.
-- The "Admin Management" sidebar link is shown only to `super_admin`.
+- Added `role` (`super_admin` | `admin`) and `is_active` to `admins`.
+- Added `admin/users.php` for super-admin user management.
+- Supports:
+  - creating admins
+  - assigning roles
+  - changing passwords
+  - activating/deactivating accounts
+  - deleting accounts with safeguards
+- The last remaining `super_admin` cannot be removed or deactivated.
+- An admin cannot deactivate or delete their own account.
+- Added `requireSuperAdmin()` and `isSuperAdmin()`.
+- The first admin created through `install.php` is automatically promoted to `super_admin`.
 
 ### 🗄️ Database Changes
 
-- Added `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql`.
-  - This migration is for databases that already contain v1.0.0, such as the existing live site. It only adds columns/tables; **no data is deleted or rewritten**.
-  - Existing orders that were already in a `confirmed` state or later are automatically marked with `payment_status = paid`, because online payment did not exist in the previous version.
-  - The first existing admin is automatically promoted to `super_admin`.
-- Updated the base `database/schema.sql` so fresh installations contain all of the new tables/columns directly; fresh installs do not need to run the migration separately.
+Added `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` for upgrading existing v1.0.0 installations.
+
+- Adds only new columns/tables; no existing data is deleted or overwritten.
+- Existing confirmed orders are marked as `payment_status = paid` because online-payment status did not exist in v1.0.0.
+- The first existing admin is promoted to `super_admin`.
+- `database/schema.sql` was also updated so clean installations include the complete v1.1.0 schema directly.
 
 ### ⚙️ Configuration Changes (`config/config.php`)
 
-Six new constants were added:
+Six new settings were introduced:
 
 ```php
-define('ZARINPAL_MERCHANT_ID', '00000000-0000-0000-0000-000000000000'); // Default test merchant
+define('ZARINPAL_MERCHANT_ID', '00000000-0000-0000-0000-000000000000');
 define('ZARINPAL_SANDBOX', true);
 define('SMS_ENABLED', false);
 define('SMS_PROVIDER_API_KEY', '');
@@ -294,38 +512,38 @@ define('SMS_SENDER_LINE', '');
 
 ### 📄 Documentation
 
-- Added `docs/ARCHITECTURE.md` as the authoritative reference for architecture, request lifecycle, data model, and critical security logic.
-- Created `docs/CHANGELOG.md`.
-- Added the `APP_VERSION` constant to `app/bootstrap.php` for application version tracking.
+- Added `docs/ARCHITECTURE.md`.
+- Added `docs/CHANGELOG.md`.
+- Added `APP_VERSION` in `app/bootstrap.php`.
 
-### ✅ Tests Performed for This Release
+### ✅ Testing
 
-All of the following were tested and verified on a real PHP 8.3 + MariaDB environment rather than only through code review:
+The release was tested on PHP 8.3 + MariaDB:
 
-- Full PHP lint across all files with zero errors.
-- Migration execution against a simulated v1.0.0 database with no data loss.
-- Cart page bug fix verified from `403 Forbidden` to `200 OK`, including a simulation of Apache/mod_rewrite behavior.
-- Coupon application/removal and discount correctness in final order totals.
-- Full order creation using Cash on Delivery (COD).
-- First admin login (`super_admin`) and creation of a second (`admin`) account from the admin panel.
-- Permission enforcement: an `admin`-level account is blocked from the admin-management page and redirected to the dashboard while retaining access to the rest of the admin panel.
-- Simulated failed Zarinpal callback with correct rendering of the payment-failure page and retry action.
+- Full PHP lint with zero errors
+- Migration execution on a simulated v1.0.0 database without data loss
+- `/cart` fix verified from HTTP 403 to HTTP 200 using Apache/mod_rewrite behavior
+- Coupon apply/remove and total calculation
+- Complete Cash on Delivery checkout
+- First-admin (`super_admin`) creation and second-admin (`admin`) creation
+- Admin-role access restriction
+- Failed Zarinpal callback simulation with correct retry UI
 
-### ⚠️ Deployment Notes for the Live Site (`absocks.ir`)
+### ⚠️ Live Deployment Notes (`absocks.ir`)
 
-1. **Back up the current database first** using DirectAdmin or phpMyAdmin → Export.
-2. Run `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` **once** from phpMyAdmin's SQL tab against the live database.
-3. Replace the entire project structure on the host with the new structure (`app/`, `views/`, `ajax/`, `payment/`, etc.), rather than copying only the new directories. Remove legacy `includes/`, `pages/`, and `cart/` directories to avoid collisions.
-4. Re-enter the real production database credentials and other sensitive values into the new `config/config.php`; the repository version contains placeholders only.
-5. After deployment, perform a test order using both payment methods (online and COD).
+1. Back up the existing database using DirectAdmin or phpMyAdmin.
+2. Run `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` exactly once against the production database.
+3. Replace the old project structure with the new `app/`, `views/`, `ajax/`, and `payment/` directories; remove the old `includes/`, `pages/`, and `cart/` directories.
+4. Re-enter the real production database credentials into `config/config.php`; the repository version contains placeholders.
+5. After deployment, place at least one test order using both online payment and Cash on Delivery.
 
 ---
 
-## [1.0.0] — Initial MVP Release
+## [1.0.0] — Initial Release (MVP)
 
 The first usable version of the store, including:
 
-- Customer-facing storefront: home page, categories, product details with size/color variants, Session-based cart, Cash on Delivery checkout, order-success page, About, Contact, and Terms pages.
-- Admin panel: dashboard, product CRUD with image upload and variant management, category CRUD, order management, and order status updates.
-- Infrastructure: framework-free PHP, MySQL, Session-based admin authentication, CSRF/XSS/SQL Injection protection, and initial installation without CLI through `install.php`.
-- Direct deployment to shared DirectAdmin hosting without Composer/npm/SSH.
+- Customer storefront: homepage, categories, product details with size/color variants, session-based cart, Cash on Delivery checkout, order-success page, about/contact/terms pages.
+- Admin panel: dashboard, product CRUD with image uploads and variant management, category CRUD, order management, and order-status updates.
+- Infrastructure: framework-free PHP, MySQL, session-based admin authentication, CSRF/XSS/SQL-injection protections, and first-time setup through `install.php`.
+- Direct deployment to shared DirectAdmin hosting without Composer, npm, or SSH.

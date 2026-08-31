@@ -1,7 +1,8 @@
 <?php
 /**
- * Zarinpal payment callback for successful or failed transactions.
- * Zarinpal redirects the customer here with: ?Authority=...&Status=OK|NOK
+ * Return point from the Zarinpal gateway after payment (successful or not)
+ * Zarinpal redirects the customer to this URL with these parameters:
+ * ?Authority=...&Status=OK|NOK
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
@@ -18,11 +19,11 @@ $stmt->execute([$authority]);
 $order = $stmt->fetch();
 
 if (!$order) {
-    // No order was found for this Authority; the callback may be invalid or duplicated.
+    // No order was found with this Authority (an invalid/duplicate link)
     redirect('/');
 }
 
-// If the transaction was already verified and marked as paid, do not charge the customer again.
+// If it was already verified and paid (e.g. the customer hit Back and this page loaded again), the customer isn't charged again
 if ($order['payment_status'] === 'paid') {
     redirect('/order/success/' . $order['order_code']);
 }

@@ -1,7 +1,7 @@
 <?php
 /**
- * Admin account management; available only to super_admin.
- * Supports creating admins, changing passwords, enabling/disabling accounts, and deletion.
+ * Admin account management — accessible only to super_admin.
+ * Features: add a new admin, change password, activate/deactivate, delete.
  */
 
 requireSuperAdmin();

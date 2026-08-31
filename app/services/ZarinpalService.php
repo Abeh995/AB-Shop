@@ -1,14 +1,16 @@
 <?php
 /**
- * Zarinpal payment gateway integration using REST API v4.
+ * Zarinpal payment gateway integration service (Zarinpal REST API v4)
  *
- * Sandbox mode is enabled by default so the full payment flow can be tested before a real
- * merchant ID is available. For production, update these settings in config.php:
- *   ZARINPAL_MERCHANT_ID -> the real merchant ID from the Zarinpal panel
- *   ZARINPAL_SANDBOX     -> false
+ * Sandbox (test) mode is enabled by default, so you can test the entire
+ * payment flow with Zarinpal's test data before getting a real merchant ID.
+ * To go live, just change these values in config.php:
+ *   ZARINPAL_MERCHANT_ID  -> the real merchant ID from your Zarinpal panel
+ *   ZARINPAL_SANDBOX      -> false
  *
- * Currency note: project prices are stored in toman, while Zarinpal expects rial.
- * This service converts toman to rial automatically.
+ * Currency note: prices in this project are stored in Toman, but the
+ * Zarinpal API expects the amount in Rial; this service handles the
+ * multiply-by-10 itself.
  */
 
 class ZarinpalService
@@ -28,19 +30,19 @@ class ZarinpalService
     }
 
     /**
-     * Create a new payment transaction request.
-     * @param int         $amountToman Amount in toman.
-     * @param string      $description Transaction description, such as the order number.
-     * @param string      $callbackUrl URL to return to after payment.
-     * @param string|null $mobile Optional customer mobile number for Zarinpal.
-     * @param string|null $email Optional customer email address.
+     * Request the creation of a payment transaction
+     * @param int    $amountToman Amount in Toman
+     * @param string $description Transaction description (e.g. the order number)
+     * @param string $callbackUrl URL the customer returns to after paying
+     * @param string|null $mobile Customer's mobile number (optional, pre-fills the Zarinpal form)
+     * @param string|null $email  Customer's email (optional)
      * @return array ['ok'=>bool, 'authority'=>string|null, 'pay_url'=>string|null, 'error'=>string|null]
      */
     public static function request(int $amountToman, string $description, string $callbackUrl, ?string $mobile = null, ?string $email = null): array
     {
         $payload = [
             'merchant_id'  => ZARINPAL_MERCHANT_ID,
-            'amount'       => $amountToman * 10, // Convert toman to rial.
+            'amount'       => $amountToman * 10, // Convert Toman to Rial
             'description'  => $description,
             'callback_url' => $callbackUrl,
         ];
@@ -69,9 +71,9 @@ class ZarinpalService
     }
 
     /**
-     * Verify the transaction after the customer returns from the gateway.
-     * @param int    $amountToman The exact amount previously sent to request().
-     * @param string $authority   Authority value returned by Zarinpal.
+     * Final verification of the transaction after the customer returns from the gateway
+     * @param int    $amountToman The same amount sent in request() (must match exactly)
+     * @param string $authority   The value Zarinpal returns in the callback
      * @return array ['ok'=>bool, 'ref_id'=>string|null, 'error'=>string|null]
      */
     public static function verify(int $amountToman, string $authority): array
@@ -89,7 +91,7 @@ class ZarinpalService
         }
 
         $data = $result['data']['data'] ?? null;
-        // Zarinpal code 100 means a new successful payment; 101 means the transaction was already verified.
+        // Code 100 = freshly successful payment, code 101 = this transaction was already verified (also a success)
         if ($data && in_array((int)($data['code'] ?? 0), [100, 101], true)) {
             return ['ok' => true, 'ref_id' => (string)($data['ref_id'] ?? ''), 'error' => null];
         }
@@ -99,7 +101,7 @@ class ZarinpalService
     }
 
     /**
-     * Send a JSON POST request and decode the JSON response.
+     * Send a POST request with a JSON body and read the JSON response
      */
     private static function postJson(string $url, array $payload): array
     {

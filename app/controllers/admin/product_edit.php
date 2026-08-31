@@ -18,8 +18,10 @@ $pageTitle = $product ? 'ویرایش محصول' : 'محصول جدید';
 $categories = getCategoriesForDropdown();
 $allTags = getAllTags();
 $productTagIds = $id ? array_column(getProductTags($id), 'id') : [];
+$galleryImages = $id ? db()->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, id ASC") : null;
+if ($galleryImages) { $galleryImages->execute([$id]); $galleryImages = $galleryImages->fetchAll(); } else { $galleryImages = []; }
 $errors = [];
-// Determine the current variant-enabled state for the initial form checkbox.
+// Current "has variants" state, used to pre-check the checkbox on first render (based on existing variant rows)
 $hasVariantsInitial = count($variants) > 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
     $hasVariants = isset($_POST['has_variants']);
 
-    // Products with variants do not use a meaningful aggregate stock value; each variant tracks its own stock.
-    // Store zero so aggregate stock values are not misleading in reports.
+    // When a product has variants, overall stock is meaningless (each variant
+    // has its own stock), so 0 is stored to avoid misleading reports.
     $stock = $hasVariants ? 0 : (int) ($_POST['stock'] ?? 0);
 
     if ($name === '') $errors[] = 'نام محصول الزامی است.';
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price < 1) $errors[] = 'قیمت معتبر وارد کنید.';
     if ($discountPrice !== null && $discountPrice >= $price) $errors[] = 'قیمت با تخفیف باید کمتر از قیمت اصلی باشد.';
 
-    // ---------- SKU: generate one when empty; otherwise validate uniqueness ----------
+    // ---------- SKU: auto-generated if left empty; otherwise its uniqueness is checked ----------
     if ($sku === '') {
         $sku = generateUniqueSku();
     } else {
@@ -89,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', 'محصول با موفقیت اضافه شد.');
         }
 
-        // ---------- Variants: process only when variant support is enabled ----------
+        // ---------- Variants: only processed when "has variants" is enabled ----------
         db()->prepare("DELETE FROM product_variants WHERE product_id = ?")->execute([$productId]);
         if ($hasVariants) {
             $sizes = $_POST['variant_size'] ?? [];
@@ -105,24 +107,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // ---------- Tags: editable by any admin at any time ----------
+        // ---------- Tags: editable by any admin, at any time ----------
         $selectedTagIds = array_map('intval', $_POST['tag_ids'] ?? []);
         $newTagsRaw = trim($_POST['new_tags'] ?? '');
         syncProductTags($productId, $selectedTagIds, $newTagsRaw);
 
+        // ---------- Gallery: delete the selected images ----------
+        $deleteImageIds = array_map('intval', $_POST['delete_image_ids'] ?? []);
+        if ($deleteImageIds) {
+            $placeholders = implode(',', array_fill(0, count($deleteImageIds), '?'));
+            $imgStmt = db()->prepare("SELECT id, image_path FROM product_images WHERE id IN ($placeholders) AND product_id = ?");
+            $imgStmt->execute([...$deleteImageIds, $productId]);
+            foreach ($imgStmt->fetchAll() as $img) {
+                if (file_exists(UPLOAD_DIR . $img['image_path'])) {
+                    @unlink(UPLOAD_DIR . $img['image_path']);
+                }
+            }
+            db()->prepare("DELETE FROM product_images WHERE id IN ($placeholders) AND product_id = ?")
+                ->execute([...$deleteImageIds, $productId]);
+        }
+
+        // ---------- Gallery: add however many new images the admin selected ----------
+        if (!empty($_FILES['gallery_images']['name'][0])) {
+            $maxSortStmt = db()->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM product_images WHERE product_id = ?");
+            $maxSortStmt->execute([$productId]);
+            $maxSort = (int) $maxSortStmt->fetchColumn();
+            $galleryFiles = $_FILES['gallery_images'];
+            $fileCount = count($galleryFiles['name']);
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                if ($galleryFiles['error'][$i] !== UPLOAD_ERR_OK) continue;
+
+                $singleFile = [
+                    'name' => $galleryFiles['name'][$i],
+                    'type' => $galleryFiles['type'][$i],
+                    'tmp_name' => $galleryFiles['tmp_name'][$i],
+                    'error' => $galleryFiles['error'][$i],
+                    'size' => $galleryFiles['size'][$i],
+                ];
+
+                $uploadResult = handleProductImageUpload($singleFile);
+                if ($uploadResult['ok']) {
+                    $maxSort++;
+                    db()->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
+                        ->execute([$productId, $uploadResult['filename'], $maxSort]);
+                }
+                // An error on one gallery image doesn't stop the rest of the save (only that image is skipped)
+            }
+        }
+
         redirect('products.php');
     }
 
-    // Preserve the current tag selection when re-rendering the form after validation errors.
+    // If there were errors, keep the current tag selection so the form re-renders it
     $productTagIds = array_map('intval', $_POST['tag_ids'] ?? []);
 
-    // Preserve the generated or submitted SKU when re-rendering the form after validation errors.
+    // If there were errors, keep the generated/entered SKU so the form re-renders it
     if ($product) { $product['sku'] = $sku; } else { $product = ['sku' => $sku]; }
     $hasVariantsInitial = $hasVariants;
 }
 
 /**
- * Validate and securely store an uploaded file.
+ * Validate and safely store the uploaded file
  */
 function handleProductImageUpload(array $file): array
 {
@@ -153,4 +199,4 @@ function handleProductImageUpload(array $file): array
     return ['ok' => true, 'filename' => $filename];
 }
 
-renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds'));
+renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds', 'galleryImages'));

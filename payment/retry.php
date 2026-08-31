@@ -1,7 +1,8 @@
 <?php
 /**
- * Retry payment for an existing order whose previous payment attempt failed or was incomplete.
- * The order and its items already exist; this endpoint only creates a new Zarinpal payment request.
+ * Retry payment for an existing order whose payment previously failed or
+ * wasn't completed. The order and its items already exist; this page just
+ * fires a new request to Zarinpal.
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';

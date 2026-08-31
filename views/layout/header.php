@@ -1,19 +1,25 @@
 <?php
 /**
  * Shared site header.
- * $pageTitle may be defined before including this file.
- * Optional page-level SEO variables: $metaDescription, $ogImage, $jsonLd.
+ * Expects $pageTitle to be set before this file is included (optional).
+ * Optional per-page SEO variables: $metaDescription, $ogImage, $jsonLd
  */
 $pageTitle = $pageTitle ?? SITE_NAME;
 $flash = getFlash();
 
-// Load top-level categories for the main menu; child categories are shown on their parent page.
+// Top-level categories for the main nav (subcategories are shown inside the parent category page)
 $navCategories = db()->query("SELECT id, name, slug FROM categories WHERE is_active = 1 AND parent_id IS NULL ORDER BY sort_order ASC LIMIT 8")->fetchAll();
 
-// ---------- SEO: control Google indexing based on the admin setting ----------
+// ---------- SEO: control search-engine indexing from the admin settings ----------
 $seoIndexingEnabled = getSetting('seo_indexing_enabled', '0') === '1';
 $canonicalUrl = rtrim(SITE_URL, '/') . strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 $metaDescription = $metaDescription ?? 'فروشگاه اینترنتی جوراب؛ خرید آنلاین جوراب مردانه، زنانه و بچگانه با ارسال سریع';
+
+$logoUrl = siteLogoUrl();
+$announcementBarEnabled = getSetting('announcement_bar_enabled', '0') === '1';
+$announcementBarText = getSetting('announcement_bar_text', '');
+$announcementBarLink = getSetting('announcement_bar_link', '');
+$searchQuery = $_GET['q'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -49,7 +55,13 @@ $metaDescription = $metaDescription ?? 'فروشگاه اینترنتی جورا
             <span></span><span></span><span></span>
         </button>
 
-        <a href="/" class="logo"><?= e(SITE_NAME) ?></a>
+        <a href="/" class="logo">
+            <?php if ($logoUrl): ?>
+                <img src="<?= e($logoUrl) ?>" alt="<?= e(SITE_NAME) ?>" class="logo-img">
+            <?php else: ?>
+                <?= e(SITE_NAME) ?>
+            <?php endif; ?>
+        </a>
 
         <nav class="main-nav" id="mainNav">
             <a href="/">خانه</a>
@@ -59,6 +71,10 @@ $metaDescription = $metaDescription ?? 'فروشگاه اینترنتی جورا
             <a href="/about">درباره ما</a>
             <a href="/contact">تماس با ما</a>
         </nav>
+
+        <button class="search-toggle" id="searchToggle" aria-label="جستجو" aria-expanded="false" aria-controls="searchBarPanel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
 
         <a href="/cart" class="cart-link">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -75,7 +91,28 @@ $metaDescription = $metaDescription ?? 'فروشگاه اینترنتی جورا
             </a>
         <?php endif; ?>
     </div>
+
+    <div class="search-bar-panel" id="searchBarPanel">
+        <div class="container">
+            <form action="/search" method="get" role="search">
+                <input type="search" name="q" class="form-control" value="<?= e($searchQuery) ?>" placeholder="نام محصول را جستجو کنید…" aria-label="جستجوی محصول" id="searchBarInput">
+                <button type="submit" class="btn btn-primary btn-sm">جستجو</button>
+            </form>
+        </div>
+    </div>
 </header>
+
+<?php if ($announcementBarEnabled && $announcementBarText !== ''): ?>
+<div class="announcement-bar">
+    <div class="container">
+        <?php if ($announcementBarLink !== ''): ?>
+            <a href="<?= e($announcementBarLink) ?>" target="_blank" rel="noopener"><?= e($announcementBarText) ?></a>
+        <?php else: ?>
+            <span><?= e($announcementBarText) ?></span>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php if ($flash): ?>
     <div class="container">

@@ -1,13 +1,13 @@
 -- ============================================================
--- Sock Store - Database Schema
--- Engine: InnoDB, Charset: utf8mb4 (full Unicode support)
+-- Sock Shop - Database Schema
+-- Engine: InnoDB, Charset: utf8mb4 (full Persian text support)
 -- ============================================================
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ------------------------------------------------------------
--- Admin accounts
+-- Admins table
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS admins (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS admins (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Customer accounts (mobile-number based)
+-- Customer accounts (based on mobile number)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS customers (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS customers (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Verification codes (SMS/email) for customer mobile and email verification
+-- Verification codes (SMS/email) for customer phone and email verification
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS verification_codes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -95,11 +95,11 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(180) NOT NULL,
     slug VARCHAR(200) NOT NULL UNIQUE,
     description TEXT,
-    price DECIMAL(12,0) NOT NULL,              -- Toman, no decimal places
-    discount_price DECIMAL(12,0) DEFAULT NULL,  -- Discounted price when applicable
+    price DECIMAL(12,0) NOT NULL,              -- تومان، بدون اعشار
+    discount_price DECIMAL(12,0) DEFAULT NULL,  -- اگر تخفیف دارد
     sku VARCHAR(60) DEFAULT NULL UNIQUE,
-    stock INT NOT NULL DEFAULT 0,               -- Aggregate stock when no variants exist
-    image VARCHAR(255) DEFAULT NULL,            -- Primary image
+    stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
+    image VARCHAR(255) DEFAULT NULL,            -- تصویر اصلی
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     is_featured TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Product image gallery (additional images)
+-- Product image gallery (additional images beyond the main image)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS product_images (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -122,12 +122,12 @@ CREATE TABLE IF NOT EXISTS product_images (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Product variants (sock size/color), optional per product
+-- Product variants (sock size/color) - optional at the product level
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS product_variants (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
-    size VARCHAR(40) DEFAULT NULL,     -- Example: 39-42
+    size VARCHAR(40) DEFAULT NULL,     -- مثلا 39-42
     color VARCHAR(40) DEFAULT NULL,
     stock INT NOT NULL DEFAULT 0,
     price_override DECIMAL(12,0) DEFAULT NULL,
@@ -185,14 +185,14 @@ CREATE TABLE IF NOT EXISTS orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Order items
+-- Order line items
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS order_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
     product_id INT UNSIGNED DEFAULT NULL,
     variant_id INT UNSIGNED DEFAULT NULL,
-    product_name VARCHAR(180) NOT NULL,   -- Snapshot at purchase time
+    product_name VARCHAR(180) NOT NULL,   -- snapshot در لحظه خرید
     variant_label VARCHAR(80) DEFAULT NULL,
     unit_price DECIMAL(12,0) NOT NULL,
     quantity INT NOT NULL,
@@ -205,9 +205,9 @@ CREATE TABLE IF NOT EXISTS order_items (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ------------------------------------------------------------
--- Persistent cart for logged-in customers
--- variant_id uses 0 instead of NULL for "no variant" so the UNIQUE KEY behaves as intended
--- (MySQL does not treat multiple NULL values as duplicates in a UNIQUE KEY)
+-- Persistent cart (for logged-in customers only)
+-- variant_id uses 0 instead of NULL for "no variant" so the UNIQUE KEY works correctly
+-- (since MySQL doesn't treat multiple NULLs in a UNIQUE KEY as duplicates)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cart_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- General store settings (Key-Value), including cart price guarantees
+-- General store settings (key/value) — includes the cart price guarantee
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS settings (
     setting_key VARCHAR(100) PRIMARY KEY,
@@ -234,25 +234,57 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('price_guarantee_enabled', '1'),
     ('price_guarantee_days', '7'),
     ('show_product_tags', '1'),
-    ('seo_indexing_enabled', '0');
+    ('seo_indexing_enabled', '0'),
+    ('site_logo', ''),
+    ('announcement_bar_enabled', '0'),
+    ('announcement_bar_text', ''),
+    ('announcement_bar_link', ''),
+    ('footer_about_teaser_text', ''),
+    ('footer_shipping_badge_text', ''),
+    ('store_phone', ''),
+    ('social_instagram_enabled', '0'),
+    ('social_instagram_url', ''),
+    ('social_telegram_enabled', '0'),
+    ('social_telegram_url', ''),
+    ('social_bale_enabled', '0'),
+    ('social_bale_url', ''),
+    ('social_torob_enabled', '0'),
+    ('social_torob_url', ''),
+    ('enamad_enabled', '0'),
+    ('enamad_embed_code', '');
 
 -- ------------------------------------------------------------
--- SMS delivery log (both real sends and log-only entries)
+-- Log of sent SMS messages (whether actually sent, or just logged when no SMS service is configured)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS sms_log (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     phone VARCHAR(20) NOT NULL,
     message TEXT NOT NULL,
     status VARCHAR(40) NOT NULL DEFAULT 'logged',
+    debug_info TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_phone (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- Initial sample data
--- Note: the admins table intentionally remains empty. After deploying the project,
--- visit /install.php once to create the first admin account with your own password
--- securely without requiring CLI access; the installer locks itself after use.
+-- Log of sent emails (for troubleshooting email verification)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS email_log (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    status VARCHAR(40) NOT NULL DEFAULT 'logged',
+    debug_info TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Initial seed data
+-- Note: the admins table is intentionally left empty. After uploading the
+-- project to your host, visit /install.php once to securely create the
+-- first admin account with your own password (no CLI needed). That page
+-- locks itself after use.
 -- ------------------------------------------------------------
 
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES

@@ -44,22 +44,24 @@
             <td><?= $a['role'] === 'super_admin' ? '<span class="status-pill status-shipped">مدیر کل</span>' : '<span class="status-pill status-processing">ادمین</span>' ?></td>
             <td><?= $a['is_active'] ? '<span class="status-pill status-delivered">فعال</span>' : '<span class="status-pill status-cancelled">غیرفعال</span>' ?></td>
             <td><?= toPersianDigits(date('Y/m/d', strtotime($a['created_at']))) ?></td>
-            <td class="admin-actions">
-                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('pw-<?= (int)$a['id'] ?>').style.display='flex'">تغییر رمز</button>
-                <?php if (!$isMe): ?>
-                <form method="post" style="display:inline;">
-                    <?= csrfField() ?>
-                    <input type="hidden" name="action" value="toggle_active">
-                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                    <button type="submit" class="btn btn-sm btn-outline"><?= $a['is_active'] ? 'غیرفعال کردن' : 'فعال کردن' ?></button>
-                </form>
-                <form method="post" onsubmit="return confirm('حذف این حساب ادمین؟');" style="display:inline;">
-                    <?= csrfField() ?>
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                    <button type="submit" class="btn btn-sm btn-danger">حذف</button>
-                </form>
-                <?php endif; ?>
+            <td>
+                <div class="admin-actions">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('pw-<?= (int)$a['id'] ?>').style.display='flex'">تغییر رمز</button>
+                    <?php if (!$isMe): ?>
+                    <form method="post" style="display:inline;">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="toggle_active">
+                        <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-outline"><?= $a['is_active'] ? 'غیرفعال کردن' : 'فعال کردن' ?></button>
+                    </form>
+                    <form method="post" onsubmit="return confirm('حذف این حساب ادمین؟');" style="display:inline;">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                    </form>
+                    <?php endif; ?>
+                </div>
             </td>
         </tr>
         <tr id="pw-<?= (int)$a['id'] ?>" style="display:none;">

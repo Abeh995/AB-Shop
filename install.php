@@ -1,8 +1,9 @@
 <?php
 /**
- * Initial installation. Run this once after uploading the project: yoursite.com/install.php
- * The installer locks itself automatically when an admin already exists in the database,
- * preventing additional admin accounts from being created through this page.
+ * Initial setup — run this only once after uploading the project:
+ * yoursite.com/install.php
+ * This page automatically locks itself if an admin already exists in the
+ * database, and no longer allows creating a new admin (for security).
  */
 require_once __DIR__ . '/app/bootstrap.php';
 

@@ -1,15 +1,15 @@
 <?php
 /**
- * General-purpose helper functions.
+ * General-purpose helper functions
  */
 
-// Escape output to prevent XSS.
+// Escape output to prevent XSS
 function e(?string $str): string
 {
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// Format prices in toman with thousands separators and Persian numerals.
+// Format a price in Toman with thousands separators and Persian digits
 function formatPrice($amount): string
 {
     $amount = (float) $amount;
@@ -17,7 +17,7 @@ function formatPrice($amount): string
     return toPersianDigits($formatted) . ' ' . CURRENCY_LABEL;
 }
 
-// Convert Latin digits to Persian numerals for local display.
+// Convert Latin digits to Persian digits for a more native display
 function toPersianDigits(string $str): string
 {
     $en = ['0','1','2','3','4','5','6','7','8','9'];
@@ -25,7 +25,7 @@ function toPersianDigits(string $str): string
     return str_replace($en, $fa, $str);
 }
 
-// Generate a slug from Persian or English text.
+// Build a URL slug from a Persian/English string
 function slugify(string $text): string
 {
     $text = trim($text);
@@ -35,14 +35,14 @@ function slugify(string $text): string
     return trim($text, '-') ?: 'item-' . substr(md5(uniqid('', true)), 0, 8);
 }
 
-// Simple redirect helper.
+// Simple redirect helper
 function redirect(string $path): void
 {
     header('Location: ' . $path);
     exit;
 }
 
-// Flash messages persisted across redirects through the session.
+// Session-based flash messages (persist across a redirect)
 function setFlash(string $type, string $message): void
 {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
@@ -58,7 +58,7 @@ function getFlash(): ?array
     return null;
 }
 
-// Generate a unique order code, e.g. SK-4F82A1.
+// Generate a unique order code, e.g. SK-4F82A1
 function generateOrderCode(): string
 {
     return 'SK-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
@@ -66,8 +66,9 @@ function generateOrderCode(): string
 
 /**
  * Generate a unique SKU for a new product, e.g. SOCK-042817.
- * The database is checked before returning the value; on the unlikely chance of a collision,
- * the generator retries to guarantee uniqueness.
+ * Before returning, always checks the database to make sure the code hasn't
+ * been used already (collisions are extremely unlikely, but it retries a
+ * few times just to be safe).
  */
 function generateUniqueSku(): string
 {
@@ -79,11 +80,11 @@ function generateUniqueSku(): string
             return $candidate;
         }
     }
-    // Very unlikely fallback: include microseconds to preserve uniqueness.
+    // Extremely unlikely fallback: mix in microtime uniqueness for a guaranteed-unique value
     return 'SOCK-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
 }
 
-// Calculate the effective product price after discounts.
+// Effective product price (accounting for a discount)
 function effectivePrice(array $product): float
 {
     if (!empty($product['discount_price']) && $product['discount_price'] < $product['price']) {
@@ -92,7 +93,7 @@ function effectivePrice(array $product): float
     return (float) $product['price'];
 }
 
-// Calculate the discount percentage for display.
+// Discount percentage, for the badge shown on product cards
 function discountPercent(array $product): int
 {
     if (!empty($product['discount_price']) && $product['discount_price'] < $product['price'] && $product['price'] > 0) {
@@ -101,15 +102,16 @@ function discountPercent(array $product): int
     return 0;
 }
 
-// Basic validation for Iranian mobile numbers.
+// Simple validation for an Iranian mobile number
 function isValidIranPhone(string $phone): bool
 {
     return (bool) preg_match('/^09[0-9]{9}$/', $phone);
 }
 
 /**
- * Return categories in hierarchical order for admin <select> elements.
- * Each item includes a 'depth' value (0 = top-level category).
+ * Categories as a hierarchical list (a parent category followed by its indented
+ * children) for use in the admin panel's <select>. Each item has a 'depth'
+ * field (0 = top-level category).
  */
 function getCategoriesForDropdown(): array
 {
@@ -134,8 +136,8 @@ function getCategoriesForDropdown(): array
 }
 
 /**
- * Return a category ID together with the IDs of its direct children.
- * Used so parent category pages can include products from their immediate subcategories.
+ * A category's id plus the ids of all its direct children (one level deep).
+ * Lets a parent category page also show products from its subcategories.
  */
 function getCategoryAndChildIds(int $categoryId): array
 {
@@ -149,25 +151,41 @@ function getCategoryAndChildIds(int $categoryId): array
 }
 
 /**
- * SQL fragment for calculating a product's effective stock in list queries (product cards).
- * Variant products use the sum of variant stock; products without variants use their stock column.
- * Fixes the previous behavior where variant products were incorrectly shown as out of stock
- * because p.stock is intentionally stored as zero for such products.
+ * SQL fragment that computes a product's "effective stock" for listing
+ * queries (product cards): the sum of its variants' stock when it has
+ * variants, otherwise its own stock column.
+ * Bug fix: product cards used to read only p.stock (which is always stored
+ * as 0 for products with variants, per the 1.2.0 design) and so incorrectly
+ * showed every product with variants as "out of stock", even when its
+ * variants had stock.
  */
 function effectiveStockSqlFragment(string $productAlias = 'p'): string
 {
     return "COALESCE((SELECT SUM(v.stock) FROM product_variants v WHERE v.product_id = $productAlias.id), $productAlias.stock)";
 }
 
+/**
+ * URL of the uploaded site logo, or null when no logo has been uploaded yet
+ * (or the stored file is missing), so callers can fall back to the text logo.
+ */
+function siteLogoUrl(): ?string
+{
+    $filename = getSetting('site_logo', '');
+    if (!$filename || !file_exists(BRANDING_UPLOAD_DIR . $filename)) {
+        return null;
+    }
+    return BRANDING_UPLOAD_URL . $filename;
+}
+
 // ---------- Product tags ----------
 
-// Load all tags used by the site, including those attached to inactive products, for admin forms.
+// All tags on the site (across all products, active or not) — for the admin form's checkboxes
 function getAllTags(): array
 {
     return db()->query("SELECT id, name, slug FROM tags ORDER BY name ASC")->fetchAll();
 }
 
-// Load tags assigned to a specific product.
+// Tags belonging to a specific product
 function getProductTags(int $productId): array
 {
     $stmt = db()->prepare("SELECT t.id, t.name, t.slug FROM tags t
@@ -178,10 +196,10 @@ function getProductTags(int $productId): array
 }
 
 /**
- * Synchronize a product's tags with a new selection and any newly entered tag names.
- * Missing tags are created automatically.
- * @param int[] $existingTagIds IDs of existing selected tags.
- * @param string $newTagsRaw Comma-separated new tag names, e.g. "cotton, autumn".
+ * Sync a product's tags with a new list (checked existing tags + any new
+ * tags the admin typed in as free text). New tags are created if missing.
+ * @param int[] $existingTagIds Ids of the existing tags that were checked
+ * @param string $newTagsRaw Comma-separated string of new tags, e.g. "نخی, پاییزه"
  */
 function syncProductTags(int $productId, array $existingTagIds, string $newTagsRaw): void
 {

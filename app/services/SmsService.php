@@ -1,15 +1,17 @@
 <?php
 /**
- * SMS delivery service.
+ * SMS-sending service
  *
- * By default, the service runs in "Log Mode": until a real provider API key is configured
- * in config.php, no SMS is sent, but the message is stored in sms_log for inspection.
- * Missing SMS configuration therefore never causes a site crash.
+ * Runs in "log mode" by default; that is, until a real API key
+ * (Kavenegar/Melipayamak/etc.) is set in config.php, no real SMS is sent,
+ * but the message text is stored in the sms_log table so you can review it
+ * in the panel. This means missing SMS credentials never causes an error
+ * or crashes the site.
  *
- * To enable real delivery (for example, Kavenegar):
+ * To actually enable it (e.g. with Kavenegar):
  *   SMS_ENABLED = true
- *   SMS_PROVIDER_API_KEY = 'your real API key'
- *   SMS_SENDER_LINE = 'your sender line'
+ *   SMS_PROVIDER_API_KEY = 'your real key'
+ *   SMS_SENDER_LINE = 'your sending line number'
  */
 
 class SmsService
@@ -25,7 +27,7 @@ class SmsService
             $status = $result['ok'] ? 'sent' : 'failed: ' . $result['error'];
         }
 
-        // Always record the message in the log table, whether it was actually sent or log-only.
+        // Always recorded in the log table (whether it's a real send or just a log)
         try {
             $stmt = db()->prepare("INSERT INTO sms_log (phone, message, status) VALUES (?, ?, ?)");
             $stmt->execute([$phone, $message, $status]);
@@ -37,8 +39,8 @@ class SmsService
     }
 
     /**
-     * Send SMS through Kavenegar, a common SMS provider in Iran.
-     * Documentation: https://kavenegar.com/rest.html
+     * Send via Kavenegar (Iran's most common SMS provider)
+     * Docs: https://kavenegar.com/rest.html
      */
     private static function sendViaKavenegar(string $phone, string $message): array
     {
@@ -74,7 +76,7 @@ class SmsService
         return ['ok' => false, 'error' => $data['return']['message'] ?? 'خطای نامشخص'];
     }
 
-    // ---------- Predefined messages for order events ----------
+    // ---------- Ready-made messages for various order events ----------
 
     public static function notifyOrderConfirmed(string $phone, string $orderCode): void
     {

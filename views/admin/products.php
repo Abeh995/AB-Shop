@@ -46,14 +46,16 @@
                 <?php endif; ?>
             </td>
             <td><?= $p['is_active'] ? '<span class="status-pill status-delivered">فعال</span>' : '<span class="status-pill status-cancelled">غیرفعال</span>' ?></td>
-            <td class="admin-actions">
-                <a href="product_edit.php?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-outline">ویرایش</a>
-                <form method="post" onsubmit="return confirm('حذف این محصول؟');" style="display:inline;">
-                    <?= csrfField() ?>
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                    <button type="submit" class="btn btn-sm btn-danger">حذف</button>
-                </form>
+            <td>
+                <div class="admin-actions">
+                    <a href="product_edit.php?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-outline">ویرایش</a>
+                    <form method="post" onsubmit="return confirm('حذف این محصول؟');" style="display:inline;">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                    </form>
+                </div>
             </td>
         </tr>
         <?php endforeach; ?>

@@ -63,16 +63,18 @@
                 <td><?= toPersianDigits((string)$c['product_count']) ?></td>
                 <td><label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="is_active" <?= $c['is_active'] ? 'checked' : '' ?>> فعال</label></td>
                 <td><input class="form-control" type="number" name="sort_order" value="<?= (int)$c['sort_order'] ?>" style="width:70px;"></td>
-                <td class="admin-actions">
-                    <input type="hidden" name="description" value="<?= e($c['description']) ?>">
-                    <button type="submit" class="btn btn-sm btn-outline">ذخیره</button>
-            </form>
-                    <form method="post" onsubmit="return confirm('حذف این دسته‌بندی؟');" style="display:inline;">
-                        <?= csrfField() ?>
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
-                    </form>
+                <td>
+                    <div class="admin-actions">
+                        <input type="hidden" name="description" value="<?= e($c['description']) ?>">
+                        <button type="submit" class="btn btn-sm btn-outline">ذخیره</button>
+                </form>
+                        <form method="post" onsubmit="return confirm('حذف این دسته‌بندی؟');" style="display:inline;">
+                            <?= csrfField() ?>
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                            <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                        </form>
+                    </div>
                 </td>
         </tr>
         <?php endforeach; ?>

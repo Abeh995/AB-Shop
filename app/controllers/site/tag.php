@@ -1,6 +1,6 @@
 <?php
 /**
- * Tag product listing controller for topic-based navigation and SEO.
+ * Product-listing page for a single tag (topical grouping + SEO landing page).
  */
 
 $slug = $_GET['slug'] ?? '';
@@ -15,7 +15,7 @@ if (!$tag) {
     return;
 }
 
-$pageTitle = 'تگ: ' . $tag['name'];
+$pageTitle = $tag['name'];
 $stockSql = effectiveStockSqlFragment('p');
 
 $stmt = db()->prepare("SELECT p.*, $stockSql AS effective_stock FROM products p
@@ -24,5 +24,9 @@ $stmt = db()->prepare("SELECT p.*, $stockSql AS effective_stock FROM products p
                         ORDER BY p.created_at DESC");
 $stmt->execute([$tag['id']]);
 $products = $stmt->fetchAll();
+
+// A tag-specific meta description (instead of the generic site-wide default)
+// gives each tag page unique, keyword-relevant content for search engines.
+$metaDescription = 'خرید ' . $tag['name'] . ' — ' . count($products) . ' محصول متنوع با ارسال سریع در ' . SITE_NAME . '.';
 
 renderView('site/tag', compact('pageTitle', 'tag', 'products'));

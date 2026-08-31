@@ -1,12 +1,15 @@
 <?php
 /**
- * OTP management service for customer mobile and email verification.
+ * Service that manages verification (OTP) codes for customer phone and
+ * email verification.
  *
- * Security and abuse-prevention rules:
+ * Security / anti-abuse rules:
  * - Each code is valid for 10 minutes.
- * - A maximum of 5 failed attempts is allowed; a new code is required afterward.
- * - At least 60 seconds must pass between code requests to limit SMS abuse and cost.
- * - Codes are stored as SHA-256 hashes in the database, never as plaintext.
+ * - A maximum of 5 incorrect attempts is allowed; after that, a new code
+ *   must be requested.
+ * - At least 60 seconds must pass between two code-send requests
+ *   (prevents cost/abuse from repeated SMS sends).
+ * - The code is stored hashed (sha256) in the database, never as plain text.
  */
 
 class VerificationService
@@ -22,7 +25,8 @@ class VerificationService
     }
 
     /**
-     * Generate and send a new customer verification code. Requests within 60 seconds of the previous send are rejected.
+     * Generate and send a new code for the customer. Rejected if fewer than
+     * 60 seconds have passed since the last send.
      * @return array ['ok'=>bool, 'error'=>string|null, 'wait_seconds'=>int|null]
      */
     public static function sendCode(int $customerId, string $type, string $target): array
@@ -51,9 +55,11 @@ class VerificationService
             $result = EmailService::sendOtp($target, $code);
         }
 
-        // If the provider is not configured (error === null indicates development/unconfigured state, not a network failure),
-        // the code is still stored in the database so it can be retrieved through support/logs;
-        // the controller can then choose the appropriate message based on APP_DEBUG.
+        // If the service isn't configured (error === null means a
+        // development/not-configured state, not a real network error), the
+        // code is still stored in the database and the customer can get it
+        // via support/the log; we let the controller show an appropriate
+        // message based on APP_DEBUG.
         if (!$result['ok'] && $result['error'] !== null) {
             return ['ok' => false, 'error' => $result['error'], 'wait_seconds' => null];
         }
@@ -62,7 +68,7 @@ class VerificationService
     }
 
     /**
-     * Verify a code submitted by the customer.
+     * Check the code entered by the customer
      * @return array ['ok'=>bool, 'error'=>string|null]
      */
     public static function verifyCode(int $customerId, string $type, string $inputCode): array

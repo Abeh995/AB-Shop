@@ -1,7 +1,9 @@
 <?php
 /**
- * Dynamically generates robots.txt based on the seo_indexing_enabled admin setting.
- * When disabled (the default until production content is ready), all crawlers are blocked site-wide.
+ * Dynamic robots.txt — driven by the seo_indexing_enabled setting in the
+ * admin panel (Store settings section).
+ * When it's off (the default, until real content is ready), every bot is
+ * blocked from the entire site.
  */
 
 require_once __DIR__ . '/app/bootstrap.php';

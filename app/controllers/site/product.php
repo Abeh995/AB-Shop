@@ -1,6 +1,6 @@
 <?php
 /**
- * Product detail page controller.
+ * Product detail page controller
  */
 
 $slug = $_GET['slug'] ?? '';
@@ -38,7 +38,7 @@ $finalPrice = effectivePrice($product);
 $showTags = getSetting('show_product_tags', '1') === '1';
 $tags = $showTags ? getProductTags($product['id']) : [];
 
-// ---------- SEO: product-specific description and JSON-LD ----------
+// ---------- SEO: this product's description and JSON-LD ----------
 $metaDescription = $product['description']
     ? mb_substr(strip_tags($product['description']), 0, 160)
     : ($product['name'] . ' — ' . SITE_NAME);
@@ -53,7 +53,7 @@ $jsonLd = [
     'offers' => [
         '@type' => 'Offer',
         'priceCurrency' => 'IRR',
-        'price' => (string) ((int) $finalPrice * 10), // Convert toman to rial for schema.org compatibility.
+        'price' => (string) ((int) $finalPrice * 10), // Toman to Rial, as expected by the schema.org standard
         'availability' => $totalStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         'url' => rtrim(SITE_URL, '/') . '/product/' . $product['slug'],
     ],

@@ -1,6 +1,6 @@
 <?php
 /**
- * PDO database connection using a singleton pattern; all queries use prepared statements.
+ * PDO database connection (singleton) — every query is a prepared statement.
  */
 
 function db(): PDO
@@ -16,12 +16,14 @@ function db(): PDO
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
 
-            // Important: the host usually runs MySQL in UTC, while this project uses a local PHP timezone
-            // configured as Asia/Tehran in config.php. Without this setting, CURRENT_TIMESTAMP values
-            // stored in the database (such as cart added_at or verification created_at) can differ from PHP time()/ 
-            // and strtotime() by about 3.5 hours, causing time-sensitive logic
-            // such as cart price guarantees and verification resend limits to be calculated incorrectly.
-            // This keeps the database session timezone aligned with PHP.
+            // Important: the host usually runs MySQL on UTC, while this project's
+            // PHP is set to Asia/Tehran (in config.php). Without this line,
+            // CURRENT_TIMESTAMP values stored in the database (e.g. the cart's
+            // added_at or a verification code's created_at) would end up about
+            // 3.5 hours off from PHP's time()/strtotime(), breaking
+            // time-sensitive logic (the cart price guarantee, the resend
+            // interval for verification codes). This line keeps the database
+            // session's clock exactly in sync with PHP's.
             $offsetSeconds = (new DateTime('now', new DateTimeZone(date_default_timezone_get())))->getOffset();
             $offsetSign = $offsetSeconds >= 0 ? '+' : '-';
             $offsetSeconds = abs($offsetSeconds);

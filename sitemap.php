@@ -1,8 +1,9 @@
 <?php
 /**
- * Dynamically generates sitemap.xml for primary pages, categories, and active products.
- * Sitemap generation is independent of Google indexing settings; it does not force indexing.
- * It is only useful when crawlers discover and process the sitemap; robots.txt remains the primary control.
+ * Dynamic sitemap.xml — lists the main pages, categories, and active products.
+ * Generating this file is independent of whether Google indexing is
+ * enabled (it doesn't cause indexing by itself; it's only useful once a
+ * bot crawls the page — robots.txt is the actual control).
  */
 
 require_once __DIR__ . '/app/bootstrap.php';

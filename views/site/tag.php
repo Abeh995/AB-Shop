@@ -1,7 +1,7 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 
 <div class="container section">
-    <div class="section-title"><h2>محصولات با تگ «<?= e($tag['name']) ?>»</h2></div>
+    <div class="section-title"><h1 style="font-size:1.4rem; margin:0;">محصولات با تگ «<?= e($tag['name']) ?>»</h1></div>
 
     <?php if ($products): ?>
         <div class="product-grid">

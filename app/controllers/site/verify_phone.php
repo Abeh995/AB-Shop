@@ -1,6 +1,7 @@
 <?php
 /**
- * Mobile verification page where customers enter the SMS code after signup or an incomplete login.
+ * Phone-verification page — after signup or an incomplete login, the
+ * customer enters their SMS code here.
  */
 
 $customerId = pendingCustomerId();
@@ -34,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             completeCustomerLogin($customerId);
             setFlash('success', 'شماره موبایل شما با موفقیت تایید شد. خوش آمدید!');
 
-            // If an email was provided during signup and is still unverified, proceed to email verification.
+            // If an email was also given at signup and isn't verified yet, the next step is email verification
             $emailStmt = db()->prepare("SELECT email, email_verified_at FROM customers WHERE id = ?");
             $emailStmt->execute([$customerId]);
             $customerRow = $emailStmt->fetch();

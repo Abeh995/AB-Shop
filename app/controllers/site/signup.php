@@ -1,7 +1,7 @@
 <?php
 /**
- * Customer registration using a mobile number. After registration, the mobile number
- * must be verified by SMS before the login session is completed.
+ * Customer signup by mobile number — after a successful signup, the customer
+ * must verify their phone number with an SMS code before login is complete.
  */
 
 if (isCustomerLoggedIn()) {

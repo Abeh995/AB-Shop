@@ -1,6 +1,6 @@
 <?php
 /**
- * Category product listing controller, including child categories when present.
+ * Product-listing page for a category (including its subcategories, if any)
  */
 
 $slug = $_GET['slug'] ?? '';
@@ -17,7 +17,7 @@ if (!$category) {
 
 $pageTitle = $category['name'];
 
-// Include products from child categories when this category has descendants.
+// If this category has subcategories, their products are shown on this page too
 $subCategories = db()->prepare("SELECT id, name, slug FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
 $subCategories->execute([$category['id']]);
 $subCategories = $subCategories->fetchAll();

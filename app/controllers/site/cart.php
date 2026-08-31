@@ -1,13 +1,13 @@
 <?php
 /**
- * Shopping cart page controller.
+ * Cart page controller
  */
 
 $pageTitle = 'سبد خرید';
 $cart = cartDetails();
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 
-// Revalidate the applied coupon if the updated cart no longer meets its conditions.
+// Re-validate an already-applied coupon in case it no longer matches the current cart (e.g. the total dropped)
 $discount = 0;
 if ($appliedCoupon) {
     $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);

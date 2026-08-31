@@ -1,16 +1,18 @@
-# Sock Store Architecture Documentation
+# Store Architecture Documentation
 
-**Current Version: `1.2.1`**
+**Current version: 1.3.0**
 
-This document is the authoritative reference for the application's architecture and core business logic. Whenever the project changes, both this document and `CHANGELOG.md` must be updated accordingly.
+This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
 ---
 
 ## 1. Architectural Philosophy
 
-This project is intentionally built **without a framework** (such as Laravel or Symfony) and **without Composer/npm on the production server** so that it can be deployed on inexpensive shared hosting with strict limitations, including limited SSH access and no guaranteed CLI environment. The architecture follows a **Lightweight Manual MVC** approach.
+The project is intentionally built **without a framework** (Laravel, Symfony, etc.) and **without Composer/npm on the server**, so it can be deployed to inexpensive shared hosting with severe operational restrictions such as limited SSH access and no guaranteed CLI tooling.
 
-There are no framework classes, ORM, complex router, or Dependency Injection Container in the project. The application uses procedural PHP together with a small number of focused service classes.
+The architecture follows a **Lightweight Manual MVC** pattern.
+
+There is no framework routing layer, ORM, complex router, or dependency-injection container. The application consists of procedural PHP plus a small number of simple service classes.
 
 ---
 
@@ -18,73 +20,87 @@ There are no framework classes, ORM, complex router, or Dependency Injection Con
 
 ```text
 /
-├── index.php                  Public front controller (routes requests to controllers only)
-├── install.php                Initial installation (creates the first admin without requiring SSH)
-├── .htaccess                  Rewriting, forced HTTPS, security headers
+├── index.php                  Public storefront front controller (routes requests to controllers)
+├── install.php                First-time installer (creates the initial admin without SSH)
+├── .htaccess                  URL rewriting, forced HTTPS, security headers
 │
-├── config/                    Sensitive configuration (protected with .htaccess Deny)
-│   └── config.php             DB, Zarinpal, SMS, debug mode
+├── robots.php                 Dynamic robots.txt (based on seo_indexing_enabled) — since 1.2.1
+├── sitemap.php                Dynamic sitemap.xml (categories + active products) — since 1.2.1
 │
-├── app/                       All application logic — entire directory protected with .htaccess Deny
-│   ├── bootstrap.php          Shared bootstrap entry point for all public entry files
+├── config/                    Sensitive configuration (protected by .htaccess Deny)
+│   └── config.php             DB, Zarinpal, SMS, Faraz SMS, SMTP, Debug mode
+│
+├── app/                       All application/backend logic — protected by .htaccess Deny
+│   ├── bootstrap.php          Shared bootstrap for all entry points; also derives BRANDING_UPLOAD_DIR/URL — since 1.3.0
+│   ├── vendor/PHPMailer/      Official PHPMailer library (without Composer) — since 1.2.1
 │   ├── core/                  Shared application core
-│   │   ├── db.php             PDO connection (Singleton)
-│   │   ├── functions.php      Common helpers (price formatting, slugs, automatic SKU, category hierarchy, ...)
+│   │   ├── db.php             PDO connection (Singleton) + PHP/MySQL timezone synchronization — since 1.2.1
+│   │   ├── functions.php      Shared helpers (price formatting, slugs, automatic SKU, category hierarchy,
+│   │   │                       tags, effective stock, site logo URL, etc.)
 │   │   ├── csrf.php           CSRF token generation/validation
-│   │   ├── settings.php       Read/write store Key-Value settings (introduced in 1.2.0)
+│   │   ├── settings.php       Key-value store settings — since 1.2.0
 │   │   ├── auth.php           Admin authentication + roles (super_admin/admin)
-│   │   ├── customer_auth.php  Customer authentication via mobile number + password (introduced in 1.2.0)
-│   │   └── cart.php            Cart logic (guest = Session, authenticated = database with price guarantee; rewritten in 1.2.0)
-│   ├── services/              Independent, reusable services
-│   │   ├── ZarinpalService.php Payment gateway integration
-│   │   ├── SmsService.php      SMS sending/logging
-│   │   └── CouponService.php   Coupon validation and discount calculation
+│   │   ├── customer_auth.php  Customer authentication by mobile number + password + mandatory phone verification
+│   │   │                       (since 1.2.0, updated in 1.2.1)
+│   │   └── cart.php           Cart logic (guest=Session, logged-in=database with price guarantee) — rewritten in 1.2.0
+│   ├── services/              Reusable independent services
+│   │   ├── ZarinpalService.php      Payment gateway integration
+│   │   ├── SmsService.php           Standard SMS notifications / logging
+│   │   ├── FarazSmsService.php      Pattern-based OTP SMS through Faraz SMS — since 1.2.1
+│   │   ├── EmailService.php          SMTP email delivery with authenticated PHPMailer — since 1.2.1
+│   │   ├── VerificationService.php  Phone/email verification-code lifecycle — since 1.2.1
+│   │   └── CouponService.php         Coupon validation and discount calculation
 │   └── controllers/            Controllers — data fetching/processing only, zero HTML
-│       ├── site/               Storefront controllers (home, product, cart, checkout, ...)
-│       └── admin/               Admin panel controllers
+│       ├── site/               Storefront controllers (home, product, cart, checkout, tags, search, authentication, etc.)
+│       └── admin/               Admin-panel controllers
 │
-├── views/                     All HTML/templates (Presentation Layer) — entire directory protected with .htaccess Deny
-│   ├── layout/                 Shared site header/footer (including SEO tags: robots, canonical, Open Graph)
+├── views/                      All HTML/templates (Presentation Layer) — protected by .htaccess Deny
+│   ├── layout/                 Shared storefront header/footer (search bar, announcement bar, logo, social
+│   │                            links, SEO robots/canonical/Open Graph tags) — extended in 1.3.0
 │   ├── site/                   Storefront views + partials
-│   └── admin/                  Admin panel views + admin-specific layout
+│   └── admin/                  Admin-panel views + admin-specific layouts
 │
-├── admin/                     Public admin entry points (thin files: bootstrap + auth guard + controller require)
-├── ajax/                      AJAX endpoints (add/remove/update cart, apply coupon)
-├── payment/                   Payment gateway endpoints (callback, retry)
-├── assets/                    Public CSS/JS/static images
-├── uploads/products/          Uploaded product images (PHP execution disabled in this directory)
+├── admin/                      Public admin entry points (thin files: bootstrap + auth guard + controller require)
+│   ├── diagnostics.php         Live Faraz SMS/SMTP diagnostics (super_admin only) — since 1.2.2
+│   └── notifications_log.php   Detailed SMS/email attempt log (super_admin only) — since 1.2.2
+├── ajax/                       AJAX endpoints (cart operations, coupon application/removal, etc.)
+├── payment/                    Payment gateway endpoints (callback, retry)
+├── assets/                     Public CSS/JS/static images
+├── uploads/products/           Uploaded product images (PHP execution disabled in this directory)
+├── uploads/branding/           Uploaded site logo (same PHP-execution restriction, derived from UPLOAD_DIR) — since 1.3.0
 ├── database/
 │   ├── schema.sql              Complete schema for fresh installations
-│   └── migrations/             Upgrade scripts for existing installations
-└── docs/                      Project documentation
+│   └── migrations/             Upgrade scripts for existing databases
+└── docs/                        Project documentation
 ```
 
 ### Why Separate `app/` and `views/`?
 
-- `app/` is never requested directly by the browser. It is loaded only through PHP `require` statements. As a result, business logic, database queries, and form processing remain fully separated from HTML.
-- `views/` is presentation-only. A view uses only the variables prepared by its controller through `renderView()`, and rarely performs direct queries. The intentional exception is the category menu in `views/layout/header.php`, because it is shared data required by all pages rather than page-specific data.
-- This separation means that changing the appearance of a page requires modifying only the corresponding `views/...` file, while changing behavior (for example, discount calculation) is isolated to `app/controllers/...` or `app/services/...`.
+- `app/` is never directly requested by the browser. It is loaded only through server-side `require` calls. Business logic, database queries, and form processing are therefore isolated from HTML.
+- `views/` is presentation-only. A view consumes variables prepared by its controller through `renderView()` and rarely performs its own queries.
+- The intentional exception is the shared category navigation in `views/layout/header.php`, because it is common data required by every page rather than data specific to a single controller.
+- A visual redesign can therefore be implemented in `views/...` without changing business logic, while a business rule such as discount calculation can be changed in `app/controllers/...` or `app/services/...`.
 
 ---
 
 ## 3. Request Lifecycle
 
-### Storefront Requests (for example, `/product/men-socks`)
+### Storefront Requests (Example: `/product/mens-socks`)
 
-1. `.htaccess` rewrites the request to `index.php?route=product/men-socks`, except for physical files/directories such as `assets/`, `ajax/`, `admin/`, and `uploads/`, which are served directly.
-2. `index.php` loads the bootstrap (`app/bootstrap.php`), including Session, Config, Core, and Services.
-3. `index.php` selects the controller based on the first route segment (`product` in this example) and requires `app/controllers/site/product.php`.
-4. The controller fetches the required data from the database and calls `renderView('site/product', [...])`.
-5. `renderView()` (defined in the bootstrap) extracts the supplied variables and requires `views/site/product.php`.
-6. The view requires `views/layout/header.php` and `views/layout/footer.php` around its content.
+1. `.htaccess` rewrites requests that do not match a physical file/directory to `index.php?route=product/mens-socks`. Physical paths such as `assets/`, `ajax/`, `admin/`, and `uploads/` bypass the main rewrite.
+2. `index.php` loads the shared bootstrap (`app/bootstrap.php`), including sessions, configuration, core modules, and services.
+3. `index.php` extracts the first route segment (`product`) and requires the corresponding controller: `app/controllers/site/product.php`.
+4. The controller fetches the required data and calls `renderView('site/product', [...])`.
+5. `renderView()` extracts the provided data and requires `views/site/product.php`.
+6. The view loads `views/layout/header.php` and `views/layout/footer.php`.
 
-### Admin Panel Requests (for example, `/admin/products.php`)
+### Admin Requests (Example: `/admin/products.php`)
 
-The flow is similar, except that `admin/products.php` is a thin physical entry point and is called directly by Apache because this path is a physical file and therefore bypasses the rewrite rule. It loads the bootstrap, calls `requireAdmin()`, and then requires `app/controllers/admin/products.php`.
+The overall pattern is the same, except `admin/products.php` is a thin physical entry point served directly by Apache. It loads the bootstrap, calls `requireAdmin()`, and then requires `app/controllers/admin/products.php`.
 
-### AJAX Requests (for example, adding an item to the cart)
+### AJAX Requests (Example: Add to Cart)
 
-Files under `ajax/` are independent endpoints. Each endpoint loads the bootstrap, validates input (including CSRF validation), and returns either a JSON response or a redirect.
+Files under `ajax/` are standalone entry points. Each file loads the bootstrap, validates request data including CSRF, and returns JSON or a redirect.
 
 ---
 
@@ -92,22 +108,25 @@ Files under `ajax/` are independent endpoints. Each endpoint loads the bootstrap
 
 | Table | Description |
 |---|---|
-| `admins` | Admin panel accounts. The `role` (`super_admin`/`admin`) and `is_active` columns were introduced in 1.1.0. |
-| `customers` | Customer accounts identified by mobile number (introduced in 1.2.0). |
-| `categories` | Product categories; `parent_id` supports one-level child categories (introduced in 1.2.0, self-referencing, nullable). |
-| `products` | Products; includes `price`, `discount_price`, `stock` (overall stock when variants are not used), and `sku` with a `UNIQUE KEY` and automatic generation (introduced in 1.2.0). |
-| `product_images` | Additional image gallery for each product. |
-| `product_variants` | Product size/color variants with independent stock. |
-| `coupons` | Discount codes (percentage-based or fixed amount). |
-| `orders` | Orders; includes customer information, amounts, `status`, `payment_status` (introduced in 1.1.0), and optional `customer_id` (introduced in 1.2.0; guest orders remain supported). |
-| `order_items` | Order line items containing a snapshot of product name/price at purchase time, independent of later product changes. |
-| `cart_items` | Persistent cart items for authenticated users; every row stores a `locked_unit_price` (introduced in 1.2.0). |
-| `settings` | Store-wide Key-Value settings; currently used for price guarantee configuration (introduced in 1.2.0). |
-| `sms_log` | Log of all sent/recorded SMS messages (introduced in 1.1.0). |
+| `admins` | Admin accounts. `role` (`super_admin`/`admin`) and `is_active` were added in 1.1.0. |
+| `customers` | Customer accounts based on mobile number (since 1.2.0); `email`, `phone_verified_at`, and `email_verified_at` were added in 1.2.1. |
+| `verification_codes` | Hashed phone/email verification codes with expiry and attempt limits — since 1.2.1. |
+| `categories` | Product categories; `parent_id` enables one-level subcategories (since 1.2.0, self-referencing, nullable). |
+| `products` | Products with `price`, `discount_price`, `stock` (global stock when variants are not used), unique auto-generated `sku`, etc. |
+| `product_images` | Additional product gallery images. |
+| `product_variants` | Product size/color variants with independent inventory. |
+| `tags` / `product_tags` | Product tags and the many-to-many relationship between products and tags — since 1.2.1. |
+| `coupons` | Discount codes supporting percentage or fixed-amount discounts. |
+| `orders` | Orders with customer details, totals, `status`, `payment_status` (since 1.1.0), and nullable `customer_id` (since 1.2.0; guest orders are supported). |
+| `order_items` | Order line items storing a snapshot of product name/price at purchase time. |
+| `cart_items` | Persistent cart items for authenticated customers; each row stores a `locked_unit_price` — since 1.2.0. |
+| `settings` | Store-wide key-value configuration, including price guarantee (1.2.0), product tags, SEO indexing (1.2.1), and site logo/announcement bar/footer content/social links/eNamad embed (1.3.0). |
+| `sms_log` | SMS delivery/log records (since 1.1.0); `debug_info` was added in 1.2.2 for detailed API diagnostics. |
+| `email_log` | Email delivery-attempt log with SMTP diagnostics stored in `debug_info` — since 1.2.2. |
 
-### Why Do `order_items` Store Snapshots?
+### Why Does `order_items` Store a Snapshot?
 
-If a product's price or name changes later, historical orders must not change. Therefore, `product_name` and `unit_price` are stored directly in `order_items` rather than relying only on a link to `products`.
+If a product's name or price changes later, historical orders must remain unchanged. Therefore `product_name` and `unit_price` are stored directly in `order_items` instead of relying solely on the current `products` row.
 
 ---
 
@@ -115,163 +134,393 @@ If a product's price or name changes later, historical orders must not change. T
 
 ### 5.1 Cart (`app/core/cart.php`) — Rewritten in 1.2.0
 
-Starting with 1.2.0, the cart has two completely separate storage paths, while the function interface (`cartAdd`, `cartUpdateQty`, `cartRemove`, `cartClear`, `cartCount`, `cartDetails`) remains identical for both. Controllers and views do not need to know the user's authentication state.
+Since 1.2.0, the cart has two distinct storage paths while exposing the same function interface:
 
-- **Guest user:** The cart is stored in `$_SESSION['cart']` as before, containing only `product_id`, `variant_id`, and `qty`. **Price and stock are never stored in the Session**; they are always read live from the database. Guest carts do not have price guarantees because there is no persistent identity to which a multi-day guarantee can be attached.
-- **Authenticated user:** The cart is stored in the `cart_items` database table and persists across devices and sessions. Each row contains a `locked_unit_price` representing the price at the time the item was added. This mode also supports the **price guarantee** described in 5.1.1.
-- If a product is deleted/disabled or does not have sufficient stock, it is automatically ignored in both modes. `cartDetails()` performs this validation at read time.
-- **Guest cart merge after authentication:** when a guest who already has cart items signs in or registers, `mergeGuestCartIntoCustomerCart()` transfers the Session items into `cart_items` using a merge operation rather than replacement, then clears the Session cart.
+`cartAdd`, `cartUpdateQty`, `cartRemove`, `cartClear`, `cartCount`, `cartDetails`
+
+Controllers and views therefore do not need to know whether the current customer is a guest or authenticated.
+
+- **Guest:** stored in `$_SESSION['cart']` as `product_id`, `variant_id`, and `qty`. **Price and stock are never stored in Session**; they are always read live from the database. Guest carts have no price guarantee because there is no persistent identity to which a multi-day guarantee can be attached.
+- **Authenticated customer:** stored in `cart_items`, persistent across sessions and devices. Each row has a `locked_unit_price`, enabling the **price guarantee** described below.
+- If a product is deleted, disabled, or out of stock, it is ignored automatically in both cart modes because `cartDetails()` rechecks the current product state.
+- When a guest logs in or registers, `mergeGuestCartIntoCustomerCart()` transfers guest-session items into the persistent cart using a merge operation rather than replacement, and then clears the guest session.
 
 #### 5.1.1 Cart Price Guarantee
 
-- The cart's **start time** is `MIN(added_at)` across the user's *current* `cart_items`, i.e. the oldest item that currently remains in the cart. Because it is calculated dynamically from the current rows, completely emptying the cart and adding new items later automatically starts a new guarantee period without a dedicated reset column or operation.
-- Configuration is stored through `app/core/settings.php` and the `settings` table and is manageable in `admin/settings.php`:
-  - `price_guarantee_enabled`: enables/disables the feature.
-  - `price_guarantee_days`: guarantee duration in days (default: 7).
-- In `cartDetailsForCustomer()`, if the cart age (`now - cartStartedAt`) is less than `price_guarantee_days`, each item's `locked_unit_price` is used. Otherwise, the product/variant's live price replaces it. From that point onward, the cart continues using live prices until it is emptied and populated again; it never automatically returns to the locked price.
-- **Important:** stock is always checked live from the database, even for items whose price is locked. The guarantee affects the price only, not stock or product active/inactive state.
+- The cart start time is `MIN(added_at)` across the user's **current** `cart_items`.
+- Because this is calculated dynamically, fully emptying the cart and adding a new item later automatically starts a new guarantee period.
+- Settings are stored through `app/core/settings.php` and the `settings` table and can be managed through `admin/settings.php`:
+  - `price_guarantee_enabled`
+  - `price_guarantee_days` (default: 7)
+- `cartDetailsForCustomer()` compares `now - cartStartedAt` with `price_guarantee_days`.
+- While the guarantee is active, each item's `locked_unit_price` is used.
+- After expiry, the live product/variant price replaces the locked price permanently for that cart cycle until the cart becomes empty and a new cycle begins.
+- **Important:** inventory is always checked live. The guarantee affects price only; it does not freeze stock or active/inactive state.
 
 ### 5.1.2 Customer Authentication (`app/core/customer_auth.php`) — Introduced in 1.2.0
 
-Customer login and registration use **mobile number + password**, not SMS OTP. The reason is that `SmsService` is Log-Only by default, so OTP authentication would not work out of the box. Security measures include `password_hash`/`password_verify`, `session_regenerate_id()` after login/registration, an artificial delay for failed attempts, and Open Redirect prevention for the `next` parameter (only internal paths beginning with `/` and not `//` are accepted).
+Authentication uses mobile number + password rather than SMS OTP as the original default customer-login mechanism.
 
-### 5.2 Final Order Total Calculation (`app/controllers/site/checkout.php`)
+Security measures include:
 
-When an order is created:
+- `password_hash()` / `password_verify()`
+- `session_regenerate_id()` after login/registration
+- artificial delay on failed login attempts
+- protection against open redirects in the `next` parameter; only safe internal paths beginning with `/` and not with `//` are accepted
 
-1. The cart is reloaded from the database from scratch rather than trusting submitted form values.
-2. Stock is checked again for every item.
-3. The coupon, if any, is validated again because it may have expired or reached its usage limit during the checkout interval.
-4. `subtotal`, `discount_total`, and `total` are calculated server-side. No monetary amount is accepted directly from the user.
-5. Order creation, inventory deduction, and coupon usage counter increment are executed inside a database **Transaction** (all succeed or all roll back).
+From 1.2.1 onward, newly registered customers must also complete phone verification before a full authenticated session is established.
+
+### 5.2 Final Order Price Calculation (`app/controllers/site/checkout.php`)
+
+During order creation:
+
+1. The cart is rebuilt from database state rather than trusting quantities or totals submitted by the browser.
+2. Stock is revalidated for every item.
+3. The applied coupon is revalidated because it may have expired or reached its usage limit since it was applied to the cart.
+4. `subtotal`, `discount_total`, and `total` are calculated server-side. No monetary value is trusted directly from the client.
+5. Order insertion, stock decrement, and coupon usage increment are executed inside a single database transaction so the operation either fully succeeds or fully rolls back.
 
 ### 5.3 Payment Gateway (`app/services/ZarinpalService.php`)
 
 - Uses Zarinpal REST API v4.
-- Project amounts are stored in **Toman**; the service automatically multiplies them by 10 when sending requests because the Zarinpal API expects Rials.
-- `request()`: creates the payment request with Zarinpal and returns the payment URL.
-- `verify()`: finalizes/verifies the transaction after the customer returns from the gateway.
-- On any network error or invalid response, the service never throws an Exception that could crash the site. It always returns `['ok'=>false, 'error'=>...]`, which is handled by the controller.
+- Monetary values inside the project are stored in **toman**.
+- The service multiplies the amount by 10 when sending it to Zarinpal because the gateway expects rial.
+- `request()` creates the payment request and returns the gateway URL.
+- `verify()` finalizes the payment after the user returns from the gateway.
+- Network failures and invalid responses do not throw exceptions that crash the site. The service returns `['ok'=>false, 'error'=>...]` and the controller handles the failure.
 
 **Complete online payment flow:**
 
 ```text
-Checkout (POST) → Order created in DB (status=pending, payment_status=unpaid)
-                 → ZarinpalService::request() is called
-                 → Success: customer is redirected to Zarinpal
-                 → Failure (network error, etc.): customer is sent to /order/failed/{code}
-                                  with a "Retry Payment" action
-                                  (the order is preserved; only payment remains incomplete)
+Checkout (POST)
+    ↓
+Create order in DB
+status=pending, payment_status=unpaid
+    ↓
+ZarinpalService::request()
+    ├─ success → redirect customer to Zarinpal
+    └─ failure → /order/failed/{code} with Retry button
+                  (order remains stored; payment was not completed)
 
-Customer pays or cancels at the gateway
-                 → Zarinpal redirects to payment/zarinpal_callback.php
-                 → Status=NOK (cancelled): order payment_status=failed → failure page
-                 → Status=OK: ZarinpalService::verify() is called
-                         → Success: payment_status=paid, status=confirmed,
-                                    confirmation SMS sent → success page
-                         → Failure: payment_status=failed → failure page with retry
+Customer pays or cancels on Zarinpal
+    ↓
+payment/zarinpal_callback.php
+    ├─ Status=NOK
+    │    → payment_status=failed
+    │    → failure page
+    │
+    └─ Status=OK
+         → ZarinpalService::verify()
+             ├─ success → payment_status=paid, status=confirmed
+             │            → confirmation SMS
+             │            → success page
+             │
+             └─ failure → payment_status=failed
+                          → failure page + Retry button
 ```
 
 ### 5.4 Coupons (`app/services/CouponService.php`)
 
-Validation covers: enabled state, expiration date, usage limit (`max_uses`/`used_count`), and minimum order amount. A discount can never exceed the order amount (`min()` is used during calculation). The usage counter is incremented only after the order is successfully committed, not when the coupon is merely applied to the cart.
+Validation includes:
 
-### 5.5 SMS (`app/services/SmsService.php`)
+- enabled/active state
+- expiration date
+- usage limits (`max_uses` / `used_count`)
+- minimum order amount
 
-Designed with a **Fail-Safe by Default** strategy: while `SMS_ENABLED` is `false` or the API key is empty, no real SMS is sent, but the message is still recorded in `sms_log`. Missing SMS configuration therefore never breaks order creation or status changes.
+A discount can never exceed the order total because the final value is bounded with `min()`.
 
-### 5.6 Customer Phone/Email Verification (`app/services/VerificationService.php`, `FarazSmsService.php`, `EmailService.php`) — Introduced in 1.2.1
+The usage counter is incremented only after the order is successfully committed, not merely when the coupon is applied to the cart.
 
-Beginning with this version, customer registration no longer creates a fully authenticated Session immediately. The account is created, but full login remains blocked until the correct six-digit SMS verification code is entered at `/verify-phone`.
+### 5.5 Standard SMS Notifications (`app/services/SmsService.php`)
 
-- **`VerificationService`**: generates six-digit numeric codes, hashes them with `sha256` before storage, enforces a 10-minute validity period, allows at most five incorrect attempts, and requires at least 60 seconds between code-send requests. It delegates delivery to `FarazSmsService` for phone verification and `EmailService` for email verification.
-- **`FarazSmsService`**: sends pattern-based OTP messages through the Faraz SMS / Iran Payamak API. Pattern code and variable name are configurable in `config.php`.
-- **`EmailService`**: sends email through authenticated SMTP using the bundled PHPMailer library (without Composer, under `app/vendor/PHPMailer/`) rather than PHP's built-in `mail()` function.
+The service follows a **fail-safe by default** model.
 
-Both delivery services are Fail-Safe. When their configuration is disabled (`FARAZ_SMS_ENABLED` / `SMTP_ENABLED` is `false`), no real message is sent and the application remains operational.
+Until `SMS_ENABLED` is enabled and the required provider key is configured:
 
-### 5.7 PHP/MySQL Timezone Synchronization (`app/core/db.php`) — Bug Fix in 1.2.1
+- no real SMS is sent
+- the message is written to `sms_log`
+- notification configuration cannot break order creation or order-status updates
 
-Many shared hosting environments run MySQL with a default timezone of `UTC`, while this project sets `date_default_timezone_set('Asia/Tehran')` (`UTC+3:30`) in `config.php`. Without synchronization, comparisons between `CURRENT_TIMESTAMP` values generated by MySQL and `time()`/`strtotime()` in PHP can differ by approximately 3.5 hours.
+This service is used for standard order-related notifications, while `FarazSmsService` handles verification OTP messages.
 
-The issue was mostly invisible in the 1.2.0 daily-granularity cart price guarantee. However, the 60-second verification-code resend interval introduced in 1.2.1 exposed it because PHP could interpret a newly created code as having been sent hours earlier.
+### 5.6 SMS/Email Diagnostics (`admin/diagnostics.php`, `admin/notifications_log.php`) — Introduced in 1.2.2
 
-The fix in `db.php` calculates the current PHP timezone offset and applies the equivalent `SET time_zone = '+HH:MM'` value to the database session immediately after connecting. The value is derived from the configured PHP timezone rather than hardcoded.
+The notification services distinguish between two layers of output:
 
-### 5.8 Effective Product Stock (`effectiveStockSqlFragment()`) — Bug Fix in 1.2.1
+1. A **user-safe error message**, such as “SMS delivery failed”, which never exposes sensitive protocol details.
+2. **Full diagnostic data**, including URL, payload, HTTP status, cURL errors, raw API response, or full SMTP conversation, stored in `debug_info` and visible only to `super_admin` users through the admin panel.
 
-Since 1.2.0, products with variants intentionally store `0` in `products.stock` because actual inventory comes from the variant rows. However, storefront product cards were still using `stock` directly and therefore incorrectly marked every variant-based product as unavailable.
+`admin/diagnostics.php` provides three diagnostic actions:
 
-`effectiveStockSqlFragment()` returns a SQL fragment using `COALESCE` with a subquery: if variants exist, the result is `SUM(stock)` across them; otherwise the product's own `stock` column is used. The resulting `effective_stock` is included in the home, category, and tag product-list queries, and `product_card.php` prioritizes it.
+- Faraz account balance lookup via `GET /account/balance`
+- Faraz pattern lookup via `GET /patterns/{code}`
+- raw SMTP connectivity/authentication through `smtpConnect()` without sending a message
 
-### 5.9 Product Tags and SEO
+The diagnostics deliberately avoid sending a test OTP because a live test message may create a real cost and involve a real customer. The diagnostics instead verify connectivity and configuration directly.
 
-Tags use a simple many-to-many relationship (`tags` + `product_tags`) without ownership rules. Any admin can modify any product's tags at any time. `syncProductTags()` replaces the product's existing tag relationships using the selected tags and any newly entered tags.
+The same low-level mechanisms used by the production services (`callApi()` / `testConnection()`) are reused so the diagnostic path and the production path share the same logging behavior.
 
-For SEO, `seo_indexing_enabled` controls `robots.php`, `sitemap.php`, and the `<meta name="robots">` tag. Indexing is disabled by default so incomplete content is not exposed to Google before the store is ready.
+**Why store diagnostics in the database instead of relying on `error_log()`?**
 
-### 5.10 Admin Authentication and Roles (`app/core/auth.php`)
+On shared hosting, server log access often requires File Manager or SSH access that a store administrator may not have. Database-backed diagnostics make the technical evidence available directly from the admin panel without additional infrastructure.
 
-- `requireAdmin()`: every admin panel page must call this guard.
-- `requireSuperAdmin()`: the admin management page (`admin/users.php`) and order deletion operations (`admin/orders.php`, `admin/order_detail.php`, introduced in 1.2.0) use this guard.
-- Any admin can have `is_active=0` without the account being deleted, allowing temporary suspension of access.
-- The system must always retain at least one `super_admin`; this is enforced by the deletion/deactivation safeguards in `app/controllers/admin/users.php`.
-- **Order deletion (introduced in 1.2.0):** only a `super_admin` can permanently delete an order. This restriction is enforced both in the UI (the button is rendered only for super admins) and, more importantly, server-side through `requireSuperAdmin()` in the controller. A regular admin therefore cannot bypass the restriction by manually submitting a POST request.
+### 5.7 Multi-Image Product Gallery — Introduced in 1.2.2
 
-### 5.7 CSRF, XSS, SQL Injection
+The `product_images` table has existed since 1.0.0 and storefront product pages have read from it from the beginning. Until 1.2.2, however, the admin panel could only set the primary cover image in `products.image`.
 
-- Every POST form includes a `csrf_token` (`csrfField()`), which is checked by `verifyCsrf()`.
-- All textual output is escaped through `e()` (a wrapper around `htmlspecialchars`).
-- All queries use PDO Prepared Statements (`db()->prepare(...)`); raw user input is never concatenated directly into SQL.
+The new gallery management logic in the product editor:
+
+- accepts `gallery_images[]` through `<input type="file" multiple>`
+- validates every uploaded file using `handleProductImageUpload()` and real file-type detection with `finfo`
+- inserts images using increasing `sort_order` based on the product's current maximum `sort_order`
+- supports deletion using `delete_image_ids[]`
+- removes both the database row and the physical file from disk
+- processes deletion before insertion when both happen in one submission so the next `sort_order` is calculated correctly
+- keeps the primary cover image (`products.image`) completely independent from the gallery
+
+The cover image continues to serve product cards, Open Graph metadata, and JSON-LD.
+
+### 5.8 Customer Phone/Email Verification (`app/services/VerificationService.php`, `FarazSmsService.php`, `EmailService.php`) — Introduced in 1.2.1
+
+Customer verification is divided into three responsibilities:
+
+- **`VerificationService`**
+  - generates a six-digit numeric code
+  - hashes the code with `sha256` before storage
+  - enforces 10-minute expiry
+  - allows at most five incorrect attempts
+  - enforces a minimum 60-second interval between send requests
+  - delegates delivery to the appropriate channel
+
+- **`FarazSmsService`**
+  - sends pattern-based OTP SMS through the Faraz SMS / Iran Payamak API
+  - uses a pre-approved pattern rather than arbitrary message text
+  - pattern code and variable name are configurable in `config.php`
+
+- **`EmailService`**
+  - sends email through authenticated SMTP
+  - uses the PHPMailer package stored directly in `app/vendor/PHPMailer/`
+  - intentionally avoids PHP's built-in `mail()` function
+
+Both delivery services are fail-safe. When their respective integrations are not configured, the application logs the attempt rather than crashing.
+
+#### Delivery Fixes in 1.2.2
+
+After real deployment, two additional issues were identified:
+
+1. `FarazSmsService` sent `number_format = 'en'`; the API requires `'english'`.
+2. The email-verification controller did not send a code on the first GET request to `/verify-email`.
+
+The email verification fix intentionally runs the automatic send only on `GET` requests (`REQUEST_METHOD !== 'POST'`) rather than on every controller execution.
+
+This is important because a `POST` request may either submit a new code for validation or trigger a resend. Sending automatically during POST processing could generate a new verification code immediately before validating the code the user just entered and could therefore invalidate a still-valid previous code.
+
+The resulting behavior was tested:
+
+- first GET to `/verify-email` creates one delivery log entry
+- subsequent POST requests do not automatically create another delivery record unless the explicit resend action is used
+
+### 5.9 PHP/MySQL Timezone Synchronization (`app/core/db.php`) — Fixed in 1.2.1
+
+This is an important deployment requirement for environments where MySQL does not use the same timezone as PHP.
+
+The project configures PHP for `Asia/Tehran` (`UTC+3:30`), while many shared-hosting MySQL instances default to UTC. Without synchronization, values created using MySQL `CURRENT_TIMESTAMP` can differ from timestamps interpreted through PHP by roughly 3.5 hours.
+
+This previously affected:
+
+- cart price-guarantee age calculation
+- 60-second verification-code resend throttling
+
+The fix calculates the current PHP timezone offset dynamically and applies the equivalent `SET time_zone = '+HH:MM'` value to the active PDO connection.
+
+No fixed timezone offset is hardcoded in application logic beyond the actual configured PHP timezone.
+
+### 5.10 Effective Product Stock (`effectiveStockSqlFragment()`) — Fixed in 1.2.1
+
+When `has_variants` is enabled, `products.stock` is intentionally stored as `0`, because real inventory is represented by the sum of `product_variants.stock`.
+
+The storefront product cards previously ignored this and read `products.stock` directly.
+
+`effectiveStockSqlFragment()` resolves this by using:
+
+- the sum of variant stock when variants exist
+- otherwise the product-level `stock`
+
+The resulting SQL expression is exposed as `effective_stock` in product-list queries across the homepage, category pages, and tag pages.
+
+`product_card.php` prefers `effective_stock` when present and falls back to the simple `stock` value when it is not.
+
+### 5.11 Product Tags and SEO
+
+Product tags use a simple many-to-many relationship between `tags` and `product_tags`.
+
+`syncProductTags()` replaces the product's current tag relationships with the current selection each time the product form is saved.
+
+There is no tag ownership model; any admin can modify any product's tags.
+
+The `seo_indexing_enabled` setting controls:
+
+- `<meta name="robots">` in `views/layout/header.php`
+- `robots.php`
+- whether `robots.txt` advertises the sitemap
+
+`sitemap.php` always generates its list of pages independently. Making a sitemap available does not itself force indexing; crawler access is controlled through the robots configuration.
+
+Product pages also generate a complete `schema.org/Product` JSON-LD object using the same effective-stock calculation as the storefront UI.
+
+### 5.12 Admin Authentication and Roles (`app/core/auth.php`)
+
+- `requireAdmin()` must be called by admin pages.
+- `requireSuperAdmin()` protects `admin/users.php` and full order deletion in `admin/orders.php` and `admin/order_detail.php`.
+- `is_active=0` provides account suspension without deleting the admin.
+- The system must always retain at least one `super_admin`.
+- The last `super_admin` cannot be removed or deactivated.
+- Full order deletion is server-side protected; hiding the button in the UI is only an additional usability layer.
+- A normal `admin` cannot bypass the privilege check by manually crafting a POST request.
+
+### 5.13 CSRF, XSS, and SQL Injection
+
+- All POST forms include a CSRF token generated through `csrfField()` and validated with `verifyCsrf()`.
+- Text output is escaped through `e()`, which wraps `htmlspecialchars`.
+- Database queries use PDO prepared statements through `db()->prepare(...)`.
+- User-controlled input is never directly concatenated into SQL strings.
+
+### 5.14 Site Branding, Announcement Bar, and Footer Settings — Introduced in 1.3.0
+
+The header and footer moved from being mostly static markup to reading their content from the `settings` table, so an admin can change them without touching code:
+
+- **Logo** (`site_logo` setting): uploaded from `admin/settings.php`. The uploaded file is stored under `uploads/branding/` and validated the same way as product images (`finfo`-based real MIME-type detection, 2 MB limit, `move_uploaded_file()`). `siteLogoUrl()` in `app/core/functions.php` returns the logo's URL, or `null` when no logo has been uploaded (or the stored file is missing), so both `views/layout/header.php` and `views/layout/footer.php` can fall back to the text `SITE_NAME` logo.
+- `BRANDING_UPLOAD_DIR` / `BRANDING_UPLOAD_URL` are derived once in `app/bootstrap.php` from the existing `UPLOAD_DIR` / `UPLOAD_URL` constants (`dirname(...) . '/branding/'`), rather than requiring a new constant to be added to every already-deployed site's `config.php`.
+- **Announcement bar** (`announcement_bar_enabled`, `announcement_bar_text`, `announcement_bar_link`): a site-wide strip rendered right under `<header>` in `views/layout/header.php`, shown on every page when enabled. Wrapped in a link only when a link is configured.
+- **Footer content** (`footer_about_teaser_text`, `footer_shipping_badge_text`, `store_phone`): free-text settings rendered by `views/layout/footer.php`. `store_phone` is also used on `/contact`.
+- **Social links** (`social_{instagram,telegram,bale,torob}_enabled` / `_url`) and **eNamad** (`enamad_enabled`, `enamad_embed_code`): each social network is independently toggled and linked; only enabled networks with a non-empty URL are rendered. `enamad_embed_code` stores the raw badge markup/script an admin pastes in after eNamad certification and is echoed unescaped in the footer — this is intentional (it's admin-only input, equivalent in trust level to `config.php`), since eNamad's badge is a script/HTML snippet, not plain text.
+
+`app/controllers/admin/settings.php` was refactored so each settings section is its own `<form>` posting a `section` hidden field, and the controller only writes the keys belonging to that section. This replaces the earlier pattern of every form re-submitting every other section's values as hidden inputs to avoid resetting them — a pattern that becomes increasingly fragile (and easy to break by forgetting one hidden field) as the number of settings grows.
+
+### 5.15 Order List Product/Variant Summary — Introduced in 1.3.0
+
+`app/controllers/admin/orders.php` previously only showed order-level fields (code, customer, total, status); seeing which product **variant** was purchased required opening `order_detail.php` for every single order. A single grouped query now loads every visible order's items (`product_name`, `variant_label`, `quantity`) up front and `views/admin/orders.php` renders them inline in a new "Order items" column, so the admin can see exactly what was ordered — including size/color — directly from the list.
+
+### 5.16 Admin Table Row-Alignment Bug — Fixed in 1.3.0
+
+`views/admin/products.php`, `categories.php`, and `users.php` all had an actions cell written as `<td class="admin-actions">`, where `.admin-actions` sets `display: flex`. Applying `display: flex` directly to a `<td>` overrides its `display: table-cell` internal type, which is what `vertical-align: middle` requires to have any effect — so that one cell silently stopped honoring the row's vertical centering. This was invisible on short rows, but on `products.php`, a row whose variant-stock summary wrapped onto several lines made the row noticeably taller, and the action buttons stayed pinned to the top of that taller cell while every other column stayed vertically centered.
+
+Fixed by keeping the actions `<td>` a plain cell and moving `class="admin-actions"` onto an inner `<div>` instead, plus adding an explicit `vertical-align: middle` to `.admin-table th, .admin-table td` in `assets/css/admin.css` so cross-browser default differences can't reintroduce the same issue.
 
 ---
 
-## 6. Storefront Routing System (Framework-Free)
+## 6. Storefront Routing (Framework-Free)
 
-`.htaccess` sends every request that does not map to a physical file/directory to `index.php?route=<path>`. `index.php` splits the path with `explode('/', ...)` and requires the controller corresponding to the first segment (`home`, `category`, `product`, `cart`, `checkout`, `order`, `about`, `contact`, `terms`, `signup`, `login`, `logout`, `account` — the last four were introduced in 1.2.0). This is an intentionally simple `switch/case` router because the site contains a small and relatively stable number of pages.
+Requests that do not match a physical file or directory are rewritten by `.htaccess` to:
 
-**Important historical note:** in 1.0.0, a physical directory named `cart/` (used for AJAX endpoints) conflicted with the `/cart` storefront route and caused a Forbidden error. In 1.1.0, this directory was renamed to `ajax/` to eliminate the conflict. In general, no physical directory should share the name of a route defined in `index.php`.
+```text
+index.php?route=<path>
+```
 
-### 6.1 Child Categories (Introduced in 1.2.0)
+`index.php` splits the route with `explode('/', ...)` and selects a controller based on the first segment.
 
-Categories support one level of nesting through `categories.parent_id`. A parent category page displays its child categories as clickable chips and includes products belonging to those child categories in the same listing. `getCategoryAndChildIds()` in `app/core/functions.php` returns the category ID plus its direct child IDs and is used in `WHERE category_id IN (...)`. The site's top navigation displays only top-level categories (`parent_id IS NULL`).
+Current route roots include:
 
-### 6.2 Automatic Unique SKU (Introduced in 1.2.0)
+```text
+home
+category
+product
+cart
+checkout
+order
+about
+contact
+terms
+signup
+login
+logout
+account
+verify-phone
+verify-email
+tag
+search
+```
 
-`generateUniqueSku()` in `app/core/functions.php` generates an SKU in the form `SOCK-XXXXXX` and guarantees uniqueness at the database level. If the SKU field is left empty in the product form, one is generated automatically. If a value is entered manually, uniqueness is validated against existing products. The `products.sku` column also has a real `UNIQUE KEY`, rather than relying only on application-level validation.
+This is intentionally implemented as a simple `switch/case` router because the number of storefront pages is small and relatively stable.
 
-### 6.3 Products with Variants (`has_variants` Checkbox, Introduced in 1.2.0)
+`robots.txt` and `sitemap.xml` are handled separately in `.htaccess` and rewritten directly to `robots.php` and `sitemap.php`, outside the main storefront router because their output formats are plain text and XML rather than HTML.
 
-The product form includes a "Has Variants" checkbox. JavaScript disables the "Overall Stock" field and enables the variants section when it is checked. However, the final decision is always made **server-side** as defense in depth, independent of client-side JavaScript:
+### 6.1 Subcategories — Since 1.2.0
 
-- If `has_variants` is not present in POST data, submitted variant rows are completely ignored.
-- If `has_variants` is present, the product's `stock` column is always stored as `0`, because actual inventory is derived from the sum of variant stock rather than the product-level stock field.
+Categories support one nested level through `categories.parent_id`.
+
+A parent-category page:
+
+- displays direct subcategories as clickable chips
+- includes products assigned to those direct child categories through `getCategoryAndChildIds()`
+
+The main navigation lists only top-level categories (`parent_id IS NULL`).
+
+### 6.2 Automatic Unique SKU — Since 1.2.0
+
+`generateUniqueSku()` in `app/core/functions.php` generates `SOCK-XXXXXX` values and ensures uniqueness against the database.
+
+- Empty SKU fields are generated automatically.
+- Manually supplied values are checked for uniqueness.
+- `products.sku` has a real database-level `UNIQUE KEY`.
+
+### 6.3 Products with Variants (`has_variants`) — Since 1.2.0
+
+The product form provides a `has_variants` checkbox.
+
+When enabled:
+
+- JavaScript disables the global stock field.
+- The variant section becomes active.
+- The server independently enforces the same rule.
+- Variant rows are ignored when `has_variants` is absent.
+- When variants are enabled, `products.stock` is stored as `0`.
+
+This is deliberate defense in depth and does not depend on client-side JavaScript.
+
+### 6.4 Product Tags — Since 1.2.1
+
+`syncProductTags()` removes the product's existing `product_tags` rows and recreates them from the currently selected checkboxes and any newly typed tags.
+
+New tags are created in `tags` when they do not already exist.
+
+There is no ownership concept; every admin may change any product's tags.
+
+### 6.5 SEO Controls — Since 1.2.1
+
+The `seo_indexing_enabled` setting is disabled by default and affects three main mechanisms:
+
+1. The `<meta name="robots">` tag in `views/layout/header.php`
+2. `robots.php`, which emits `Disallow: /` when indexing is disabled
+3. `robots.txt`, which advertises the sitemap when indexing is enabled
+
+`sitemap.php` generates the sitemap independently of the setting.
+
+Product pages provide complete `schema.org/Product` JSON-LD and use the same `effectiveStockSqlFragment()` logic used by the storefront to keep SEO availability data consistent with visible inventory.
+
+### 6.6 Storefront Search — Introduced in 1.3.0
+
+`app/controllers/site/search.php` handles the `search` route. It's a plain `LIKE '%term%'` match against `products.name` and `products.description`, paginated the same way as `category.php`. This is intentionally simple (no full-text index, no relevance ranking) since it matches the product catalog's expected scale on this hosting plan; it can be swapped for `MATCH ... AGAINST` full-text search later without changing the route or view.
+
+The search box itself (`views/layout/header.php`) is a single collapsible panel toggled by a magnifier button (`#searchToggle` / `#searchBarPanel` in `assets/js/main.js`), rendered identically on mobile and desktop, rather than two separate responsive layouts — chosen specifically to avoid the flexbox `order` bugs that come from conditionally showing/hiding different search markup at different breakpoints.
+
+### 6.7 Product Tag SEO Refinements — Introduced in 1.3.0
+
+The tag slug format was already correct before this version: `slugify()` (`app/core/functions.php`) turns spaces into hyphens (`-`), which is what search engines treat as a word separator — unlike underscores (`_`), which most engines do not split into separate keywords. No change was needed there.
+
+Two related refinements were made:
+
+1. **Decorative "#" moved out of the anchor text.** `views/site/product.php` previously rendered each tag as `#<?= e($tag['name']) ?>` — a literal `#` character inside the clickable link text. It's now `.tag-pill::before { content: "#"; }` in `assets/css/style.css`, so the tag still displays with a leading `#`, but the actual `<a>` text search engines and screen readers see is the clean tag name. A `rel="tag"` attribute (the HTML tag-cloud microformat) was also added.
+2. **Per-tag meta description.** `app/controllers/site/tag.php` now sets `$metaDescription` to a tag-specific sentence (including the tag name and product count) instead of falling back to the site-wide generic description, and `views/site/tag.php` uses an `<h1>` for the page heading instead of `<h2>` (every page should have exactly one `<h1>`; the tag page previously had none).
 
 ---
-
-### 6.4 Product Tags (since 1.2.1)
-
-`syncProductTags()` follows a simple replacement strategy. Whenever a product form is saved, existing `product_tags` relationships are removed and recreated from selected checkboxes and newly entered tags. Missing tags are created immediately.
-
-There is no ownership concept: any admin can modify any product's tags at any time.
-
-### 6.5 SEO Indexing Control (since 1.2.1)
-
-The `seo_indexing_enabled` setting (disabled by default) affects:
-
-1. The `<meta name="robots">` tag in `views/layout/header.php`.
-2. The `robots.php` output (`Disallow: /` when indexing is disabled).
-3. The `Sitemap:` directive in `robots.txt` when indexing is enabled.
-
-`sitemap.php` independently builds the complete page list regardless of this setting. Generating a sitemap does not itself cause indexing; `robots.txt` remains the primary indexing control.
-
-Product pages additionally generate complete `schema.org/Product` JSON-LD, whose stock status is derived from `effectiveStockSqlFragment()` so structured data matches the storefront's effective inventory.
 
 ## 7. Versioning and Change Documentation
 
-Every technical change (bug fix, new feature, structural change) must:
+Every technical change—bug fix, feature, structural modification, or behavior change—must:
 
-1. Update the version number in `app/bootstrap.php` (`APP_VERSION`) using Semantic Versioning: `MAJOR.MINOR.PATCH`.
-2. Add a new, precise entry to `docs/CHANGELOG.md` describing the changes relative to the previous version.
-3. If the change requires an `ALTER TABLE`, add a new file under `database/migrations/`. Never modify the base `schema.sql` in a way that requires existing databases to be re-imported; use migrations instead.
-4. Update this `ARCHITECTURE.md` document whenever the change affects the architecture or documented system behavior.
+1. Update `APP_VERSION` in `app/bootstrap.php` using Semantic Versioning (`MAJOR.MINOR.PATCH`).
+2. Add a new, precise entry to `docs/CHANGELOG.md` describing the change relative to the previous version.
+3. Add a new file under `database/migrations/` whenever an `ALTER TABLE` or another database upgrade is required. The base `schema.sql` must not be changed in a way that forces existing installations to be re-imported; existing databases should be upgraded through migrations.
+4. Update this `ARCHITECTURE.md` whenever the architectural behavior described here changes.

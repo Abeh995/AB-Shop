@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer login using a mobile number.
+ * Customer login by mobile number
  */
 
 if (isCustomerLoggedIn()) {
@@ -10,7 +10,7 @@ if (isCustomerLoggedIn()) {
 $pageTitle = 'ورود به حساب کاربری';
 $error = '';
 $next = $_GET['next'] ?? $_POST['next'] ?? '/account';
-// Prevent open redirects by accepting only internal paths starting with /.
+// Prevent an open redirect: only internal paths (starting with /) are accepted
 if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) {
     $next = '/account';
 }

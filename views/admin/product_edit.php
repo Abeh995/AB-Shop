@@ -76,11 +76,33 @@
         </div>
 
         <div class="form-group">
-            <label>تصویر اصلی محصول</label>
+            <label>تصویر اصلی محصول (کاور)</label>
             <?php if (!empty($product['image'])): ?>
                 <img src="<?= UPLOAD_URL . e($product['image']) ?>" style="width:90px; height:90px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
             <?php endif; ?>
             <input class="form-control" type="file" name="image" accept="image/png,image/jpeg,image/webp">
+        </div>
+
+        <div class="form-group">
+            <label class="group-label">گالری تصاویر بیشتر (تعداد دلخواه)</label>
+
+            <?php if ($galleryImages): ?>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                <?php foreach ($galleryImages as $img): ?>
+                <div style="text-align:center;">
+                    <img src="<?= UPLOAD_URL . e($img['image_path']) ?>" style="width:80px; height:80px; object-fit:cover; border-radius:8px; display:block; margin-bottom:4px;">
+                    <label style="display:flex; align-items:center; justify-content:center; gap:4px; font-size:.75rem; color:var(--color-danger);">
+                        <input type="checkbox" name="delete_image_ids[]" value="<?= (int)$img['id'] ?>"> حذف
+                    </label>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php elseif (!$product): ?>
+                <p style="font-size:.82rem; color:var(--color-muted); margin-bottom:10px;">بعد از اولین ذخیره محصول، می‌توانید تصاویر گالری اضافه کنید (پایین همین صفحه دوباره ظاهر می‌شود).</p>
+            <?php endif; ?>
+
+            <input class="form-control" type="file" name="gallery_images[]" accept="image/png,image/jpeg,image/webp" multiple>
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">می‌توانید چند فایل را هم‌زمان انتخاب کنید (Ctrl/Cmd را نگه دارید). هر بار ذخیره فرم، فایل‌های انتخاب‌شده به گالری اضافه می‌شوند.</p>
         </div>
 
         <div class="form-group">
@@ -97,6 +119,10 @@
             </div>
             <?php endif; ?>
             <input class="form-control" type="text" name="new_tags" placeholder="افزودن تگ جدید (با کاما جدا کنید، مثلا: نخی, پاییزه)">
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">
+                نکته سئو: تگ‌ها را با فاصله معمولی بنویسید (نه زیرخط _)؛ آدرس هر تگ به‌طور خودکار با خط تیره (-) ساخته می‌شود
+                که فرمت استاندارد و مورد تأیید گوگل برای URL است.
+            </p>
         </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
@@ -124,7 +150,7 @@ document.getElementById('addVariantRow').addEventListener('click', function () {
     wrap.appendChild(row);
 });
 
-// ---------- تغییر وضعیت فعال/غیرفعال فیلدها بر اساس چک‌باکس «دارای واریانت» ----------
+// ---------- Enable/disable fields based on the "has variants" checkbox ----------
 function syncVariantToggle() {
     var hasVariants = document.getElementById('hasVariantsToggle').checked;
     var stockField = document.getElementById('stockField');

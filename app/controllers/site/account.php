@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer account: editable profile data, current cart, and order history.
+ * Customer account page — editable profile info, current cart, order history
  */
 
 requireCustomer();
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $emailChanged = $email !== ($customer['email'] ?? '');
         if ($emailChanged) {
-            // Changing the email address resets its verification status and requires re-verification.
+            // Changing the email resets its verified state, so it needs re-verifying
             db()->prepare("UPDATE customers SET full_name = ?, email = ?, email_verified_at = NULL WHERE id = ?")
                 ->execute([$fullName ?: null, $email ?: null, $customer['id']]);
         } else {
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$customer = currentCustomer(); // Reload after a possible update because currentCustomer() caches its result.
+$customer = currentCustomer(); // Re-fetch after a possible update (currentCustomer caches, so read from the DB again)
 $freshStmt = db()->prepare("SELECT * FROM customers WHERE id = ?");
 $freshStmt->execute([$customer['id']]);
 $customer = $freshStmt->fetch();

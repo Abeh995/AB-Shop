@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Design System — Sock Store
-   Warm premium palette, minimal, mobile-first, RTL
+   Design System — Sock Shop
+   Warm/premium palette, minimal, mobile-first, RTL
    ========================================================================== */
 
 :root {
@@ -68,7 +68,10 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
     font-weight: 800;
     color: var(--color-primary-dark);
     margin-left: auto;
+    display: flex;
+    align-items: center;
 }
+.logo-img { height: 40px; width: auto; }
 .main-nav {
     display: flex;
     gap: 22px;
@@ -115,6 +118,35 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
     flex-direction: column; justify-content: center; gap: 5px;
 }
 .nav-toggle span { width: 100%; height: 2px; background: var(--color-text); border-radius: 2px; }
+
+/* ---------- Header search ---------- */
+.search-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    background: none; border: none;
+    color: var(--color-text);
+    border-radius: 50%;
+    transition: background .15s, color .15s;
+}
+.search-toggle:hover, .search-toggle[aria-expanded="true"] { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.search-bar-panel {
+    display: none;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: 14px 0;
+}
+.search-bar-panel.open { display: block; }
+.search-bar-panel form { display: flex; gap: 10px; }
+.search-bar-panel .form-control { flex: 1; }
+
+/* ---------- Announcement bar ---------- */
+.announcement-bar {
+    background: var(--color-primary-dark);
+    color: #fff;
+}
+.announcement-bar .container { padding-top: 10px; padding-bottom: 10px; text-align: center; }
+.announcement-bar a, .announcement-bar span { font-size: .85rem; font-weight: 600; }
+.announcement-bar a:hover { text-decoration: underline; }
 
 /* ---------- Buttons ---------- */
 .btn {
@@ -290,6 +322,20 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
 
 .product-description { margin-top: 16px; color: var(--color-muted); font-size: .95rem; }
 
+/* ---------- Product tags ----------
+   The leading "#" is purely decorative (CSS ::before), so the actual link
+   text stays a clean keyword for search engines and screen readers. */
+.product-tags { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-pill {
+    font-size: .8rem;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+.tag-pill::before { content: "#"; opacity: .65; }
+.tag-pill:hover { background: var(--color-primary); color: #fff; }
+
 /* ---------- Cart page ---------- */
 .cart-table { width: 100%; border-collapse: collapse; }
 .cart-item-row { border-bottom: 1px solid var(--color-border); }
@@ -341,9 +387,27 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 
 /* ---------- Footer ---------- */
 .site-footer { background: #FFF; border-top: 1px solid var(--color-border); margin-top: 60px; }
-.footer-inner { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; padding: 40px 20px; }
+.footer-teaser { background: var(--color-primary-light); }
+.footer-teaser a { display: block; padding: 12px 0; text-align: center; font-size: .9rem; font-weight: 600; color: var(--color-primary-dark); }
+.footer-teaser a:hover { text-decoration: underline; }
+.footer-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; padding: 40px 20px; }
 .footer-col h4 { font-size: 1rem; margin-bottom: 12px; }
 .footer-col a { display: block; color: var(--color-muted); margin-bottom: 8px; font-size: .9rem; }
+.footer-col-brand p { color: var(--color-muted); font-size: .88rem; }
+.footer-logo { display: block; font-size: 1.2rem; font-weight: 800; color: var(--color-primary-dark); margin-bottom: 10px; }
+.footer-logo img { height: 36px; width: auto; }
+.footer-phone { display: inline-block; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
+.footer-shipping-badge { display: flex; align-items: center; gap: 8px; }
+.footer-social { display: flex; gap: 10px; margin-bottom: 14px; }
+.footer-social a {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    border: 1px solid var(--color-border); border-radius: 50%;
+    color: var(--color-text);
+    transition: color .15s, border-color .15s;
+}
+.footer-social a:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.footer-enamad img { max-width: 100px; }
 .footer-bottom { border-top: 1px solid var(--color-border); padding: 16px 0; text-align: center; font-size: .82rem; color: var(--color-muted); }
 
 /* ---------- Pagination ---------- */
@@ -367,7 +431,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     .main-nav.open { right: 0; }
     .main-nav a { padding: 12px 4px; border-bottom: 1px solid var(--color-border); }
     .logo { margin-left: 0; margin-right: auto; order: 2; }
-    .cart-link { order: 3; }
+    .search-toggle { order: 3; }
+    .cart-link { order: 4; }
+    .account-link { order: 5; }
     .nav-toggle { order: 1; }
+    .search-bar-panel form { flex-wrap: wrap; }
     .form-row { grid-template-columns: 1fr; }
 }

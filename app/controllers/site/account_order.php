@@ -1,6 +1,6 @@
 <?php
 /**
- * Details for a specific order; only the order owner may view it.
+ * A single order's details, viewable only by that order's owner.
  */
 
 requireCustomer();

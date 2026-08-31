@@ -1,13 +1,23 @@
 <?php
 /**
- * Customer authentication for the storefront (not the admin panel), based on mobile number and password.
+ * Customer authentication (storefront, not the admin panel) — based on
+ * mobile number + password.
  *
- * Design decision from v1.2.0: login uses a password rather than OTP so it works without a live SMS provider.
+ * Design decision (unchanged since 1.2.0): login with mobile number +
+ * password, not OTP, since a password works from day one without needing
+ * a real SMS service.
  *
- * v1.2.1 change: the mobile number must now be verified by SMS before the account becomes fully active:
- * 1) customerSignup() creates the account, stores $_SESSION['pending_customer_id'], and redirects to /verify-phone.
- * 2) After a valid code, completeCustomerLogin() creates the full customer session.
- * Existing customers are automatically marked as verified by the migration because verification did not exist at signup.
+ * Important change in 1.2.1: from this version on, the mobile number must
+ * be verified with an SMS code before the account is fully "active". Steps:
+ *   1) customerSignup() creates the account but doesn't grant a full
+ *      session yet; instead it sets $_SESSION['pending_customer_id'] and
+ *      the controller sends the user to /verify-phone.
+ *   2) After entering the correct code (VerificationService::verifyCode),
+ *      completeCustomerLogin() is called, which creates the full session
+ *      (customer_id).
+ * Customers who signed up before this version automatically got
+ * phone_verified_at set during the migration (since this requirement
+ * didn't exist when they signed up), so their login isn't affected.
  */
 
 function isCustomerLoggedIn(): bool
@@ -36,7 +46,9 @@ function currentCustomer(): ?array
 }
 
 /**
- * Register a new customer without creating a full session until mobile verification succeeds.
+ * Register a new customer — the account is created but no full session is
+ * granted; the customer must first verify their mobile number with an SMS
+ * code (completeCustomerLogin).
  * @return array ['ok'=>bool, 'error'=>string|null, 'customer_id'=>int|null]
  */
 function customerSignup(string $phone, string $password, ?string $fullName, ?string $email = null): array
@@ -67,7 +79,7 @@ function customerSignup(string $phone, string $password, ?string $fullName, ?str
 }
 
 /**
- * Authenticate a customer with a password.
+ * Customer login with a password.
  * @return array ['ok'=>bool, 'error'=>string|null, 'needs_verification'=>bool, 'customer_id'=>int|null]
  */
 function attemptCustomerLogin(string $phone, string $password): array
@@ -77,12 +89,12 @@ function attemptCustomerLogin(string $phone, string $password): array
     $customer = $stmt->fetch();
 
     if (!$customer || !password_verify($password, $customer['password_hash'])) {
-        usleep(400000); // Add a small delay to slow brute-force attempts.
+        usleep(400000); // Slow down brute-force attacks
         return ['ok' => false, 'error' => 'شماره موبایل یا رمز عبور اشتباه است.', 'needs_verification' => false, 'customer_id' => null];
     }
 
     if (empty($customer['phone_verified_at'])) {
-        // Registration is incomplete; redirect to mobile verification instead of creating a full session.
+        // Signup wasn't completed yet; redirect to the phone-verification step instead of a full login
         $_SESSION['pending_customer_id'] = (int) $customer['id'];
         return ['ok' => false, 'error' => null, 'needs_verification' => true, 'customer_id' => (int) $customer['id']];
     }
@@ -92,7 +104,8 @@ function attemptCustomerLogin(string $phone, string $password): array
 }
 
 /**
- * Complete the customer login after successful mobile verification during signup or login.
+ * Finalize the login after successful mobile-number verification (whether
+ * reached via signup or login).
  */
 function completeCustomerLogin(int $customerId): void
 {

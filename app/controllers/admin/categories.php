@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $currentId = (int) ($_POST['id'] ?? 0);
         $parentId = $parentId > 0 ? $parentId : null;
 
-        // Prevent a category from being assigned as its own parent.
+        // Prevent a category from being set as its own parent
         if ($parentId !== null && $parentId === $currentId) {
             $parentId = null;
         }
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categoriesFlat = db()->query("SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS product_count
                             FROM categories c ORDER BY sort_order ASC")->fetchAll();
 
-// Build a hierarchical table view: parent category followed by its children.
+// For hierarchical display in the table (parent, then its children)
 $byParent = [];
 foreach ($categoriesFlat as $cat) {
     $byParent[$cat['parent_id'] ?? 0][] = $cat;
@@ -77,7 +77,7 @@ $walkCategories = function ($parentId, $depth) use (&$walkCategories, &$byParent
 };
 $walkCategories(0, 0);
 
-// Provide parent-category options; only top-level categories are selectable to keep nesting shallow.
+// For the parent-selection dropdown in forms (only top-level categories are offered as a parent, to avoid excessive nesting)
 $topLevelCategories = array_values(array_filter($categoriesFlat, fn($c) => $c['parent_id'] === null));
 
 renderView('admin/categories', compact('pageTitle', 'categories', 'topLevelCategories'));

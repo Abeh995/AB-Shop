@@ -2,7 +2,9 @@
 <div class="container">
     <div class="static-page">
         <h1>تماس با ما</h1>
-        <p>سوالی دارید؟ فرم زیر را پر کنید یا با شماره <span dir="ltr">021-00000000</span> تماس بگیرید.</p>
+        <p>
+            سوالی دارید؟ فرم زیر را پر کنید<?= $storePhone !== '' ? ' یا با شماره <span dir="ltr">' . e($storePhone) . '</span> تماس بگیرید' : '' ?>.
+        </p>
 
         <?php if ($sent): ?>
             <div class="alert alert-success">پیام شما ارسال شد. به‌زودی با شما تماس می‌گیریم.</div>

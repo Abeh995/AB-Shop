@@ -20,7 +20,7 @@ $productId = (int) ($_POST['product_id'] ?? 0);
 $variantId = !empty($_POST['variant_id']) ? (int) $_POST['variant_id'] : null;
 $qty = max(1, (int) ($_POST['qty'] ?? 1));
 
-// Re-validate the product and stock against the database; never trust client input.
+// Real validation of the product and its stock against the database (never trust user input)
 $stmt = db()->prepare('SELECT id, stock, is_active FROM products WHERE id = ?');
 $stmt->execute([$productId]);
 $product = $stmt->fetch();

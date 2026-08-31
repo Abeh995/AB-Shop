@@ -1,10 +1,10 @@
 // ==========================================================================
-// Lightweight JavaScript with no build step or dependencies.
+// Lightweight vanilla JS — no dependencies, no build step
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ---------- Mobile menu ----------
+    // ---------- Mobile nav menu ----------
     var toggle = document.getElementById('navToggle');
     var nav = document.getElementById('mainNav');
     if (toggle && nav) {
@@ -13,7 +13,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ---------- Product variant selection (size/color) ----------
+    // ---------- Header search bar (collapsed behind a magnifier icon) ----------
+    var searchToggle = document.getElementById('searchToggle');
+    var searchBarPanel = document.getElementById('searchBarPanel');
+    if (searchToggle && searchBarPanel) {
+        searchToggle.addEventListener('click', function () {
+            var isOpen = searchBarPanel.classList.toggle('open');
+            searchToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) {
+                var input = document.getElementById('searchBarInput');
+                if (input) input.focus();
+            }
+        });
+    }
+
+    // ---------- Variant (size/color) selection on the product page ----------
     document.querySelectorAll('.variant-chip input').forEach(function (input) {
         input.addEventListener('change', function () {
             var group = input.closest('.variant-options');
@@ -26,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ---------- Product quantity controls ----------
+    // ---------- Quantity stepper on the product page ----------
     document.querySelectorAll('.qty-selector').forEach(function (box) {
         var input = box.querySelector('input');
         var max = parseInt(input.getAttribute('max') || '99', 10);
@@ -76,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ---------- Cart quantity updates / item removal ----------
+    // ---------- Quantity change / remove on the cart page ----------
     document.querySelectorAll('.cart-qty-input').forEach(function (input) {
         input.addEventListener('change', function () {
             input.closest('form').submit();
