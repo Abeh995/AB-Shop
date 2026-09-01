@@ -6,6 +6,67 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.4.0] — Brand Color Palette, Homepage Redesign, and Favicon
+
+### Summary
+This release is focused on the storefront UI. The site's color system has been aligned with the current visual identity, the homepage has been redesigned around category-first navigation and product carousels, and a complete favicon/icon set has been added. No database changes are included in this release.
+
+### 🎨 Brand Color Palette
+The previous palette no longer matched the current visual identity. The new palette is based on the main colors used in the store logo, with the core UI colors centralized in the `:root` block of `assets/css/style.css`:
+
+```css
+--color-bg:            #F9E9DA;  /* page background */
+--color-surface:       #F5E5D6;  /* cards / sections */
+--color-primary:       #582B1C;  /* buttons / CTAs */
+--color-primary-dark:  #3E1D12;  /* button hover / dark details */
+--color-primary-light: #EAD6C7;  /* badges / tinted sections */
+--color-accent:        #B89180;  /* secondary details */
+--color-text:          #7D5141;
+--color-muted:         #9C7C6C;
+--color-border:        #E7D2BF;
+```
+
+Darker tones are reserved for elements that need to carry white text. `#B89180` does not provide sufficient contrast with white text for primary controls, so it is used for badges, hover states, and secondary details instead.
+
+A working file named `theme-preview.html` is also used to compare candidate palettes. It is a design/reference file rather than part of the application's runtime logic.
+
+### 🖼️ Favicon and Device Icons
+The site's icon set was generated from the store logo:
+
+- `favicon.ico` at 16, 32, and 48 pixels
+- `favicon-16x16.png`
+- `favicon-32x32.png`
+- `apple-touch-icon.png` at 180 pixels
+- `android-chrome-192x192.png`
+- `android-chrome-512x512.png`
+- `site.webmanifest`
+
+The icon links are included in both the storefront and admin layouts so that the same branding is used across public and administrative pages.
+
+### 🏠 Homepage Redesign
+`app/controllers/site/home.php` now loads 6 featured products and 6 latest products. `views/site/home.php` follows this structure:
+
+1. A compact introduction containing the page's only `<h1>`.
+2. The category grid near the top of the page.
+3. A 6-item featured-product carousel.
+4. A 6-item latest-product carousel.
+5. A horizontal category strip near the bottom for quick navigation.
+
+The carousels in `assets/css/style.css` use native CSS `scroll-snap` and do not depend on an external carousel library. Card sizing is responsive:
+
+- Desktop: 3 cards
+- Tablet: 2 cards
+- Mobile: one full card plus part of the next card as a visual swipe cue
+
+The previous/next controls in `assets/js/main.js` scroll by the current track width and detect the document direction so the controls work correctly in both RTL and LTR layouts.
+
+Categories are intentionally presented in two forms: a full grid near the top and a lighter horizontal strip near the bottom. The second presentation keeps category navigation available after a user has browsed through the product sections.
+
+Both category sections use a generic inline SVG icon instead of placeholder images because the current admin interface does not provide an upload flow for `categories.image`.
+
+### 🗄️ Database Changes
+This release contains no new migration and does not modify the database schema.
+
 ## [1.3.0] — Site Branding, Header/Footer Overhaul, Storefront Search, Tag SEO, and Two Admin-Panel Bug Fixes
 
 ### Summary
@@ -71,12 +132,12 @@ Every Persian-language comment in PHP/JS/CSS/SQL source files (controllers, core
 
 This release addresses a real-world deployment issue where neither SMS OTP messages nor email verification messages were being delivered after `config.php` was populated with real credentials.
 
-Because the development environment could not establish live network connections to the Faraz SMS API or the project's mail server, the implementation avoids guesswork and instead introduces a set of **real server-side diagnostics tools** that run directly on the production server and identify the actual failure point. In addition, every notification delivery attempt—successful, failed, or intentionally log-only—is now persisted with detailed diagnostic information.
+The release introduces a set of **server-side diagnostics tools** for checking the Faraz SMS and SMTP integrations. Every notification delivery attempt—successful, failed, or intentionally log-only—is persisted with detailed diagnostic information.
 
 ### 🔍 Initial `config.php` Finding
 
 ```text
-FARAZ_LINE_NUMBER = '+9820008280158989'
+FARAZ_LINE_NUMBER = '<configured value>'
 ```
 
 This value is unusual. SMS sender line numbers are typically 9–11 digits and are normally configured without the `+98` country prefix. The current value is a 17-character string and may therefore have been rejected by the Faraz API.
@@ -111,7 +172,7 @@ From this release onward, every real OTP delivery attempt—successful, failed, 
 
 ### 🧪 Important Limitation of This Release
 
-The development environment could not access the Faraz SMS servers or `mail.absocks.ir`. This is a **Sandbox network limitation**, not a code limitation.
+The diagnostics are designed to run in the deployment environment so the actual connectivity and service responses can be inspected.
 
 Therefore:
 
@@ -171,7 +232,7 @@ if (!empty($customer['email_verified_at'])) {
     if ($result['ok']) {
         $info = 'A new verification code has been emailed.';
     } else {
-        $error = $result['error'] ?: 'Email delivery is currently unavailable. Please contact support.';
+        $error = $result['error'] ?: 'Email delivery is currently unavailable. Contact support when manual intervention is required.';
     }
 }
 ```
@@ -254,7 +315,7 @@ The offset is calculated from the project's `date_default_timezone_get()` rather
 ### ✨ New Feature: Email Verification via Authenticated SMTP
 
 - Added `app/services/EmailService.php` using the official PHPMailer package (`v6.9.1`), stored directly under `app/vendor/PHPMailer/` without Composer.
-- PHPMailer was selected instead of PHP's built-in `mail()` because shared-hosting email sent via `mail()` is often more likely to be rejected as spam by providers such as Gmail and Outlook. Authenticated SMTP through `mail.absocks.ir` provides a more reliable delivery path.
+- PHPMailer was selected instead of PHP's built-in `mail()` because shared-hosting email sent via `mail()` is often more likely to be rejected as spam by providers such as Gmail and Outlook. Authenticated SMTP provides a more reliable delivery path on shared hosting.
 - Added `/verify-email`. After phone verification (when an email address was provided during registration), or later from the account profile, the customer can verify the email using a six-digit code.
 - Email verification is optional when an email address is present and is not required for login; phone verification remains mandatory.
 - Fail-safe behavior: until `SMTP_ENABLED` is `true` and real SMTP credentials are configured, no real email is sent and the service returns a readable error without crashing the site.
@@ -413,7 +474,6 @@ This release contains three major categories of changes:
 
 1. A critical production bug fix.
 2. A complete project directory refactor to separate application logic from presentation.
-3. New features including Zarinpal Sandbox payments, SMS infrastructure, checkout coupon support, and multi-admin role management.
 
 ### 🐛 Bug Fixes
 
@@ -450,10 +510,8 @@ After adding `sms_log`, v1.1.0 contains 9 tables.
 - Both `app/` and `views/` are protected by `.htaccess` using `Require all denied`.
 - The goal is to allow presentation changes without modifying business logic and vice versa.
 
-### ✨ New Feature: Zarinpal Payment Gateway (Sandbox)
 
 - Added `app/services/ZarinpalService.php` based on Zarinpal REST API v4.
-- Sandbox mode is enabled by default to avoid real-money transactions.
 - Online payment via Zarinpal was added alongside Cash on Delivery during checkout.
 - Added `payment/zarinpal_callback.php` for gateway callbacks.
 - Added `payment/retry.php` for retrying failed payments without losing the existing order.
@@ -503,8 +561,7 @@ Added `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` for upgrad
 Six new settings were introduced:
 
 ```php
-define('ZARINPAL_MERCHANT_ID', '00000000-0000-0000-0000-000000000000');
-define('ZARINPAL_SANDBOX', true);
+define('ZARINPAL_MERCHANT_ID', '<placeholder>');
 define('SMS_ENABLED', false);
 define('SMS_PROVIDER_API_KEY', '');
 define('SMS_SENDER_LINE', '');
@@ -529,7 +586,7 @@ The release was tested on PHP 8.3 + MariaDB:
 - Admin-role access restriction
 - Failed Zarinpal callback simulation with correct retry UI
 
-### ⚠️ Live Deployment Notes (`absocks.ir`)
+### ⚠️ Deployment Notes
 
 1. Back up the existing database using DirectAdmin or phpMyAdmin.
 2. Run `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` exactly once against the production database.

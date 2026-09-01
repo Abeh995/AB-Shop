@@ -4,23 +4,27 @@
    ========================================================================== */
 
 :root {
-    --color-bg: #FAF8F5;
-    --color-surface: #FFFFFF;
-    --color-text: #232323;
-    --color-muted: #6b6b6b;
-    --color-border: #E7E1D7;
-    --color-primary: #C05621;
-    --color-primary-dark: #9C4221;
-    --color-primary-light: #FBEBDD;
-    --color-success: #2F855A;
-    --color-danger: #C53030;
+    /* Warm mocha/latte palette — matches the AB Socks logo's dusty-rose knit
+       cord on cream. Buttons use the deep "primary" tone for solid contrast;
+       the softer "accent" tone is reserved for badges/borders/hover fills. */
+    --color-bg: #F9E9DA;
+    --color-surface: #F5E5D6;
+    --color-text: #7D5141;
+    --color-muted: #9C7C6C;
+    --color-border: #E7D2BF;
+    --color-primary: #582B1C;
+    --color-primary-dark: #3E1D12;
+    --color-primary-light: #EAD6C7;
+    --color-accent: #B89180;
+    --color-success: #2F7A52;
+    --color-danger: #B4432E;
 
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
 
-    --shadow-sm: 0 1px 3px rgba(30, 20, 10, 0.06);
-    --shadow-md: 0 6px 20px rgba(30, 20, 10, 0.08);
+    --shadow-sm: 0 1px 3px rgba(60, 35, 20, 0.08);
+    --shadow-md: 0 6px 20px rgba(60, 35, 20, 0.10);
 
     --container-w: 1180px;
     --header-h: 64px;
@@ -185,16 +189,12 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
 .alert-error { background: #FCEBEB; color: var(--color-danger); }
 .alert-info { background: var(--color-primary-light); color: var(--color-primary-dark); }
 
-/* ---------- Hero ---------- */
-.hero {
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-bg));
-    padding: 56px 0;
-    text-align: center;
-}
-.hero h1 { font-size: 2rem; color: var(--color-primary-dark); }
-.hero p { color: var(--color-muted); max-width: 520px; margin: 0 auto 24px; }
+/* ---------- Homepage intro (sits above the category grid, carries the page's single H1) ---------- */
+.page-intro { text-align: center; padding: 32px 0 8px; }
+.page-intro h1 { font-size: 1.4rem; color: var(--color-primary-dark); margin-bottom: 6px; }
+.page-intro p { color: var(--color-muted); font-size: .92rem; max-width: 480px; margin: 0 auto; }
 
-.section { padding: 48px 0; }
+.section { padding: 40px 0; }
 .section-title {
     font-size: 1.4rem;
     margin-bottom: 24px;
@@ -202,7 +202,7 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
 }
 .section-title a { font-size: .85rem; color: var(--color-primary); font-weight: 600; }
 
-/* ---------- Category chips ---------- */
+/* ---------- Category grid (top of the homepage) ---------- */
 .category-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -217,9 +217,39 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
     font-weight: 600;
     transition: box-shadow .15s, transform .15s;
 }
-.category-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.category-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--color-accent); }
+.category-card .cat-icon {
+    width: 42px; height: 42px; margin: 0 auto 10px;
+    background: var(--color-primary-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary-dark);
+}
 
-/* ---------- Product grid & card ---------- */
+/* ---------- Category strip (repeated near the bottom of the homepage, a different
+   look on purpose, so categories stay reachable after scrolling past the products) ---------- */
+.category-strip-section { background: var(--color-primary-light); padding: 30px 0; margin-top: 8px; }
+.category-strip-section h2 { font-size: 1.05rem; margin-bottom: 14px; }
+.category-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.category-pill {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px;
+    /* Intentionally white rather than var(--color-surface): the surface tone
+       sits too close to this section's tinted background to read as a card. */
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 7px 16px 7px 7px;
+    font-size: .85rem; font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .15s, transform .15s;
+}
+.category-pill:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.category-pill .cat-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--color-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ---------- Product grid (category page) & product card ---------- */
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -245,7 +275,7 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
 .product-card .name { font-size: .93rem; font-weight: 600; margin-bottom: 6px; min-height: 2.6em; }
 .product-card .price-row { margin-top: auto; display: flex; align-items: baseline; gap: 8px; }
 .price-current { font-weight: 700; color: var(--color-primary-dark); }
-.price-old { text-decoration: line-through; color: var(--color-muted); font-size: .82rem; }
+.price-old { text-decoration: line-through; color: var(--color-accent); font-size: .82rem; }
 .badge-discount {
     position: absolute; top: 10px; right: 10px;
     background: var(--color-danger); color: #fff;
@@ -257,6 +287,39 @@ h1, h2, h3, h4 { margin: 0 0 .5em; font-weight: 700; line-height: 1.4; }
     background: #333; color: #fff;
     font-size: .72rem; padding: 3px 8px; border-radius: 20px;
 }
+
+/* ---------- Product carousel (homepage: "Featured" / "Newest" sections) ----------
+   A single continuous horizontal scroll-snap track, sized so exactly 3 cards fit
+   per screen width on desktop (2 on tablets, ~1.2 — a "peek" hint — on phones).
+   Scrolling by the container's own width via the arrow buttons therefore moves
+   by "however many cards currently fit", matching the requested "3 shown, swipe
+   right to reveal 3 more" behavior without any breakpoint-specific markup. */
+.carousel-wrap { position: relative; }
+.carousel-track {
+    display: flex; gap: 18px;
+    overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: 4px; margin: 0 -4px; padding-inline: 4px;
+    scrollbar-width: none;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track .product-card {
+    flex: 0 0 calc((100% - 2 * 18px) / 3);
+    scroll-snap-align: start;
+    min-width: 0;
+}
+.carousel-nav {
+    position: absolute; top: 38%; z-index: 5;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-primary-dark);
+    cursor: pointer;
+}
+.carousel-nav:hover { background: var(--color-primary-light); }
+.carousel-nav.prev { right: -14px; }
+.carousel-nav.next { left: -14px; }
 
 /* ---------- Filters / toolbar ---------- */
 .toolbar {
@@ -419,6 +482,9 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 .pagination .active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 980px) {
+    .carousel-track .product-card { flex-basis: calc((100% - 18px) / 2); }
+}
 @media (max-width: 860px) {
     .product-detail, .cart-layout, .checkout-layout, .footer-inner { grid-template-columns: 1fr; }
     .nav-toggle { display: flex; }
@@ -437,4 +503,9 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     .nav-toggle { order: 1; }
     .search-bar-panel form { flex-wrap: wrap; }
     .form-row { grid-template-columns: 1fr; }
+
+    /* Carousel: show a "peek" of the next card as a swipe hint, and drop the
+       arrow buttons since touch-scrolling is the primary interaction here. */
+    .carousel-track .product-card { flex-basis: 68%; }
+    .carousel-nav { display: none; }
 }

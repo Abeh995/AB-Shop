@@ -12,13 +12,13 @@ $stockSql = effectiveStockSqlFragment('products');
 $featured = db()->query("
     SELECT *, $stockSql AS effective_stock FROM products
     WHERE is_active = 1 AND is_featured = 1
-    ORDER BY created_at DESC LIMIT 8
+    ORDER BY created_at DESC LIMIT 6
 ")->fetchAll();
 
 $newest = db()->query("
     SELECT *, $stockSql AS effective_stock FROM products
     WHERE is_active = 1
-    ORDER BY created_at DESC LIMIT 8
+    ORDER BY created_at DESC LIMIT 6
 ")->fetchAll();
 
 renderView('site/home', compact('pageTitle', 'categories', 'featured', 'newest'));

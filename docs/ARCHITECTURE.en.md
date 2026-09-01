@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.3.0**
+**Current version: 1.4.0**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -26,6 +26,9 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 │
 ├── robots.php                 Dynamic robots.txt (based on seo_indexing_enabled) — since 1.2.1
 ├── sitemap.php                Dynamic sitemap.xml (categories + active products) — since 1.2.1
+├── favicon.ico, favicon-*.png, apple-touch-icon.png,
+│   android-chrome-*.png, site.webmanifest
+│                               Browser and mobile home-screen icons — since 1.4.0
 │
 ├── config/                    Sensitive configuration (protected by .htaccess Deny)
 │   └── config.php             DB, Zarinpal, SMS, Faraz SMS, SMTP, Debug mode
@@ -57,7 +60,8 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 ├── views/                      All HTML/templates (Presentation Layer) — protected by .htaccess Deny
 │   ├── layout/                 Shared storefront header/footer (search bar, announcement bar, logo, social
 │   │                            links, SEO robots/canonical/Open Graph tags) — extended in 1.3.0
-│   ├── site/                   Storefront views + partials
+
+│   ├── site/                   Storefront views + partials (homepage/carousel redesign in 1.4.0)
 │   └── admin/                  Admin-panel views + admin-specific layouts
 │
 ├── admin/                      Public admin entry points (thin files: bootstrap + auth guard + controller require)
@@ -515,6 +519,36 @@ Two related refinements were made:
 2. **Per-tag meta description.** `app/controllers/site/tag.php` now sets `$metaDescription` to a tag-specific sentence (including the tag name and product count) instead of falling back to the site-wide generic description, and `views/site/tag.php` uses an `<h1>` for the page heading instead of `<h2>` (every page should have exactly one `<h1>`; the tag page previously had none).
 
 ---
+
+### 6.8 Brand Color System — Introduced in 1.4.0
+
+The core storefront colors are centralized in the `:root` block at the top of `assets/css/style.css`. The main variables are:
+
+```css
+--color-bg, --color-surface, --color-text, --color-muted, --color-border,
+--color-primary, --color-primary-dark, --color-primary-light, --color-accent,
+--color-success, --color-danger
+```
+
+`--color-primary` is reserved for primary button backgrounds and other elements that need to carry white text. `--color-primary-light` and `--color-accent` are used for badges, hover states, and secondary details.
+
+The goal is to keep theme changes localized instead of scattering fixed color values throughout the stylesheet. A small set of semantic status colors remains independent in `assets/css/admin.css` so states such as success, error, and warning do not depend on the brand palette.
+
+`theme-preview.html` is a design/reference tool for comparing palettes and is not part of the application's runtime flow.
+
+### 6.9 Homepage Product Carousel — Introduced in 1.4.0
+
+The homepage carousels use `.carousel-wrap` and `.carousel-track` in `assets/css/style.css` and rely on native CSS `scroll-snap` rather than an external carousel library.
+
+- Cards are not grouped into separate hard-coded pages in the markup.
+- Three cards fit in the carousel on desktop.
+- Two cards fit at tablet widths.
+- On mobile, one full card plus part of the next card is visible as a swipe cue.
+- Previous/next controls in `assets/js/main.js` scroll by `track.clientWidth`.
+- The document direction is detected with `getComputedStyle(document.documentElement).direction` so the controls behave correctly in the RTL storefront.
+- The arrow controls are hidden on small mobile widths where touch scrolling is the primary interaction.
+
+The component is reusable: other homepage carousels can use the same `.carousel-wrap > .carousel-track` structure without introducing new carousel-specific CSS.
 
 ## 7. Versioning and Change Documentation
 

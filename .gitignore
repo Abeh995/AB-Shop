@@ -101,9 +101,6 @@ Desktop.ini
 # =========================================================
 
 /versions/
-/docs/*
-!/docs/ARCHITECTURE.en.md
-!/docs/CHANGELOG.en.md
 /assets/img/
 *.gitattributes
 *.zip

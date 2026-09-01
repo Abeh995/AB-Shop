@@ -27,6 +27,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ---------- Homepage product carousels (Featured / Newest) ----------
+    document.querySelectorAll('.carousel-wrap').forEach(function (wrap) {
+        var track = wrap.querySelector('.carousel-track');
+        if (!track) return;
+        var isRtl = getComputedStyle(document.documentElement).direction === 'rtl';
+        var sign = isRtl ? -1 : 1; // scrollLeft grows negative in RTL in modern browsers
+        var prevBtn = wrap.querySelector('.carousel-nav.prev');
+        var nextBtn = wrap.querySelector('.carousel-nav.next');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                track.scrollBy({ left: sign * track.clientWidth, behavior: 'smooth' });
+            });
+        }
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                track.scrollBy({ left: -sign * track.clientWidth, behavior: 'smooth' });
+            });
+        }
+    });
+
     // ---------- Variant (size/color) selection on the product page ----------
     document.querySelectorAll('.variant-chip input').forEach(function (input) {
         input.addEventListener('change', function () {
