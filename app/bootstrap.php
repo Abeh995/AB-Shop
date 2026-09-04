@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.4.0');
+define('APP_VERSION', '1.5.0');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------
@@ -53,6 +53,7 @@ require_once __DIR__ . '/services/CouponService.php';
 require_once __DIR__ . '/services/FarazSmsService.php';
 require_once __DIR__ . '/services/EmailService.php';
 require_once __DIR__ . '/services/VerificationService.php';
+require_once __DIR__ . '/services/PricingService.php';
 
 /**
  * Render a view with a given set of variables (keeps logic separate from presentation).

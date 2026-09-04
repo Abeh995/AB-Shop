@@ -49,6 +49,9 @@ $searchQuery = $_GET['q'] ?? '';
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="/assets/css/style.css">
+<?php $themeCss = activeThemeCssVars(); if ($themeCss !== ''): ?>
+<style id="active-theme-vars"><?= $themeCss ?></style>
+<?php endif; ?>
 <?php if (!empty($jsonLd)): ?>
 <script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 <?php endif; ?>

@@ -6,6 +6,35 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.5.0] — Cost/Sale Price History, Bulk Pricing, Admin-Managed Theme System, and Admin Navigation Reorganization
+
+### Summary
+This release lays the groundwork for the store's upcoming accounting and inventory features: every cost and sale price change is now individually audited, a bulk pricing tool lets several unrelated products be repriced at once with a preview step before anything is written, and a long-standing bug that silently reset product variant ids on every save has been fixed. Alongside this, the color system introduced in 1.4.0 is now a proper admin-managed multi-theme setup instead of a fixed stylesheet, and the admin sidebar has been reorganized into labeled groups. No breaking changes; migrations 007 and 008 are additive only.
+
+### ✨ Cost/Sale Price History
+`products` and `product_variants` both gained a `cost_price` column, independent of the existing sale price columns. Neither is ever written directly — every change goes through `recordPriceChange()` (`app/services/PricingService.php`), which locks the target row, computes the new value from a fixed amount, a percentage, or a direct value, and records the change in a new `price_history` table: previous value, new value, computed amount/percentage, method, an optional reason, and who made it. A `price_history` entry survives its variant being deleted later (`ON DELETE SET NULL` plus a stored `variant_label`, mirroring how `order_items` already handles this), so historical entries stay meaningful. `admin/product_edit.php` shows a product's full price history at the bottom of the edit page.
+
+### ✨ Bulk Pricing (`admin/pricing.php`)
+Lets an admin select any set of products — not tied to a category — and apply the same price change to all of them in one request. The flow is preview-then-confirm: submitting a selection computes and displays every product's new value without writing anything, and only an explicit second submission applies it. Each bulk request creates a `bulk_price_operations` row, and every resulting `price_history` row references it, so a later question like "what did this bulk update actually change" has a direct answer. Each product's change is its own transaction — one product failing (e.g. a concurrent edit) doesn't discard the rest of an otherwise-successful batch.
+
+### 🐛 Bug Fix: Product Variants Lost Their Identity on Every Save
+`admin/product_edit.php` used to delete and recreate every variant of a product on every save, regardless of whether anything about them had changed — so a variant's id (and anything referencing it) became meaningless after the very next edit. The form now tracks each variant's id in a hidden field; saving updates matching rows in place, inserts genuinely new ones, and only deletes rows that were actually removed from the form. This was found and fixed specifically because the new price-history feature needed variant ids to be stable across edits.
+
+### 🎨 Admin-Managed Theme System
+The color system is now backed by `themes`/`theme_tokens` tables instead of being fixed in `assets/css/style.css`. An admin can create, edit, and switch between full color palettes from `admin/themes.php` and `admin/theme_edit.php`; the active theme is applied site-wide by injecting its tokens as a `<style>` override in the storefront `<head>` — no file changes or deployment needed to change the site's look. Four starter themes, matching the palettes compared in `theme-preview.html`, are seeded automatically. Falls back cleanly to the stylesheet's built-in defaults if a theme has no tokens.
+
+### 🗂️ Admin Navigation Reorganization
+The admin sidebar is now grouped by domain (Products, Orders, Settings, and an Administration group visible only to `super_admin`) instead of one flat list, to keep it navigable as more admin pages are added — the new "Bulk Pricing" and "Theme" pages are filed under Products and Settings respectively rather than tacked onto the end.
+
+### 🗄️ Database Changes
+- `database/migrations/007_v1.5.0_theme_system.sql` — `themes`, `theme_tokens` tables, plus four seeded starter palettes.
+- `database/migrations/008_v1.5.0_price_history.sql` — `cost_price` on `products`/`product_variants`, plus `bulk_price_operations` and `price_history` tables.
+
+### 📋 Planned Next
+Gift box / post-order items, shipping cost calculation, and store accounting are designed (see `ARCHITECTURE.md` §8) but not yet implemented — each depends on the price-history groundwork in this release, and accounting additionally depends on the other two, so they're being built in that order rather than in parallel.
+
+---
+
 ## [1.4.0] — Brand Color Palette, Homepage Redesign, and Favicon
 
 ### Summary

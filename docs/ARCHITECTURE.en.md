@@ -412,6 +412,24 @@ The header and footer moved from being mostly static markup to reading their con
 
 Fixed by keeping the actions `<td>` a plain cell and moving `class="admin-actions"` onto an inner `<div>` instead, plus adding an explicit `vertical-align: middle` to `.admin-table th, .admin-table td` in `assets/css/admin.css` so cross-browser default differences can't reintroduce the same issue.
 
+### 5.17 Cost/Sale Price History (`app/services/PricingService.php`) — Introduced in 1.5.0
+
+`products.cost_price` and `product_variants.cost_price` exist alongside the existing `price`/`price_override` sale-price columns, and neither is ever written directly — every write goes through `recordPriceChange()`, which does three things inside one transaction:
+
+1. Locks the target row with `SELECT ... FOR UPDATE`, so two admins changing the same price at the same time serialize instead of one silently overwriting the other.
+2. Computes the new value from the requested method (`fixed_amount`, `percentage`, or `direct_value`) and the row's current value.
+3. Writes the new value and inserts a `price_history` row recording the previous value, the new value, the computed amount/percentage change, who made the change, and why.
+
+`price_history.variant_id` uses `ON DELETE SET NULL` rather than `CASCADE`, and a `variant_label` snapshot is stored alongside it — the same pattern `order_items` already uses for `product_name`/`variant_label` — so a history row keeps meaning even after the variant it referred to is later removed.
+
+Bulk changes (`applyBulkPriceChange()`, used by `admin/pricing.php`) apply the same per-row transaction to an arbitrary list of product ids — not necessarily from the same category — and are deliberately **not** one all-or-nothing transaction across the whole batch: each product's change commits (or fails) independently, and the bulk operation reports back which products succeeded and which were skipped, along with why. A `bulk_price_operations` row is created up front so every resulting `price_history` row can be traced back to the request that produced it. The bulk pricing screen itself is a two-step preview-then-confirm flow: the preview computes and displays every row's new value without writing anything, and only a second, explicit confirmation actually calls `applyBulkPriceChange()`.
+
+### 5.18 Product Variant Upsert — Fixed in 1.5.0
+
+`app/controllers/admin/product_edit.php` used to delete every one of a product's variants and reinsert them from scratch on every save, regardless of whether anything about them had actually changed. That meant a variant's id — and therefore anything that had come to reference it, including the `price_history` rows introduced above — became meaningless after the very next unrelated edit to the product.
+
+The form now carries each existing variant's id in a hidden field. On save, a submitted row whose id matches an existing variant updates that row in place; a row with no id (or an id no longer present in the database) is inserted as new; and any existing variant id that wasn't resubmitted — because its row was removed in the form, or "has variants" was turned off — is deleted. A variant's id is now stable for as long as the variant itself exists.
+
 ---
 
 ## 6. Storefront Routing (Framework-Free)
@@ -550,6 +568,18 @@ The homepage carousels use `.carousel-wrap` and `.carousel-track` in `assets/css
 
 The component is reusable: other homepage carousels can use the same `.carousel-wrap > .carousel-track` structure without introducing new carousel-specific CSS.
 
+### 6.10 Admin-Managed Theme System (`themes`, `theme_tokens`) — Introduced in 1.5.0
+
+The static color system from 6.8 is now backed by an admin-editable data store instead of being fixed in the stylesheet. A `themes` row is a named, versionable set of design tokens; `theme_tokens` holds each token as a `(theme_id, token_group, token_key, token_value)` row rather than fixed columns, so a theme isn't limited to the current color set — typography, spacing, or radius tokens can be added later as new `token_group` values without a schema change.
+
+Exactly one theme is active at a time, tracked by an `active_theme_id` setting rather than an `is_active` column on `themes`, avoiding the usual trouble of enforcing "at most one row is true" at the database level. Switching themes (`setActiveTheme()`) updates that setting inside a transaction. `activeThemeCssVars()` reads the active theme's color tokens and renders them as a `<style>` block injected in `views/layout/header.php`, overriding the `:root` defaults from `assets/css/style.css` for every visitor — no file is written and no deployment step is needed to switch themes. If a theme somehow has no tokens (e.g. mid-edit), the block renders empty and the stylesheet's built-in defaults apply, so a broken or incomplete theme can't take down the storefront's styling.
+
+Four starter themes are seeded by `database/migrations/007_v1.5.0_theme_system.sql`, matching the palettes compared in `theme-preview.html` (see 6.8): the store's chosen default plus three logo-derived alternatives, any of which can be activated from `admin/themes.php` without touching code.
+
+### 6.11 Admin Panel Navigation — Reorganized in 1.5.0
+
+As the admin panel has grown past a dozen pages, `views/admin/layout/header.php`'s sidebar was split into labeled groups (Products, Orders, Settings, and — for `super_admin` only — Administration) instead of one flat list. This is presentation-only: it doesn't introduce a permissions concept beyond the existing `super_admin`/`admin` role check already used elsewhere, and new pages are expected to be filed under the group matching their domain rather than appended to the end of the list.
+
 ## 7. Versioning and Change Documentation
 
 Every technical change—bug fix, feature, structural modification, or behavior change—must:
@@ -558,3 +588,16 @@ Every technical change—bug fix, feature, structural modification, or behavior 
 2. Add a new, precise entry to `docs/CHANGELOG.md` describing the change relative to the previous version.
 3. Add a new file under `database/migrations/` whenever an `ALTER TABLE` or another database upgrade is required. The base `schema.sql` must not be changed in a way that forces existing installations to be re-imported; existing databases should be upgraded through migrations.
 4. Update this `ARCHITECTURE.md` whenever the architectural behavior described here changes.
+
+## 8. Planned: Gifts, Shipping, and Store Accounting
+
+The pricing/audit groundwork in 5.17–5.18 exists to support three larger pieces of business logic that are designed but not yet built. Recorded here so the dependency on what already exists is explicit before work on any of them starts.
+
+**Gift box / post-order items.** A gift and a post-order item are the same underlying entity used in two different roles, not two separate product types — an item needs its own id, image, active flag, stock, and cost price, plus an independent, admin-set sale price for when it's offered as a paid post-order add-on at checkout. Assigning one to an order as a free gift is a separate action from a customer buying it: it consumes stock and has a real cost to the store, but no revenue. Both cases need a `product_id`-style snapshot on the order (name, image, cost at the time) for the same reason `order_items` already snapshots products — a later cost change must not rewrite an old order's numbers.
+
+**Shipping.** Not implemented at all today; `checkout.php` currently hardcodes `$shippingCost = 0`. Needs a cost model flexible enough to grow from a flat rate into per-city or per-weight rules and a free-shipping threshold, without the checkout controller needing to know which rule is active.
+
+**Store accounting.** Depends on both of the above, plus 5.17's price history, being in place first — an order's real profit needs the cost that was actually in effect when it was placed, not today's cost. Planned shape: a general `expenses` table (category, amount, optional reference to the entity it relates to) separate from anything order-derived, and order-level profitability computed from each order's line items' snapshotted cost/price rather than stored as a single mutable number, so it stays correct as underlying costs change later. A financial dashboard and expense management would sit on top of this once it exists.
+
+None of the three has a table or a line of code yet. They're sequenced in this order because each one's numbers depend on the previous one already recording history correctly — building accounting before shipping cost and gift cost feed into it, for instance, would mean rebuilding it once those exist.
+

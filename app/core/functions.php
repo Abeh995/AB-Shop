@@ -233,3 +233,102 @@ function syncProductTags(int $productId, array $existingTagIds, string $newTagsR
         }
     }
 }
+
+// ---------- Storefront theme system ----------
+
+/**
+ * Canonical set of color tokens a theme must define, with a human label and
+ * a safe fallback value. Used both to render the theme editor (so every
+ * field always appears, even for a theme missing a token) and as the last
+ * line of defense if a token is somehow absent from the database.
+ */
+function defaultThemeColorTokens(): array
+{
+    return [
+        'bg'            => ['label' => 'پس‌زمینه صفحه', 'default' => '#F9E9DA'],
+        'surface'       => ['label' => 'کارت‌ها و بخش‌ها', 'default' => '#F5E5D6'],
+        'text'          => ['label' => 'متن اصلی', 'default' => '#7D5141'],
+        'muted'         => ['label' => 'متن کم‌رنگ', 'default' => '#9C7C6C'],
+        'border'        => ['label' => 'خط دور کادرها', 'default' => '#E7D2BF'],
+        'primary'       => ['label' => 'دکمه‌ها / CTA', 'default' => '#582B1C'],
+        'primary-dark'  => ['label' => 'هاور دکمه / جزئیات تیره', 'default' => '#3E1D12'],
+        'primary-light' => ['label' => 'بج و هاورِ روشن', 'default' => '#EAD6C7'],
+        'accent'        => ['label' => 'جزئیات ثانویه', 'default' => '#B89180'],
+    ];
+}
+
+/**
+ * The currently active theme, or null if the theme tables don't exist yet
+ * (migration not run) or no theme is marked active.
+ */
+function getActiveTheme(): ?array
+{
+    try {
+        $stmt = db()->query("SELECT * FROM themes WHERE is_active = 1 LIMIT 1");
+        $theme = $stmt->fetch();
+        return $theme ?: null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
+
+/**
+ * A theme's tokens as a flat [token_key => token_value] map.
+ */
+function getThemeTokens(int $themeId, string $group = 'color'): array
+{
+    $stmt = db()->prepare("SELECT token_key, token_value FROM theme_tokens WHERE theme_id = ? AND token_group = ?");
+    $stmt->execute([$themeId, $group]);
+    $tokens = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $tokens[$row['token_key']] = $row['token_value'];
+    }
+    return $tokens;
+}
+
+/**
+ * A `:root{...}` CSS block overriding the default palette in
+ * assets/css/style.css with the active theme's tokens, for injection into
+ * <head> right after the main stylesheet. Returns an empty string (never
+ * throws) if the theme system isn't set up yet, so the page always falls
+ * back cleanly to the hardcoded defaults already in style.css.
+ */
+function activeThemeCssVars(): string
+{
+    $theme = getActiveTheme();
+    if (!$theme) {
+        return '';
+    }
+
+    $tokens = getThemeTokens((int) $theme['id']);
+    if (!$tokens) {
+        return '';
+    }
+
+    $css = ':root{';
+    foreach ($tokens as $key => $value) {
+        $css .= '--color-' . preg_replace('/[^a-z0-9\-]/', '', $key) . ':' . preg_replace('/[^#a-zA-Z0-9(),.%\s]/', '', $value) . ';';
+    }
+    $css .= '}';
+    return $css;
+}
+
+/**
+ * Atomically make one theme the active one (clears every other theme's
+ * is_active flag inside the same transaction, so exactly one row is ever
+ * active even if two admins act at the same time).
+ */
+function setActiveTheme(int $themeId): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->exec("UPDATE themes SET is_active = 0");
+        $stmt = $pdo->prepare("UPDATE themes SET is_active = 1 WHERE id = ?");
+        $stmt->execute([$themeId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}

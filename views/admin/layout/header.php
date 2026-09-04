@@ -28,16 +28,27 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
         <div class="admin-logo"><?= e(SITE_NAME) ?><br><small>پنل مدیریت</small></div>
         <nav>
             <a href="index.php" class="<?= $currentPage === 'index.php' ? 'active' : '' ?>">داشبورد</a>
+
+            <div class="nav-group-label">محصولات</div>
             <a href="products.php" class="<?= $currentPage === 'products.php' && empty($_GET['featured']) || $currentPage === 'product_edit.php' ? 'active' : '' ?>">محصولات</a>
             <a href="products.php?featured=1" class="<?= $currentPage === 'products.php' && !empty($_GET['featured']) ? 'active' : '' ?>">⭐ پیشنهاد ویژه</a>
             <a href="categories.php" class="<?= $currentPage === 'categories.php' ? 'active' : '' ?>">دسته‌بندی‌ها</a>
+            <a href="pricing.php" class="<?= $currentPage === 'pricing.php' ? 'active' : '' ?>">💰 تغییر قیمت گروهی</a>
+
+            <div class="nav-group-label">سفارش‌ها</div>
             <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' ? 'active' : '' ?>">سفارش‌ها</a>
+
+            <div class="nav-group-label">تنظیمات</div>
             <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
+            <a href="themes.php" class="<?= $currentPage === 'themes.php' || $currentPage === 'theme_edit.php' ? 'active' : '' ?>">🎨 قالب و رنگ سایت</a>
+
             <?php if (isSuperAdmin()): ?>
+            <div class="nav-group-label">مدیریت</div>
             <a href="users.php" class="<?= $currentPage === 'users.php' ? 'active' : '' ?>">مدیریت ادمین‌ها</a>
             <a href="diagnostics.php" class="<?= $currentPage === 'diagnostics.php' || $currentPage === 'notifications_log.php' ? 'active' : '' ?>">🔧 عیب‌یابی پیامک/ایمیل</a>
             <?php endif; ?>
-            <a href="/" target="_blank">مشاهده فروشگاه ↗</a>
+
+            <a href="/" target="_blank" style="margin-top:16px; border-top:1px solid rgba(255,255,255,.08); padding-top:16px;">مشاهده فروشگاه ↗</a>
             <a href="logout.php" class="logout-link">خروج</a>
         </nav>
     </aside>

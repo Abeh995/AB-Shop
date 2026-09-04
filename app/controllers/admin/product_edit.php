@@ -33,10 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = (int) preg_replace('/\D/', '', $_POST['price'] ?? '0');
     $discountPrice = trim($_POST['discount_price'] ?? '');
     $discountPrice = $discountPrice === '' ? null : (int) preg_replace('/\D/', '', $discountPrice);
+    $costPriceRaw = trim($_POST['cost_price'] ?? '');
+    $costPrice = $costPriceRaw === '' ? null : (int) preg_replace('/\D/', '', $costPriceRaw);
     $sku = trim($_POST['sku'] ?? '');
     $isActive = isset($_POST['is_active']) ? 1 : 0;
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
     $hasVariants = isset($_POST['has_variants']);
+    $adminId = (int) ($_SESSION['admin_id'] ?? 0);
 
     // When a product has variants, overall stock is meaningless (each variant
     // has its own stock), so 0 is stored to avoid misleading reports.
@@ -80,31 +83,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($product) {
-            $stmt = db()->prepare("UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?, discount_price=?, sku=?, stock=?, image=?, is_active=?, is_featured=? WHERE id=?");
-            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured, $id]);
+            // price and cost_price are deliberately NOT written here — they go
+            // exclusively through recordPriceChange() below, so every change to
+            // them lands in price_history. See app/services/PricingService.php.
+            $stmt = db()->prepare("UPDATE products SET category_id=?, name=?, slug=?, description=?, discount_price=?, sku=?, stock=?, image=?, is_active=?, is_featured=? WHERE id=?");
+            $stmt->execute([$categoryId, $name, $slug, $description, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured, $id]);
             $productId = $id;
+
+            $oldPrice = (int) $product['price'];
+            if ($price !== $oldPrice) {
+                recordPriceChange($productId, null, 'sale_price', 'direct_value', (float) $price, $adminId);
+            }
+            $oldCostPrice = $product['cost_price'] !== null ? (int) $product['cost_price'] : null;
+            if ($costPrice !== $oldCostPrice) {
+                if ($costPrice === null) {
+                    db()->prepare("UPDATE products SET cost_price = NULL WHERE id = ?")->execute([$productId]);
+                } else {
+                    recordPriceChange($productId, null, 'cost_price', 'direct_value', (float) $costPrice, $adminId);
+                }
+            }
+
             setFlash('success', 'محصول به‌روزرسانی شد.');
         } else {
-            $stmt = db()->prepare("INSERT INTO products (category_id, name, slug, description, price, discount_price, sku, stock, image, is_active, is_featured) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured]);
+            $stmt = db()->prepare("INSERT INTO products (category_id, name, slug, description, price, discount_price, cost_price, sku, stock, image, is_active, is_featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $costPrice, $sku, $stock, $newImageName, $isActive, $isFeatured]);
             $productId = db()->lastInsertId();
             setFlash('success', 'محصول با موفقیت اضافه شد.');
         }
 
-        // ---------- Variants: only processed when "has variants" is enabled ----------
-        db()->prepare("DELETE FROM product_variants WHERE product_id = ?")->execute([$productId]);
+        // ---------- Variants: upsert in place so an existing row's id (and
+        // anything referencing it — price_history, order_items) stays stable
+        // across edits, instead of being deleted and recreated every save. ----------
+        $oldVariantsById = [];
+        foreach ($variants as $v) {
+            $oldVariantsById[(int) $v['id']] = $v;
+        }
+
+        $submittedVariantIds = [];
         if ($hasVariants) {
+            $variantIdsIn = $_POST['variant_id'] ?? [];
             $sizes = $_POST['variant_size'] ?? [];
             $colors = $_POST['variant_color'] ?? [];
             $vstocks = $_POST['variant_stock'] ?? [];
+            $vcostPrices = $_POST['variant_cost_price'] ?? [];
+
             for ($i = 0; $i < count($sizes); $i++) {
                 $sz = trim($sizes[$i]);
                 $cl = trim($colors[$i] ?? '');
                 $st = (int) ($vstocks[$i] ?? 0);
+                $vcpRaw = trim($vcostPrices[$i] ?? '');
+                $vcp = $vcpRaw === '' ? null : (int) preg_replace('/\D/', '', $vcpRaw);
+                $existingId = (int) ($variantIdsIn[$i] ?? 0);
+
                 if ($sz === '' && $cl === '') continue;
-                $vstmt = db()->prepare("INSERT INTO product_variants (product_id, size, color, stock) VALUES (?,?,?,?)");
-                $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st]);
+
+                if ($existingId && isset($oldVariantsById[$existingId])) {
+                    db()->prepare("UPDATE product_variants SET size=?, color=?, stock=? WHERE id=? AND product_id=?")
+                        ->execute([$sz ?: null, $cl ?: null, $st, $existingId, $productId]);
+
+                    $oldVariant = $oldVariantsById[$existingId];
+                    $oldVcp = $oldVariant['cost_price'] !== null ? (int) $oldVariant['cost_price'] : null;
+                    if ($vcp !== $oldVcp) {
+                        if ($vcp === null) {
+                            db()->prepare("UPDATE product_variants SET cost_price = NULL WHERE id = ?")->execute([$existingId]);
+                        } else {
+                            recordPriceChange($productId, $existingId, 'cost_price', 'direct_value', (float) $vcp, $adminId);
+                        }
+                    }
+                    $submittedVariantIds[] = $existingId;
+                } else {
+                    $vstmt = db()->prepare("INSERT INTO product_variants (product_id, size, color, stock, cost_price) VALUES (?,?,?,?,?)");
+                    $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st, $vcp]);
+                    $submittedVariantIds[] = (int) db()->lastInsertId();
+                }
             }
+        }
+
+        // Any previously-existing variant not present in this submission was
+        // removed by the admin (or "has variants" was turned off entirely).
+        $idsToDelete = array_diff(array_keys($oldVariantsById), $submittedVariantIds);
+        if ($idsToDelete) {
+            $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+            db()->prepare("DELETE FROM product_variants WHERE id IN ($placeholders) AND product_id = ?")
+                ->execute([...$idsToDelete, $productId]);
         }
 
         // ---------- Tags: editable by any admin, at any time ----------
@@ -199,4 +260,6 @@ function handleProductImageUpload(array $file): array
     return ['ok' => true, 'filename' => $filename];
 }
 
-renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds', 'galleryImages'));
+$priceHistory = $id ? getProductPriceHistory($id) : [];
+
+renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds', 'galleryImages', 'priceHistory'));

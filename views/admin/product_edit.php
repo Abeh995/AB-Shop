@@ -40,6 +40,11 @@
                 <label>قیمت با تخفیف (اختیاری)</label>
                 <input class="form-control" type="text" inputmode="numeric" name="discount_price" value="<?= e($product['discount_price'] ?? '') ?>">
             </div>
+            <div class="form-group">
+                <label>قیمت تمام‌شده (اختیاری)</label>
+                <input class="form-control" type="text" inputmode="numeric" name="cost_price" value="<?= e($product['cost_price'] ?? '') ?>">
+                <p style="font-size:.75rem; color:var(--color-muted); margin-top:4px;">فقط برای گزارش سود داخلی؛ به مشتری نمایش داده نمی‌شود.</p>
+            </div>
         </div>
 
         <div class="form-group">
@@ -62,17 +67,22 @@
             <label class="group-label">سایزها / رنگ‌ها</label>
             <div id="variantRows">
                 <?php
-                $variantRows = $variants ?: [['size' => '', 'color' => '', 'stock' => '']];
+                $variantRows = $variants ?: [['id' => '', 'size' => '', 'color' => '', 'stock' => '', 'cost_price' => '']];
                 foreach ($variantRows as $v): ?>
-                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;">
+                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;">
+                    <input type="hidden" name="variant_id[]" value="<?= e((string)($v['id'] ?? '')) ?>">
                     <input class="form-control variant-input" type="text" name="variant_size[]" placeholder="سایز (مثلا 39-42)" value="<?= e($v['size'] ?? '') ?>">
                     <input class="form-control variant-input" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)" value="<?= e($v['color'] ?? '') ?>">
                     <input class="form-control variant-input" type="number" name="variant_stock[]" placeholder="موجودی" value="<?= e((string)($v['stock'] ?? '')) ?>">
+                    <input class="form-control variant-input" type="number" name="variant_cost_price[]" placeholder="قیمت تمام‌شده (اختیاری)" value="<?= e((string)($v['cost_price'] ?? '')) ?>">
                     <button type="button" class="btn btn-sm btn-outline" onclick="this.closest('.form-row').remove()">حذف</button>
                 </div>
                 <?php endforeach; ?>
             </div>
             <button type="button" class="btn btn-sm btn-outline" id="addVariantRow">+ افزودن ردیف</button>
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:6px;">
+                قیمت تمام‌شده واریانت اختیاری است؛ اگر خالی بماند، قیمت تمام‌شده محصول (بالا) برایش در نظر گرفته می‌شود.
+            </p>
         </div>
 
         <div class="form-group">
@@ -137,15 +147,50 @@
     </form>
 </div>
 
+<?php if ($product): ?>
+<div class="admin-card">
+    <h3 style="margin-bottom:14px;">تاریخچه تغییرات قیمت</h3>
+    <?php if ($priceHistory): ?>
+    <table class="admin-table">
+        <thead><tr><th>تاریخ</th><th>نوع</th><th>واریانت</th><th>قبل</th><th>بعد</th><th>مقدار تغییر</th><th>درصد</th><th>روش</th><th>ادمین</th></tr></thead>
+        <tbody>
+        <?php foreach ($priceHistory as $h): ?>
+        <tr>
+            <td><?= toPersianDigits(date('Y/m/d H:i', strtotime($h['created_at']))) ?></td>
+            <td><?= $h['field_changed'] === 'cost_price' ? 'قیمت تمام‌شده' : 'قیمت فروش' ?></td>
+            <td><?= $h['variant_label'] ? e($h['variant_label']) : '—' ?></td>
+            <td><?= $h['previous_value'] !== null ? formatPrice((int)$h['previous_value']) : '—' ?></td>
+            <td><?= formatPrice((int)$h['new_value']) ?></td>
+            <td style="color: <?= $h['change_amount'] >= 0 ? 'var(--color-success)' : 'var(--color-danger)' ?>;">
+                <?= $h['change_amount'] >= 0 ? '+' : '' ?><?= toPersianDigits(number_format((int)$h['change_amount'])) ?>
+            </td>
+            <td><?= $h['change_percentage'] !== null ? toPersianDigits(number_format((float)$h['change_percentage'], 2)) . '٪' : '—' ?></td>
+            <td>
+                <?= ['fixed_amount' => 'مبلغ ثابت', 'percentage' => 'درصدی', 'direct_value' => 'ویرایش مستقیم'][$h['method']] ?? e($h['method']) ?>
+                <?php if ($h['bulk_operation_id']): ?><span style="color:var(--color-muted); font-size:.78rem;"> (Bulk #<?= (int)$h['bulk_operation_id'] ?>)</span><?php endif; ?>
+            </td>
+            <td><?= e($h['admin_username'] ?? '—') ?></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php else: ?>
+        <p style="color:var(--color-muted); font-size:.9rem;">هنوز تغییر قیمتی برای این محصول ثبت نشده است.</p>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <script>
 document.getElementById('addVariantRow').addEventListener('click', function () {
     var wrap = document.getElementById('variantRows');
     var row = document.createElement('div');
     row.className = 'form-row';
-    row.style.cssText = 'grid-template-columns: 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;';
-    row.innerHTML = '<input class="form-control variant-input" type="text" name="variant_size[]" placeholder="سایز">' +
+    row.style.cssText = 'grid-template-columns: 1fr 1fr 1fr 1fr auto; align-items:center; margin-bottom:8px;';
+    row.innerHTML = '<input type="hidden" name="variant_id[]" value="">' +
+        '<input class="form-control variant-input" type="text" name="variant_size[]" placeholder="سایز">' +
         '<input class="form-control variant-input" type="text" name="variant_color[]" placeholder="رنگ (اختیاری)">' +
         '<input class="form-control variant-input" type="number" name="variant_stock[]" placeholder="موجودی">' +
+        '<input class="form-control variant-input" type="number" name="variant_cost_price[]" placeholder="قیمت تمام‌شده (اختیاری)">' +
         '<button type="button" class="btn btn-sm btn-outline" onclick="this.closest(\'.form-row\').remove()">حذف</button>';
     wrap.appendChild(row);
 });

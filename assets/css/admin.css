@@ -24,6 +24,12 @@
 }
 .admin-sidebar a:hover, .admin-sidebar a.active { background: rgba(255,255,255,.08); color: #fff; }
 .admin-sidebar a.logout-link { margin-top: 20px; color: #E08B7A; }
+.nav-group-label {
+    font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+    color: #8A7A69; text-transform: uppercase;
+    padding: 14px 12px 4px;
+}
+.nav-group-label:first-of-type { padding-top: 8px; }
 
 .admin-main { flex: 1; padding: 26px 32px; max-width: 100%; overflow-x: auto; }
 .admin-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }

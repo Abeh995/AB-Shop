@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price DECIMAL(12,0) NOT NULL,              -- تومان، بدون اعشار
     discount_price DECIMAL(12,0) DEFAULT NULL,  -- اگر تخفیف دارد
+    cost_price DECIMAL(12,0) DEFAULT NULL,      -- قیمت تمام‌شده؛ مستقل از قیمت فروش
     sku VARCHAR(60) DEFAULT NULL UNIQUE,
     stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
     image VARCHAR(255) DEFAULT NULL,            -- تصویر اصلی
@@ -131,8 +132,59 @@ CREATE TABLE IF NOT EXISTS product_variants (
     color VARCHAR(40) DEFAULT NULL,
     stock INT NOT NULL DEFAULT 0,
     price_override DECIMAL(12,0) DEFAULT NULL,
+    cost_price DECIMAL(12,0) DEFAULT NULL,      -- مستقل از cost_price سطح محصول؛ در صورت NULL، از محصول ارث می‌برد
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Bulk price-change requests. A bulk operation targets an arbitrary
+-- product selection (not tied to a category) and is not itself a price
+-- record — each affected product still gets its own price_history row.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS bulk_price_operations (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT UNSIGNED NOT NULL,
+    field_changed ENUM('cost_price','sale_price') NOT NULL,
+    method ENUM('fixed_amount','percentage','direct_value') NOT NULL,
+    requested_change VARCHAR(40) NOT NULL,
+    reason VARCHAR(255) DEFAULT NULL,
+    product_count INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE RESTRICT,
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Immutable audit trail of every cost/sale price change, at the product or
+-- variant level, whether from a single edit or a bulk operation.
+-- variant_id is SET NULL (not CASCADE) on variant deletion, and
+-- variant_label is stored as a text snapshot, so a history row stays
+-- meaningful even after the variant itself is gone — the same pattern
+-- order_items already uses for product_name/variant_label.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS price_history (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id INT UNSIGNED NOT NULL,
+    variant_id INT UNSIGNED DEFAULT NULL,
+    variant_label VARCHAR(80) DEFAULT NULL,
+    field_changed ENUM('cost_price','sale_price') NOT NULL,
+    previous_value DECIMAL(12,0) DEFAULT NULL,
+    new_value DECIMAL(12,0) NOT NULL,
+    change_amount DECIMAL(12,0) NOT NULL,
+    change_percentage DECIMAL(8,4) DEFAULT NULL,
+    method ENUM('fixed_amount','percentage','direct_value') NOT NULL,
+    reason VARCHAR(255) DEFAULT NULL,
+    bulk_operation_id INT UNSIGNED DEFAULT NULL,
+    admin_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE SET NULL,
+    FOREIGN KEY (bulk_operation_id) REFERENCES bulk_price_operations(id) ON DELETE SET NULL,
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE RESTRICT,
+    INDEX idx_product (product_id),
+    INDEX idx_bulk (bulk_operation_id),
+    INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
@@ -280,6 +332,30 @@ CREATE TABLE IF NOT EXISTS email_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Admin-managed storefront themes. `theme_tokens` is a generic
+-- (token_group, token_key, token_value) store so token types beyond color
+-- (typography, spacing, radius, shadows, ...) can be added later without a
+-- schema change. Exactly one theme has is_active = 1 at a time.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS themes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS theme_tokens (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    theme_id INT UNSIGNED NOT NULL,
+    token_group VARCHAR(40) NOT NULL DEFAULT 'color',
+    token_key VARCHAR(60) NOT NULL,
+    token_value VARCHAR(255) NOT NULL,
+    FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE,
+    UNIQUE KEY uniq_theme_token (theme_id, token_group, token_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Initial seed data
 -- Note: the admins table is intentionally left empty. After uploading the
 -- project to your host, visit /install.php once to securely create the
@@ -292,3 +368,20 @@ INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
 ('جوراب زنانه', 'zanane', 'جوراب‌های زنانه شیک و راحت', 2, 1),
 ('جوراب بچگانه', 'bachegane', 'جوراب‌های رنگارنگ کودک', 3, 1),
 ('جوراب ورزشی', 'varzeshi', 'مناسب فعالیت و ورزش', 4, 1);
+
+INSERT INTO themes (id, name, is_active) VALUES
+(1, 'پیش‌فرض', 1), (2, 'هم‌رنگ لوگو', 0), (3, 'صورتی ملایم', 0), (4, 'کنتراست بالا', 0);
+
+INSERT INTO theme_tokens (theme_id, token_group, token_key, token_value) VALUES
+(1, 'color', 'bg', '#F9E9DA'), (1, 'color', 'surface', '#F5E5D6'), (1, 'color', 'text', '#7D5141'),
+(1, 'color', 'muted', '#9C7C6C'), (1, 'color', 'border', '#E7D2BF'), (1, 'color', 'primary', '#582B1C'),
+(1, 'color', 'primary-dark', '#3E1D12'), (1, 'color', 'primary-light', '#EAD6C7'), (1, 'color', 'accent', '#B89180'),
+(2, 'color', 'bg', '#F3E4D6'), (2, 'color', 'surface', '#FFFFFF'), (2, 'color', 'text', '#6B4130'),
+(2, 'color', 'muted', '#9A7A68'), (2, 'color', 'border', '#E6D3C2'), (2, 'color', 'primary', '#4A2A1D'),
+(2, 'color', 'primary-dark', '#331C12'), (2, 'color', 'primary-light', '#EFDDD0'), (2, 'color', 'accent', '#A97C68'),
+(3, 'color', 'bg', '#FBF1EC'), (3, 'color', 'surface', '#FFFFFF'), (3, 'color', 'text', '#6B4A47'),
+(3, 'color', 'muted', '#9C807C'), (3, 'color', 'border', '#EDDAD3'), (3, 'color', 'primary', '#4A302E'),
+(3, 'color', 'primary-dark', '#331F1D'), (3, 'color', 'primary-light', '#F1DFDA'), (3, 'color', 'accent', '#C9A29A'),
+(4, 'color', 'bg', '#F7EAE0'), (4, 'color', 'surface', '#FFFFFF'), (4, 'color', 'text', '#5C3A2E'),
+(4, 'color', 'muted', '#8A6B5C'), (4, 'color', 'border', '#E2CFC0'), (4, 'color', 'primary', '#331C12'),
+(4, 'color', 'primary-dark', '#1F110B'), (4, 'color', 'primary-light', '#E8D5C7'), (4, 'color', 'accent', '#8B5E4A');
