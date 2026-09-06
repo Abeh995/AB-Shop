@@ -34,6 +34,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
             <a href="products.php?featured=1" class="<?= $currentPage === 'products.php' && !empty($_GET['featured']) ? 'active' : '' ?>">⭐ پیشنهاد ویژه</a>
             <a href="categories.php" class="<?= $currentPage === 'categories.php' ? 'active' : '' ?>">دسته‌بندی‌ها</a>
             <a href="pricing.php" class="<?= $currentPage === 'pricing.php' ? 'active' : '' ?>">💰 تغییر قیمت گروهی</a>
+            <a href="gift_items.php" class="<?= $currentPage === 'gift_items.php' || $currentPage === 'gift_item_edit.php' ? 'active' : '' ?>">🎁 هدیه و پیشنهاد بعد از سبد</a>
 
             <div class="nav-group-label">سفارش‌ها</div>
             <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' ? 'active' : '' ?>">سفارش‌ها</a>
@@ -41,6 +42,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
             <div class="nav-group-label">تنظیمات</div>
             <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
             <a href="themes.php" class="<?= $currentPage === 'themes.php' || $currentPage === 'theme_edit.php' ? 'active' : '' ?>">🎨 قالب و رنگ سایت</a>
+            <a href="shipping_methods.php" class="<?= $currentPage === 'shipping_methods.php' || $currentPage === 'shipping_method_edit.php' ? 'active' : '' ?>">🚚 روش‌های ارسال</a>
 
             <?php if (isSuperAdmin()): ?>
             <div class="nav-group-label">مدیریت</div>

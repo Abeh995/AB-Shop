@@ -31,6 +31,16 @@ if ($appliedCoupon) {
     }
 }
 
+// Post-order add-ons selected on the cart page, re-validated against the
+// live catalog (never trust price/stock carried over from an earlier page)
+$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
+
+// A shipping preview for the initial render (and for a re-rendered form
+// after a validation error, using whatever province was already typed).
+// The authoritative calculation happens again, server-side, inside the
+// POST handler below — this is only what the page displays before submit.
+$shippingPreview = calculateShippingCost($_POST['province'] ?? '', $cart['subtotal']);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
 
@@ -76,6 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Re-validate post-order add-ons again, right before placing the order,
+    // for the same reason the coupon is re-checked above. A line that fails
+    // now (e.g. stock ran out) is silently dropped rather than blocking
+    // checkout — it's an optional add-on, not the order the customer came
+    // here to place.
+    $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
+    $giftItemsTotal = $postOrderResult['total'];
+
     if (empty($errors)) {
         $pdo = db();
         try {
@@ -83,17 +101,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderCode = generateOrderCode();
             $subtotal = $cart['subtotal'];
-            $shippingCost = 0; // Phase 1: free shipping / no complex calculation yet
-            $total = max(0, $subtotal - $discount + $shippingCost);
+            $shipping = calculateShippingCost($province, $subtotal);
+            $shippingCost = $shipping['cost'];
+            $total = max(0, $subtotal - $discount + $shippingCost + $giftItemsTotal);
             $customerId = isCustomerLoggedIn() ? (int) $_SESSION['customer_id'] : null;
 
             $stmt = $pdo->prepare("INSERT INTO orders
                 (customer_id, order_code, customer_name, phone, email, province, city, address, postal_code, notes,
-                 subtotal, discount_total, shipping_cost, total, coupon_code, coupon_id, status, payment_status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
+                 subtotal, discount_total, shipping_cost, shipping_method_name, gift_items_total, total, coupon_code, coupon_id, status, payment_status)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
             $stmt->execute([
                 $customerId, $orderCode, $name, $phone, $email ?: null, $province, $city, $address, $postalCode ?: null, $notes ?: null,
-                $subtotal, $discount, $shippingCost, $total,
+                $subtotal, $discount, $shippingCost, $shipping['method_name'], $giftItemsTotal, $total,
                 $couponRow ? $couponRow['code'] : null, $couponRow ? $couponRow['id'] : null,
             ]);
             $orderId = $pdo->lastInsertId();
@@ -126,9 +145,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 CouponService::markUsed($couponRow['id']);
             }
 
+            if ($postOrderResult['lines']) {
+                attachPostOrderLines($pdo, $orderId, $postOrderResult['lines']);
+            }
+
             $pdo->commit();
             cartClear();
             unset($_SESSION['coupon']);
+            unset($_SESSION['post_order_selection']);
 
             if ($paymentMethod === 'cod') {
                 // Cash on delivery: go straight to the success page
@@ -155,4 +179,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderView('site/checkout', compact('pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount', 'prefillCustomer'));
+renderView('site/checkout', compact('pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount', 'prefillCustomer', 'postOrderResult', 'shippingPreview'));

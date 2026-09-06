@@ -6,6 +6,53 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.7.0] — Shipping Cost Calculation
+
+### Summary
+Replaces the hardcoded `$shippingCost = 0` that's been in `checkout.php` since the first release with an actual, admin-configurable shipping cost, calculated per order from the customer's province with a live estimate shown before they submit. No changes to existing behavior for anything other than the shipping line itself; migration 010 is additive only.
+
+### ✨ Shipping Methods (`admin/shipping_methods.php`)
+A `shipping_methods` row matches an order one of two ways: `province_contains` applies when the customer's (free-text) province field contains a configured value (e.g. "تهران"), and `default` is the fallback used when nothing more specific matches. Methods are evaluated in a configurable order (reorderable from the admin list with up/down controls), so specific rules can be placed ahead of the fallback. Each method also supports an optional `free_above_amount` — once an order's subtotal reaches it, that method's cost is waived. Two starter methods are seeded, matching the shipping copy already shown in the site footer (a Tehran courier rate and a default post rate for everywhere else), both at zero cost until an admin sets real prices.
+
+### ✨ Live Shipping Estimate at Checkout
+The checkout page now shows a shipping cost estimate that updates as the customer types their province, via a new `ajax/shipping_estimate.php` endpoint — recomputed from scratch server-side each time (never trusting a client-supplied cost), and purely a display convenience: the authoritative calculation happens again, independently, when the order is actually submitted. The cart page shows an informational note that shipping is calculated on the next (checkout) step, since a customer's address isn't known yet at that point.
+
+### 🗄️ Snapshotting
+`orders.shipping_method_name` records the matched method's name at order time, alongside the existing `shipping_cost` column — the same reasoning as every other snapshot column already on `orders`/`order_items`/`order_gift_items`: a later change to a shipping method's name or price must not alter what an existing order says it shipped by. Both the admin order detail page and the customer's own order history page now show the shipping line (and, where applicable, paid post-order add-ons), which they didn't display at all before this release.
+
+### 🗄️ Database Changes
+`database/migrations/010_v1.7.0_shipping.sql` — `shipping_methods` table (with two seeded starter methods) and `orders.shipping_method_name`.
+
+### 📋 Planned Next
+Store accounting (see `ARCHITECTURE.md` §8) is designed but not yet implemented — it depends on price history, gift/post-order, and this release's shipping cost all already recording their own history, which they now do.
+
+---
+
+## [1.6.0] — Gift Box / Post-Order Items
+
+### Summary
+Introduces a single new catalog concept — a "gift item" — that an admin can attach to an order for free, offer to customers as a paid checkout add-on, or both, without it being two separate systems. Every attachment to an order is fully snapshotted, the same way products already are, so a later change to an item's cost or price never rewrites an existing order's numbers. No changes to existing behavior; migration 009 is additive only.
+
+### ✨ Gift Box / Post-Order Catalog (`gift_items`)
+A `gift_items` row has its own name, image, stock, and `cost_price`, plus two independent flags: `is_giftable` (an admin can attach it to an order for free) and `is_post_orderable` (a customer can add it as a paid checkout add-on, at its own `post_order_price`, separate from cost). Both flags can be on at once — the same item can be a free gift today and a paid add-on tomorrow without being recreated, since there was never a real distinction between the two beyond how a given attachment is used. Managed from `admin/gift_items.php` (list) and `admin/gift_item_edit.php` (create/edit), reusing the same image upload path as products.
+
+### ✨ Admin: Gifting an Item to an Order
+`admin/order_detail.php` now has a form to attach a giftable item, with a quantity and an optional note, to any existing order. `assignGiftToOrder()` (`app/services/GiftService.php`) locks the item's row, decrements stock with a guarded conditional update, and records an `order_gift_items` row with `unit_selling_price = 0` — no charge to the customer, but the store's actual cost is preserved for later accounting. The order detail page lists everything already attached, gift or post-order, with who assigned it and when.
+
+### ✨ Storefront: Post-Order Add-Ons at Checkout
+The cart page now offers active, in-stock, post-orderable items as optional paid add-ons; a selection is held in `$_SESSION['post_order_selection']`, the same session-based pattern already used for an applied coupon. It's re-validated against the live catalog on the cart page and again at the top of `checkout.php` — a line that fails re-validation at that point (e.g. stock ran out) is silently dropped rather than blocking the order, since it's an optional add-on rather than what the customer came to buy. Selected post-order lines are included in `orders.gift_items_total` and the order total, and are written into `order_gift_items` inside the same transaction as the rest of the order — a stock failure on a gift item rolls back the whole order exactly like a stock failure on a regular product would.
+
+### 🐛 Bug Fix: Image Upload Helper Was Trapped Inside a Single Controller
+`handleProductImageUpload()` was defined inside `app/controllers/admin/product_edit.php` and only existed for the duration of that one page's request — calling it from anywhere else would have been a fatal "undefined function" error. Found while wiring up gift item image uploads; moved to `app/core/functions.php`, which is loaded on every request, so both `product_edit.php` and the new `gift_item_edit.php` can use it.
+
+### 🗄️ Database Changes
+`database/migrations/009_v1.6.0_gift_post_order.sql` — `gift_items`, `order_gift_items` tables, plus `orders.gift_items_total`.
+
+### 📋 Planned Next
+Shipping cost calculation and store accounting are designed (see `ARCHITECTURE.md` §8) but not yet implemented. Accounting is sequenced after shipping since its numbers depend on shipping cost already being recorded per order.
+
+---
+
 ## [1.5.0] — Cost/Sale Price History, Bulk Pricing, Admin-Managed Theme System, and Admin Navigation Reorganization
 
 ### Summary

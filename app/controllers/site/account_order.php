@@ -21,10 +21,15 @@ $itemsStmt = db()->prepare("SELECT * FROM order_items WHERE order_id = ?");
 $itemsStmt->execute([$order['id']]);
 $items = $itemsStmt->fetchAll();
 
+// Post-order add-ons the customer paid for on this order (free gifts are
+// intentionally excluded here — they're an internal/admin-facing record,
+// not something the customer needs itemized on their own order view).
+$orderGiftItems = array_filter(getOrderGiftItems($order['id']), fn($gi) => $gi['role'] === 'post_order');
+
 $statusLabels = [
     'pending' => 'در انتظار بررسی', 'confirmed' => 'تأیید شده', 'processing' => 'در حال پردازش',
     'shipped' => 'ارسال شده', 'delivered' => 'تحویل داده شده', 'cancelled' => 'لغو شده',
 ];
 
 $pageTitle = 'سفارش ' . $order['order_code'];
-renderView('site/account_order', compact('pageTitle', 'order', 'items', 'statusLabels'));
+renderView('site/account_order', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems'));

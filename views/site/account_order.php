@@ -15,10 +15,23 @@
                 <span><?= formatPrice($it['line_total']) ?></span>
             </div>
         <?php endforeach; ?>
+        <?php foreach ($orderGiftItems as $gi): ?>
+            <div class="item-line">
+                <span><?= e($gi['name']) ?> × <?= toPersianDigits((string)$gi['quantity']) ?></span>
+                <span><?= formatPrice($gi['unit_selling_price'] * $gi['quantity']) ?></span>
+            </div>
+        <?php endforeach; ?>
         <div class="row" style="margin-top:14px;"><span>جمع کل کالاها</span><span><?= formatPrice($order['subtotal']) ?></span></div>
         <?php if ($order['discount_total'] > 0): ?>
         <div class="row" style="color:var(--color-success);"><span>تخفیف</span><span>−<?= formatPrice($order['discount_total']) ?></span></div>
         <?php endif; ?>
+        <?php if (!empty($order['gift_items_total']) && $order['gift_items_total'] > 0): ?>
+        <div class="row"><span>پیشنهاد بعد از سبد</span><span><?= formatPrice($order['gift_items_total']) ?></span></div>
+        <?php endif; ?>
+        <div class="row">
+            <span>هزینه ارسال<?= !empty($order['shipping_method_name']) ? ' (' . e($order['shipping_method_name']) . ')' : '' ?></span>
+            <span><?= $order['shipping_cost'] > 0 ? formatPrice($order['shipping_cost']) : 'رایگان' ?></span>
+        </div>
         <div class="row total-row"><span>مبلغ نهایی</span><span><?= formatPrice($order['total']) ?></span></div>
     </div>
 

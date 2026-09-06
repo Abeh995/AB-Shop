@@ -19,4 +19,13 @@ if ($appliedCoupon) {
     }
 }
 
-renderView('site/cart', compact('pageTitle', 'cart', 'appliedCoupon', 'discount'));
+// Post-order add-ons: what the customer has selected so far (re-validated
+// against the live catalog) plus what else is currently offerable
+$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
+$selectedPostOrderIds = array_column($postOrderResult['lines'], 'gift_item_id');
+$availablePostOrderItems = array_filter(
+    getAvailablePostOrderItems(),
+    fn($item) => !in_array((int) $item['id'], $selectedPostOrderIds, true)
+);
+
+renderView('site/cart', compact('pageTitle', 'cart', 'appliedCoupon', 'discount', 'postOrderResult', 'availablePostOrderItems'));

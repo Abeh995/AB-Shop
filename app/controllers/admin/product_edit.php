@@ -228,38 +228,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hasVariantsInitial = $hasVariants;
 }
 
-/**
- * Validate and safely store the uploaded file
- */
-function handleProductImageUpload(array $file): array
-{
-    if ($file['size'] > MAX_UPLOAD_SIZE) {
-        return ['ok' => false, 'error' => 'حجم تصویر نباید بیشتر از ۲ مگابایت باشد.'];
-    }
-
-    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    if (!isset($allowedMimes[$mime])) {
-        return ['ok' => false, 'error' => 'فقط تصاویر JPG، PNG یا WEBP مجاز هستند.'];
-    }
-
-    if (!is_dir(UPLOAD_DIR)) {
-        mkdir(UPLOAD_DIR, 0755, true);
-    }
-
-    $filename = bin2hex(random_bytes(12)) . '.' . $allowedMimes[$mime];
-    $destination = UPLOAD_DIR . $filename;
-
-    if (!move_uploaded_file($file['tmp_name'], $destination)) {
-        return ['ok' => false, 'error' => 'خطا در ذخیره فایل روی سرور.'];
-    }
-
-    return ['ok' => true, 'filename' => $filename];
-}
-
 $priceHistory = $id ? getProductPriceHistory($id) : [];
 
 renderView('admin/product_edit', compact('pageTitle', 'product', 'categories', 'variants', 'errors', 'hasVariantsInitial', 'allTags', 'productTagIds', 'galleryImages', 'priceHistory'));

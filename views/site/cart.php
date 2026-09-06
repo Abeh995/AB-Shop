@@ -59,6 +59,61 @@
                     </tr>
                     <?php endforeach; ?>
                 </table>
+
+                <?php if ($postOrderResult['lines']): ?>
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:1rem; margin-bottom:12px;">پیشنهاد بعد از سبد شما</h3>
+                    <table class="cart-table">
+                        <?php foreach ($postOrderResult['lines'] as $line):
+                            $giftImg = $line['image'] ? UPLOAD_URL . e($line['image']) : '/assets/img/placeholder-sock.svg';
+                        ?>
+                        <tr class="cart-item-row">
+                            <td>
+                                <div class="cart-item-info">
+                                    <img src="<?= $giftImg ?>" alt="">
+                                    <div class="cart-item-name"><?= e($line['name']) ?></div>
+                                </div>
+                            </td>
+                            <td><?= formatPrice($line['unit_selling_price']) ?></td>
+                            <td><?= toPersianDigits((string)$line['quantity']) ?></td>
+                            <td style="font-weight:700;"><?= formatPrice($line['line_total']) ?></td>
+                            <td>
+                                <form method="post" action="/ajax/post_order_remove.php">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="gift_item_id" value="<?= (int)$line['gift_item_id'] ?>">
+                                    <button type="submit" class="remove-btn">حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($availablePostOrderItems): ?>
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:1rem; margin-bottom:12px;">می‌خواهید این‌ها رو هم اضافه کنید؟</h3>
+                    <div class="product-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+                        <?php foreach ($availablePostOrderItems as $gi):
+                            $giftImg = $gi['image'] ? UPLOAD_URL . e($gi['image']) : '/assets/img/placeholder-sock.svg';
+                        ?>
+                        <div class="product-card">
+                            <div class="thumb"><img src="<?= $giftImg ?>" alt=""></div>
+                            <div class="body">
+                                <div class="name"><?= e($gi['name']) ?></div>
+                                <div class="price-row"><span class="price-current"><?= formatPrice((int)$gi['post_order_price']) ?></span></div>
+                                <form method="post" action="/ajax/post_order_add.php" style="margin-top:8px;">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="gift_item_id" value="<?= (int)$gi['id'] ?>">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-sm btn-outline btn-block">افزودن</button>
+                                </form>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="cart-summary">
@@ -81,8 +136,13 @@
                     </form>
                 <?php endif; ?>
 
-                <div class="row total-row"><span>مبلغ قابل پرداخت</span><span><?= formatPrice($cart['subtotal'] - $discount) ?></span></div>
-                <a href="/checkout" class="btn btn-primary btn-block" style="margin-top:16px;">ادامه فرآیند خرید</a>
+                <?php if ($postOrderResult['total'] > 0): ?>
+                <div class="row"><span>پیشنهاد بعد از سبد</span><span><?= formatPrice($postOrderResult['total']) ?></span></div>
+                <?php endif; ?>
+
+                <div class="row total-row"><span>مبلغ قابل پرداخت</span><span><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total']) ?></span></div>
+                <p style="font-size:.78rem; color:var(--color-muted); margin-top:6px;">+ هزینه ارسال، که در مرحله بعد بر اساس آدرستان محاسبه می‌شود</p>
+                <a href="/checkout" class="btn btn-primary btn-block" style="margin-top:10px;">ادامه فرآیند خرید</a>
             </div>
         </div>
     <?php endif; ?>

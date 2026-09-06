@@ -20,6 +20,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('orders.php');
     }
 
+    if (($_POST['action'] ?? '') === 'assign_gift') {
+        $giftItemId = (int) ($_POST['gift_item_id'] ?? 0);
+        $qty = (int) ($_POST['quantity'] ?? 1);
+        $note = trim($_POST['note'] ?? '') ?: null;
+        $adminId = (int) ($_SESSION['admin_id'] ?? 0);
+
+        $result = assignGiftToOrder($id, $giftItemId, $qty, $adminId, $note);
+        setFlash($result['ok'] ? 'success' : 'error', $result['ok'] ? 'هدیه به سفارش اضافه شد.' : $result['error']);
+        redirect('order_detail.php?id=' . $id);
+    }
+
     $newStatus = $_POST['status'] ?? '';
     if (isset($statusLabels[$newStatus]) && $newStatus !== $order['status']) {
         db()->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$newStatus, $id]);
@@ -36,5 +47,8 @@ $itemsStmt = db()->prepare("SELECT * FROM order_items WHERE order_id = ?");
 $itemsStmt->execute([$id]);
 $items = $itemsStmt->fetchAll();
 
+$orderGiftItems = getOrderGiftItems($id);
+$giftableItems = getGiftableItems();
+
 $pageTitle = 'سفارش ' . $order['order_code'];
-renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels'));
+renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'giftableItems'));

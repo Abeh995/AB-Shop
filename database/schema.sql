@@ -204,6 +204,55 @@ CREATE TABLE IF NOT EXISTS coupons (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Gift box / post-order catalog. A single item can be assigned to an order
+-- for free by an admin (is_giftable) and/or offered to the customer as a
+-- paid checkout add-on (is_post_orderable) — both flags may be set on the
+-- same row, so an item's available roles can change without recreating it.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS gift_items (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    is_giftable TINYINT(1) NOT NULL DEFAULT 1,
+    is_post_orderable TINYINT(1) NOT NULL DEFAULT 0,
+    cost_price DECIMAL(12,0) NOT NULL,
+    post_order_price DECIMAL(12,0) DEFAULT NULL,  -- required (enforced in the app) when is_post_orderable = 1
+    stock INT NOT NULL DEFAULT 0,
+    created_by INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admins(id) ON DELETE SET NULL,
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Shipping cost rules. A method matches an order either by the customer's
+-- (free-text) province containing match_value, or as the 'default'
+-- fallback when nothing more specific matched; methods are evaluated in
+-- sort_order. free_above_amount, when set, waives the cost once the order
+-- subtotal reaches it. match_type is an enum specifically so a value like
+-- 'city_contains' or a future weight-based rule can be added later without
+-- restructuring this table — provinces/cities are free text today and
+-- products carry no weight, so those are the two rule kinds that are
+-- actually usable right now.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS shipping_methods (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255) DEFAULT NULL,
+    match_type ENUM('province_contains','default') NOT NULL DEFAULT 'default',
+    match_value VARCHAR(100) DEFAULT NULL,
+    cost DECIMAL(12,0) NOT NULL DEFAULT 0,
+    free_above_amount DECIMAL(12,0) DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Orders
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
@@ -221,6 +270,8 @@ CREATE TABLE IF NOT EXISTS orders (
     subtotal DECIMAL(12,0) NOT NULL,
     discount_total DECIMAL(12,0) NOT NULL DEFAULT 0,
     shipping_cost DECIMAL(12,0) NOT NULL DEFAULT 0,
+    shipping_method_name VARCHAR(100) DEFAULT NULL,  -- snapshot of the method's name at order time
+    gift_items_total DECIMAL(12,0) NOT NULL DEFAULT 0,  -- paid post-order add-ons; free gifts do not add to this
     total DECIMAL(12,0) NOT NULL,
     coupon_code VARCHAR(60) DEFAULT NULL,
     coupon_id INT UNSIGNED DEFAULT NULL,
@@ -234,6 +285,34 @@ CREATE TABLE IF NOT EXISTS orders (
     INDEX idx_status (status),
     INDEX idx_customer (customer_id),
     INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Gift/post-order items attached to an order. Snapshots name/image/cost/
+-- price at the moment of attachment, the same way order_items snapshots
+-- products, so a later change to a gift item does not rewrite an existing
+-- order's financial record. role='gift' rows have unit_selling_price=0 and
+-- assigned_by_admin_id set; role='post_order' rows are customer-selected at
+-- checkout and have assigned_by_admin_id NULL.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS order_gift_items (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
+    gift_item_id INT UNSIGNED DEFAULT NULL,
+    name VARCHAR(150) NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    quantity INT NOT NULL,
+    unit_cost_price DECIMAL(12,0) NOT NULL,
+    unit_selling_price DECIMAL(12,0) NOT NULL DEFAULT 0,
+    role ENUM('gift','post_order') NOT NULL,
+    note VARCHAR(255) DEFAULT NULL,
+    assigned_by_admin_id INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (gift_item_id) REFERENCES gift_items(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL,
+    INDEX idx_order (order_id),
+    INDEX idx_gift_item (gift_item_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
@@ -362,6 +441,10 @@ CREATE TABLE IF NOT EXISTS theme_tokens (
 -- first admin account with your own password (no CLI needed). That page
 -- locks itself after use.
 -- ------------------------------------------------------------
+
+INSERT INTO shipping_methods (name, description, match_type, match_value, cost, is_active, sort_order) VALUES
+    ('پیک تهران', 'ارسال با پیک موتوری برای سفارش‌های داخل تهران', 'province_contains', 'تهران', 0, 1, 1),
+    ('پست سایر شهرها', 'ارسال با پست پیشتاز برای بقیه شهرها', 'default', NULL, 0, 1, 2);
 
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
 ('جوراب مردانه', 'mardane', 'انواع جوراب مردانه، ساقدار و ساقکوتاه', 1, 1),

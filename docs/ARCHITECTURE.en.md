@@ -430,6 +430,29 @@ Bulk changes (`applyBulkPriceChange()`, used by `admin/pricing.php`) apply the s
 
 The form now carries each existing variant's id in a hidden field. On save, a submitted row whose id matches an existing variant updates that row in place; a row with no id (or an id no longer present in the database) is inserted as new; and any existing variant id that wasn't resubmitted — because its row was removed in the form, or "has variants" was turned off — is deleted. A variant's id is now stable for as long as the variant itself exists.
 
+### 5.19 Gift Box / Post-Order Items (`app/services/GiftService.php`) — Introduced in 1.6.0
+
+`gift_items` is one catalog, not two. `is_giftable` and `is_post_orderable` are independent flags on the same row: an admin can attach an item to an order for free (a gift) if the first is set, and/or the storefront can offer it as a paid checkout add-on (a post-order) if the second is set. An item can have both flags, either one, or — enforced at save time, not by the schema — at least one; there's no separate "type" column and no duplication between a gift catalog and a post-order catalog, because they were never two different kinds of thing, just two different ways an admin decides to use the same one.
+
+`order_gift_items` records every attachment, in either role, as its own row with a full snapshot (name, image, `unit_cost_price`, `unit_selling_price`) independent of the current state of `gift_items` — the same reasoning as `order_items` and `price_history` above: a later change to an item's cost or post-order price must not rewrite what an already-placed order actually cost or charged. `gift_item_id` is `ON DELETE SET NULL`, so deleting an item from the catalog doesn't touch past orders' records of it.
+
+The two roles reach this table through two different paths, both funneled through `GiftService.php`:
+
+- **Gift** (`assignGiftToOrder()`): called from `admin/order_detail.php`. Its own transaction, since it's issued on its own outside of order creation — an admin can gift something to an order at any point after it's placed. Locks the `gift_items` row (`SELECT ... FOR UPDATE`), decrements stock with a conditional `UPDATE ... WHERE stock >= ?`, and inserts an `order_gift_items` row with `unit_selling_price = 0` and `assigned_by_admin_id` set.
+- **Post-order** (`validatePostOrderSelection()` + `attachPostOrderLines()`): the customer's selection lives in `$_SESSION['post_order_selection']` (`[gift_item_id => quantity]`), the same session-based pattern already used for an applied coupon. It's validated against the live catalog on both the cart page and again at the top of `checkout.php` — never trusted from an earlier page load — and, unlike a cart item running out of stock, a post-order line that fails re-validation at checkout is silently dropped rather than blocking the order, since it's an optional add-on rather than what the customer came to buy. `attachPostOrderLines()` joins the same transaction `checkout.php` already runs for the rest of the order, rather than opening its own, so a stock failure on a gift item rolls back the whole order exactly like a stock failure on a regular product does.
+
+`orders.gift_items_total` is the sum of paid post-order lines only (never free gifts) and is added into `orders.total` alongside the existing subtotal/discount/shipping terms.
+
+### 5.20 Shipping Cost (`app/services/ShippingService.php`) — Introduced in 1.7.0
+
+`shipping_methods` rows are matched against an order in `sort_order`, stopping at the first match: a `province_contains` row matches when the customer's free-text province field contains its `match_value`, and a `default` row is the fallback used when nothing more specific matched. A method's `cost` is waived (treated as 0) once the order subtotal reaches its `free_above_amount`, when one is set. `match_type` is an enum specifically so a `city_contains` rule, or eventually a weight-based one, can be added later without restructuring the table — province/city are free text today and products carry no weight, so those two rule kinds are what's actually usable right now, not a placeholder for a design that was never finished.
+
+`calculateShippingCost()` never trusts a client-supplied cost — only the province string goes in, and the subtotal it's compared against is always the caller's own server-side computation (`cartDetails()['subtotal']` or the equivalent inside `checkout.php`). It's called from three places, all independently: `checkout.php`'s authoritative calculation at order-creation time, `checkout.php`'s own re-render (a validation error re-shows the form with whatever the customer already typed), and `ajax/shipping_estimate.php`, which the checkout page polls as the customer types their province so the displayed total updates live. Only the first of these ever writes to the database — the other two are display-only estimates, recomputed from scratch and never fed back into the order.
+
+`orders.shipping_method_name` snapshots the matched method's name at order time, the same reasoning as every other snapshot column on `orders`/`order_items`/`order_gift_items`: renaming or reconfiguring a shipping method later must not alter what an existing order says it shipped by.
+
+Two starter methods are seeded (`database/migrations/010_v1.7.0_shipping.sql`), matching the shipping copy already shown in the site footer — a Tehran-matching method and a default for everywhere else — both at zero cost until an admin sets real prices from `admin/shipping_methods.php`.
+
 ---
 
 ## 6. Storefront Routing (Framework-Free)
@@ -589,15 +612,11 @@ Every technical change—bug fix, feature, structural modification, or behavior 
 3. Add a new file under `database/migrations/` whenever an `ALTER TABLE` or another database upgrade is required. The base `schema.sql` must not be changed in a way that forces existing installations to be re-imported; existing databases should be upgraded through migrations.
 4. Update this `ARCHITECTURE.md` whenever the architectural behavior described here changes.
 
-## 8. Planned: Gifts, Shipping, and Store Accounting
+## 8. Planned: Store Accounting
 
-The pricing/audit groundwork in 5.17–5.18 exists to support three larger pieces of business logic that are designed but not yet built. Recorded here so the dependency on what already exists is explicit before work on any of them starts.
+The pricing/audit groundwork in 5.17–5.20 — price history, gift/post-order snapshots, and now shipping cost per order — exists to support one larger piece of business logic that is designed but not yet built.
 
-**Gift box / post-order items.** A gift and a post-order item are the same underlying entity used in two different roles, not two separate product types — an item needs its own id, image, active flag, stock, and cost price, plus an independent, admin-set sale price for when it's offered as a paid post-order add-on at checkout. Assigning one to an order as a free gift is a separate action from a customer buying it: it consumes stock and has a real cost to the store, but no revenue. Both cases need a `product_id`-style snapshot on the order (name, image, cost at the time) for the same reason `order_items` already snapshots products — a later cost change must not rewrite an old order's numbers.
+**Store accounting.** An order's real profit needs the cost that was actually in effect when it was placed, not today's cost, plus the gift/post-order cost and revenue `order_gift_items` already snapshots, plus the shipping cost `orders.shipping_cost`/`shipping_method_name` already records. Planned shape: a general `expenses` table (category, amount, optional reference to the entity it relates to) separate from anything order-derived, and order-level profitability computed from each order's line items' snapshotted cost/price rather than stored as a single mutable number, so it stays correct as underlying costs change later. A financial dashboard and expense management would sit on top of this once it exists.
 
-**Shipping.** Not implemented at all today; `checkout.php` currently hardcodes `$shippingCost = 0`. Needs a cost model flexible enough to grow from a flat rate into per-city or per-weight rules and a free-shipping threshold, without the checkout controller needing to know which rule is active.
-
-**Store accounting.** Depends on both of the above, plus 5.17's price history, being in place first — an order's real profit needs the cost that was actually in effect when it was placed, not today's cost. Planned shape: a general `expenses` table (category, amount, optional reference to the entity it relates to) separate from anything order-derived, and order-level profitability computed from each order's line items' snapshotted cost/price rather than stored as a single mutable number, so it stays correct as underlying costs change later. A financial dashboard and expense management would sit on top of this once it exists.
-
-None of the three has a table or a line of code yet. They're sequenced in this order because each one's numbers depend on the previous one already recording history correctly — building accounting before shipping cost and gift cost feed into it, for instance, would mean rebuilding it once those exist.
+No table or line of code for this exists yet. It was sequenced last because its numbers depend on price history, gift/post-order, and shipping all already recording their own history correctly — building it before any of those existed would have meant reworking it once they did.
 

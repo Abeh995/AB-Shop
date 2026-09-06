@@ -26,9 +26,72 @@
                     <span>−<?= formatPrice($order['discount_total']) ?></span>
                 </div>
                 <?php endif; ?>
+                <?php if (!empty($order['gift_items_total']) && $order['gift_items_total'] > 0): ?>
+                <div class="row"><span>پیشنهاد بعد از سبد</span><span><?= formatPrice($order['gift_items_total']) ?></span></div>
+                <?php endif; ?>
+                <div class="row">
+                    <span>هزینه ارسال<?= !empty($order['shipping_method_name']) ? ' (' . e($order['shipping_method_name']) . ')' : '' ?></span>
+                    <span><?= $order['shipping_cost'] > 0 ? formatPrice($order['shipping_cost']) : 'رایگان' ?></span>
+                </div>
                 <div class="row total-row"><span>مبلغ نهایی</span><span><?= formatPrice($order['total']) ?></span></div>
             </div>
         </div>
+
+        <?php if ($orderGiftItems): ?>
+        <div class="admin-card">
+            <h3 style="margin-bottom:14px;">هدایا و پیشنهادهای بعد از سبد</h3>
+            <table class="admin-table">
+                <thead><tr><th>نام</th><th>نوع</th><th>تعداد</th><th>قیمت واحد</th><th>یادداشت</th></tr></thead>
+                <tbody>
+                <?php foreach ($orderGiftItems as $gi): ?>
+                <tr>
+                    <td><?= e($gi['name']) ?></td>
+                    <td>
+                        <?php if ($gi['role'] === 'gift'): ?>
+                            <span class="status-pill status-delivered">🎁 هدیه<?= $gi['admin_username'] ? ' — ' . e($gi['admin_username']) : '' ?></span>
+                        <?php else: ?>
+                            <span class="status-pill status-confirmed">پیشنهاد بعد از سبد</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= toPersianDigits((string)$gi['quantity']) ?></td>
+                    <td><?= $gi['unit_selling_price'] > 0 ? formatPrice((int)$gi['unit_selling_price']) : 'رایگان' ?></td>
+                    <td><?= e($gi['note'] ?: '—') ?></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($giftableItems): ?>
+        <div class="admin-card">
+            <h3 style="margin-bottom:6px;">اهدای یک هدیه به این سفارش</h3>
+            <p style="color:var(--color-muted); font-size:.85rem; margin-bottom:14px;">این آیتم رایگان به مشتری تعلق می‌گیرد و از موجودی کم می‌شود؛ مبلغی به فاکتور مشتری اضافه نمی‌شود.</p>
+            <form method="post" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="assign_gift">
+                <div class="form-group" style="flex:1; min-width:180px;">
+                    <label>آیتم هدیه</label>
+                    <select class="form-control" name="gift_item_id" required>
+                        <?php foreach ($giftableItems as $gi): ?>
+                            <option value="<?= (int)$gi['id'] ?>">
+                                <?= e($gi['name']) ?> (موجودی: <?= toPersianDigits((string)$gi['stock']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group" style="width:100px;">
+                    <label>تعداد</label>
+                    <input class="form-control" type="number" name="quantity" value="1" min="1" required>
+                </div>
+                <div class="form-group" style="flex:1; min-width:180px;">
+                    <label>یادداشت (اختیاری)</label>
+                    <input class="form-control" type="text" name="note" placeholder="مثلا: جبران تأخیر ارسال">
+                </div>
+                <button type="submit" class="btn btn-primary">اهدا کن</button>
+            </form>
+        </div>
+        <?php endif; ?>
 
         <div class="admin-card">
             <h3 style="margin-bottom:14px;">اطلاعات مشتری و ارسال</h3>

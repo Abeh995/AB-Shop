@@ -33,6 +33,13 @@ storage_errors.log
 !/uploads/products/
 !/uploads/products/.gitkeep
 
+android-chrome-192x192.png
+android-chrome-512x512.png
+apple-touch-icon.png
+favicon.ico
+favicon-16x16.png
+favicon-32x32.png
+favicon-48x48.png
 
 # =========================================================
 # Database dumps / backups
@@ -104,4 +111,5 @@ Desktop.ini
 /assets/img/
 *.gitattributes
 *.zip
+*.rar
 README-DEPLOY.md

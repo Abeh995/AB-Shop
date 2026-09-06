@@ -32,13 +32,20 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>استان</label>
-                    <input class="form-control" type="text" name="province" value="<?= e($_POST['province'] ?? '') ?>" required>
+                    <input class="form-control" type="text" name="province" id="provinceInput" value="<?= e($_POST['province'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label>شهر</label>
                     <input class="form-control" type="text" name="city" value="<?= e($_POST['city'] ?? '') ?>" required>
                 </div>
             </div>
+            <p id="shippingEstimateNote" style="font-size:.85rem; color:var(--color-muted); margin-top:-10px; margin-bottom:16px;">
+                <?php if ($shippingPreview['method_name']): ?>
+                    هزینه ارسال (<?= e($shippingPreview['method_name']) ?>): <?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?>
+                <?php else: ?>
+                    هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.
+                <?php endif; ?>
+            </p>
 
             <div class="form-group">
                 <label>آدرس کامل</label>
@@ -78,6 +85,12 @@
                     <span><?= formatPrice($item['line_total']) ?></span>
                 </div>
             <?php endforeach; ?>
+            <?php foreach ($postOrderResult['lines'] as $line): ?>
+                <div class="item-line">
+                    <span><?= e($line['name']) ?> × <?= toPersianDigits((string)$line['quantity']) ?></span>
+                    <span><?= formatPrice($line['line_total']) ?></span>
+                </div>
+            <?php endforeach; ?>
 
             <div class="row" style="margin-top:14px;">
                 <span>جمع کل کالاها</span>
@@ -89,9 +102,19 @@
                 <span>−<?= formatPrice($discount) ?></span>
             </div>
             <?php endif; ?>
+            <?php if ($postOrderResult['total'] > 0): ?>
+            <div class="row">
+                <span>پیشنهاد بعد از سبد</span>
+                <span><?= formatPrice($postOrderResult['total']) ?></span>
+            </div>
+            <?php endif; ?>
+            <div class="row" id="shippingRow">
+                <span>هزینه ارسال<?= $shippingPreview['method_name'] ? ' (' . e($shippingPreview['method_name']) . ')' : '' ?></span>
+                <span id="shippingCostValue"><?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?></span>
+            </div>
             <div class="row total-row">
                 <span>مبلغ قابل پرداخت</span>
-                <span><?= formatPrice($cart['subtotal'] - $discount) ?></span>
+                <span id="grandTotalValue"><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total'] + $shippingPreview['cost']) ?></span>
             </div>
             <p style="font-size:.82rem; color:var(--color-muted); margin-top:14px;">
                 در صورت انتخاب پرداخت آنلاین، بعد از ثبت فرم به درگاه امن زرین‌پال منتقل می‌شوید.
@@ -99,5 +122,42 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var provinceInput = document.getElementById('provinceInput');
+    var note = document.getElementById('shippingEstimateNote');
+    var shippingRow = document.getElementById('shippingRow');
+    var shippingCostValue = document.getElementById('shippingCostValue');
+    var grandTotalValue = document.getElementById('grandTotalValue');
+    if (!provinceInput) return;
+
+    var timer = null;
+
+    function refreshShipping() {
+        var fd = new FormData();
+        fd.append('province', provinceInput.value);
+        fetch('/ajax/shipping_estimate.php', { method: 'POST', body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) return;
+                var label = data.method_name ? ('هزینه ارسال (' + data.method_name + ')') : 'هزینه ارسال';
+                shippingRow.querySelector('span').textContent = label;
+                shippingCostValue.textContent = data.is_free ? 'رایگان' : data.cost_formatted;
+                note.textContent = data.method_name
+                    ? (label + ': ' + (data.is_free ? 'رایگان' : data.cost_formatted))
+                    : 'هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.';
+                if (grandTotalValue) grandTotalValue.textContent = data.grand_total_formatted;
+            })
+            .catch(function () { /* keep the last known estimate on a network error */ });
+    }
+
+    provinceInput.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(refreshShipping, 500);
+    });
+    provinceInput.addEventListener('blur', refreshShipping);
+})();
+</script>
 
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>
