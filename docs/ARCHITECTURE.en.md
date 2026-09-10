@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.4.0**
+**Current version: 1.8.1**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -300,7 +300,9 @@ Customer verification is divided into three responsibilities:
 - **`FarazSmsService`**
   - sends pattern-based OTP SMS through the Faraz SMS / Iran Payamak API
   - uses a pre-approved pattern rather than arbitrary message text
-  - pattern code and variable name are configurable in `config.php`
+  - the current Faraz pattern contains both `%code%` and `%code2%`; both variables receive the exact same six-digit OTP so the provider can carry an origin-bound OTP marker in the final SMS line
+  - the primary variable name remains configurable through `FARAZ_OTP_PATTERN_VAR` in `config.php`; the secondary `code2` variable is required by the currently registered Faraz pattern
+  - the current production SMS pattern is: `کد احراز:` / `%code%` / `AB Socks-Shop` / `@absocks.ir #%code2%` — the final line is intentionally the last line because it is the browser-recognized origin-bound OTP format
 
 - **`EmailService`**
   - sends email through authenticated SMTP
@@ -324,6 +326,19 @@ The resulting behavior was tested:
 
 - first GET to `/verify-email` creates one delivery log entry
 - subsequent POST requests do not automatically create another delivery record unless the explicit resend action is used
+
+#### SMS OTP AutoFill / WebOTP (added in 1.8.1)
+
+The phone-verification view now supports browser-assisted OTP entry without changing the server-side verification contract. The implementation deliberately has two layers:
+
+1. The OTP input uses `autocomplete="one-time-code"`, `inputmode="numeric"`, `maxlength="6"`, and a six-digit pattern. This is the primary cross-browser enhancement and allows browsers that support SMS OTP autofill (including Safari's OTP suggestion flow) to recognize the field.
+2. Where `OTPCredential` / WebOTP is supported, the view calls `navigator.credentials.get({ otp: { transport: ["sms"] } })`. When the browser accepts the SMS OTP, the returned code is placed into the existing `code` input and the same verification form is submitted. Unsupported browsers simply keep the normal manual-entry flow.
+
+The current SMS pattern is origin-bound to `absocks.ir` and ends with `@absocks.ir #<OTP>`. WebOTP is a secure-context (HTTPS) feature, so the production site's HTTPS configuration satisfies that prerequisite. The user-agent may still request explicit consent before exposing the OTP to page JavaScript.
+
+A deliberate limitation remains in the current request flow: signup and incomplete-login controllers call `VerificationService::sendCode()` before redirecting to `/verify-phone`, so the WebOTP listener is started only after the verification page loads. This does not affect the standard `autocomplete="one-time-code"` path, but it means WebOTP capture itself is best-effort if the SMS arrives before the WebOTP request is active. Making WebOTP timing fully deterministic would require moving SMS dispatch behind a client-initiated request after the WebOTP listener is established; that is not currently done because it would change the existing authentication flow.
+
+No database migration is required for 1.8.1. The existing `verification_codes` table and `VerificationService::verifyCode()` contract remain unchanged.
 
 ### 5.9 PHP/MySQL Timezone Synchronization (`app/core/db.php`) — Fixed in 1.2.1
 
@@ -452,6 +467,20 @@ The two roles reach this table through two different paths, both funneled throug
 `orders.shipping_method_name` snapshots the matched method's name at order time, the same reasoning as every other snapshot column on `orders`/`order_items`/`order_gift_items`: renaming or reconfiguring a shipping method later must not alter what an existing order says it shipped by.
 
 Two starter methods are seeded (`database/migrations/010_v1.7.0_shipping.sql`), matching the shipping copy already shown in the site footer — a Tehran-matching method and a default for everywhere else — both at zero cost until an admin sets real prices from `admin/shipping_methods.php`.
+
+### 5.21 Store Accounting (`app/services/AccountingService.php`) — Introduced in 1.8.0
+
+Everything in this section is read-only reporting. `AccountingService.php` computes figures from data other parts of the system already snapshot at the moment it happened — it never looks up a product's, gift item's, or shipping method's *current* cost or price, and it never writes anything back to the database.
+
+**Per-order profitability** (`getOrderProfitability()`): revenue is `order_items` line totals minus the order's discount, plus post-order revenue and shipping revenue (both already on `orders`/`order_gift_items`); cost is `order_items.unit_cost_price × quantity`, plus gift/post-order cost from `order_gift_items.unit_cost_price`, plus `orders.shipping_actual_cost`. `order_items.unit_cost_price` — introduced in this migration — is populated once, at checkout, from whichever of the variant's or product's `cost_price` applied to that line (the same precedence `price_override` already uses for the sale price); it is `NULL` for every order placed before 1.8.0, and for any line where the product had no `cost_price` set at all. Rather than guess at a historical cost that was never recorded, such a line is simply excluded from the cost total and the whole result is flagged `has_incomplete_cost_data` — callers show that as a caveat on the figure rather than silently presenting an inflated profit as exact.
+
+**Shipping's cost side**: `shipping_methods.cost` (what the customer is charged) and `shipping_methods.actual_cost` (what the store pays a courier or post service) are now two separate columns — 1.7.0 only had the first. `actual_cost` was backfilled to match `cost` for existing methods so nothing suddenly shows a fabricated 100% margin; an admin adjusts it separately once real courier pricing is known. `orders.shipping_actual_cost` snapshots it per order the same way `shipping_method_name` already does. Waiving a method's `free_above_amount` only waives what the customer is charged — the store's actual cost to ship is unaffected.
+
+**Financial summary** (`getFinancialSummary($startDate, $endDate)`): sums every non-cancelled order's profitability in the range, then subtracts the manually-recorded `expenses` ledger for the same range to arrive at net profit. Loops over orders individually rather than a single aggregate SQL query — deliberately, since the per-order calculation already has non-trivial branching (the incomplete-cost-data case, the shipping-cost fallback); at the scale this hosting plan is built for, the simpler, more auditable code is worth more than the query count.
+
+**Expenses** (`admin/expenses.php`, `expense_edit.php`): a general ledger for costs that aren't a specific product sale — hosting, packaging, advertising, and so on. `category` is a plain string suggested from a `<datalist>` (not an enum), so a new category never requires a migration. `reference_type`/`reference_id` optionally point at whatever entity an expense relates to (e.g. a bulk product purchase); this is deliberately not a foreign key, since `reference_type` can point at more than one table and MySQL has no polymorphic FK support — enforcing one would mean either a separate nullable FK column per possible reference target or giving up the "any entity" flexibility, and the spec calling for it doesn't yet name specific FK targets to design around. "Deleting" an expense sets `status = 'archived'` rather than removing the row, so it drops out of every report but the record itself — and who created it — survives, consistent with the auditability goal in 5.17–5.20.
+
+Access to the Finance section (`admin/finance_dashboard.php`, `expenses.php`) is gated the same as every other admin page (`requireAdmin()`), not restricted to `super_admin` — there's no finer-grained permission system to restrict it with, and the business requirement was explicit that finance visibility shouldn't default to super-admin-only just because it's sensitive.
 
 ---
 
@@ -612,11 +641,13 @@ Every technical change—bug fix, feature, structural modification, or behavior 
 3. Add a new file under `database/migrations/` whenever an `ALTER TABLE` or another database upgrade is required. The base `schema.sql` must not be changed in a way that forces existing installations to be re-imported; existing databases should be upgraded through migrations.
 4. Update this `ARCHITECTURE.md` whenever the architectural behavior described here changes.
 
-## 8. Planned: Store Accounting
+## 8. Known Extension Points
 
-The pricing/audit groundwork in 5.17–5.20 — price history, gift/post-order snapshots, and now shipping cost per order — exists to support one larger piece of business logic that is designed but not yet built.
+Nothing below is planned or in progress — this is a record of where the current design deliberately leaves room, so a future change in one of these directions doesn't require reworking what already exists:
 
-**Store accounting.** An order's real profit needs the cost that was actually in effect when it was placed, not today's cost, plus the gift/post-order cost and revenue `order_gift_items` already snapshots, plus the shipping cost `orders.shipping_cost`/`shipping_method_name` already records. Planned shape: a general `expenses` table (category, amount, optional reference to the entity it relates to) separate from anything order-derived, and order-level profitability computed from each order's line items' snapshotted cost/price rather than stored as a single mutable number, so it stays correct as underlying costs change later. A financial dashboard and expense management would sit on top of this once it exists.
-
-No table or line of code for this exists yet. It was sequenced last because its numbers depend on price history, gift/post-order, and shipping all already recording their own history correctly — building it before any of those existed would have meant reworking it once they did.
+- **Payments**: `orders.payment_status`/`payment_authority`/`payment_ref_id` (2.x) only exist for Zarinpal today, but nothing about the checkout flow assumes a single gateway — a second `*Service.php` alongside `ZarinpalService.php` is additive.
+- **Coupons/promotions**: `CouponService` currently supports a flat percent/fixed discount; loyalty points, tiered promotions, or a gift-card-style stored balance sit naturally alongside it as separate services rather than requiring changes to it.
+- **Refunds/cancellations**: `orders.status` has no `refunded` value and nothing decrements a completed order's recorded revenue. Adding one is compatible with 5.21's model — a refund would be a new snapshot event with its own audit trail, not a mutation of the original order's numbers, the same principle every other financial record in this document already follows.
+- **Multi-supplier / purchase orders**: `expenses.reference_type`/`reference_id` (5.21) can already tag an expense as relating to a purchase; a dedicated supplier/purchase-order model would sit on top of that tagging rather than replacing it.
+- **Tax**: no tax field exists anywhere on `orders`/`order_items`. A per-line or per-order tax amount would follow the same snapshot pattern as discount and shipping.
 

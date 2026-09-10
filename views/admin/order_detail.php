@@ -37,6 +37,25 @@
             </div>
         </div>
 
+        <?php if ($profitability['ok']): ?>
+        <div class="admin-card">
+            <h3 style="margin-bottom:6px;">سودآوری این سفارش</h3>
+            <?php if ($profitability['has_incomplete_cost_data']): ?>
+                <p style="color:var(--color-danger); font-size:.85rem; margin-bottom:12px;">⚠️ حداقل یکی از محصولات این سفارش، در لحظه فروش قیمت تمام‌شده ثبت‌شده‌ای نداشته؛ سود واقعی ممکن است کمتر از عدد زیر باشد.</p>
+            <?php endif; ?>
+            <div class="row"><span>درآمد کالاها</span><span><?= formatPrice($profitability['product_revenue']) ?></span></div>
+            <?php if ($profitability['discount'] > 0): ?><div class="row" style="color:var(--color-success);"><span>تخفیف</span><span>−<?= formatPrice($profitability['discount']) ?></span></div><?php endif; ?>
+            <?php if ($profitability['post_order_revenue'] > 0): ?><div class="row"><span>درآمد پیشنهاد بعد از سبد</span><span><?= formatPrice($profitability['post_order_revenue']) ?></span></div><?php endif; ?>
+            <div class="row"><span>درآمد ارسال (دریافتی از مشتری)</span><span><?= formatPrice($profitability['shipping_revenue']) ?></span></div>
+            <div class="row" style="border-top:1px solid var(--color-border); margin-top:8px; padding-top:8px; font-weight:700;"><span>مجموع درآمد</span><span><?= formatPrice($profitability['revenue']) ?></span></div>
+
+            <div class="row" style="margin-top:14px;"><span>هزینه تمام‌شده کالاها</span><span>−<?= formatPrice($profitability['product_cost']) ?></span></div>
+            <?php if ($profitability['gift_cost'] > 0): ?><div class="row"><span>هزینه هدیه/پیشنهاد بعد از سبد</span><span>−<?= formatPrice($profitability['gift_cost']) ?></span></div><?php endif; ?>
+            <div class="row"><span>هزینه واقعی ارسال</span><span>−<?= formatPrice($profitability['shipping_cost']) ?></span></div>
+            <div class="row total-row" style="color: <?= $profitability['gross_profit'] >= 0 ? 'var(--color-success)' : 'var(--color-danger)' ?>;"><span>سود ناخالص</span><span><?= formatPrice($profitability['gross_profit']) ?></span></div>
+        </div>
+        <?php endif; ?>
+
         <?php if ($orderGiftItems): ?>
         <div class="admin-card">
             <h3 style="margin-bottom:14px;">هدایا و پیشنهادهای بعد از سبد</h3>

@@ -108,25 +108,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare("INSERT INTO orders
                 (customer_id, order_code, customer_name, phone, email, province, city, address, postal_code, notes,
-                 subtotal, discount_total, shipping_cost, shipping_method_name, gift_items_total, total, coupon_code, coupon_id, status, payment_status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
+                 subtotal, discount_total, shipping_cost, shipping_method_name, shipping_actual_cost, gift_items_total, total, coupon_code, coupon_id, status, payment_status)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
             $stmt->execute([
                 $customerId, $orderCode, $name, $phone, $email ?: null, $province, $city, $address, $postalCode ?: null, $notes ?: null,
-                $subtotal, $discount, $shippingCost, $shipping['method_name'], $giftItemsTotal, $total,
+                $subtotal, $discount, $shippingCost, $shipping['method_name'], $shipping['actual_cost'], $giftItemsTotal, $total,
                 $couponRow ? $couponRow['code'] : null, $couponRow ? $couponRow['id'] : null,
             ]);
             $orderId = $pdo->lastInsertId();
 
             $itemStmt = $pdo->prepare("INSERT INTO order_items
-                (order_id, product_id, variant_id, product_name, variant_label, unit_price, quantity, line_total)
-                VALUES (?,?,?,?,?,?,?,?)");
+                (order_id, product_id, variant_id, product_name, variant_label, unit_price, unit_cost_price, quantity, line_total)
+                VALUES (?,?,?,?,?,?,?,?,?)");
 
             foreach ($cart['items'] as $item) {
                 $variantLabel = $item['variant'] ? trim(($item['variant']['size'] ?? '') . ' ' . ($item['variant']['color'] ?? '')) : null;
+                // A variant's own cost_price, when set, takes precedence over the product's;
+                // this mirrors how price_override already works for the sale price.
+                $unitCostPrice = $item['variant']['cost_price'] ?? $item['product']['cost_price'] ?? null;
                 $itemStmt->execute([
                     $orderId, $item['product']['id'], $item['variant']['id'] ?? null,
                     $item['product']['name'], $variantLabel ?: null,
-                    $item['unit_price'], $item['qty'], $item['line_total'],
+                    $item['unit_price'], $unitCostPrice, $item['qty'], $item['line_total'],
                 ]);
 
                 if (!empty($item['variant'])) {

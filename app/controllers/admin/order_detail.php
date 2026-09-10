@@ -51,4 +51,6 @@ $orderGiftItems = getOrderGiftItems($id);
 $giftableItems = getGiftableItems();
 
 $pageTitle = 'سفارش ' . $order['order_code'];
-renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'giftableItems'));
+$profitability = getOrderProfitability($id);
+
+renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'giftableItems', 'profitability'));

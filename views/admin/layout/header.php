@@ -39,6 +39,10 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
             <div class="nav-group-label">سفارش‌ها</div>
             <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' ? 'active' : '' ?>">سفارش‌ها</a>
 
+            <div class="nav-group-label">مالی</div>
+            <a href="finance_dashboard.php" class="<?= $currentPage === 'finance_dashboard.php' ? 'active' : '' ?>">📊 داشبورد مالی</a>
+            <a href="expenses.php" class="<?= $currentPage === 'expenses.php' || $currentPage === 'expense_edit.php' ? 'active' : '' ?>">🧾 هزینه‌ها</a>
+
             <div class="nav-group-label">تنظیمات</div>
             <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
             <a href="themes.php" class="<?= $currentPage === 'themes.php' || $currentPage === 'theme_edit.php' ? 'active' : '' ?>">🎨 قالب و رنگ سایت</a>

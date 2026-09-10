@@ -243,7 +243,8 @@ CREATE TABLE IF NOT EXISTS shipping_methods (
     description VARCHAR(255) DEFAULT NULL,
     match_type ENUM('province_contains','default') NOT NULL DEFAULT 'default',
     match_value VARCHAR(100) DEFAULT NULL,
-    cost DECIMAL(12,0) NOT NULL DEFAULT 0,
+    cost DECIMAL(12,0) NOT NULL DEFAULT 0,       -- charged to the customer
+    actual_cost DECIMAL(12,0) DEFAULT NULL,      -- what the store actually pays a courier/post service; for profit reports
     free_above_amount DECIMAL(12,0) DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     sort_order INT NOT NULL DEFAULT 0,
@@ -271,6 +272,7 @@ CREATE TABLE IF NOT EXISTS orders (
     discount_total DECIMAL(12,0) NOT NULL DEFAULT 0,
     shipping_cost DECIMAL(12,0) NOT NULL DEFAULT 0,
     shipping_method_name VARCHAR(100) DEFAULT NULL,  -- snapshot of the method's name at order time
+    shipping_actual_cost DECIMAL(12,0) DEFAULT NULL, -- snapshot of the method's actual_cost at order time
     gift_items_total DECIMAL(12,0) NOT NULL DEFAULT 0,  -- paid post-order add-ons; free gifts do not add to this
     total DECIMAL(12,0) NOT NULL,
     coupon_code VARCHAR(60) DEFAULT NULL,
@@ -326,6 +328,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     product_name VARCHAR(180) NOT NULL,   -- snapshot در لحظه خرید
     variant_label VARCHAR(80) DEFAULT NULL,
     unit_price DECIMAL(12,0) NOT NULL,
+    unit_cost_price DECIMAL(12,0) DEFAULT NULL,  -- snapshot of cost at sale time; NULL when the product had no cost_price set yet
     quantity INT NOT NULL,
     line_total DECIMAL(12,0) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
@@ -334,6 +337,31 @@ CREATE TABLE IF NOT EXISTS order_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ------------------------------------------------------------
+-- General expense ledger — for costs not tied to a specific product sale
+-- (hosting, packaging, advertising, and so on). reference_type/reference_id
+-- optionally point at whatever entity an expense relates to (e.g. a product
+-- purchase); this is intentionally not a foreign key, since reference_type
+-- can point at more than one table and MySQL has no polymorphic FK support.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS expenses (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(180) NOT NULL,
+    amount DECIMAL(12,0) NOT NULL,
+    expense_date DATE NOT NULL,
+    category VARCHAR(60) NOT NULL,
+    description TEXT DEFAULT NULL,
+    status ENUM('active','archived') NOT NULL DEFAULT 'active',
+    reference_type VARCHAR(40) DEFAULT NULL,
+    reference_id INT UNSIGNED DEFAULT NULL,
+    created_by INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admins(id) ON DELETE SET NULL,
+    INDEX idx_status_date (status, expense_date),
+    INDEX idx_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
 -- Persistent cart (for logged-in customers only)
@@ -442,9 +470,9 @@ CREATE TABLE IF NOT EXISTS theme_tokens (
 -- locks itself after use.
 -- ------------------------------------------------------------
 
-INSERT INTO shipping_methods (name, description, match_type, match_value, cost, is_active, sort_order) VALUES
-    ('پیک تهران', 'ارسال با پیک موتوری برای سفارش‌های داخل تهران', 'province_contains', 'تهران', 0, 1, 1),
-    ('پست سایر شهرها', 'ارسال با پست پیشتاز برای بقیه شهرها', 'default', NULL, 0, 1, 2);
+INSERT INTO shipping_methods (name, description, match_type, match_value, cost, actual_cost, is_active, sort_order) VALUES
+    ('پیک تهران', 'ارسال با پیک موتوری برای سفارش‌های داخل تهران', 'province_contains', 'تهران', 0, 0, 1, 1),
+    ('پست سایر شهرها', 'ارسال با پست پیشتاز برای بقیه شهرها', 'default', NULL, 0, 0, 1, 2);
 
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
 ('جوراب مردانه', 'mardane', 'انواع جوراب مردانه، ساقدار و ساقکوتاه', 1, 1),

@@ -6,6 +6,76 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.8.1] — SMS OTP AutoFill and Faraz Pattern Update
+
+### Summary
+Adds origin-bound SMS OTP support for the phone-verification screen and updates the Faraz SMS integration to match the new registered pattern. The existing verification backend, database schema, expiry rules, attempt limits, and resend throttling remain unchanged. This is an application-layer/browser-integration release only; no database migration is required.
+
+### ✨ Faraz SMS Pattern Update (`app/services/FarazSmsService.php`)
+The registered Faraz pattern now uses two variables because the provider requires the OTP value to appear both in the human-readable part of the message and in the browser-recognized origin-bound OTP line:
+
+```text
+کد احراز:
+%code%
+AB Socks-Shop
+
+@absocks.ir #%code2%
+```
+
+`FarazSmsService::sendOtp()` sends the same six-digit value to both variables: `%code% = $code` and `%code2% = $code`. The primary variable name remains configurable through `FARAZ_OTP_PATTERN_VAR`; the secondary `code2` variable is fixed because it belongs to the currently registered Faraz pattern. The API continues to use `number_format = 'english'`.
+
+The final line is intentionally the last line of the SMS and binds the OTP to `absocks.ir` using the standard `@domain #OTP` structure.
+
+### ✨ Browser OTP AutoFill (`views/site/verify_phone.php`)
+The phone-verification input now declares:
+
+- `autocomplete="one-time-code"` for browser-native OTP recognition/autofill
+- `inputmode="numeric"` and `pattern="[0-9]{6}"` for a six-digit numeric code
+- `maxlength="6"` to match the server-side OTP length
+
+In addition, the page feature-detects the WebOTP API. On supporting browsers, it requests an SMS OTP using `navigator.credentials.get()` with the `sms` transport, places the returned code into the existing input, and submits the existing verification form. Unsupported browsers keep the normal manual-entry flow.
+
+WebOTP requires HTTPS and has limited cross-browser availability, so it is an enhancement rather than the only verification path. The standardized `autocomplete="one-time-code"` + origin-bound SMS format remains the cross-browser path.
+
+### ⚠️ Current Flow Limitation
+The signup and incomplete-login controllers currently send the SMS before redirecting to `/verify-phone`. Therefore, the WebOTP listener is established after the SMS dispatch request has already happened. If the SMS arrives before the WebOTP request is active, programmatic WebOTP capture may not occur; native `one-time-code` autofill can still work independently. Making WebOTP timing fully deterministic would require a client-initiated SMS send after the WebOTP listener starts, which would be a larger authentication-flow change and is intentionally outside 1.8.1.
+
+### 🔒 Security / Verification Contract
+No changes were made to the verification database contract:
+
+- OTPs remain six-digit values generated with `random_int()`
+- only `sha256` hashes are stored
+- expiry remains 10 minutes
+- maximum incorrect attempts remain 5
+- resend cooldown remains 60 seconds
+- `verifyCode()` continues to validate against the latest unconsumed verification record
+
+No database migration is required.
+
+---
+
+## [1.8.0] — Store Accounting: Order Profitability, Expense Ledger, Financial Dashboard
+
+### Summary
+Completes the accounting groundwork laid by price history (1.5.0), gift/post-order tracking (1.6.0), and shipping cost (1.7.0): every order can now show exactly how much profit it generated, a general expense ledger records costs that aren't tied to a specific sale, and a financial dashboard summarizes both over a date range. Everything here is read-only reporting over data other parts of the system already snapshot — nothing writes back to an order, product, or price record. Migration 011 adds one nullable column to `order_items`, splits `shipping_methods.cost` into a charged/actual pair, and adds the `expenses` table; nothing existing is altered in place beyond that.
+
+### ✨ Order-Level Profitability (`app/services/AccountingService.php`)
+`getOrderProfitability()` computes an order's revenue (line items minus discount, plus post-order and shipping revenue) against its cost (product/variant cost at sale time, gift/post-order cost, shipping's actual cost) to arrive at gross profit — shown as a full breakdown on the admin order detail page. This required a real gap to close: `order_items` had never recorded what a product actually cost the store at the moment it was sold, only its `price` history. `order_items.unit_cost_price` now snapshots that, resolved with the same variant-overrides-product precedence `price_override` already uses for the sale price, and populated once at checkout — `cartDetails()` (`app/core/cart.php`) had to start selecting `cost_price` alongside the fields it already returned to make that possible. Orders placed before this release, and any line whose product had no cost price on record, are excluded from the cost total rather than guessed at, and the result is flagged so the UI can show that as a caveat instead of presenting an inflated profit as exact.
+
+### ✨ Shipping's Cost Side
+`shipping_methods.cost` (what a customer is charged, from 1.7.0) and the new `shipping_methods.actual_cost` (what the store actually pays a courier or post service) are now separate — 1.7.0 only tracked the first, which meant every order looked like it shipped for free from the store's own perspective. `actual_cost` is backfilled to match `cost` for existing methods so nothing suddenly shows a fabricated 100% margin; an admin can set the real figure separately. `orders.shipping_actual_cost` snapshots it per order the same way `shipping_method_name` already does, and waiving a method's free-shipping threshold only waives the customer-facing charge, not the store's real cost.
+
+### ✨ Expense Ledger (`admin/expenses.php`, `expense_edit.php`)
+A general ledger for costs that aren't a specific product sale — hosting, packaging, advertising, and so on — with a free-text category (suggested from a `<datalist>`, not an enum, so a new category never needs a migration), search, and category/date filtering. "Deleting" an expense archives it (`status = 'archived'`) rather than removing the row, so it drops out of every report while the record and who created it survive.
+
+### ✨ Financial Dashboard (`admin/finance_dashboard.php`)
+Date-range summary (defaulting to the current month) combining every non-cancelled order's profitability with the expense ledger: total revenue, cost of goods/gifts/shipping sold, gross profit, total expenses, and net profit, plus a per-category expense breakdown. Access is gated the same as every other admin page — not restricted to `super_admin`, since there's no finer permission system to restrict it with and the requirement was explicit that finance shouldn't default to super-admin-only.
+
+### 🗄️ Database Changes
+`database/migrations/011_v1.8.0_accounting.sql` — `order_items.unit_cost_price`; `shipping_methods.actual_cost` (backfilled from `cost`) and `orders.shipping_actual_cost`; the `expenses` table.
+
+---
+
 ## [1.7.0] — Shipping Cost Calculation
 
 ### Summary

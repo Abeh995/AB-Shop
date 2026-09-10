@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $matchType = ($_POST['match_type'] ?? '') === 'province_contains' ? 'province_contains' : 'default';
     $matchValue = trim($_POST['match_value'] ?? '');
     $cost = (int) preg_replace('/\D/', '', $_POST['cost'] ?? '0');
+    $actualCostRaw = trim($_POST['actual_cost'] ?? '');
+    $actualCost = $actualCostRaw === '' ? null : (int) preg_replace('/\D/', '', $actualCostRaw);
     $freeAboveRaw = trim($_POST['free_above_amount'] ?? '');
     $freeAbove = $freeAboveRaw === '' ? null : (int) preg_replace('/\D/', '', $freeAboveRaw);
     $isActive = isset($_POST['is_active']) ? 1 : 0;
@@ -36,14 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         if ($method) {
-            $stmt = db()->prepare("UPDATE shipping_methods SET name=?, description=?, match_type=?, match_value=?, cost=?, free_above_amount=?, is_active=? WHERE id=?");
-            $stmt->execute([$name, $description ?: null, $matchType, $matchType === 'province_contains' ? $matchValue : null, $cost, $freeAbove, $isActive, $id]);
+            $stmt = db()->prepare("UPDATE shipping_methods SET name=?, description=?, match_type=?, match_value=?, cost=?, actual_cost=?, free_above_amount=?, is_active=? WHERE id=?");
+            $stmt->execute([$name, $description ?: null, $matchType, $matchType === 'province_contains' ? $matchValue : null, $cost, $actualCost, $freeAbove, $isActive, $id]);
             setFlash('success', 'روش ارسال به‌روزرسانی شد.');
         } else {
             $maxSortStmt = db()->query("SELECT COALESCE(MAX(sort_order), 0) FROM shipping_methods");
             $nextSort = ((int) $maxSortStmt->fetchColumn()) + 1;
-            $stmt = db()->prepare("INSERT INTO shipping_methods (name, description, match_type, match_value, cost, free_above_amount, is_active, sort_order) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->execute([$name, $description ?: null, $matchType, $matchType === 'province_contains' ? $matchValue : null, $cost, $freeAbove, $isActive, $nextSort]);
+            $stmt = db()->prepare("INSERT INTO shipping_methods (name, description, match_type, match_value, cost, actual_cost, free_above_amount, is_active, sort_order) VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$name, $description ?: null, $matchType, $matchType === 'province_contains' ? $matchValue : null, $cost, $actualCost, $freeAbove, $isActive, $nextSort]);
             setFlash('success', 'روش ارسال اضافه شد.');
         }
         redirect('shipping_methods.php');
@@ -51,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $method = [
         'id' => $id, 'name' => $name, 'description' => $description, 'match_type' => $matchType,
-        'match_value' => $matchValue, 'cost' => $cost, 'free_above_amount' => $freeAbove, 'is_active' => $isActive,
+        'match_value' => $matchValue, 'cost' => $cost, 'actual_cost' => $actualCost, 'free_above_amount' => $freeAbove, 'is_active' => $isActive,
     ];
 }
 

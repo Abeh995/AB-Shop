@@ -112,4 +112,5 @@ Desktop.ini
 *.gitattributes
 *.zip
 *.rar
+opencode.json
 README-DEPLOY.md

@@ -20,7 +20,7 @@
  * Never trusts a client-supplied cost — only the province string and the
  * subtotal (itself always computed server-side by the caller) go in.
  *
- * @return array{method_id:?int, method_name:?string, cost:int, is_free:bool}
+ * @return array{method_id:?int, method_name:?string, cost:int, actual_cost:?int, is_free:bool}
  */
 function calculateShippingCost(string $province, int $subtotal): array
 {
@@ -40,15 +40,18 @@ function calculateShippingCost(string $province, int $subtotal): array
     }
 
     if (!$matched) {
-        return ['method_id' => null, 'method_name' => null, 'cost' => 0, 'is_free' => false];
+        return ['method_id' => null, 'method_name' => null, 'cost' => 0, 'actual_cost' => null, 'is_free' => false];
     }
 
     $cost = (int) $matched['cost'];
+    $actualCost = $matched['actual_cost'] !== null ? (int) $matched['actual_cost'] : null;
     $isFree = false;
     if ($matched['free_above_amount'] !== null && $subtotal >= (int) $matched['free_above_amount']) {
+        // Waiving the charge to the customer doesn't waive what the store
+        // actually pays the courier — only the revenue side becomes free.
         $cost = 0;
         $isFree = true;
     }
 
-    return ['method_id' => (int) $matched['id'], 'method_name' => $matched['name'], 'cost' => $cost, 'is_free' => $isFree];
+    return ['method_id' => (int) $matched['id'], 'method_name' => $matched['name'], 'cost' => $cost, 'actual_cost' => $actualCost, 'is_free' => $isFree];
 }

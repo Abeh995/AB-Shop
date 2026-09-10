@@ -171,7 +171,7 @@ function cartDetailsForGuest(): array
     $subtotal = 0;
 
     foreach ($_SESSION['cart'] ?? [] as $key => $entry) {
-        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, stock, image, is_active FROM products WHERE id = ?");
+        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
         $stmt->execute([$entry['product_id']]);
         $product = $stmt->fetch();
         if (!$product || !$product['is_active']) continue;
@@ -181,7 +181,7 @@ function cartDetailsForGuest(): array
         $unitPrice = effectivePrice($product);
 
         if (!empty($entry['variant_id'])) {
-            $vstmt = db()->prepare("SELECT id, size, color, stock, price_override FROM product_variants WHERE id = ? AND product_id = ?");
+            $vstmt = db()->prepare("SELECT id, size, color, stock, price_override, cost_price FROM product_variants WHERE id = ? AND product_id = ?");
             $vstmt->execute([$entry['variant_id'], $product['id']]);
             $variant = $vstmt->fetch();
             if ($variant) {
@@ -231,7 +231,7 @@ function cartDetailsForCustomer(int $customerId): array
     $expiresAt = date('Y-m-d H:i:s', strtotime($cartStartedAt) + $guaranteeDays * 86400);
 
     foreach ($rows as $row) {
-        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, stock, image, is_active FROM products WHERE id = ?");
+        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
         $stmt->execute([$row['product_id']]);
         $product = $stmt->fetch();
         if (!$product || !$product['is_active']) continue;
@@ -241,7 +241,7 @@ function cartDetailsForCustomer(int $customerId): array
         $liveUnitPrice = effectivePrice($product);
 
         if ($row['variant_id'] > 0) {
-            $vstmt = db()->prepare("SELECT id, size, color, stock, price_override FROM product_variants WHERE id = ? AND product_id = ?");
+            $vstmt = db()->prepare("SELECT id, size, color, stock, price_override, cost_price FROM product_variants WHERE id = ? AND product_id = ?");
             $vstmt->execute([$row['variant_id'], $product['id']]);
             $variant = $vstmt->fetch();
             if ($variant) {

@@ -33,13 +33,18 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label>هزینه ارسال (تومان)</label>
+                <label>هزینه ارسال دریافتی از مشتری (تومان)</label>
                 <input class="form-control" type="text" inputmode="numeric" name="cost" value="<?= e((string)($method['cost'] ?? '0')) ?>" required>
             </div>
             <div class="form-group">
-                <label>ارسال رایگان از این مبلغ به بالا (اختیاری)</label>
-                <input class="form-control" type="text" inputmode="numeric" name="free_above_amount" value="<?= e((string)($method['free_above_amount'] ?? '')) ?>" placeholder="مثلا: 1000000">
+                <label>هزینه واقعی ارسال برای فروشگاه (اختیاری)</label>
+                <input class="form-control" type="text" inputmode="numeric" name="actual_cost" value="<?= e((string)($method['actual_cost'] ?? '')) ?>" placeholder="مثلا هزینه واقعی پیک/پست">
+                <p style="font-size:.75rem; color:var(--color-muted); margin-top:4px;">برای محاسبه سود واقعی در بخش مالی استفاده می‌شود؛ اگر متفاوت از مبلغی است که از مشتری می‌گیرید، اینجا وارد کنید.</p>
             </div>
+        </div>
+        <div class="form-group">
+            <label>ارسال رایگان از این مبلغ به بالا (اختیاری)</label>
+            <input class="form-control" type="text" inputmode="numeric" name="free_above_amount" value="<?= e((string)($method['free_above_amount'] ?? '')) ?>" placeholder="مثلا: 1000000">
         </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
