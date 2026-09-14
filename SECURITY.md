@@ -113,6 +113,20 @@ next security work to pick up, not a description of the current state.
     rotate `APP_SECRET`/DB credentials, how to force-logout all sessions —
     written down before it's needed rather than during an incident.
 
+## Private storefront content
+
+Business contact details and editable public-page copy are intentionally not
+hard-coded in repository files. Initial real values can live in
+`config/private_content.php`, which is gitignored alongside `config/config.php`.
+The file is optional and protected by the `config/.htaccess` deny rule. Once an
+admin saves content, the database `settings` table is the source of truth.
+`config/private_content.example.php` contains placeholders only.
+
+The public content editor uses a limited text format and escapes all rendered
+content, so an administrator cannot accidentally turn a legal-page textarea
+into arbitrary HTML. The existing eNamad embed remains the only intentional
+raw admin-controlled HTML field.
+
 ## Secure-development checklist for new code
 
 Anyone (human or agent) adding a feature to this project should be able to

@@ -6,6 +6,30 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.8.2] — Editable Public Content and Business Information
+
+### Summary
+The About, Terms, Privacy, and contact/business-information pages are no longer hard-coded. They are editable from the admin panel. To keep real business information out of GitHub, initial production values live in `config/private_content.php`, which is gitignored; after an admin saves a value, the database becomes the source of truth.
+
+### ✨ Dynamic Content
+- Business/contact details are stored in the existing `settings` key/value table.
+- About, Terms, and Privacy copy can be edited from the admin panel.
+- Page content uses a deliberately limited `## heading` / `- item` / paragraph format; arbitrary HTML is not accepted.
+- The Footer now consumes the stored business/contact information and editable brand tagline.
+
+### 🔒 Private Data Outside the Repository
+- `config/private_content.php` is gitignored.
+- `config/private_content.example.php` contains placeholders only and is safe to publish.
+- The real About story, legal copy, address, phone numbers, and support email are not stored in public repository files.
+
+### 🧩 Storefront Pages
+- Added `/privacy` with its controller and view.
+- Terms and About now render database-backed content.
+- Contact displays dynamic business details and no longer shows a false success message for the currently non-functional form.
+
+### 🗄️ Database Changes
+No new table or column is required. The existing `settings` key/value table is sufficient, so there is no new migration.
+
 ## [1.8.1] — SMS OTP AutoFill and Faraz Pattern Update
 
 ### Summary

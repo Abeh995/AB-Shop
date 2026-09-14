@@ -1,12 +1,10 @@
 <?php
 /**
- * Store settings — cart price guarantee, product tags visibility, SEO indexing,
- * site branding/logo, header announcement bar, footer content and social links.
+ * Store settings — operational settings, branding, social links, and editable
+ * public business/legal content.
  *
- * Each settings section below is submitted as its own <form> with a hidden
- * "section" field, and only the keys belonging to that section are written.
- * This avoids the earlier fragile pattern of mirroring every other section's
- * values as hidden fields (easy to forget one and silently reset a setting).
+ * Each settings section is submitted independently so saving one section cannot
+ * accidentally overwrite values belonging to another section.
  */
 
 $pageTitle = 'تنظیمات فروشگاه';
@@ -57,10 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 setSetting('site_logo', '');
                 setFlash('success', 'لوگو حذف شد؛ نام فروشگاه جای آن نمایش داده می‌شود.');
-            } else {
-                setFlash('success', 'تنظیمات ذخیره شد.');
             }
-            redirect('settings.php');
             break;
 
         case 'announcement':
@@ -72,7 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'footer':
             setSetting('footer_about_teaser_text', trim($_POST['footer_about_teaser_text'] ?? ''));
             setSetting('footer_shipping_badge_text', trim($_POST['footer_shipping_badge_text'] ?? ''));
-            setSetting('store_phone', trim($_POST['store_phone'] ?? ''));
+            setSetting('footer_tagline', trim($_POST['footer_tagline'] ?? ''));
+            break;
+
+        case 'business':
+            foreach (['store_email', 'store_phone', 'store_mobile', 'store_address', 'store_postal_code', 'store_support_hours', 'store_start_date', 'contact_intro'] as $key) {
+                setSetting($key, trim($_POST[$key] ?? ''));
+            }
+            break;
+
+        case 'legal_content':
+            foreach (['about_content', 'terms_content', 'privacy_content'] as $key) {
+                setSetting($key, trim($_POST[$key] ?? ''));
+            }
             break;
 
         case 'social':
@@ -101,7 +108,20 @@ $announcementBarLink = getSetting('announcement_bar_link', '');
 
 $footerAboutTeaserText = getSetting('footer_about_teaser_text', '');
 $footerShippingBadgeText = getSetting('footer_shipping_badge_text', '');
-$storePhone = getSetting('store_phone', '');
+$footerTagline = getSiteContent('footer_tagline');
+
+$storeEmail = getSiteContent('store_email');
+$storePhone = getSiteContent('store_phone');
+$storeMobile = getSiteContent('store_mobile');
+$storeAddress = getSiteContent('store_address');
+$storePostalCode = getSiteContent('store_postal_code');
+$storeSupportHours = getSiteContent('store_support_hours');
+$storeStartDate = getSiteContent('store_start_date');
+$contactIntro = getSiteContent('contact_intro');
+
+$aboutContent = getSiteContent('about_content');
+$termsContent = getSiteContent('terms_content');
+$privacyContent = getSiteContent('privacy_content');
 
 $enamadEnabled = getSetting('enamad_enabled', '0') === '1';
 $enamadEmbedCode = getSetting('enamad_embed_code', '');
@@ -145,11 +165,13 @@ function handleBrandingImageUpload(array $file): array
 renderView('admin/settings', compact(
     'pageTitle',
     'priceGuaranteeEnabled', 'priceGuaranteeDays',
-    'showProductTags',
-    'seoIndexingEnabled',
+    'showProductTags', 'seoIndexingEnabled',
     'siteLogo',
     'announcementBarEnabled', 'announcementBarText', 'announcementBarLink',
-    'footerAboutTeaserText', 'footerShippingBadgeText', 'storePhone',
+    'footerAboutTeaserText', 'footerShippingBadgeText', 'footerTagline',
+    'storeEmail', 'storePhone', 'storeMobile', 'storeAddress', 'storePostalCode',
+    'storeSupportHours', 'storeStartDate', 'contactIntro',
+    'aboutContent', 'termsContent', 'privacyContent',
     'enamadEnabled', 'enamadEmbedCode',
     'socialNetworks', 'socialSettings'
 ));

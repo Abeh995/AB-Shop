@@ -1,11 +1,14 @@
 <?php
 /**
  * Shared site footer.
- * Reads branding/social settings configured under Admin > Store settings.
+ * Reads branding, business, and social settings configured under Admin > Store settings.
  */
 $footerAboutTeaser = getSetting('footer_about_teaser_text', '');
 $footerShippingBadge = getSetting('footer_shipping_badge_text', '');
-$storePhone = getSetting('store_phone', '');
+$footerTagline = getSiteContent('footer_tagline');
+$storePhone = getSiteContent('store_phone');
+$storeEmail = getSiteContent('store_email');
+$storeSupportHours = getSiteContent('store_support_hours');
 $footerLogoUrl = siteLogoUrl();
 
 $socialLabels = ['instagram' => 'اینستاگرام', 'telegram' => 'تلگرام', 'bale' => 'بله', 'torob' => 'ترب'];
@@ -48,7 +51,9 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
                     <?= e(SITE_NAME) ?>
                 <?php endif; ?>
             </a>
-            <p>خرید آنلاین انواع جوراب با کیفیت بالا و ارسال سریع به سراسر ایران.</p>
+            <?php if ($footerTagline !== ''): ?>
+                <p><?= e($footerTagline) ?></p>
+            <?php endif; ?>
             <?php if ($storePhone !== ''): ?>
                 <a href="tel:<?= e($storePhone) ?>" class="footer-phone" dir="ltr"><?= e($storePhone) ?></a>
             <?php endif; ?>
@@ -65,11 +70,17 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
             <a href="/about">درباره ما</a>
             <a href="/contact">تماس با ما</a>
             <a href="/terms">قوانین و مقررات</a>
+            <a href="/privacy">حریم خصوصی و امنیت</a>
         </div>
 
         <div class="footer-col">
             <h4>پشتیبانی</h4>
-            <p>شنبه تا پنج‌شنبه، ۹ تا ۱۸</p>
+            <?php if ($storeSupportHours !== ''): ?>
+                <p><?= e($storeSupportHours) ?></p>
+            <?php endif; ?>
+            <?php if ($storeEmail !== ''): ?>
+                <a href="mailto:<?= e($storeEmail) ?>" dir="ltr"><?= e($storeEmail) ?></a>
+            <?php endif; ?>
         </div>
 
         <?php if ($activeSocialLinks || ($enamadEnabled && $enamadEmbedCode !== '')): ?>
@@ -83,7 +94,7 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
             </div>
             <?php endif; ?>
             <?php if ($enamadEnabled && $enamadEmbedCode !== ''): ?>
-                <div class="footer-enamad"><?= $enamadEmbedCode /* Trusted admin-only embed code from enamad.ir, not user input */ ?></div>
+                <div class="footer-enamad"><?= $enamadEmbedCode /* Trusted admin-only embed code from enamad.ir */ ?></div>
             <?php endif; ?>
         </div>
         <?php endif; ?>

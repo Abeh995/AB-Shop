@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.8.1**
+**Current version: 1.8.2**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -31,7 +31,9 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 │                               Browser and mobile home-screen icons — since 1.4.0
 │
 ├── config/                    Sensitive configuration (protected by .htaccess Deny)
-│   └── config.php             DB, Zarinpal, SMS, Faraz SMS, SMTP, Debug mode
+│   ├── config.php             DB, Zarinpal, SMS, Faraz SMS, SMTP, Debug mode (private, gitignored)
+│   ├── private_content.php    private seed values for business/contact/public content; gitignored and optional
+│   └── private_content.example.php  placeholder-only setup example
 │
 ├── app/                       All application/backend logic — protected by .htaccess Deny
 │   ├── bootstrap.php          Shared bootstrap for all entry points; also derives BRANDING_UPLOAD_DIR/URL — since 1.3.0
@@ -124,7 +126,7 @@ Files under `ajax/` are standalone entry points. Each file loads the bootstrap, 
 | `orders` | Orders with customer details, totals, `status`, `payment_status` (since 1.1.0), and nullable `customer_id` (since 1.2.0; guest orders are supported). |
 | `order_items` | Order line items storing a snapshot of product name/price at purchase time. |
 | `cart_items` | Persistent cart items for authenticated customers; each row stores a `locked_unit_price` — since 1.2.0. |
-| `settings` | Store-wide key-value configuration, including price guarantee (1.2.0), product tags, SEO indexing (1.2.1), and site logo/announcement bar/footer content/social links/eNamad embed (1.3.0). |
+| `settings` | Store-wide key-value configuration, including price guarantee (1.2.0), product tags, SEO indexing (1.2.1), site logo/announcement bar/footer content/social links/eNamad embed (1.3.0), and editable public-page/business content (1.8.2). |
 | `sms_log` | SMS delivery/log records (since 1.1.0); `debug_info` was added in 1.2.2 for detailed API diagnostics. |
 | `email_log` | Email delivery-attempt log with SMTP diagnostics stored in `debug_info` — since 1.2.2. |
 
@@ -483,6 +485,18 @@ Everything in this section is read-only reporting. `AccountingService.php` compu
 Access to the Finance section (`admin/finance_dashboard.php`, `expenses.php`) is gated the same as every other admin page (`requireAdmin()`), not restricted to `super_admin` — there's no finer-grained permission system to restrict it with, and the business requirement was explicit that finance visibility shouldn't default to super-admin-only just because it's sensitive.
 
 ---
+
+### 5.22 Editable Public Content and Business Information — Introduced in 1.8.2
+
+The About, Terms, Privacy, and contact/business-information content is no longer hard-coded in storefront views. Editable values are stored in the existing `settings` key/value table and managed through `admin/settings.php`.
+
+- **Business information:** `store_email`, `store_phone`, `store_mobile`, `store_address`, `store_postal_code`, `store_support_hours`, `store_start_date`, and `contact_intro`. These values are consumed by About, Contact, and the Footer.
+- **Page content:** `about_content`, `terms_content`, and `privacy_content`. A deliberately limited text format is used: `## heading` creates a section heading, `- item` creates a list item, and blank lines separate paragraphs. Output is always escaped; arbitrary HTML is not accepted from this editor.
+- **Private initial defaults:** when a setting does not yet exist in the database, `app/core/settings.php` optionally loads `config/private_content.php`. That file is gitignored and may contain the real business information and initial page copy. Once an admin saves a value, the database becomes the source of truth.
+- **No personal copy in public source:** the real About story, legal text, address, phone numbers, email, and support hours are not stored in files that belong in the public repository. `config/private_content.example.php` contains placeholders only.
+- **No migration:** the existing generic `settings` table is sufficient, so this feature requires no new table, column, or database migration.
+- **Contact form:** the current backend does not actually persist or send contact messages, so the controller no longer shows a false success state. The public form remains hidden until real message delivery/storage is implemented.
+
 
 ## 6. Storefront Routing (Framework-Free)
 

@@ -63,6 +63,10 @@ switch ($page) {
         require $controllersDir . '/terms.php';
         break;
 
+    case 'privacy':
+        require $controllersDir . '/privacy.php';
+        break;
+
     case 'signup':
         require $controllersDir . '/signup.php';
         break;

@@ -1,5 +1,81 @@
 <?php require APP_ROOT . '/views/admin/layout/header.php'; ?>
 
+<div class="admin-card" style="max-width:760px;">
+    <h3 style="margin-bottom:14px;">اطلاعات کسب‌وکار و تماس</h3>
+    <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
+        اطلاعات این بخش در صفحات «درباره ما» و «تماس با ما» نمایش داده می‌شوند. این مقادیر در دیتابیس فروشگاه نگهداری می‌شوند و نباید برای اطلاعات حساس مانند رمزها یا کلیدهای API استفاده شوند.
+    </p>
+    <form method="post">
+        <?= csrfField() ?>
+        <input type="hidden" name="section" value="business">
+        <div class="form-group">
+            <label>ایمیل پشتیبانی</label>
+            <input class="form-control" type="email" name="store_email" dir="ltr" value="<?= e($storeEmail) ?>" placeholder="support@example.com">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>تلفن ثابت</label>
+                <input class="form-control" type="text" name="store_phone" dir="ltr" value="<?= e($storePhone) ?>" placeholder="051-12345678">
+            </div>
+            <div class="form-group">
+                <label>شماره همراه</label>
+                <input class="form-control" type="text" name="store_mobile" dir="ltr" value="<?= e($storeMobile) ?>" placeholder="09123456789">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>نشانی کسب‌وکار</label>
+            <input class="form-control" type="text" name="store_address" value="<?= e($storeAddress) ?>" placeholder="نشانی کامل کسب‌وکار">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>کدپستی</label>
+                <input class="form-control" type="text" name="store_postal_code" dir="ltr" value="<?= e($storePostalCode) ?>" placeholder="۱۰ رقمی">
+            </div>
+            <div class="form-group">
+                <label>تاریخ شروع فعالیت</label>
+                <input class="form-control" type="text" name="store_start_date" value="<?= e($storeStartDate) ?>" placeholder="مرداد ۱۴۰۵">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>ساعات پاسخ‌گویی</label>
+            <input class="form-control" type="text" name="store_support_hours" value="<?= e($storeSupportHours) ?>" placeholder="شنبه تا پنج‌شنبه، ۹ تا ۱۸">
+        </div>
+        <div class="form-group">
+            <label>متن معرفی صفحه تماس با ما</label>
+            <textarea class="form-control" name="contact_intro" rows="3"><?= e($contactIntro) ?></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">ذخیره اطلاعات تماس</button>
+    </form>
+</div>
+
+<div class="admin-card" style="max-width:760px;">
+    <h3 style="margin-bottom:14px;">محتوای صفحات عمومی</h3>
+    <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
+        متن «درباره ما»، «قوانین و مقررات» و «حریم خصوصی و امنیت» از اینجا قابل ویرایش است. HTML خام پشتیبانی نمی‌شود؛ از قالب ساده زیر استفاده کنید: خط خالی = پاراگراف جدید، <code>## عنوان</code> = تیتر بخش، و <code>- مورد</code> = آیتم فهرست.
+    </p>
+    <form method="post">
+        <?= csrfField() ?>
+        <input type="hidden" name="section" value="legal_content">
+
+        <div class="form-group">
+            <label>متن «درباره ما»</label>
+            <textarea class="form-control" name="about_content" rows="14"><?= e($aboutContent) ?></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>متن «قوانین و مقررات»</label>
+            <textarea class="form-control" name="terms_content" rows="30"><?= e($termsContent) ?></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>متن «حریم خصوصی و امنیت»</label>
+            <textarea class="form-control" name="privacy_content" rows="30"><?= e($privacyContent) ?></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">ذخیره محتوای صفحات</button>
+    </form>
+</div>
+
 <div class="admin-card" style="max-width:560px;">
     <h3 style="margin-bottom:14px;">لوگوی فروشگاه</h3>
     <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
@@ -40,11 +116,11 @@
         </label>
         <div class="form-group">
             <label>متن اعلان</label>
-            <input class="form-control" type="text" name="announcement_bar_text" value="<?= e($announcementBarText) ?>" placeholder="هر هفته دو بار ارسال داریم؛ کد رهگیری در کانال تلگرام @AB_SOCKS قرار می‌گیرد">
+            <input class="form-control" type="text" name="announcement_bar_text" value="<?= e($announcementBarText) ?>" placeholder="متن اعلان فروشگاه">
         </div>
         <div class="form-group">
-            <label>لینک اعلان (اختیاری — مثلاً لینک کانال تلگرام)</label>
-            <input class="form-control" type="text" name="announcement_bar_link" dir="ltr" value="<?= e($announcementBarLink) ?>" placeholder="https://t.me/AB_SOCKS">
+            <label>لینک اعلان (اختیاری)</label>
+            <input class="form-control" type="text" name="announcement_bar_link" dir="ltr" value="<?= e($announcementBarLink) ?>" placeholder="https://example.com">
         </div>
         <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
     </form>
@@ -56,16 +132,16 @@
         <?= csrfField() ?>
         <input type="hidden" name="section" value="footer">
         <div class="form-group">
-            <label>متن دعوت به مطالعه «درباره ما» (بالای فوتر، لینک به صفحه درباره ما)</label>
-            <input class="form-control" type="text" name="footer_about_teaser_text" value="<?= e($footerAboutTeaserText) ?>" placeholder="اگه می‌خوای بدونی این آنلاین‌شاپ به چه دلیلی متولد شد، رو این متن کلیک کن (:">
+            <label>متن دعوت به مطالعه «درباره ما»</label>
+            <input class="form-control" type="text" name="footer_about_teaser_text" value="<?= e($footerAboutTeaserText) ?>" placeholder="متن کوتاه لینک درباره ما">
+        </div>
+        <div class="form-group">
+            <label>توضیح برند در فوتر</label>
+            <textarea class="form-control" name="footer_tagline" rows="3"><?= e($footerTagline) ?></textarea>
         </div>
         <div class="form-group">
             <label>متن نماد ارسال</label>
-            <input class="form-control" type="text" name="footer_shipping_badge_text" value="<?= e($footerShippingBadgeText) ?>" placeholder="ارسال با پست برای بقیه شهرها و با پیک برای تهران">
-        </div>
-        <div class="form-group">
-            <label>شماره تماس</label>
-            <input class="form-control" type="text" name="store_phone" dir="ltr" value="<?= e($storePhone) ?>" placeholder="09123456789">
+            <input class="form-control" type="text" name="footer_shipping_badge_text" value="<?= e($footerShippingBadgeText) ?>" placeholder="متن توضیح ارسال">
         </div>
         <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
     </form>
