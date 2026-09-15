@@ -275,6 +275,9 @@ CREATE TABLE IF NOT EXISTS orders (
     shipping_actual_cost DECIMAL(12,0) DEFAULT NULL, -- snapshot of the method's actual_cost at order time
     gift_items_total DECIMAL(12,0) NOT NULL DEFAULT 0,  -- paid post-order add-ons; free gifts do not add to this
     total DECIMAL(12,0) NOT NULL,
+    payment_method VARCHAR(30) NOT NULL DEFAULT 'zarinpal',
+    card_to_card_receipt VARCHAR(255) DEFAULT NULL,
+    card_to_card_submitted_at DATETIME DEFAULT NULL,
     coupon_code VARCHAR(60) DEFAULT NULL,
     coupon_id INT UNSIGNED DEFAULT NULL,
     status ENUM('pending','confirmed','processing','shipped','delivered','cancelled') NOT NULL DEFAULT 'pending',
@@ -401,6 +404,10 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('footer_about_teaser_text', ''),
     ('footer_shipping_badge_text', ''),
     ('store_phone', ''),
+    ('payment_zarinpal_enabled', '1'),
+    ('card_to_card_number', ''),
+    ('card_to_card_holder', ''),
+    ('card_to_card_note', ''),
     ('social_instagram_enabled', '0'),
     ('social_instagram_url', ''),
     ('social_telegram_enabled', '0'),

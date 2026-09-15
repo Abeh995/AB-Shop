@@ -9,7 +9,7 @@
 
 <div class="admin-card">
     <table class="admin-table">
-        <thead><tr><th>کد سفارش</th><th>مشتری</th><th>موبایل</th><th>اقلام سفارش</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead>
+        <thead><tr><th>کد سفارش</th><th>مشتری</th><th>موبایل</th><th>اقلام سفارش</th><th>مبلغ</th><th>روش پرداخت</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($orders as $o):
             $payLabels = ['unpaid' => 'پرداخت‌نشده', 'paid' => 'پرداخت‌شده', 'failed' => 'ناموفق'];
@@ -29,6 +29,7 @@
                 <?php if (empty($itemsByOrder[$o['id']])): ?>—<?php endif; ?>
             </td>
             <td><?= formatPrice($o['total']) ?></td>
+            <td><?= ($o['payment_method'] ?? 'zarinpal') === 'card_to_card' ? 'کارت‌به‌کارت' : 'زرین‌پال' ?></td>
             <td><span class="status-pill <?= $payClass[$o['payment_status']] ?? '' ?>"><?= e($payLabels[$o['payment_status']] ?? $o['payment_status']) ?></span></td>
             <td><span class="status-pill status-<?= e($o['status']) ?>"><?= e($statusLabels[$o['status']] ?? $o['status']) ?></span></td>
             <td><?= toPersianDigits(date('Y/m/d H:i', strtotime($o['created_at']))) ?></td>
@@ -47,7 +48,7 @@
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$orders): ?><tr><td colspan="9" style="text-align:center; color:var(--color-muted);">سفارشی یافت نشد.</td></tr><?php endif; ?>
+        <?php if (!$orders): ?><tr><td colspan="10" style="text-align:center; color:var(--color-muted);">سفارشی یافت نشد.</td></tr><?php endif; ?>
         </tbody>
     </table>
 </div>

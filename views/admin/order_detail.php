@@ -128,8 +128,34 @@
             $payLabels = ['unpaid' => 'پرداخت‌نشده', 'paid' => 'پرداخت‌شده', 'failed' => 'ناموفق'];
             $payClass = ['unpaid' => 'status-pending', 'paid' => 'status-delivered', 'failed' => 'status-cancelled'];
             ?>
+            <p><strong>روش پرداخت:</strong> <?= $order['payment_method'] === 'card_to_card' ? 'کارت‌به‌کارت' : 'زرین‌پال' ?></p>
             <p><strong>وضعیت پرداخت:</strong> <span class="status-pill <?= $payClass[$order['payment_status']] ?? '' ?>"><?= e($payLabels[$order['payment_status']] ?? $order['payment_status']) ?></span></p>
             <?php if ($order['payment_ref_id']): ?><p><strong>کد پیگیری زرین‌پال:</strong> <span dir="ltr"><?= e($order['payment_ref_id']) ?></span></p><?php endif; ?>
+            <?php if ($order['payment_method'] === 'card_to_card'): ?>
+                <div class="receipt-admin-box">
+                    <strong>رسید کارت‌به‌کارت</strong>
+                    <?php if ($order['card_to_card_receipt']): ?>
+                        <img src="order_receipt.php?id=<?= (int)$order['id'] ?>" alt="رسید کارت‌به‌کارت" class="receipt-admin-image">
+                        <a href="order_receipt.php?id=<?= (int)$order['id'] ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline">مشاهده در صفحه جداگانه</a>
+                        <?php if ($order['card_to_card_submitted_at']): ?><small style="color:var(--color-muted);">ارسال شده: <?= toPersianDigits(date('Y/m/d H:i', strtotime($order['card_to_card_submitted_at']))) ?></small><?php endif; ?>
+                    <?php else: ?>
+                        <span class="status-pill status-cancelled">رسید ثبت نشده</span>
+                    <?php endif; ?>
+                </div>
+                <form method="post" style="margin-top:16px;">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="payment_status">
+                    <div class="form-group">
+                        <label>تغییر وضعیت پرداخت</label>
+                        <select class="form-control" name="payment_status">
+                            <?php foreach ($payLabels as $key => $label): ?>
+                                <option value="<?= e($key) ?>" <?= $order['payment_status'] === $key ? 'selected' : '' ?>><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">ثبت وضعیت پرداخت</button>
+                </form>
+            <?php endif; ?>
         </div>
     </div>
 

@@ -122,6 +122,6 @@ function pendingCustomerId(): ?int
 
 function customerLogout(): void
 {
-    unset($_SESSION['customer_id'], $_SESSION['pending_customer_id'], $_SESSION['coupon'], $_SESSION['cart']);
+    unset($_SESSION['customer_id'], $_SESSION['pending_customer_id'], $_SESSION['pending_auth_next'], $_SESSION['coupon'], $_SESSION['cart'], $_SESSION['pending_card_to_card_checkout'], $_SESSION['card_to_card_receipt']);
     session_regenerate_id(true);
 }

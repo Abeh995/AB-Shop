@@ -39,6 +39,14 @@ switch ($page) {
         require $controllersDir . '/checkout.php';
         break;
 
+    case 'payment':
+        if (($segments[1] ?? '') === 'card-to-card') {
+            require $controllersDir . '/card_to_card.php';
+        } else {
+            require $controllersDir . '/not_found.php';
+        }
+        break;
+
     case 'order':
         if (($segments[1] ?? '') === 'success') {
             $_GET['code'] = $segments[2] ?? '';

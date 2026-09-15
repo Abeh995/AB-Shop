@@ -10,6 +10,10 @@ if (isCustomerLoggedIn()) {
 
 $pageTitle = 'ثبت‌نام';
 $errors = [];
+$next = $_GET['next'] ?? $_POST['next'] ?? '/account';
+if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) {
+    $next = '/account';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
@@ -18,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $passwordConfirm = $_POST['password_confirm'] ?? '';
     $fullName = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $_SESSION['pending_auth_next'] = $next;
 
     if ($password !== $passwordConfirm) {
         $errors[] = 'تکرار رمز عبور مطابقت ندارد.';
@@ -32,4 +37,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderView('site/signup', compact('pageTitle', 'errors'));
+renderView('site/signup', compact('pageTitle', 'errors', 'next'));

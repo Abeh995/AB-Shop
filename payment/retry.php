@@ -22,6 +22,14 @@ if (!$order) {
     redirect('/');
 }
 
+if (($order['payment_method'] ?? 'zarinpal') !== 'zarinpal') {
+    redirect('/order/success/' . $order['order_code']);
+}
+
+if (getSetting('payment_zarinpal_enabled', '1') !== '1') {
+    redirect('/order/failed/' . $order['order_code'] . '?err=' . urlencode('پرداخت زرین‌پال در حال حاضر غیرفعال است.'));
+}
+
 if ($order['payment_status'] === 'paid') {
     redirect('/order/success/' . $order['order_code']);
 }

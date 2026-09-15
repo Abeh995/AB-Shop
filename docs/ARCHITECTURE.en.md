@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.8.2**
+**Current version: 1.9.0**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -54,7 +54,9 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 │   │   ├── FarazSmsService.php      Pattern-based OTP SMS through Faraz SMS — since 1.2.1
 │   │   ├── EmailService.php          SMTP email delivery with authenticated PHPMailer — since 1.2.1
 │   │   ├── VerificationService.php  Phone/email verification-code lifecycle — since 1.2.1
-│   │   └── CouponService.php         Coupon validation and discount calculation
+│   │   ├── CouponService.php         Coupon validation and discount calculation
+│   │   ├── OrderService.php           Final Checkout validation and order creation — since 1.9.0
+│   │   └── CardToCardReceiptService.php  Receipt validation and private storage — since 1.9.0
 │   └── controllers/            Controllers — data fetching/processing only, zero HTML
 │       ├── site/               Storefront controllers (home, product, cart, checkout, tags, search, authentication, etc.)
 │       └── admin/               Admin-panel controllers
@@ -123,10 +125,10 @@ Files under `ajax/` are standalone entry points. Each file loads the bootstrap, 
 | `product_variants` | Product size/color variants with independent inventory. |
 | `tags` / `product_tags` | Product tags and the many-to-many relationship between products and tags — since 1.2.1. |
 | `coupons` | Discount codes supporting percentage or fixed-amount discounts. |
-| `orders` | Orders with customer details, totals, `status`, `payment_status` (since 1.1.0), and nullable `customer_id` (since 1.2.0; guest orders are supported). |
+| `orders` | Orders with customer details, totals, `status`, `payment_status`, `payment_method`, and card-to-card receipt metadata (1.9.0); the current Checkout requires an authenticated customer. |
 | `order_items` | Order line items storing a snapshot of product name/price at purchase time. |
 | `cart_items` | Persistent cart items for authenticated customers; each row stores a `locked_unit_price` — since 1.2.0. |
-| `settings` | Store-wide key-value configuration, including price guarantee (1.2.0), product tags, SEO indexing (1.2.1), site logo/announcement bar/footer content/social links/eNamad embed (1.3.0), and editable public-page/business content (1.8.2). |
+| `settings` | Store-wide key-value configuration, including price guarantee (1.2.0), product tags, SEO indexing (1.2.1), site logo/announcement bar/footer content/social links/eNamad embed (1.3.0), editable public-page/business content (1.8.2), and payment-method settings (1.9.0). |
 | `sms_log` | SMS delivery/log records (since 1.1.0); `debug_info` was added in 1.2.2 for detailed API diagnostics. |
 | `email_log` | Email delivery-attempt log with SMTP diagnostics stored in `debug_info` — since 1.2.2. |
 
@@ -176,54 +178,24 @@ Security measures include:
 
 From 1.2.1 onward, newly registered customers must also complete phone verification before a full authenticated session is established.
 
-### 5.2 Final Order Price Calculation (`app/controllers/site/checkout.php`)
+### 5.2 Order Creation and Final Price Calculation (`app/services/OrderService.php`)
 
-During order creation:
+Since 1.9.0, shared order-creation logic is centralized in `OrderService::createFromCheckout()` instead of being duplicated in the Checkout controller. Both payment methods use the same server-side validation path: cart, stock, coupon, post-order selection, shipping, and financial snapshots are re-read before the transaction.
 
-1. The cart is rebuilt from database state rather than trusting quantities or totals submitted by the browser.
-2. Stock is revalidated for every item.
-3. The applied coupon is revalidated because it may have expired or reached its usage limit since it was applied to the cart.
-4. `subtotal`, `discount_total`, and `total` are calculated server-side. No monetary value is trusted directly from the client.
-5. Order insertion, stock decrement, and coupon usage increment are executed inside a single database transaction so the operation either fully succeeds or fully rolls back.
+`OrderService::validateCheckoutData()` validates customer-facing fields. The service itself also verifies that the current session belongs to an authenticated customer whose `phone_verified_at` is not empty; having a `customer_id` session value alone is not sufficient to create an order.
 
-### 5.3 Payment Gateway (`app/services/ZarinpalService.php`)
+Order insertion, `order_items` insertion, stock decrement, and coupon usage increment are performed inside one database transaction. Stock is still decremented with a conditional `UPDATE ... WHERE stock >= ?`, preserving the existing concurrent-inventory safeguard.
 
-- Uses Zarinpal REST API v4.
-- Monetary values inside the project are stored in **toman**.
-- The service multiplies the amount by 10 when sending it to Zarinpal because the gateway expects rial.
-- `request()` creates the payment request and returns the gateway URL.
-- `verify()` finalizes the payment after the user returns from the gateway.
-- Network failures and invalid responses do not throw exceptions that crash the site. The service returns `['ok'=>false, 'error'=>...]` and the controller handles the failure.
+### 5.3 Payment Methods
 
-**Complete online payment flow:**
+The storefront currently exposes two payment methods:
 
-```text
-Checkout (POST)
-    ↓
-Create order in DB
-status=pending, payment_status=unpaid
-    ↓
-ZarinpalService::request()
-    ├─ success → redirect customer to Zarinpal
-    └─ failure → /order/failed/{code} with Retry button
-                  (order remains stored; payment was not completed)
+- **Zarinpal** (`zarinpal`): after the order is created, `ZarinpalService::request()` is called, `payment_authority` is stored on the order, and `payment/zarinpal_callback.php` verifies the transaction. The method is controlled by the admin setting `payment_zarinpal_enabled`; the retry endpoint checks the same setting.
+- **Card-to-card** (`card_to_card`): the initial Checkout only stores validated customer fields and an internal destination in the session, then redirects to `/payment/card-to-card`. No order or stock reservation is created until a receipt has uploaded successfully. The order is then created with `payment_status=unpaid`; an admin reviews the receipt and can set payment to `paid` or `failed`.
 
-Customer pays or cancels on Zarinpal
-    ↓
-payment/zarinpal_callback.php
-    ├─ Status=NOK
-    │    → payment_status=failed
-    │    → failure page
-    │
-    └─ Status=OK
-         → ZarinpalService::verify()
-             ├─ success → payment_status=paid, status=confirmed
-             │            → confirmation SMS
-             │            → success page
-             │
-             └─ failure → payment_status=failed
-                          → failure page + Retry button
-```
+**Card-to-card receipts:** `CardToCardReceiptService` enforces a 2 MiB limit, real MIME validation, and `getimagesize()`. Uploads are token-bound to the current PHP session and stored temporarily in private storage. After successful order creation, the file moves to final private storage and its filename is snapshotted in `orders.card_to_card_receipt`. `admin/order_receipt.php` streams the file only to an authenticated admin.
+
+**Guest authentication flow:** a guest may keep a session cart, but entering Checkout redirects to `/signup?next=/checkout`. The destination survives Signup/Login and verification; after phone verification, `mergeGuestCartIntoCustomerCart()` transfers the session cart into the customer's persistent cart.
 
 ### 5.4 Coupons (`app/services/CouponService.php`)
 
@@ -498,6 +470,22 @@ The About, Terms, Privacy, and contact/business-information content is no longer
 - **Contact form:** the current backend does not actually persist or send contact messages, so the controller no longer shows a false success state. The public form remains hidden until real message delivery/storage is implemented.
 
 
+### 5.23 Verified customer checkout — Introduced in 1.9.0
+
+Guest cart storage remains session-based so a visitor can browse and add products without an account. The checkout controller now requires a fully authenticated customer; a guest is redirected to signup with an internal `next=/checkout` destination. Signup/login verification flows preserve this destination through phone verification and, when applicable, email verification. `completeCustomerLogin()` continues to merge the guest session cart into the customer's persistent `cart_items` rows, so authentication does not discard the shopper's selections.
+
+The order-creation path is centralized in `app/services/OrderService.php`. `validateCheckoutData()` handles customer-facing field validation, while `createFromCheckout()` re-reads the cart, coupon, post-order selection, shipping, prices, and stock before opening the transaction. This keeps the financial/inventory rules in one place for both payment flows.
+
+### 5.24 Payment methods and card-to-card receipts — Introduced in 1.9.0
+
+`orders.payment_method` distinguishes `zarinpal` from `card_to_card`. The old COD path is no longer accepted by Checkout. Zarinpal remains the existing gateway and is controlled by `payment_zarinpal_enabled`; the retry endpoint also refuses new Zarinpal attempts when the method is disabled.
+
+Card-to-card settings live in the existing `settings` table: `card_to_card_number`, `card_to_card_holder`, and optional `card_to_card_note`. A card-to-card checkout is intentionally two-step: the validated checkout data is kept in `$_SESSION['pending_card_to_card_checkout']`, then `/payment/card-to-card` requires a receipt upload before `OrderService::createFromCheckout()` creates the order. This avoids reserving product stock while the customer is merely viewing the payment instructions.
+
+Receipt files are handled by `CardToCardReceiptService`. The browser uploads the image asynchronously to `ajax/card_to_card_receipt_upload.php`, where MIME, size, upload origin, and actual image validity are checked. The temporary file is bound to the current PHP session. After final submission it is moved into private card-to-card storage; the stored filename is snapshotted on `orders.card_to_card_receipt`. `admin/order_receipt.php` streams the image only after `requireAdmin()`, so the receipt is not exposed as a public image URL.
+
+The admin panel has a dedicated `card_to_card_payments.php` queue and an order-detail review section. Admins can mark a receipt `paid` or `failed` (a `paid` transition is rejected when no receipt exists) and can independently change the order status. Payment-status changes to `paid`/`failed` trigger a payment SMS, while order-status changes continue to use the existing order-status notification.
+
 ## 6. Storefront Routing (Framework-Free)
 
 Requests that do not match a physical file or directory are rewritten by `.htaccess` to:
@@ -659,7 +647,7 @@ Every technical change—bug fix, feature, structural modification, or behavior 
 
 Nothing below is planned or in progress — this is a record of where the current design deliberately leaves room, so a future change in one of these directions doesn't require reworking what already exists:
 
-- **Payments**: `orders.payment_status`/`payment_authority`/`payment_ref_id` (2.x) only exist for Zarinpal today, but nothing about the checkout flow assumes a single gateway — a second `*Service.php` alongside `ZarinpalService.php` is additive.
+- **Payments**: Zarinpal and card-to-card are now implemented in Checkout. `payment_method` snapshots the selected method and card-to-card configuration lives in `settings`; a future payment method should add its own service/path alongside these without rewriting the financial logic in `OrderService`.
 - **Coupons/promotions**: `CouponService` currently supports a flat percent/fixed discount; loyalty points, tiered promotions, or a gift-card-style stored balance sit naturally alongside it as separate services rather than requiring changes to it.
 - **Refunds/cancellations**: `orders.status` has no `refunded` value and nothing decrements a completed order's recorded revenue. Adding one is compatible with 5.21's model — a refund would be a new snapshot event with its own audit trail, not a mutation of the original order's numbers, the same principle every other financial record in this document already follows.
 - **Multi-supplier / purchase orders**: `expenses.reference_type`/`reference_id` (5.21) can already tag an expense as relating to a purchase; a dedicated supplier/purchase-order model would sit on top of that tagging rather than replacing it.

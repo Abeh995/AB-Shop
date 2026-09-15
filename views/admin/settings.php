@@ -181,6 +181,32 @@
 </div>
 
 <div class="admin-card" style="max-width:560px;">
+    <h3 style="margin-bottom:14px;">روش‌های پرداخت</h3>
+    <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">روش‌های پرداخت فعال در صفحه تسویه را مدیریت کنید. زرین‌پال می‌تواند موقتاً غیرفعال شود؛ کارت‌به‌کارت فقط زمانی برای مشتری نمایش داده می‌شود که شماره کارت و نام صاحب کارت تکمیل شده باشد.</p>
+    <form method="post">
+        <?= csrfField() ?>
+        <input type="hidden" name="section" value="payment">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
+            <input type="checkbox" name="payment_zarinpal_enabled" <?= $paymentZarinpalEnabled ? 'checked' : '' ?>>
+            فعال بودن پرداخت زرین‌پال
+        </label>
+        <div class="form-group">
+            <label>شماره کارت برای کارت‌به‌کارت</label>
+            <input class="form-control" type="text" name="card_to_card_number" dir="ltr" inputmode="numeric" value="<?= e($cardToCardNumber) ?>" placeholder="شماره کارت ۱۶ رقمی">
+        </div>
+        <div class="form-group">
+            <label>نام صاحب کارت</label>
+            <input class="form-control" type="text" name="card_to_card_holder" value="<?= e($cardToCardHolder) ?>" placeholder="نام و نام‌خانوادگی صاحب کارت">
+        </div>
+        <div class="form-group">
+            <label>توضیحات کارت‌به‌کارت (اختیاری)</label>
+            <textarea class="form-control" name="card_to_card_note" rows="4" placeholder="مثلاً: لطفاً مبلغ را دقیقاً مطابق فاکتور واریز کنید."><?= e($cardToCardNote) ?></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">ذخیره روش‌های پرداخت</button>
+    </form>
+</div>
+
+<div class="admin-card" style="max-width:560px;">
     <h3 style="margin-bottom:14px;">تضمین قیمت سبد خرید</h3>
     <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
         وقتی فعال باشد، قیمت کالاهای سبد خرید کاربران لاگین‌شده تا مدت مشخص‌شده از تاریخ افزودن اولین کالا

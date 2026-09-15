@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result['ok']) {
         redirect($next);
     } elseif ($result['needs_verification']) {
+        $_SESSION['pending_auth_next'] = $next;
         VerificationService::sendCode($result['customer_id'], 'phone', $phone);
         setFlash('info', 'حساب شما هنوز احراز نشده؛ کد تایید مجدد برای شما پیامک شد.');
         redirect('/verify-phone');

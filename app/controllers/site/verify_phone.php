@@ -14,6 +14,10 @@ $stmt->execute([$customerId]);
 $phone = $stmt->fetchColumn();
 
 $pageTitle = 'احراز شماره موبایل';
+$next = $_SESSION['pending_auth_next'] ?? '/account';
+if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) {
+    $next = '/account';
+}
 $error = '';
 $info = '';
 
@@ -44,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect('/verify-email');
             }
 
-            redirect('/account');
+            unset($_SESSION['pending_auth_next']);
+            redirect($next);
         } else {
             $error = $result['error'];
         }

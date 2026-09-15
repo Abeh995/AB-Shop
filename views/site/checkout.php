@@ -64,17 +64,27 @@
 
             <div class="form-group">
                 <label class="group-label">روش پرداخت</label>
-                <div class="variant-options">
-                    <label class="variant-chip selected">
-                        <input type="radio" name="payment_method" value="online" checked> پرداخت آنلاین (زرین‌پال)
+                <?php if ($paymentMethodsAvailable): ?>
+                <div class="payment-method-options">
+                    <?php if ($zarinpalEnabled): ?>
+                    <label class="payment-method-option">
+                        <input type="radio" name="payment_method" value="zarinpal" <?= (!$cardToCardConfigured) ? 'checked' : '' ?>>
+                        <span class="payment-method-copy"><strong>زرین‌پال</strong><small>پرداخت آنلاین امن</small></span>
                     </label>
-                    <label class="variant-chip">
-                        <input type="radio" name="payment_method" value="cod"> پرداخت در محل / هماهنگی تلفنی
+                    <?php endif; ?>
+                    <?php if ($cardToCardConfigured): ?>
+                    <label class="payment-method-option">
+                        <input type="radio" name="payment_method" value="card_to_card" <?= (!$zarinpalEnabled) ? 'checked' : '' ?>>
+                        <span class="payment-method-copy"><strong>کارت به کارت</strong><small>ارسال تصویر فیش برای بررسی ادمین</small></span>
                     </label>
+                    <?php endif; ?>
                 </div>
+                <?php else: ?>
+                    <div class="alert alert-error" style="margin:0;">هیچ روش پرداخت فعالی برای فروشگاه تنظیم نشده است.</div>
+                <?php endif; ?>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">ثبت و پرداخت سفارش</button>
+            <button type="submit" class="btn btn-primary btn-block" <?= !$paymentMethodsAvailable ? 'disabled' : '' ?>>ادامه و پرداخت سفارش</button>
         </form>
 
         <div class="order-review">
@@ -117,7 +127,7 @@
                 <span id="grandTotalValue"><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total'] + $shippingPreview['cost']) ?></span>
             </div>
             <p style="font-size:.82rem; color:var(--color-muted); margin-top:14px;">
-                در صورت انتخاب پرداخت آنلاین، بعد از ثبت فرم به درگاه امن زرین‌پال منتقل می‌شوید.
+                با انتخاب کارت‌به‌کارت، بعد از ثبت اطلاعات به صفحه پرداخت کارت‌به‌کارت منتقل می‌شوید؛ با انتخاب زرین‌پال، به درگاه پرداخت منتقل خواهید شد.
             </p>
         </div>
     </div>

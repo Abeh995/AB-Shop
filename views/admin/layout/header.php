@@ -37,7 +37,8 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
             <a href="gift_items.php" class="<?= $currentPage === 'gift_items.php' || $currentPage === 'gift_item_edit.php' ? 'active' : '' ?>">🎁 هدیه و پیشنهاد بعد از سبد</a>
 
             <div class="nav-group-label">سفارش‌ها</div>
-            <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' ? 'active' : '' ?>">سفارش‌ها</a>
+            <a href="orders.php" class="<?= $currentPage === 'orders.php' || $currentPage === 'order_detail.php' || $currentPage === 'card_to_card_payments.php' ? 'active' : '' ?>">سفارش‌ها</a>
+            <a href="card_to_card_payments.php" class="<?= $currentPage === 'card_to_card_payments.php' ? 'active' : '' ?>">💳 بررسی کارت‌به‌کارت</a>
 
             <div class="nav-group-label">مالی</div>
             <a href="finance_dashboard.php" class="<?= $currentPage === 'finance_dashboard.php' ? 'active' : '' ?>">📊 داشبورد مالی</a>

@@ -113,6 +113,12 @@ next security work to pick up, not a description of the current state.
     rotate `APP_SECRET`/DB credentials, how to force-logout all sessions —
     written down before it's needed rather than during an incident.
 
+## Card-to-card payment receipt security
+
+Card-to-card receipts are treated as private financial/customer documents. The browser upload endpoint requires an authenticated customer session and CSRF token, validates the real MIME type with `finfo`, checks the image with `getimagesize()`, limits the file to 2 MiB, generates a random filename, and stores temporary files outside the public product-image URL path. Permanent receipt storage is denied by a directory `.htaccess`; the admin review endpoint requires `requireAdmin()` and streams only a receipt filename already stored on an order.
+
+The receipt token is stored only in the customer's PHP session while the checkout is pending, so another customer cannot use a guessed token to attach a file to an order. A successful card-to-card order stores the final receipt filename as an order snapshot. Payment approval is also protected server-side: an admin cannot mark a card-to-card order as `paid` unless a receipt exists.
+
 ## Private storefront content
 
 Business contact details and editable public-page copy are intentionally not

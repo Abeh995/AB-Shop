@@ -8,6 +8,11 @@
         <span style="color:var(--color-muted); font-size:.85rem; margin-right:8px;"><?= toPersianDigits(date('Y/m/d H:i', strtotime($order['created_at']))) ?></span>
     </p>
 
+    <div class="order-payment-summary">
+        <div><span>روش پرداخت</span><strong><?= e($paymentMethodLabels[$order['payment_method']] ?? $order['payment_method']) ?></strong></div>
+        <div><span>وضعیت پرداخت</span><strong><?= e($paymentLabels[$order['payment_status']] ?? $order['payment_status']) ?></strong></div>
+    </div>
+
     <div class="order-review" style="max-width:600px;">
         <?php foreach ($items as $it): ?>
             <div class="item-line">

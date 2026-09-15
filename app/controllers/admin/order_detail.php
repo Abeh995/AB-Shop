@@ -31,6 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('order_detail.php?id=' . $id);
     }
 
+    if (($_POST['action'] ?? '') === 'payment_status') {
+        $newPaymentStatus = $_POST['payment_status'] ?? '';
+        $allowedPaymentStatuses = ['unpaid', 'paid', 'failed'];
+
+        if (!in_array($newPaymentStatus, $allowedPaymentStatuses, true)) {
+            setFlash('error', 'وضعیت پرداخت نامعتبر است.');
+        } elseif ($newPaymentStatus === 'paid' && $order['payment_method'] === 'card_to_card' && empty($order['card_to_card_receipt'])) {
+            setFlash('error', 'برای تایید پرداخت کارت‌به‌کارت ابتدا باید رسید موجود باشد.');
+        } else {
+            db()->prepare("UPDATE orders SET payment_status = ? WHERE id = ?")->execute([$newPaymentStatus, $id]);
+            if ($newPaymentStatus !== $order['payment_status'] && in_array($newPaymentStatus, ['paid', 'failed'], true)) {
+                SmsService::notifyPaymentStatusChanged($order['phone'], $order['order_code'], $newPaymentStatus);
+            }
+            setFlash('success', 'وضعیت پرداخت به‌روزرسانی شد.');
+        }
+        redirect('order_detail.php?id=' . $id);
+    }
+
     $newStatus = $_POST['status'] ?? '';
     if (isset($statusLabels[$newStatus]) && $newStatus !== $order['status']) {
         db()->prepare("UPDATE orders SET status = ? WHERE id = ?")->execute([$newStatus, $id]);

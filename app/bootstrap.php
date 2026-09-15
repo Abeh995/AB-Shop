@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.8.2');
+define('APP_VERSION', '1.9.0');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------
@@ -37,6 +37,14 @@ if (!defined('BRANDING_UPLOAD_URL')) {
     define('BRANDING_UPLOAD_URL', dirname(rtrim(UPLOAD_URL, '/')) . '/branding/');
 }
 
+// Private storage for card-to-card payment receipts; files are never served directly.
+if (!defined('CARD_TO_CARD_UPLOAD_DIR')) {
+    define('CARD_TO_CARD_UPLOAD_DIR', dirname(rtrim(UPLOAD_DIR, '/')) . '/card_to_card/');
+}
+if (!defined('CARD_TO_CARD_TMP_DIR')) {
+    define('CARD_TO_CARD_TMP_DIR', CARD_TO_CARD_UPLOAD_DIR . 'tmp/');
+}
+
 // ---------- Core ----------
 require_once __DIR__ . '/core/db.php';
 require_once __DIR__ . '/core/functions.php';
@@ -57,6 +65,8 @@ require_once __DIR__ . '/services/PricingService.php';
 require_once __DIR__ . '/services/GiftService.php';
 require_once __DIR__ . '/services/ShippingService.php';
 require_once __DIR__ . '/services/AccountingService.php';
+require_once __DIR__ . '/services/OrderService.php';
+require_once __DIR__ . '/services/CardToCardReceiptService.php';
 
 /**
  * Render a view with a given set of variables (keeps logic separate from presentation).

@@ -6,6 +6,42 @@ Versioning format: `MAJOR.MINOR.PATCH` (Semantic Versioning)
 
 ---
 
+## [1.9.0] — Verified customer checkout and card-to-card payment
+
+### Summary
+Guest shoppers can still add products to a session cart without signing in, but completing checkout now requires a customer account with a verified mobile number. The old cash-on-delivery/phone-coordination option was removed and replaced by configurable Zarinpal and card-to-card payment flows.
+
+### 👤 Checkout and Guest Cart
+- Guest session carts remain available for browsing and adding/editing items without authentication.
+- A guest entering `/checkout` is redirected to `/signup?next=/checkout`.
+- The `next` destination survives signup/incomplete-login, phone verification, and, when applicable, email verification.
+- After successful phone verification, the existing guest session cart is merged into the customer's persistent cart and checkout resumes.
+- Orders can only be created for an authenticated, phone-verified customer.
+
+### 💳 Payment Methods
+- Cash-on-delivery / phone coordination was removed from Checkout.
+- Zarinpal can be enabled or disabled from the admin settings.
+- Card-to-card payment is configurable with a card number, card-holder name, and optional customer-facing note.
+- A card-to-card order is created only after a receipt image has been uploaded successfully, so stock is not reserved before the customer actually submits the receipt.
+- Card-to-card payments remain `unpaid` until an admin reviews them and can be marked `paid` or `failed`.
+
+### 🧾 Card-to-card Receipt
+- Added `/payment/card-to-card`.
+- Card number and final amount can be copied with one tap/click.
+- Receipt upload supports drag & drop, immediate preview, live progress, and replacing the selected image.
+- Only JPG/PNG/WEBP images up to 2 MB are accepted; files are stored privately.
+- Receipts are not publicly served and are streamed only through an authenticated admin endpoint.
+
+### 🛠️ Admin Panel
+- Added a dedicated "Card-to-card review" page to the sidebar.
+- Admins can review receipts, approve/reject payment status, and change the order status.
+- Order-status changes trigger the existing order-status SMS; payment approval/rejection also triggers the corresponding payment notification.
+
+### 🗄️ Database
+- Added migration `012_v1.9.0_guest_checkout_card_to_card.sql`.
+- Added `orders.payment_method`, `orders.card_to_card_receipt`, and `orders.card_to_card_submitted_at`.
+- Payment configuration uses the existing key/value `settings` table; no new settings table was needed.
+
 ## [1.8.2] — Editable Public Content and Business Information
 
 ### Summary

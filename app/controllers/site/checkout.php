@@ -1,185 +1,92 @@
 <?php
 /**
- * Checkout controller — full server-side validation, applying a coupon,
- * creating the order, and, when online payment is chosen, connecting to
- * the Zarinpal gateway.
+ * Checkout controller — collects and validates customer/order details, then
+ * routes the customer to the selected payment flow.
  */
+
+if (!isCustomerLoggedIn()) {
+    setFlash('info', 'برای نهایی کردن سفارش ابتدا یک حساب کاربری بسازید یا وارد شوید.');
+    redirect('/signup?next=' . urlencode('/checkout'));
+}
 
 $pageTitle = 'تسویه حساب';
 $errors = [];
+$prefillCustomer = currentCustomer();
 
 $cart = cartDetails();
 if (empty($cart['items'])) {
     redirect('/cart');
 }
 
-// Pre-fill the form for a logged-in customer (just a convenience; everything is still validated server-side)
-$prefillCustomer = isCustomerLoggedIn() ? currentCustomer() : null;
-
-// The coupon applied earlier (if any was set on the cart page)
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
-$couponRow = null;
 if ($appliedCoupon) {
     $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);
     if ($check['ok']) {
         $discount = $check['discount'];
-        $couponRow = $check['coupon'];
     } else {
         unset($_SESSION['coupon']);
         $appliedCoupon = null;
     }
 }
 
-// Post-order add-ons selected on the cart page, re-validated against the
-// live catalog (never trust price/stock carried over from an earlier page)
 $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
-
-// A shipping preview for the initial render (and for a re-rendered form
-// after a validation error, using whatever province was already typed).
-// The authoritative calculation happens again, server-side, inside the
-// POST handler below — this is only what the page displays before submit.
 $shippingPreview = calculateShippingCost($_POST['province'] ?? '', $cart['subtotal']);
+
+$zarinpalEnabled = getSetting('payment_zarinpal_enabled', '1') === '1';
+$cardToCardConfigured = getSetting('card_to_card_number', '') !== '' && getSetting('card_to_card_holder', '') !== '';
+$paymentMethodsAvailable = $zarinpalEnabled || $cardToCardConfigured;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
 
-    $name = trim($_POST['customer_name'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $province = trim($_POST['province'] ?? '');
-    $city = trim($_POST['city'] ?? '');
-    $address = trim($_POST['address'] ?? '');
-    $postalCode = trim($_POST['postal_code'] ?? '');
-    $notes = trim($_POST['notes'] ?? '');
-    $paymentMethod = ($_POST['payment_method'] ?? 'online') === 'cod' ? 'cod' : 'online';
+    $data = [
+        'customer_name' => trim($_POST['customer_name'] ?? ''),
+        'phone' => trim($_POST['phone'] ?? ''),
+        'email' => trim($_POST['email'] ?? ''),
+        'province' => trim($_POST['province'] ?? ''),
+        'city' => trim($_POST['city'] ?? ''),
+        'address' => trim($_POST['address'] ?? ''),
+        'postal_code' => trim($_POST['postal_code'] ?? ''),
+        'notes' => trim($_POST['notes'] ?? ''),
+    ];
+    $paymentMethod = $_POST['payment_method'] ?? '';
+    $errors = OrderService::validateCheckoutData($data);
 
-    if (mb_strlen($name) < 3) $errors[] = 'نام و نام‌خانوادگی را کامل وارد کنید.';
-    if (!isValidIranPhone($phone)) $errors[] = 'شماره موبایل معتبر نیست (مثال: 09123456789).';
-    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'ایمیل وارد شده معتبر نیست.';
-    if (mb_strlen($province) < 2) $errors[] = 'استان را وارد کنید.';
-    if (mb_strlen($city) < 2) $errors[] = 'شهر را وارد کنید.';
-    if (mb_strlen($address) < 10) $errors[] = 'آدرس دقیق را کامل‌تر وارد کنید.';
-
-    // ---------- Re-read the cart straight from the DB (price/stock are never taken from the client) ----------
-    $cart = cartDetails();
-    if (empty($cart['items'])) {
-        $errors[] = 'سبد خرید شما خالی است.';
-    }
-    foreach ($cart['items'] as $item) {
-        if ($item['qty'] > $item['stock']) {
-            $errors[] = 'موجودی «' . $item['product']['name'] . '» کافی نیست.';
-        }
+    if (!$paymentMethodsAvailable) {
+        $errors[] = 'در حال حاضر هیچ روش پرداخت فعالی برای فروشگاه تنظیم نشده است.';
+    } elseif ($paymentMethod === 'zarinpal' && !$zarinpalEnabled) {
+        $errors[] = 'پرداخت زرین‌پال در حال حاضر توسط فروشگاه غیرفعال است.';
+    } elseif ($paymentMethod === 'card_to_card' && !$cardToCardConfigured) {
+        $errors[] = 'پرداخت کارت‌به‌کارت هنوز توسط فروشگاه پیکربندی نشده است.';
+    } elseif (!in_array($paymentMethod, ['zarinpal', 'card_to_card'], true)) {
+        $errors[] = 'لطفاً یک روش پرداخت معتبر انتخاب کنید.';
     }
 
-    // ---------- Re-validate the coupon right before placing the order (it may have expired/hit its limit in the meantime) ----------
-    $discount = 0;
-    $couponRow = null;
-    if ($appliedCoupon) {
-        $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);
-        if ($check['ok']) {
-            $discount = $check['discount'];
-            $couponRow = $check['coupon'];
-        } else {
-            unset($_SESSION['coupon']);
-            $appliedCoupon = null;
-        }
+    if (!$errors && $paymentMethod === 'card_to_card') {
+        $_SESSION['pending_card_to_card_checkout'] = $data;
+        CardToCardReceiptService::discardPending();
+        redirect('/payment/card-to-card');
     }
 
-    // Re-validate post-order add-ons again, right before placing the order,
-    // for the same reason the coupon is re-checked above. A line that fails
-    // now (e.g. stock ran out) is silently dropped rather than blocking
-    // checkout — it's an optional add-on, not the order the customer came
-    // here to place.
-    $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
-    $giftItemsTotal = $postOrderResult['total'];
-
-    if (empty($errors)) {
-        $pdo = db();
-        try {
-            $pdo->beginTransaction();
-
-            $orderCode = generateOrderCode();
-            $subtotal = $cart['subtotal'];
-            $shipping = calculateShippingCost($province, $subtotal);
-            $shippingCost = $shipping['cost'];
-            $total = max(0, $subtotal - $discount + $shippingCost + $giftItemsTotal);
-            $customerId = isCustomerLoggedIn() ? (int) $_SESSION['customer_id'] : null;
-
-            $stmt = $pdo->prepare("INSERT INTO orders
-                (customer_id, order_code, customer_name, phone, email, province, city, address, postal_code, notes,
-                 subtotal, discount_total, shipping_cost, shipping_method_name, shipping_actual_cost, gift_items_total, total, coupon_code, coupon_id, status, payment_status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 'unpaid')");
-            $stmt->execute([
-                $customerId, $orderCode, $name, $phone, $email ?: null, $province, $city, $address, $postalCode ?: null, $notes ?: null,
-                $subtotal, $discount, $shippingCost, $shipping['method_name'], $shipping['actual_cost'], $giftItemsTotal, $total,
-                $couponRow ? $couponRow['code'] : null, $couponRow ? $couponRow['id'] : null,
-            ]);
-            $orderId = $pdo->lastInsertId();
-
-            $itemStmt = $pdo->prepare("INSERT INTO order_items
-                (order_id, product_id, variant_id, product_name, variant_label, unit_price, unit_cost_price, quantity, line_total)
-                VALUES (?,?,?,?,?,?,?,?,?)");
-
-            foreach ($cart['items'] as $item) {
-                $variantLabel = $item['variant'] ? trim(($item['variant']['size'] ?? '') . ' ' . ($item['variant']['color'] ?? '')) : null;
-                // A variant's own cost_price, when set, takes precedence over the product's;
-                // this mirrors how price_override already works for the sale price.
-                $unitCostPrice = $item['variant']['cost_price'] ?? $item['product']['cost_price'] ?? null;
-                $itemStmt->execute([
-                    $orderId, $item['product']['id'], $item['variant']['id'] ?? null,
-                    $item['product']['name'], $variantLabel ?: null,
-                    $item['unit_price'], $unitCostPrice, $item['qty'], $item['line_total'],
-                ]);
-
-                if (!empty($item['variant'])) {
-                    $dec = $pdo->prepare("UPDATE product_variants SET stock = stock - ? WHERE id = ? AND stock >= ?");
-                    $dec->execute([$item['qty'], $item['variant']['id'], $item['qty']]);
-                } else {
-                    $dec = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?");
-                    $dec->execute([$item['qty'], $item['product']['id'], $item['qty']]);
-                }
-                if ($dec->rowCount() === 0) {
-                    throw new Exception('موجودی کافی نیست: ' . $item['product']['name']);
-                }
-            }
-
-            if ($couponRow) {
-                CouponService::markUsed($couponRow['id']);
-            }
-
-            if ($postOrderResult['lines']) {
-                attachPostOrderLines($pdo, $orderId, $postOrderResult['lines']);
-            }
-
-            $pdo->commit();
-            cartClear();
-            unset($_SESSION['coupon']);
-            unset($_SESSION['post_order_selection']);
-
-            if ($paymentMethod === 'cod') {
-                // Cash on delivery: go straight to the success page
-                redirect('/order/success/' . $orderCode);
-            }
-
-            // ---------- Online payment: connect to Zarinpal ----------
+    if (!$errors && $paymentMethod === 'zarinpal') {
+        $result = OrderService::createFromCheckout($data, 'zarinpal');
+        if ($result['ok']) {
             $callbackUrl = rtrim(SITE_URL, '/') . '/payment/zarinpal_callback.php';
-            $payResult = ZarinpalService::request((int) $total, 'پرداخت سفارش ' . $orderCode, $callbackUrl, $phone, $email ?: null);
+            $payResult = ZarinpalService::request((int) $result['total'], 'پرداخت سفارش ' . $result['order_code'], $callbackUrl, $data['phone'], $data['email'] ?: null);
 
             if ($payResult['ok']) {
-                db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")->execute([$payResult['authority'], $orderId]);
+                db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")->execute([$payResult['authority'], $result['order_id']]);
                 redirect($payResult['pay_url']);
-            } else {
-                // The order was created successfully; only the gateway connection failed — a retry is available
-                redirect('/order/failed/' . $orderCode . '?err=' . urlencode($payResult['error']));
             }
 
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            error_log('Order creation failed: ' . $e->getMessage());
-            $errors[] = 'خطا در ثبت سفارش. لطفاً دوباره تلاش کنید. (' . (APP_DEBUG ? $e->getMessage() : 'خطای سرور') . ')';
+            redirect('/order/failed/' . $result['order_code'] . '?err=' . urlencode($payResult['error']));
         }
+        $errors[] = $result['error'];
     }
 }
 
-renderView('site/checkout', compact('pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount', 'prefillCustomer', 'postOrderResult', 'shippingPreview'));
+renderView('site/checkout', compact(
+    'pageTitle', 'errors', 'cart', 'appliedCoupon', 'discount', 'prefillCustomer',
+    'postOrderResult', 'shippingPreview', 'zarinpalEnabled', 'cardToCardConfigured', 'paymentMethodsAvailable'
+));

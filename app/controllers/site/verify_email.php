@@ -16,6 +16,10 @@ if (!empty($customer['email_verified_at'])) {
 }
 
 $pageTitle = 'احراز ایمیل';
+$next = $_SESSION['pending_auth_next'] ?? '/account';
+if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) {
+    $next = '/account';
+}
 $error = '';
 $info = '';
 
@@ -48,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = VerificationService::verifyCode($customer['id'], 'email', $code);
         if ($result['ok']) {
             setFlash('success', 'ایمیل شما با موفقیت تایید شد.');
-            redirect('/account');
+            unset($_SESSION['pending_auth_next']);
+            redirect($next);
         } else {
             $error = $result['error'];
         }

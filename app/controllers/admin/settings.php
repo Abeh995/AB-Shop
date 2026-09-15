@@ -21,6 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $section = $_POST['section'] ?? '';
 
     switch ($section) {
+        case 'payment':
+            setSetting('payment_zarinpal_enabled', isset($_POST['payment_zarinpal_enabled']) ? '1' : '0');
+            $cardNumber = preg_replace('/\D+/', '', trim($_POST['card_to_card_number'] ?? ''));
+            $cardHolder = trim($_POST['card_to_card_holder'] ?? '');
+            if ($cardNumber !== '' && strlen($cardNumber) !== 16) {
+                setFlash('error', 'شماره کارت باید ۱۶ رقم باشد.');
+                redirect('settings.php');
+            }
+            if ($cardHolder !== '' && mb_strlen($cardHolder) < 2) {
+                setFlash('error', 'نام صاحب کارت معتبر نیست.');
+                redirect('settings.php');
+            }
+            setSetting('card_to_card_number', $cardNumber);
+            setSetting('card_to_card_holder', $cardHolder);
+            setSetting('card_to_card_note', trim($_POST['card_to_card_note'] ?? ''));
+            break;
+
         case 'price_guarantee':
             setSetting('price_guarantee_enabled', isset($_POST['price_guarantee_enabled']) ? '1' : '0');
             setSetting('price_guarantee_days', (string) max(1, (int) ($_POST['price_guarantee_days'] ?? 7)));
@@ -96,6 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('settings.php');
 }
 
+$paymentZarinpalEnabled = getSetting('payment_zarinpal_enabled', '1') === '1';
+$cardToCardNumber = getSetting('card_to_card_number', '');
+$cardToCardHolder = getSetting('card_to_card_holder', '');
+$cardToCardNote = getSetting('card_to_card_note', '');
+
 $priceGuaranteeEnabled = getSetting('price_guarantee_enabled', '1') === '1';
 $priceGuaranteeDays = (int) getSetting('price_guarantee_days', '7');
 $showProductTags = getSetting('show_product_tags', '1') === '1';
@@ -164,6 +186,7 @@ function handleBrandingImageUpload(array $file): array
 
 renderView('admin/settings', compact(
     'pageTitle',
+    'paymentZarinpalEnabled', 'cardToCardNumber', 'cardToCardHolder', 'cardToCardNote',
     'priceGuaranteeEnabled', 'priceGuaranteeDays',
     'showProductTags', 'seoIndexingEnabled',
     'siteLogo',

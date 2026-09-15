@@ -87,4 +87,12 @@ class SmsService
     {
         self::send($phone, SITE_NAME . "\nوضعیت سفارش {$orderCode} به «{$statusLabel}» تغییر کرد.");
     }
+
+    public static function notifyPaymentStatusChanged(string $phone, string $orderCode, string $paymentStatus): void
+    {
+        $message = $paymentStatus === 'paid'
+            ? SITE_NAME . "\nپرداخت سفارش {$orderCode} تایید شد. با تشکر از خرید شما."
+            : SITE_NAME . "\nپرداخت سفارش {$orderCode} تایید نشد. لطفاً برای پیگیری با پشتیبانی تماس بگیرید.";
+        self::send($phone, $message);
+    }
 }

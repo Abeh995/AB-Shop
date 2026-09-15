@@ -31,5 +31,8 @@ $statusLabels = [
     'shipped' => 'ارسال شده', 'delivered' => 'تحویل داده شده', 'cancelled' => 'لغو شده',
 ];
 
+$paymentLabels = ['unpaid' => 'در انتظار پرداخت/بررسی', 'paid' => 'پرداخت‌شده', 'failed' => 'ناموفق'];
+$paymentMethodLabels = ['zarinpal' => 'زرین‌پال', 'card_to_card' => 'کارت‌به‌کارت'];
+
 $pageTitle = 'سفارش ' . $order['order_code'];
-renderView('site/account_order', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems'));
+renderView('site/account_order', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'paymentLabels', 'paymentMethodLabels'));

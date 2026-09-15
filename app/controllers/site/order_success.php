@@ -16,4 +16,5 @@ if (!$order) {
 }
 
 $pageTitle = 'ثبت سفارش موفق';
-renderView('site/order_success', compact('pageTitle', 'order'));
+$cardToCardPendingReview = $order['payment_method'] === 'card_to_card' && $order['payment_status'] === 'unpaid';
+renderView('site/order_success', compact('pageTitle', 'order', 'cardToCardPendingReview'));

@@ -143,6 +143,7 @@
                 <div class="row total-row"><span>مبلغ قابل پرداخت</span><span><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total']) ?></span></div>
                 <p style="font-size:.78rem; color:var(--color-muted); margin-top:6px;">+ هزینه ارسال، که در مرحله بعد بر اساس آدرستان محاسبه می‌شود</p>
                 <a href="/checkout" class="btn btn-primary btn-block" style="margin-top:10px;">ادامه فرآیند خرید</a>
+                <?php if (!isCustomerLoggedIn()): ?><p style="font-size:.78rem; color:var(--color-muted); margin:8px 0 0; text-align:center;">برای نهایی کردن سفارش، ابتدا حساب کاربری بسازید یا وارد شوید.</p><?php endif; ?>
             </div>
         </div>
     <?php endif; ?>
