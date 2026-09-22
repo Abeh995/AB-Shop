@@ -63,7 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $newImageName = $product['image'] ?? null;
     if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadResult = handleProductImageUpload($_FILES['image']);
+        // For existing products use the standard name immediately;
+        // for new products use a temp name (renamed after INSERT below).
+        $uploadResult = $product
+            ? handleProductImageUpload($_FILES['image'], 'product', $id, 'main')
+            : handleProductImageUpload($_FILES['image']);
         if ($uploadResult['ok']) {
             if ($newImageName && file_exists(UPLOAD_DIR . $newImageName)) {
                 @unlink(UPLOAD_DIR . $newImageName);
@@ -107,7 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = db()->prepare("INSERT INTO products (category_id, name, slug, description, price, discount_price, cost_price, sku, stock, image, is_active, is_featured) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $costPrice, $sku, $stock, $newImageName, $isActive, $isFeatured]);
-            $productId = db()->lastInsertId();
+            $productId = (int) db()->lastInsertId();
+
+            // Rename the temp-named main image now that we have the product id
+            if ($newImageName) {
+                $renamed = renameUploadedImage($newImageName, 'product', $productId, 'main');
+                if ($renamed) {
+                    $newImageName = $renamed;
+                    db()->prepare("UPDATE products SET image = ? WHERE id = ?")->execute([$renamed, $productId]);
+                }
+            }
             setFlash('success', 'محصول با موفقیت اضافه شد.');
         }
 
@@ -207,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'size' => $galleryFiles['size'][$i],
                 ];
 
-                $uploadResult = handleProductImageUpload($singleFile);
+                $uploadResult = handleProductImageUpload($singleFile, 'product', $productId, 'g' . ($maxSort + 1));
                 if ($uploadResult['ok']) {
                     $maxSort++;
                     db()->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")

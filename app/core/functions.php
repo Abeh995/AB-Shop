@@ -178,10 +178,65 @@ function siteLogoUrl(): ?string
 }
 
 /**
+ * Build a standardized filename for an uploaded asset.
+ *
+ * Pattern: {entityType}-{entityId}-{role}-{hash4}.{ext}
+ * Examples: product-5-main-a3f4.jpg, giftitem-3-main-d4e5.webp
+ *
+ * The 4-char random suffix acts as a cache-buster so browsers fetch the new
+ * version when an image is replaced without changing the URL structure.
+ *
+ * @param string $entityType  e.g. 'product', 'giftitem', 'logo'
+ * @param int    $entityId    Row id (0 for singletons like the site logo)
+ * @param string $role        e.g. 'main', 'g1', 'g2', 'site'
+ * @param string $ext         File extension without the dot, e.g. 'jpg'
+ */
+function generateStandardFilename(string $entityType, int $entityId, string $role, string $ext): string
+{
+    $hash = substr(bin2hex(random_bytes(2)), 0, 4);
+    if ($entityId > 0) {
+        return "{$entityType}-{$entityId}-{$role}-{$hash}.{$ext}";
+    }
+    // Singleton assets (e.g. logo) omit the id segment
+    return "{$entityType}-{$role}-{$hash}.{$ext}";
+}
+
+/**
+ * Rename an already-uploaded file from its temporary random name to a
+ * standardized name.  Used after INSERT when the entity id is first known.
+ *
+ * @return string|null The new filename on success, null on failure.
+ */
+function renameUploadedImage(string $oldFilename, string $entityType, int $entityId, string $role): ?string
+{
+    $oldPath = UPLOAD_DIR . $oldFilename;
+    if (!file_exists($oldPath)) {
+        return null;
+    }
+    $ext = strtolower(pathinfo($oldFilename, PATHINFO_EXTENSION));
+    $newFilename = generateStandardFilename($entityType, $entityId, $role, $ext);
+    $newPath = UPLOAD_DIR . $newFilename;
+
+    if (rename($oldPath, $newPath)) {
+        return $newFilename;
+    }
+    return null;
+}
+
+/**
  * Validate and safely store an uploaded product/gift-item image.
  * Shared by app/controllers/admin/product_edit.php and gift_item_edit.php.
+ *
+ * When $entityType and $entityId are provided the file receives a
+ * standardized, human-readable name (e.g. product-5-main-a3f4.jpg).
+ * Without them a temporary random name is generated; the caller should
+ * call renameUploadedImage() once the entity id is known.
+ *
+ * @param string $entityType  Optional, e.g. 'product', 'giftitem'
+ * @param int    $entityId    Optional, the entity's primary key
+ * @param string $role        Optional, e.g. 'main', 'g1'
  */
-function handleProductImageUpload(array $file): array
+function handleProductImageUpload(array $file, string $entityType = '', int $entityId = 0, string $role = 'main'): array
 {
     if ($file['size'] > MAX_UPLOAD_SIZE) {
         return ['ok' => false, 'error' => 'حجم تصویر نباید بیشتر از ۲ مگابایت باشد.'];
@@ -196,19 +251,43 @@ function handleProductImageUpload(array $file): array
         return ['ok' => false, 'error' => 'فقط تصاویر JPG، PNG یا WEBP مجاز هستند.'];
     }
 
+    // Integrity check: verify that the file is actually a readable, valid image
+    $imgSize = @getimagesize($file['tmp_name']);
+    if ($imgSize === false) {
+        return ['ok' => false, 'error' => 'فایل انتخابی یک تصویر معتبر نیست.'];
+    }
+
     if (!is_dir(UPLOAD_DIR)) {
         mkdir(UPLOAD_DIR, 0755, true);
     }
 
-    $filename = bin2hex(random_bytes(12)) . '.' . $allowedMimes[$mime];
+    if ($entityType !== '' && $entityId > 0) {
+        $filename = generateStandardFilename($entityType, $entityId, $role, $allowedMimes[$mime]);
+    } else {
+        // Temporary random name — caller must rename after obtaining the id
+        $filename = bin2hex(random_bytes(12)) . '.' . $allowedMimes[$mime];
+    }
     $destination = UPLOAD_DIR . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return ['ok' => false, 'error' => 'خطا در ذخیره فایل روی سرور.'];
     }
 
+    // Defense-in-depth: if JPEG file still contains EXIF/GPS metadata, re-save to strip it
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {
+        $exif = @exif_read_data($destination);
+        if ($exif && (!empty($exif['GPS']) || !empty($exif['Make']) || !empty($exif['Model']))) {
+            $gd = @imagecreatefromjpeg($destination);
+            if ($gd) {
+                imagejpeg($gd, $destination, 90);
+                imagedestroy($gd);
+            }
+        }
+    }
+
     return ['ok' => true, 'filename' => $filename];
 }
+
 
 // ---------- Product tags ----------
 

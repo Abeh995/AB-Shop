@@ -39,7 +39,7 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 │   ├── core/                  Shared application core
 │   │   ├── db.php             PDO connection (Singleton) + PHP/MySQL timezone synchronization — since 1.2.1
 │   │   ├── functions.php      Shared helpers (price formatting, slugs, automatic SKU, category hierarchy,
-│   │   │                       tags, effective stock, site logo URL, etc.)
+│   │   │                       tags, effective stock, site logo URL, standardized image naming — since 1.11.0)
 │   │   ├── csrf.php           CSRF token generation/validation
 │   │   ├── settings.php       Key-value store settings — since 1.2.0
 │   │   ├── auth.php           Admin authentication + roles (super_admin/admin)
@@ -72,8 +72,9 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 ├── ajax/                       AJAX endpoints (cart operations, coupon application/removal, etc.)
 ├── payment/                    Payment gateway endpoints (callback, retry)
 ├── assets/                     Public CSS/JS/static images
-├── uploads/products/           Uploaded product images (PHP execution disabled in this directory)
-├── uploads/branding/           Uploaded site logo (same PHP-execution restriction, derived from UPLOAD_DIR) — since 1.3.0
+├── uploads/products/           Uploaded product/gift images — standardized naming since 1.11.0
+│                                (product-{ID}-main-{hash}.ext, giftitem-{ID}-main-{hash}.ext)
+├── uploads/branding/           Uploaded site logo (logo-site-{hash}.ext) — since 1.3.0, naming standardized 1.11.0
 ├── database/
 │   ├── schema.sql              Complete schema for fresh installations
 │   └── migrations/             Upgrade scripts for existing databases
@@ -633,9 +634,16 @@ Exactly one theme is active at a time, tracked by an `active_theme_id` setting r
 
 Four starter themes are seeded by `database/migrations/007_v1.5.0_theme_system.sql`, matching the palettes compared in `theme-preview.html` (see 6.8): the store's chosen default plus three logo-derived alternatives, any of which can be activated from `admin/themes.php` without touching code.
 
-### 6.11 Admin Panel Navigation — Reorganized in 1.5.0
+### 6.12 Client-Side Image Optimization Pipeline — Introduced in 1.12.0
 
-As the admin panel has grown past a dozen pages, `views/admin/layout/header.php`'s sidebar was split into labeled groups (Products, Orders, Settings, and — for `super_admin` only — Administration) instead of one flat list. This is presentation-only: it doesn't introduce a permissions concept beyond the existing `super_admin`/`admin` role check already used elsewhere, and new pages are expected to be filed under the group matching their domain rather than appended to the end of the list.
+To prevent shared PHP hosting RAM exhaustion and CPU timeouts when admins upload modern camera photos (up to 40 MB, iPhone HEIC files, or 48 MP uncompressed raw images), the entire image resizing, conversion, and metadata stripping pipeline runs client-side in the admin's browser (`assets/js/admin-image-optimizer.js`):
+
+- **Client-Side Engine:** HTML5 Canvas resizes incoming images to web-standard limits (max 1600px along the longest dimension for products/gifts, 1000px for logos) maintaining aspect ratio, and exports to modern, SEO-friendly WebP format at configurable quality (default 82%).
+- **EXIF & GPS Sanitization:** Because Canvas rasterization extracts only raw pixel data, sensitive GPS coordinates, device models, and camera metadata are completely stripped from the exported image. Backend functions (`handleProductImageUpload` and `handleBrandingImageUpload`) provide defense-in-depth verification via `getimagesize()` and re-encoding.
+- **On-Demand HEIC Support:** iPhone HEIC/HEIF files are decoded in-browser using a vendored, lazy-loaded converter (`assets/js/vendor/heic2any.min.js`), imposing zero processing load on the server.
+- **Interactive Live Preview:** Admins view immediate before/after size comparisons (often 90–98%+ savings, e.g. 35 MB down to ~250 KB), dimensions, and an interactive quality slider with live recalculation.
+- **Transparent Form Integration:** Using standard `DataTransfer`, compressed files populate the underlying file inputs, allowing standard multipart POST form submissions with CSRF tokens to proceed without custom AJAX workflows.
+- **RULE-UI001 Compliance:** Fully responsive layout with custom mobile, tablet, and desktop views.
 
 ## 7. Versioning and Change Documentation
 

@@ -119,3 +119,11 @@ README-DEPLOY.md
 /deploy/
 /dist/
 /tools/
+
+
+# =========================================================
+# Local agent workspace (backlog, skills) — never committed
+# =========================================================
+
+/.agents/
+/.obsidian/

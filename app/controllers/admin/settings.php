@@ -171,14 +171,40 @@ function handleBrandingImageUpload(array $file): array
         return ['ok' => false, 'error' => 'فقط تصاویر JPG، PNG، WEBP یا SVG مجاز هستند.'];
     }
 
+    // Integrity check
+    if ($mime === 'image/svg+xml') {
+        $content = file_get_contents($file['tmp_name']);
+        if (stripos($content, '<svg') === false || stripos($content, '<script') !== false) {
+            return ['ok' => false, 'error' => 'فایل SVG نامعتبر یا دارای اسکریپت غیرمجاز است.'];
+        }
+    } else {
+        $imgSize = @getimagesize($file['tmp_name']);
+        if ($imgSize === false) {
+            return ['ok' => false, 'error' => 'فایل انتخابی یک تصویر معتبر نیست.'];
+        }
+    }
+
     if (!is_dir(BRANDING_UPLOAD_DIR)) {
         mkdir(BRANDING_UPLOAD_DIR, 0755, true);
     }
 
-    $filename = 'logo-' . bin2hex(random_bytes(8)) . '.' . $allowedMimes[$mime];
+    $filename = generateStandardFilename('logo', 0, 'site', $allowedMimes[$mime]);
+    $destination = BRANDING_UPLOAD_DIR . $filename;
 
-    if (!move_uploaded_file($file['tmp_name'], BRANDING_UPLOAD_DIR . $filename)) {
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return ['ok' => false, 'error' => 'خطا در ذخیره فایل روی سرور.'];
+    }
+
+    // Defense-in-depth: strip EXIF if JPEG
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {
+        $exif = @exif_read_data($destination);
+        if ($exif && (!empty($exif['GPS']) || !empty($exif['Make']) || !empty($exif['Model']))) {
+            $gd = @imagecreatefromjpeg($destination);
+            if ($gd) {
+                imagejpeg($gd, $destination, 90);
+                imagedestroy($gd);
+            }
+        }
     }
 
     return ['ok' => true, 'filename' => $filename];

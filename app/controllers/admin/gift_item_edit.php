@@ -36,7 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $newImageName = $item['image'] ?? null;
     if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadResult = handleProductImageUpload($_FILES['image']);
+        // For existing items use the standard name immediately;
+        // for new items use a temp name (renamed after INSERT below).
+        $uploadResult = $item
+            ? handleProductImageUpload($_FILES['image'], 'giftitem', $id, 'main')
+            : handleProductImageUpload($_FILES['image']);
         if ($uploadResult['ok']) {
             if ($newImageName && file_exists(UPLOAD_DIR . $newImageName)) {
                 @unlink(UPLOAD_DIR . $newImageName);
@@ -56,6 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $adminId = (int) ($_SESSION['admin_id'] ?? 0);
             $stmt = db()->prepare("INSERT INTO gift_items (name, image, is_active, is_giftable, is_post_orderable, cost_price, post_order_price, stock, created_by) VALUES (?,?,?,?,?,?,?,?,?)");
             $stmt->execute([$name, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $stock, $adminId]);
+            $newItemId = (int) db()->lastInsertId();
+
+            // Rename the temp-named image now that we have the item id
+            if ($newImageName) {
+                $renamed = renameUploadedImage($newImageName, 'giftitem', $newItemId, 'main');
+                if ($renamed) {
+                    db()->prepare("UPDATE gift_items SET image = ? WHERE id = ?")->execute([$renamed, $newItemId]);
+                }
+            }
             setFlash('success', 'آیتم با موفقیت اضافه شد.');
         }
         redirect('gift_items.php');
