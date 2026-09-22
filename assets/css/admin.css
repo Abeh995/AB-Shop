@@ -83,3 +83,5 @@
 .receipt-admin-box { margin-top:16px; padding:14px; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:#fff; display:flex; flex-direction:column; gap:10px; }
 .receipt-admin-image { width:100%; max-width:560px; max-height:620px; object-fit:contain; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:#F8F8F8; }
 .admin-table-wrap { overflow-x:auto; }
+
+.email-client,.email-reader,.email-compose{max-width:1100px}.email-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.email-switcher{display:flex;align-items:center;gap:10px;margin-bottom:18px}.email-switcher select{max-width:420px}.email-unread{font-weight:700}.email-meta{background:var(--color-bg,#f7f7f7);padding:14px;border-radius:10px;line-height:2;margin:16px 0}.email-body{white-space:pre-wrap;word-break:break-word;font:inherit;line-height:1.9;background:var(--color-bg,#f7f7f7);padding:18px;border-radius:10px;min-height:240px;direction:auto}.email-client small{opacity:.75}

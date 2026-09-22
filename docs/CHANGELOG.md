@@ -1,4 +1,20 @@
+## 1.10.0 — 2026-09-16
+
+### Added
+- Admin mailbox client with switchable email accounts, IMAP inbox viewing, message reading, and SMTP sending via PHPMailer.
+- Encrypted mailbox passwords at rest using the application secret.
+- Admin email-account configuration and a dedicated mailbox navigation section.
+- Release deployment builder now creates a web-root-only package without database files or runtime uploads.
+
 # تاریخچه تغییرات (Changelog)
+
+## 1.9.1 — بسته‌بندی حرفه‌ای استقرار و انتقال محتوای عمومی به دیتابیس
+
+- محتوای عمومی کسب‌وکار و صفحات قانونی به‌طور کامل به جدول `settings` منتقل شد و فایل‌های seed خصوصی حذف شدند.
+- اسکریپت `tools/build-deploy.ps1` برای ساخت درخت تمیز `deploy/` و فایل `dist/AB-Socks-vX.Y.Z-deploy.zip` اضافه شد.
+- بسته استقرار بر پایه allowlist تولید می‌شود و متادیتای Git، ابزارهای توسعه/هوش مصنوعی، مستندات، فایل‌های دیتابیس، secrets محلی و آپلودهای runtime را وارد نمی‌کند.
+- راهنماهای استقرار از روت پروژه به `docs/deployment/` منتقل شدند.
+
 
 این سند تمام نسخه‌های پروژه را با جزئیات دقیق فهرست می‌کند. هر نسخه جدید، تغییرات را **مو‌به‌مو نسبت به نسخه قبل** توضیح می‌دهد.
 

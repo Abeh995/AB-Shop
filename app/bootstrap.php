@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.9.0');
+define('APP_VERSION', '1.10.0');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------
@@ -53,6 +53,7 @@ require_once __DIR__ . '/core/settings.php';
 require_once __DIR__ . '/core/auth.php';
 require_once __DIR__ . '/core/customer_auth.php';
 require_once __DIR__ . '/core/cart.php';
+require_once __DIR__ . '/core/mailbox.php';
 
 // ---------- Services ----------
 require_once __DIR__ . '/services/ZarinpalService.php';
@@ -67,6 +68,7 @@ require_once __DIR__ . '/services/ShippingService.php';
 require_once __DIR__ . '/services/AccountingService.php';
 require_once __DIR__ . '/services/OrderService.php';
 require_once __DIR__ . '/services/CardToCardReceiptService.php';
+require_once __DIR__ . '/services/MailboxService.php';
 
 /**
  * Render a view with a given set of variables (keeps logic separate from presentation).

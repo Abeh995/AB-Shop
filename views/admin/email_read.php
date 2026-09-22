@@ -1,0 +1,3 @@
+<?php require APP_ROOT . '/views/admin/layout/header.php'; ?>
+<div class="admin-card email-reader"><div class="email-toolbar"><a class="btn btn-outline" href="/admin/emails.php?account=<?= (int)($account['id']??0) ?>">← صندوق ورودی</a><a class="btn btn-primary" href="/admin/email_compose.php?account=<?= (int)($account['id']??0) ?>">ارسال ایمیل</a></div>
+<?php if($error):?><div class="alert alert-danger"><?=e($error)?></div><?php elseif($message):?><h2><?=e($message['subject'])?></h2><div class="email-meta"><b>فرستنده:</b> <?=e($message['from'])?><br><b>به:</b> <?=e($message['to'])?><br><b>تاریخ:</b> <?=e($message['date'])?></div><pre class="email-body"><?=e($message['body'])?></pre><?php endif; ?></div>

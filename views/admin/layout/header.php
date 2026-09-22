@@ -46,6 +46,8 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
 
             <div class="nav-group-label">تنظیمات</div>
             <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">تنظیمات فروشگاه</a>
+            <a href="email_accounts.php" class="<?= $currentPage === 'email_accounts.php' ? 'active' : '' ?>">📧 حساب‌های ایمیل</a>
+            <a href="emails.php" class="<?= in_array($currentPage, ['emails.php', 'email_read.php', 'email_compose.php'], true) ? 'active' : '' ?>">✉️ صندوق ایمیل</a>
             <a href="themes.php" class="<?= $currentPage === 'themes.php' || $currentPage === 'theme_edit.php' ? 'active' : '' ?>">🎨 قالب و رنگ سایت</a>
             <a href="shipping_methods.php" class="<?= $currentPage === 'shipping_methods.php' || $currentPage === 'shipping_method_edit.php' ? 'active' : '' ?>">🚚 روش‌های ارسال</a>
 

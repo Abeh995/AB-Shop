@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.9.0**
+**Current version: 1.9.1**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -32,8 +32,6 @@ There is no framework routing layer, ORM, complex router, or dependency-injectio
 │
 ├── config/                    Sensitive configuration (protected by .htaccess Deny)
 │   ├── config.php             DB, Zarinpal, SMS, Faraz SMS, SMTP, Debug mode (private, gitignored)
-│   ├── private_content.php    private seed values for business/contact/public content; gitignored and optional
-│   └── private_content.example.php  placeholder-only setup example
 │
 ├── app/                       All application/backend logic — protected by .htaccess Deny
 │   ├── bootstrap.php          Shared bootstrap for all entry points; also derives BRANDING_UPLOAD_DIR/URL — since 1.3.0
@@ -464,9 +462,9 @@ The About, Terms, Privacy, and contact/business-information content is no longer
 
 - **Business information:** `store_email`, `store_phone`, `store_mobile`, `store_address`, `store_postal_code`, `store_support_hours`, `store_start_date`, and `contact_intro`. These values are consumed by About, Contact, and the Footer.
 - **Page content:** `about_content`, `terms_content`, and `privacy_content`. A deliberately limited text format is used: `## heading` creates a section heading, `- item` creates a list item, and blank lines separate paragraphs. Output is always escaped; arbitrary HTML is not accepted from this editor.
-- **Private initial defaults:** when a setting does not yet exist in the database, `app/core/settings.php` optionally loads `config/private_content.php`. That file is gitignored and may contain the real business information and initial page copy. Once an admin saves a value, the database becomes the source of truth.
-- **No personal copy in public source:** the real About story, legal text, address, phone numbers, email, and support hours are not stored in files that belong in the public repository. `config/private_content.example.php` contains placeholders only.
-- **No migration:** the existing generic `settings` table is sufficient, so this feature requires no new table, column, or database migration.
+- **Database-backed public content:** editable About, Terms, Privacy, contact/business information, and footer content are read from the `settings` table. These are operational/public content, not application secrets.
+- **No private content seed file:** real business information is not required in the repository; migration `013_v1.9.1_db_site_content.sql` seeds missing settings during the v1.9.1 upgrade without overwriting values that already exist in production.
+- **Migration 013:** `013_v1.9.1_db_site_content.sql` seeds the current initial content only when a setting is missing, preserving any value already present in production.
 - **Contact form:** the current backend does not actually persist or send contact messages, so the controller no longer shows a false success state. The public form remains hidden until real message delivery/storage is implemented.
 
 
@@ -485,6 +483,11 @@ Card-to-card settings live in the existing `settings` table: `card_to_card_numbe
 Receipt files are handled by `CardToCardReceiptService`. The browser uploads the image asynchronously to `ajax/card_to_card_receipt_upload.php`, where MIME, size, upload origin, and actual image validity are checked. The temporary file is bound to the current PHP session. After final submission it is moved into private card-to-card storage; the stored filename is snapshotted on `orders.card_to_card_receipt`. `admin/order_receipt.php` streams the image only after `requireAdmin()`, so the receipt is not exposed as a public image URL.
 
 The admin panel has a dedicated `card_to_card_payments.php` queue and an order-detail review section. Admins can mark a receipt `paid` or `failed` (a `paid` transition is rejected when no receipt exists) and can independently change the order status. Payment-status changes to `paid`/`failed` trigger a payment SMS, while order-status changes continue to use the existing order-status notification.
+
+## 5.25. Deployment packaging
+
+Production files are generated into the gitignored `deploy/` directory by `tools/build-deploy.ps1`. The script uses an explicit allowlist, excludes local configuration and runtime uploads, and can also create `dist/AB-Socks-vX.Y.Z-deploy.zip`. Database migrations are not part of the web-root deployment archive and must be applied separately.
+
 
 ## 6. Storefront Routing (Framework-Free)
 

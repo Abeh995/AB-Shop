@@ -119,19 +119,13 @@ Card-to-card receipts are treated as private financial/customer documents. The b
 
 The receipt token is stored only in the customer's PHP session while the checkout is pending, so another customer cannot use a guessed token to attach a file to an order. A successful card-to-card order stores the final receipt filename as an order snapshot. Payment approval is also protected server-side: an admin cannot mark a card-to-card order as `paid` unless a receipt exists.
 
-## Private storefront content
+## Public storefront content
 
-Business contact details and editable public-page copy are intentionally not
-hard-coded in repository files. Initial real values can live in
-`config/private_content.php`, which is gitignored alongside `config/config.php`.
-The file is optional and protected by the `config/.htaccess` deny rule. Once an
-admin saves content, the database `settings` table is the source of truth.
-`config/private_content.example.php` contains placeholders only.
+Business contact details and editable public-page copy are stored in the `settings` database table and managed through the admin settings page. These values are operational/public content, not application secrets.
 
-The public content editor uses a limited text format and escapes all rendered
-content, so an administrator cannot accidentally turn a legal-page textarea
-into arbitrary HTML. The existing eNamad embed remains the only intentional
-raw admin-controlled HTML field.
+Migration `013_v1.9.1_db_site_content.sql` seeds the current initial values only when the corresponding setting is missing, so an existing production value is preserved. No private content seed file is required or included in the repository.
+
+The public content editor uses a limited text format and escapes all rendered content, so an administrator cannot accidentally turn a legal-page textarea into arbitrary HTML. The existing eNamad embed remains the only intentional raw admin-controlled HTML field.
 
 ## Secure-development checklist for new code
 

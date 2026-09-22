@@ -1,4 +1,19 @@
+## 1.10.0 — 2026-09-16
+
+### Added
+- Admin mailbox client with switchable email accounts, IMAP inbox viewing, message reading, and SMTP sending via PHPMailer.
+- Encrypted mailbox passwords at rest using the application secret.
+- Admin email-account configuration and dedicated mailbox navigation.
+- Release deployment builder now creates a web-root-only package without database files or runtime uploads.
+
 # Changelog
+
+## 1.9.1 — Deployment packaging and database-backed storefront content
+
+- Moved editable public business/legal content fully into the `settings` database table; removed the private content seed files.
+- Added a production deployment builder at `tools/build-deploy.ps1` that generates a clean `deploy/` tree and `dist/AB-Socks-vX.Y.Z-deploy.zip`.
+- Deployment packaging uses an explicit production allowlist and excludes Git metadata, AI/editor tooling, documentation, database files, local secrets, and runtime uploads.
+- Moved release deployment notes from the project root to `docs/deployment/`.
 
 This document lists all project releases in detail. Each new release documents its changes **step by step against the previous version**.
 

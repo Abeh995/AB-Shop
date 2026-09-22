@@ -403,7 +403,18 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('announcement_bar_link', ''),
     ('footer_about_teaser_text', ''),
     ('footer_shipping_badge_text', ''),
+    ('footer_tagline', ''),
+    ('store_email', ''),
     ('store_phone', ''),
+    ('store_mobile', ''),
+    ('store_address', ''),
+    ('store_postal_code', ''),
+    ('store_support_hours', ''),
+    ('store_start_date', ''),
+    ('contact_intro', ''),
+    ('about_content', ''),
+    ('terms_content', ''),
+    ('privacy_content', ''),
     ('payment_zarinpal_enabled', '1'),
     ('card_to_card_number', ''),
     ('card_to_card_holder', ''),
@@ -443,6 +454,25 @@ CREATE TABLE IF NOT EXISTS email_log (
     debug_info TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Admin-managed domain email mailboxes. Passwords are encrypted at application level.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS email_accounts (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email_address VARCHAR(190) NOT NULL UNIQUE,
+    display_name VARCHAR(190) NOT NULL,
+    imap_host VARCHAR(190) NOT NULL,
+    imap_port SMALLINT UNSIGNED NOT NULL DEFAULT 993,
+    imap_encryption VARCHAR(10) NOT NULL DEFAULT 'ssl',
+    smtp_host VARCHAR(190) NOT NULL,
+    smtp_port SMALLINT UNSIGNED NOT NULL DEFAULT 587,
+    smtp_encryption VARCHAR(10) NOT NULL DEFAULT 'tls',
+    password_encrypted TEXT NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

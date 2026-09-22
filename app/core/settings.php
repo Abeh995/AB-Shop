@@ -25,43 +25,12 @@ function setSetting(string $key, string $value): void
 }
 
 /**
- * Load private, non-repository defaults for storefront content.
- * The file is intentionally gitignored and is optional; the database remains
- * the source of truth after an admin saves a value.
- */
-function getPrivateSiteContentDefaults(): array
-{
-    static $defaults;
-    if ($defaults !== null) {
-        return $defaults;
-    }
-
-    $defaults = [];
-    $path = APP_ROOT . '/config/private_content.php';
-    if (is_file($path)) {
-        $loaded = require $path;
-        if (is_array($loaded)) {
-            $defaults = $loaded;
-        }
-    }
-
-    return $defaults;
-}
-
-/**
- * Read editable storefront content, falling back to the local private seed
- * file only when the setting has not yet been created in the database.
+ * Read editable storefront content from the database settings table.
+ * Public business/legal content is data, not application secrets.
  */
 function getSiteContent(string $key, string $default = ''): string
 {
-    $missing = null;
-    $value = getSetting($key, $missing);
-    if ($value !== $missing) {
-        return (string) $value;
-    }
-
-    $defaults = getPrivateSiteContentDefaults();
-    return array_key_exists($key, $defaults) ? (string) $defaults[$key] : $default;
+    return (string) getSetting($key, $default);
 }
 
 /**

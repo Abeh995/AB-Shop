@@ -114,5 +114,8 @@ Desktop.ini
 *.rar
 opencode.json
 README-DEPLOY.md
-# Private storefront/business content (never publish to GitHub)
-/config/private_content.php
+
+# Generated production deployment tree
+/deploy/
+/dist/
+/tools/
