@@ -18,19 +18,41 @@
             <div class="cat-label"><a href="/category/<?= e($product['category_slug']) ?>"><?= e($product['category_name']) ?></a></div>
             <h1><?= e($product['name']) ?></h1>
 
-            <div class="price-box">
-                <span class="price-current"><?= formatPrice($finalPrice) ?></span>
+            <?php
+            $selectedVariant = null;
+            $selectedVariantLabel = '';
+            if ($hasVariants) {
+                foreach ($variants as $v) {
+                    if ($defaultVariantId !== null && (int)$v['id'] === (int)$defaultVariantId) {
+                        $selectedVariant = $v;
+                        break;
+                    }
+                }
+                if (!$selectedVariant && !empty($variants)) {
+                    $selectedVariant = $variants[0];
+                }
+                if ($selectedVariant) {
+                    $selectedVariantLabel = trim(($selectedVariant['size'] ?? '') . ' ' . ($selectedVariant['color'] ?? '')) ?: 'استاندارد';
+                }
+            }
+            $initialVariantStock = $selectedVariant ? (int)$selectedVariant['stock'] : $totalStock;
+            $initialMaxQty = min(max(1, $initialVariantStock), 20);
+            $initialPrice = ($selectedVariant && $selectedVariant['price_override'] !== null) ? (float)$selectedVariant['price_override'] : (float)$finalPrice;
+            ?>
+
+            <div class="price-box" id="productPriceBox">
+                <span class="price-current" id="productPriceCurrent"><?= formatPrice($initialPrice) ?></span>
                 <?php if ($discount > 0): ?>
-                    <span class="price-old"><?= formatPrice($product['price']) ?></span>
-                    <span class="badge-discount" style="position:static;"><?= toPersianDigits($discount) ?>%-</span>
+                    <span class="price-old" id="productPriceOld"><?= formatPrice($product['price']) ?></span>
+                    <span class="badge-discount" id="productBadgeDiscount" style="position:static;"><?= toPersianDigits($discount) ?>%-</span>
                 <?php endif; ?>
             </div>
 
-            <div class="stock-info">
-                <?php if ($totalStock <= 0): ?>
+            <div class="stock-info" id="productStockInfo">
+                <?php if ($initialVariantStock <= 0): ?>
                     <span class="stock-out">ناموجود</span>
-                <?php elseif ($totalStock <= 5): ?>
-                    <span class="stock-low">فقط <?= toPersianDigits((string)$totalStock) ?> عدد باقی مانده</span>
+                <?php elseif ($initialVariantStock <= 5): ?>
+                    <span class="stock-low">فقط <?= toPersianDigits((string)$initialVariantStock) ?> عدد باقی مانده</span>
                 <?php else: ?>
                     <span class="stock-ok">موجود در انبار</span>
                 <?php endif; ?>
@@ -43,15 +65,29 @@
 
                 <?php if ($hasVariants): ?>
                 <div class="variant-group">
-                    <label class="group-label">سایز / رنگ</label>
-                    <div class="variant-options">
+                    <label class="group-label">
+                        سایز / رنگ:
+                        <span id="selectedVariantLabel" class="selected-variant-label"><?= e($selectedVariantLabel) ?></span>
+                    </label>
+                    <div class="variant-options" id="variantOptions">
                         <?php foreach ($variants as $v):
                             $label = trim(($v['size'] ?? '') . ' ' . ($v['color'] ?? ''));
-                            $disabled = $v['stock'] <= 0;
+                            $disabled = (int)$v['stock'] <= 0;
+                            $isSelected = ($selectedVariant && (int)$v['id'] === (int)$selectedVariant['id']);
+                            $vPrice = $v['price_override'] !== null ? (float)$v['price_override'] : (float)$finalPrice;
                         ?>
-                        <label class="variant-chip <?= $disabled ? 'disabled' : '' ?>">
-                            <input type="radio" name="variant_id" value="<?= (int)$v['id'] ?>" <?= $disabled ? 'disabled' : '' ?>>
-                            <?= e($label ?: 'استاندارد') ?>
+                        <label class="variant-chip <?= $disabled ? 'disabled' : '' ?> <?= $isSelected ? 'selected' : '' ?>">
+                            <input type="radio" name="variant_id" value="<?= (int)$v['id'] ?>"
+                                   <?= $disabled ? 'disabled' : '' ?>
+                                   <?= $isSelected ? 'checked' : '' ?>
+                                   data-stock="<?= (int)$v['stock'] ?>"
+                                   data-price="<?= (float)$vPrice ?>"
+                                   data-price-formatted="<?= formatPrice($vPrice) ?>"
+                                   data-label="<?= e($label ?: 'استاندارد') ?>">
+                            <span class="variant-chip-text"><?= e($label ?: 'استاندارد') ?></span>
+                            <?php if ($disabled): ?>
+                                <span class="variant-chip-badge">ناموجود</span>
+                            <?php endif; ?>
                         </label>
                         <?php endforeach; ?>
                     </div>
@@ -62,12 +98,14 @@
                     <label class="group-label">تعداد</label>
                     <div class="qty-selector">
                         <button type="button" class="qty-minus">−</button>
-                        <input type="number" name="qty" value="1" min="1" max="<?= min($totalStock, 20) ?>">
+                        <input type="number" id="productQtyInput" name="qty" value="1" min="1" max="<?= $initialMaxQty ?>">
                         <button type="button" class="qty-plus">+</button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block">افزودن به سبد خرید</button>
+                <button type="submit" id="addToCartBtn" class="btn btn-primary btn-block" <?= ($selectedVariant && (int)$selectedVariant['stock'] <= 0) ? 'disabled' : '' ?>>
+                    <?= ($selectedVariant && (int)$selectedVariant['stock'] <= 0) ? 'این گزینه ناموجود است' : 'افزودن به سبد خرید' ?>
+                </button>
             </form>
             <?php else: ?>
                 <button class="btn btn-outline btn-block" disabled>ناموجود</button>

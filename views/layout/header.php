@@ -20,6 +20,8 @@ $announcementBarEnabled = getSetting('announcement_bar_enabled', '0') === '1';
 $announcementBarText = getSetting('announcement_bar_text', '');
 $announcementBarLink = getSetting('announcement_bar_link', '');
 $searchQuery = $_GET['q'] ?? '';
+$searchLiveEnabled = getSetting('search_live_enabled', '1') === '1';
+$searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -103,8 +105,19 @@ $searchQuery = $_GET['q'] ?? '';
 
     <div class="search-bar-panel" id="searchBarPanel">
         <div class="container">
-            <form action="/search" method="get" role="search">
-                <input type="search" name="q" class="form-control" value="<?= e($searchQuery) ?>" placeholder="نام محصول را جستجو کنید…" aria-label="جستجوی محصول" id="searchBarInput">
+            <form action="/search" method="get" role="search" id="headerSearchForm" autocomplete="off"
+                  data-live-enabled="<?= $searchLiveEnabled ? '1' : '0' ?>"
+                  data-min-chars="<?= (int) $searchMinChars ?>">
+                <div class="search-input-wrap">
+                    <input type="search" name="q" class="form-control" value="<?= e($searchQuery) ?>"
+                           placeholder="نام محصول یا دسته‌بندی را جستجو کنید…"
+                           aria-label="جستجوی محصول" id="searchBarInput"
+                           role="combobox" aria-autocomplete="list" aria-expanded="false"
+                           aria-controls="searchSuggestions" aria-haspopup="listbox" autocomplete="off">
+                    <span class="search-spinner" id="searchSpinner" aria-hidden="true" style="display:none;"></span>
+                    <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="پاک کردن متن" style="display:none;">✕</button>
+                    <div class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="پیشنهادات جستجو" style="display:none;"></div>
+                </div>
                 <button type="submit" class="btn btn-primary btn-sm">جستجو</button>
             </form>
         </div>

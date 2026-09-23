@@ -1,6 +1,21 @@
 <?php require APP_ROOT . '/views/admin/layout/header.php'; ?>
 
-<div class="admin-card" style="max-width:760px;">
+<!-- Shortcut to Appearance / Landing Settings -->
+<div class="admin-card" style="background:#FAF8F5; border-right:4px solid var(--color-primary); margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div>
+            <h4 style="margin:0 0 6px;">🎨 ظاهر و صفحه اصلی فروشگاه</h4>
+            <p style="margin:0; font-size:.85rem; color:var(--color-muted);">
+                کنترل بخش‌های صفحه اصلی (Landing)، بنرها، لوگو، تم‌ها، نوار اعلان و فوتر در بخش مستقل ظاهر قرار دارد.
+            </p>
+        </div>
+        <a href="appearance.php" class="btn btn-primary btn-sm">مدیریت ظاهر و صفحه اصلی ←</a>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:20px; align-items:start;">
+
+<div class="admin-card">
     <h3 style="margin-bottom:14px;">اطلاعات کسب‌وکار و تماس</h3>
     <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
         اطلاعات این بخش در صفحات «درباره ما» و «تماس با ما» نمایش داده می‌شوند. این مقادیر در دیتابیس فروشگاه نگهداری می‌شوند و نباید برای اطلاعات حساس مانند رمزها یا کلیدهای API استفاده شوند.
@@ -242,6 +257,47 @@
 </div>
 
 <div class="admin-card" style="max-width:560px;">
+    <h3 style="margin-bottom:14px;">جستجوی زنده و پیشنهادات محصول</h3>
+    <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
+        تنظیمات جستجوی سریع و زنده (Live Search / Autocomplete) در هدر سایت را از اینجا کنترل کنید.
+    </p>
+    <form method="post">
+        <?= csrfField() ?>
+        <input type="hidden" name="section" value="search">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <input type="checkbox" name="search_live_enabled" <?= $searchLiveEnabled ? 'checked' : '' ?>>
+            فعال بودن جستجوی زنده (پیشنهاد درلحظه هنگام تایپ)
+        </label>
+        <div class="form-group">
+            <label>حداکثر تعداد محصولات پیشنهادی</label>
+            <input class="form-control" type="number" name="search_suggest_limit" value="<?= (int) $searchSuggestLimit ?>" min="2" max="20" style="max-width:160px;">
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">تعداد ردیف‌های محصول در منوی بازشونده (پیش‌فرض: ۶)</p>
+        </div>
+        <div class="form-group">
+            <label>حداقل کاراکتر برای شروع جستجو</label>
+            <input class="form-control" type="number" name="search_min_chars" value="<?= (int) $searchMinChars ?>" min="1" max="5" style="max-width:160px;">
+            <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">حداقل تعداد حروفی که کاربر باید تایپ کند (پیش‌فرض: ۲)</p>
+        </div>
+        <div style="margin-top:16px; margin-bottom:18px; padding:12px; background:var(--color-bg); border-radius:var(--radius-sm);">
+            <label style="font-weight:600; display:block; margin-bottom:10px; font-size:.9rem;">محدوده جستجو در اطلاعات محصول:</label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:.88rem;">
+                <input type="checkbox" name="search_scope_name" <?= $searchScopeName ? 'checked' : '' ?>>
+                جستجو در عنوان / نام محصول
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:.88rem;">
+                <input type="checkbox" name="search_scope_description" <?= $searchScopeDescription ? 'checked' : '' ?>>
+                جستجو در توضیحات محصول
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:.88rem;">
+                <input type="checkbox" name="search_include_categories" <?= $searchIncludeCategories ? 'checked' : '' ?>>
+                پیشنهاد دسته‌بندی‌های مرتبط در بالای لیست
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">ذخیره تنظیمات جستجو</button>
+    </form>
+</div>
+
+<div class="admin-card" style="max-width:560px;">
     <h3 style="margin-bottom:14px;">سئو و ایندکس گوگل</h3>
     <p style="color:var(--color-muted); font-size:.9rem; margin-bottom:18px;">
         تا زمانی که محصولات واقعی و محتوای نهایی روی سایت بارگذاری نشده، بهتر است اجازه ایندکس شدن توسط گوگل داده نشود؛
@@ -257,5 +313,7 @@
         <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
     </form>
 </div>
+
+</div><!-- end grid -->
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

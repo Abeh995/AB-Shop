@@ -1,3 +1,61 @@
+## 1.15.0 — 2026-09-24
+
+### Admin Architecture Redesign (FEAT-A003), Global Live Search (FEAT-A004), SMS Patterns Management (FEAT-A002), and Landing Section Controls (FEAT-A005 / FEAT-C002)
+
+- **Admin Navigation Restructure & Mobile Bottom Navigation Bar (FEAT-A003)**:
+  - Streamlined 25+ cluttered sidebar links down to **5 core functional groups**:
+    1. 📊 **Dashboard** (`index.php`)
+    2. 📦 **Orders** (`orders.php`, `card_to_card_payments.php`) — includes a live numeric badge showing count of pending orders.
+    3. 🛍️ **Products** (`products.php`, `categories.php`, `pricing.php`, `gift_items.php`)
+    4. 📈 **Finance** (`finance_dashboard.php`, `expenses.php`)
+    5. ⚙️ **Settings** (`settings.php`, `appearance.php`, `sms_patterns.php`, `email_accounts.php`, `shipping_methods.php`, `users.php`, `diagnostics.php`)
+  - Introduced a floating, frosted glass **Bottom Navigation Bar** for Mobile & Tablet viewports for effortless single-hand thumb reach.
+  - Eliminated the giant vertical sidebar on mobile screens (`< 900px`), maximizing usable content space.
+  - Implemented an automatic horizontal topic sub-navigation pill strip (`views/admin/layout/sub_nav.php`) rendered at the top of every section with smooth touch scrolling.
+- **Admin Global Live Search with Auto-suggest (FEAT-A004)**:
+  - Embedded an intelligent search input in the admin topbar with keyboard shortcut support (`Ctrl+K` or `/`).
+  - Secure, authenticated JSON endpoint at `/ajax/admin_search.php`.
+  - Instant grouped suggestions across:
+    - ⚙️ **Admin Pages & Topics** (instant search across page names and semantic keywords)
+    - 📦 **Orders** (searches by order code, customer name, mobile phone number, or courier tracking code with status pills)
+    - 🛍️ **Products** (searches by title and SKU, showing thumbnails, prices, and live inventory)
+  - Full keyboard accessibility (ArrowDown, ArrowUp, Enter, Escape) and click-outside dismissal in `assets/js/admin.js`.
+- **SMS Patterns Management via Admin Panel (FEAT-A002)**:
+  - Created new `sms_patterns` table storing pattern codes, titles, reference pattern texts, descriptions, system event keys, variable counts, and active status.
+  - New admin pages `admin/sms_patterns.php` and `admin/sms_pattern_edit.php` with dedicated controllers and views.
+  - Dynamic Variable Builder: dynamically add/remove variables with custom variable name, data type (numeric, string, alphanumeric), max length limit, and Persian label, serialized as structured JSON.
+  - Live test sending card: test send SMS patterns with real attributes to any mobile number with instant validation.
+  - Service upgrade: `FarazSmsService.php` prioritizes database patterns for OTP and events, while preserving zero-breakage fallback to `config.php` constants.
+- **Home / Landing Section Visibility & Appearance Controls (FEAT-A005 & FEAT-C002)**:
+  - Dedicated "Appearance & Storefront" page (`admin/appearance.php`).
+  - Independent visibility and title controls for all 5 homepage sections: top intro banner (disabled by default per FEAT-C002), large category cards (disabled by default on mobile), featured carousel, newest carousel, and category pill strip.
+  - Conditional querying in `app/controllers/site/home.php`: disabled sections bypass database queries entirely.
+  - Reorganized `settings.php` into a clean responsive grid and moved branding/themes/announcements to Appearance, directly resolving BUG-A006.
+- **Database & Versioning**:
+  - Migration file `database/migrations/016_v1.15.0_sms_patterns_and_home_sections.sql` mirrored in baseline `database/schema.sql`.
+  - Bumped `APP_VERSION` to `1.15.0` in `app/bootstrap.php`.
+
+## 1.14.0 — 2026-09-23
+
+### Default Variant Selection Bug Fix (BUG-C001) & Live Search Autocomplete (FEAT-C001)
+
+- **Product Page Default In-Stock Variant Selection (BUG-C001)**:
+  - On products with size/color variants, the first in-stock variant (`stock > 0`) is now automatically selected and highlighted (`checked` and `.selected`) on page load. Direct clicks on "Add to Cart" no longer fail with false out-of-stock messages caused by missing variant IDs.
+  - Displays selected variant label prominently next to the section title (`سایز / رنگ: ...`) for instant visual clarity.
+  - Real-time client updates on variant change: adjusts displayed price (for variants with `price_override`), updates stock status badge for that variant, and syncs the quantity stepper max limit.
+  - Preserves selected variant state visually after adding to cart, enabling immediate follow-up additions without disorientation.
+  - Backend validation hardened in `ajax/cart_add.php`: enforces variant selection whenever a product has variants, and verifies that the requested quantity is within the variant's actual inventory.
+- **Storefront Live Search & Autocomplete (FEAT-C001)**:
+  - Dedicated lightweight JSON endpoint at `/ajax/search_suggest.php`.
+  - Dropdown suggestion menu under the header search bar displaying product thumbnail, name with search query highlighted (`<mark>`), category badge, sale price/discount, and stock status.
+  - Matching category suggestion pills above products and a "View all results (X products)" footer link.
+  - Shared hosting performance optimizations: 250ms debouncing, in-flight request cancellation via `AbortController`, and an in-memory client cache to eliminate redundant requests when editing queries with Backspace.
+  - Full keyboard accessibility: Arrow Up/Down navigation across suggestions, Enter to navigate to highlighted item, Escape to dismiss, plus a quick clear button.
+  - Strict compliance with `RULE-UI001` with dedicated touch and layout considerations across Mobile, Tablet, and Desktop.
+- **Configurable Storefront Search Settings in Admin Panel**:
+  - New settings card under Store Settings: toggle live search on/off, set suggestion limit (default: 6), minimum character threshold (default: 2), search scope checkboxes (product name, description), and category suggestions toggle.
+  - Database migration `database/migrations/015_v1.14.0_search_settings.sql` and mirrored into `schema.sql`.
+
 ## 1.13.0 — 2026-09-23
 
 ### Critical post-deploy bug fixes & Image Optimizer Enhancements

@@ -14,8 +14,23 @@ $perPage = 12;
 
 if ($query !== '') {
     $stockSql = effectiveStockSqlFragment('p');
-    $where = 'p.is_active = 1 AND (p.name LIKE ? OR p.description LIKE ?)';
-    $params = ['%' . $query . '%', '%' . $query . '%'];
+    $scopeName = getSetting('search_scope_name', '1') === '1';
+    $scopeDesc = getSetting('search_scope_description', '1') === '1';
+    $clauses = [];
+    $params = [];
+    if ($scopeName) {
+        $clauses[] = 'p.name LIKE ?';
+        $params[] = '%' . $query . '%';
+    }
+    if ($scopeDesc) {
+        $clauses[] = 'p.description LIKE ?';
+        $params[] = '%' . $query . '%';
+    }
+    if (empty($clauses)) {
+        $clauses[] = 'p.name LIKE ?';
+        $params[] = '%' . $query . '%';
+    }
+    $where = 'p.is_active = 1 AND (' . implode(' OR ', $clauses) . ')';
 
     $countStmt = db()->prepare("SELECT COUNT(*) FROM products p WHERE $where");
     $countStmt->execute($params);

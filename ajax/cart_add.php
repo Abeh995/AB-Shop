@@ -30,6 +30,16 @@ if (!$product || !$product['is_active']) {
     exit;
 }
 
+// Check if this product has variants
+$vCountStmt = db()->prepare('SELECT COUNT(*) FROM product_variants WHERE product_id = ?');
+$vCountStmt->execute([$productId]);
+$variantCount = (int) $vCountStmt->fetchColumn();
+
+if ($variantCount > 0 && !$variantId) {
+    echo json_encode(['ok' => false, 'message' => 'لطفاً یکی از گزینه‌های محصول (سایز / رنگ) را انتخاب کنید.']);
+    exit;
+}
+
 $availableStock = (int) $product['stock'];
 if ($variantId) {
     $vstmt = db()->prepare('SELECT id, stock FROM product_variants WHERE id = ? AND product_id = ?');
@@ -43,7 +53,12 @@ if ($variantId) {
 }
 
 if ($availableStock < 1) {
-    echo json_encode(['ok' => false, 'message' => 'این محصول در حال حاضر موجود نیست.']);
+    echo json_encode(['ok' => false, 'message' => 'این گزینه در حال حاضر موجود نیست.']);
+    exit;
+}
+
+if ($availableStock < $qty) {
+    echo json_encode(['ok' => false, 'message' => 'تعداد درخواستی بیشتر از موجودی انبار است.']);
     exit;
 }
 

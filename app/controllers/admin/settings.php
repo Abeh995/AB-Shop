@@ -51,6 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setSetting('seo_indexing_enabled', isset($_POST['seo_indexing_enabled']) ? '1' : '0');
             break;
 
+        case 'search':
+            setSetting('search_live_enabled', isset($_POST['search_live_enabled']) ? '1' : '0');
+            setSetting('search_suggest_limit', (string) max(2, min(20, (int) ($_POST['search_suggest_limit'] ?? 6))));
+            setSetting('search_min_chars', (string) max(1, min(5, (int) ($_POST['search_min_chars'] ?? 2))));
+            setSetting('search_scope_name', isset($_POST['search_scope_name']) ? '1' : '0');
+            setSetting('search_scope_description', isset($_POST['search_scope_description']) ? '1' : '0');
+            setSetting('search_include_categories', isset($_POST['search_include_categories']) ? '1' : '0');
+            break;
+
         case 'branding':
             if (!empty($_FILES['site_logo']['name']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
                 $result = handleBrandingImageUpload($_FILES['site_logo']);
@@ -122,6 +131,13 @@ $priceGuaranteeEnabled = getSetting('price_guarantee_enabled', '1') === '1';
 $priceGuaranteeDays = (int) getSetting('price_guarantee_days', '7');
 $showProductTags = getSetting('show_product_tags', '1') === '1';
 $seoIndexingEnabled = getSetting('seo_indexing_enabled', '0') === '1';
+
+$searchLiveEnabled = getSetting('search_live_enabled', '1') === '1';
+$searchSuggestLimit = (int) getSetting('search_suggest_limit', '6');
+$searchMinChars = (int) getSetting('search_min_chars', '2');
+$searchScopeName = getSetting('search_scope_name', '1') === '1';
+$searchScopeDescription = getSetting('search_scope_description', '1') === '1';
+$searchIncludeCategories = getSetting('search_include_categories', '1') === '1';
 
 $siteLogo = getSetting('site_logo', '');
 $announcementBarEnabled = getSetting('announcement_bar_enabled', '0') === '1';
@@ -216,6 +232,8 @@ renderView('admin/settings', compact(
     'paymentZarinpalEnabled', 'cardToCardNumber', 'cardToCardHolder', 'cardToCardNote',
     'priceGuaranteeEnabled', 'priceGuaranteeDays',
     'showProductTags', 'seoIndexingEnabled',
+    'searchLiveEnabled', 'searchSuggestLimit', 'searchMinChars',
+    'searchScopeName', 'searchScopeDescription', 'searchIncludeCategories',
     'siteLogo',
     'announcementBarEnabled', 'announcementBarText', 'announcementBarLink',
     'footerAboutTeaserText', 'footerShippingBadgeText', 'footerTagline',

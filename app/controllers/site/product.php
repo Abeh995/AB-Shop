@@ -35,6 +35,20 @@ $totalStock = $hasVariants ? array_sum(array_column($variants, 'stock')) : (int)
 $discount = discountPercent($product);
 $finalPrice = effectivePrice($product);
 
+// BUG-C001: Select the first in-stock variant by default, or fallback to the first variant
+$defaultVariantId = null;
+if ($hasVariants) {
+    foreach ($variants as $v) {
+        if ((int) $v['stock'] > 0) {
+            $defaultVariantId = (int) $v['id'];
+            break;
+        }
+    }
+    if ($defaultVariantId === null && !empty($variants)) {
+        $defaultVariantId = (int) $variants[0]['id'];
+    }
+}
+
 $showTags = getSetting('show_product_tags', '1') === '1';
 $tags = $showTags ? getProductTags($product['id']) : [];
 
@@ -61,5 +75,5 @@ $jsonLd = [
 
 renderView('site/product', compact(
     'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice', 'tags',
-    'metaDescription', 'ogImage', 'jsonLd'
+    'defaultVariantId', 'metaDescription', 'ogImage', 'jsonLd'
 ));

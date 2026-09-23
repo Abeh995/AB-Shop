@@ -1,6 +1,6 @@
 # Store Architecture Documentation
 
-**Current version: 1.9.1**
+**Current version: 1.15.0**
 
 This document is the canonical technical reference for the store's architecture and business logic. Whenever a technical change is made to the project, both this document and `CHANGELOG.md` must be updated.
 
@@ -658,6 +658,14 @@ On DirectAdmin shared hosting, server MIME tables often omit `image/webp`. Combi
 - **Zero-Dependency `img.php` Proxy:** A standalone PHP script in the web root that validates the requested path against directory traversal, reads the file from `uploads/`, sends optimal cache headers (1-year `Cache-Control: public, max-age=31536000, immutable` and ETag / 304 Not Modified support), and guarantees `Content-Type: image/webp`.
 - **Root `.htaccess` Routing:** Real `.webp` files under `uploads/` are intercepted via `RewriteRule ^uploads/(.+\.webp)$ /img.php?f=/uploads/$1 [QSA,L]`. Using a root-relative leading slash (`/img.php`) is required to avoid Apache treating the substitution as a local filesystem path under PHP-FPM. Non-WebP assets (JPG, PNG, GIF, SVG) bypass PHP entirely and are served directly by the web server.
 - **Clean `uploads/.htaccess`:** To prevent Apache 500 configuration errors triggered by DirectAdmin's strict `AllowOverride`, all non-permitted directives (`Options -ExecCGI`, `php_flag`, and `ForceType`) are excluded from `uploads/.htaccess`, preserving only standard script blocking and directory listing denial.
+
+### 6.14 Admin Navigation Restructure, Faraz SMS Pattern Management, and Homepage Section Controls — Introduced in 1.15.0
+
+This release harmoniously tackles four interrelated UX and operational features:
+- **Streamlined 5-Group Navigation & Mobile Bottom Bar (FEAT-A003):** Cluttered 25+ sidebar links are organized into 5 primary groups (Dashboard, Orders, Products, Finance, and Settings). On mobile and tablet screens (`< 900px`), the vertical sidebar is hidden to free 100% of the screen for work, replaced by a persistent, floating frosted-glass Bottom Navigation Bar with a live badge showing pending order counts. Horizontal topic sub-navigation pill bars (`views/admin/layout/sub_nav.php`) render at the top of each section with touch scrolling.
+- **Admin Global Live Search (FEAT-A004):** Embedded autocomplete search in the admin topbar activated with `Ctrl+K` or `/`. Connected to `/ajax/admin_search.php` to search across Admin pages and settings topics, orders (by code, customer, phone, or tracking number), and products (by name and SKU).
+- **Faraz SMS Pattern Management (FEAT-A002):** Introduces the `sms_patterns` table for pattern codes, system event mappings, and dynamic JSON variable schemas (variable name, type, max length, label). Supports live test message sending directly from the admin panel, and enhances `FarazSmsService.php` to query database patterns with fallback to `config.php` constants.
+- **Storefront Appearance & Section Visibility Controls (FEAT-A005 & FEAT-C002):** Dedicated "Appearance" section (`admin/appearance.php`) allows independent on/off toggling and title editing for all 5 homepage sections: top intro banner (disabled by default), large category grid (disabled by default on mobile), featured carousel, newest carousel, and category pill strip. Database queries in `app/controllers/site/home.php` run conditionally, eliminating unneeded DB queries when sections are disabled.
 
 ## 7. Versioning and Change Documentation
 
