@@ -51,29 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!CardToCardReceiptService::hasPending()) {
         $errors[] = 'لطفاً تصویر فیش واریز را بارگذاری کنید.';
     } else {
-        $receiptFilename = CardToCardReceiptService::finalizePending();
-        if (!$receiptFilename) {
-            $errors[] = 'ذخیره نهایی تصویر رسید انجام نشد. لطفاً دوباره تصویر را بارگذاری کنید.';
-        } else {
-            $result = OrderService::createFromCheckout($pending, 'card_to_card', $receiptFilename);
-            if ($result['ok']) {
-                unset($_SESSION['pending_card_to_card_checkout']);
-                redirect('/order/success/' . $result['order_code']);
-            }
-
-            // Keep the failed receipt available for a retry instead of losing it.
-            $finalPath = CARD_TO_CARD_UPLOAD_DIR . $receiptFilename;
-            $tokenFilename = str_replace('receipt-', '', $receiptFilename);
-            if (is_file($finalPath)) {
-                @rename($finalPath, CARD_TO_CARD_TMP_DIR . $tokenFilename);
-                $_SESSION['card_to_card_receipt'] = [
-                    'token' => pathinfo($tokenFilename, PATHINFO_FILENAME),
-                    'filename' => $tokenFilename,
-                    'uploaded_at' => time(),
-                ];
-            }
-            $errors[] = $result['error'];
+        $result = OrderService::createFromCheckout($pending, 'card_to_card');
+        if ($result['ok']) {
+            unset($_SESSION['pending_card_to_card_checkout']);
+            redirect('/order/success/' . $result['order_code']);
         }
+        $errors[] = $result['error'];
     }
     $receiptUploaded = CardToCardReceiptService::hasPending();
 }

@@ -32,6 +32,8 @@ storage_errors.log
 !/uploads/.htaccess
 !/uploads/products/
 !/uploads/products/.gitkeep
+!/uploads/branding/
+!/uploads/branding/.gitkeep
 
 android-chrome-192x192.png
 android-chrome-512x512.png

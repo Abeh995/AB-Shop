@@ -1,13 +1,18 @@
 ## 1.13.0 — 2026-09-23
 
-### Critical post-deploy bug fixes
+### Critical post-deploy bug fixes & Image Optimizer Enhancements
 
-- **WebP images not rendering on live site** — Root cause: shared host had `AllowOverride FileInfo` disabled, silently ignoring `AddType image/webp` in `.htaccess`. Three-layer fix:
-  1. New `img.php` — lightweight PHP proxy that serves all `/uploads/**/*.webp` (and JPG, PNG, SVG) requests with a correct `Content-Type` header, Conditional GET (ETag + Last-Modified), and one-year Cache-Control.
-  2. Updated root `.htaccess` — new `RewriteRule` that routes all `/uploads/` image requests through `img.php` before the generic real-file passthrough rule.
-  3. Updated `uploads/.htaccess` — triple fallback: `AddType`, `Header set Content-Type`, and `ForceType` for environments where Apache serves files directly.
+- **Resolved WebP 500 Internal Server Error & rendering on live site** — Root cause: production runs on DirectAdmin with Nginx reverse proxy + Apache backend (PHP-FPM). DirectAdmin's restricted `AllowOverride` caused directives (`Options -ExecCGI`, `php_flag`, and `ForceType`) in `uploads/.htaccess` to trigger an immediate Apache 500 error on any `/uploads/` request.
+  1. Completely sanitized `uploads/.htaccess`: removed non-permitted directives and retained only standard script execution denial (`<FilesMatch> Require all denied </FilesMatch>`) and `Options -Indexes`.
+  2. Updated root `.htaccess`: targeted `/img.php?f=/uploads/$1` with leading slash (required for PHP-FPM) and restricted proxying specifically to real `.webp` files, allowing JPG, PNG, GIF, and SVG to be served natively with zero PHP overhead.
+  3. `img.php` proxy: enforces `Content-Type: image/webp`, supports conditional GET (ETag / 304), and sets 1-year Cache-Control.
+- **Image optimization quality range & default adjustments**:
+  - Quality/compression slider range widened to **10% – 90%** (step 5).
+  - Default optimization quality set to **30%** (across main product images, gallery, gift items, and logo).
+- **Full-Screen Quality Inspector**:
+  - Modal with interactive Zoom (20% to 500% via mouse wheel and buttons), Pan/drag support, live recompression slider, and hold-to-compare against original raw image.
 - **CSS cached on browser after deploy** — `style.css` and `admin.css` `<link>` tags now include `?v=APP_VERSION`; each version bump forces browsers to re-fetch stylesheets.
-- `tools/build-deploy.ps1` updated to include `img.php` in the production package allowlist.
+- **Hosting constraints documentation**: fully documented DirectAdmin Nginx+Apache stack and `.htaccess` limits across `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, and `ARCHITECTURE.en.md`.
 
 ## 1.12.0 — 2026-09-23
 

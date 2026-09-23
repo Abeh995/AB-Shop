@@ -91,7 +91,7 @@
         <?= csrfField() ?>
         <input type="hidden" name="section" value="branding">
         <div class="form-group">
-            <input class="form-control" type="file" name="site_logo" accept="image/*,.heic,.heif,.svg" data-optimize-image="logo" data-max-dimension="1000" data-default-quality="0.85" data-allow-svg="true">
+            <input class="form-control" type="file" name="site_logo" accept="image/*,.heic,.heif,.svg" data-optimize-image="logo" data-max-dimension="1000" data-default-quality="0.30" data-allow-svg="true">
         </div>
         <div style="display:flex; gap:10px;">
             <button type="submit" class="btn btn-primary">بارگذاری لوگو</button>

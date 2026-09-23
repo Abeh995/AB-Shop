@@ -194,6 +194,7 @@ function handleBrandingImageUpload(array $file): array
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return ['ok' => false, 'error' => 'خطا در ذخیره فایل روی سرور.'];
     }
+    @chmod($destination, 0644);
 
     // Defense-in-depth: strip EXIF if JPEG
     if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {

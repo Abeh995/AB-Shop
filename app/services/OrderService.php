@@ -75,10 +75,13 @@ class OrderService
         $shippingCost = $shipping['cost'];
         $total = (int) max(0, $cart['subtotal'] - $discount + $shippingCost + $giftItemsTotal);
 
-        if ($paymentMethod === 'card_to_card' && !$receiptFilename) {
-            return ['ok' => false, 'error' => 'تصویر رسید کارت‌به‌کارت را بارگذاری کنید.', 'order_id' => null, 'order_code' => null, 'total' => null];
+        if ($paymentMethod === 'card_to_card') {
+            if (!$receiptFilename && !CardToCardReceiptService::hasPending()) {
+                return ['ok' => false, 'error' => 'تصویر رسید کارت‌به‌کارت را بارگذاری کنید.', 'order_id' => null, 'order_code' => null, 'total' => null];
+            }
         }
 
+        $finalReceipt = null;
         $pdo = db();
         try {
             $pdo->beginTransaction();
@@ -99,6 +102,15 @@ class OrderService
                 $paymentMethod, $receiptFilename,
             ]);
             $orderId = (int) $pdo->lastInsertId();
+
+            if ($paymentMethod === 'card_to_card' && empty($receiptFilename)) {
+                $finalReceipt = CardToCardReceiptService::finalizePending($orderId, $orderCode);
+                if (!$finalReceipt) {
+                    throw new Exception('ذخیره نهایی تصویر رسید انجام نشد.');
+                }
+                $receiptFilename = $finalReceipt;
+                $pdo->prepare("UPDATE orders SET card_to_card_receipt = ? WHERE id = ?")->execute([$receiptFilename, $orderId]);
+            }
 
             $itemStmt = $pdo->prepare("INSERT INTO order_items
                 (order_id, product_id, variant_id, product_name, variant_label, unit_price, unit_cost_price, quantity, line_total)
@@ -142,6 +154,9 @@ class OrderService
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
+            }
+            if ($paymentMethod === 'card_to_card' && !empty($finalReceipt)) {
+                CardToCardReceiptService::restorePending($finalReceipt);
             }
             error_log('Order creation failed: ' . $e->getMessage());
             return [

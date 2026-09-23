@@ -37,6 +37,28 @@ every technical decision in this repo:
 - **No shell access implied for the site owner.** Every migration is a
   `.sql` file applied by hand through phpMyAdmin, in numeric order. See
   "Database changes" below.
+- **Server stack: Nginx reverse proxy + Apache backend (PHP-FPM) under DirectAdmin.**
+  - **Nginx proxy layer**: Nginx serves known static files directly from disk
+    based on a server-level regex. Older DirectAdmin templates do *not* include
+    `.webp` in that static regex, forwarding `.webp` requests to the Apache backend.
+  - **Apache backend & `.htaccess` restrictions**: DirectAdmin configures Apache
+    with a restricted `AllowOverride` (`AuthConfig FileInfo Indexes Limit Options=Indexes,...`).
+    Directives like `Options -ExecCGI`, `php_flag`, `ForceType`, or `<IfModule>`
+    nested inside `<FilesMatch>` in `.htaccess` are **strictly forbidden** by the server
+    and cause Apache to immediately fail with **500 Internal Server Error** for the
+    entire directory!
+  - **`uploads/.htaccess` must remain strictly minimal**: Keep only standard script
+    execution blocking (`<FilesMatch "\.(php|php[3-8]?|phtml|pl|py|cgi|asp|sh)$"> Require all denied </FilesMatch>`)
+    and `Options -Indexes`. Never place MIME type overrides, `ForceType`, `Header set`,
+    or `Options -ExecCGI` inside `uploads/.htaccess`.
+  - **WebP image delivery via `/img.php` proxy**: Shared hosting server-level MIME
+    tables often lack `image/webp`. Combined with the `X-Content-Type-Options: nosniff`
+    security header, browsers refuse to display `.webp` files served as `application/octet-stream`.
+    Therefore, `.webp` uploads are routed via root `.htaccess` to `/img.php?f=/uploads/$1`
+    (must use a leading slash `/img.php` to prevent Apache from treating it as a filesystem
+    path under PHP-FPM). `img.php` enforces `Content-Type: image/webp`, sends 1-year cache
+    headers, and supports conditional GET (ETag / 304). Standard images (JPG, PNG, GIF, SVG)
+    continue to be served directly by the web server.
 
 ## Critical rules
 

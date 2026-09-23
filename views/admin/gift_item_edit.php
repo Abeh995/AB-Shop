@@ -18,7 +18,7 @@
             <?php if (!empty($item['image'])): ?>
                 <img src="<?= e(UPLOAD_URL . $item['image']) ?>" alt="" style="width:80px; height:80px; object-fit:cover; border-radius:8px; margin-bottom:8px; display:block;">
             <?php endif; ?>
-            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-max-dimension="1600" data-default-quality="0.82">
+            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-max-dimension="1600" data-default-quality="0.30">
         </div>
 
         <div class="form-row">

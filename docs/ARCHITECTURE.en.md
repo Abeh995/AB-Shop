@@ -14,6 +14,13 @@ The architecture follows a **Lightweight Manual MVC** pattern.
 
 There is no framework routing layer, ORM, complex router, or dependency-injection container. The application consists of procedural PHP plus a small number of simple service classes.
 
+### Hosting Environment Specifications and Constraints (Production Host)
+- **Control Panel & Server Architecture**: DirectAdmin with an **Nginx (Reverse Proxy) + Apache Backend (PHP-FPM)** setup running PHP 8.x.
+- **Hardware Quotas**: 1.5 GB disk space, 200 MB database, 80 GB/month bandwidth.
+- **URL Rewriting & `.htaccess` Limits**: Apache executes PHP code and evaluates `.htaccess` files. Due to DirectAdmin's default restricted `AllowOverride` (`AuthConfig FileInfo Indexes Limit Options=Indexes,...`), directives such as `Options -ExecCGI`, `php_flag`, `ForceType`, or nested `<IfModule>` inside `<FilesMatch>` in `.htaccess` are strictly prohibited and immediately trigger a fatal **500 Internal Server Error**.
+- **`uploads/` Directory**: The `.htaccess` inside `uploads/` is dedicated purely to security and must remain strictly minimal (blocking script execution like `.php` and disabling directory listing via `Options -Indexes`). Never add MIME overrides, `ForceType`, or `Header set` inside `uploads/.htaccess`.
+- **WebP Image Serving**: Shared hosting server MIME tables often omit `image/webp`. Combined with the `X-Content-Type-Options: nosniff` security header, browsers refuse to display `.webp` files served as generic types (`application/octet-stream`). Therefore, `.webp` requests are routed via root `.htaccess` to `/img.php` so PHP guarantees `Content-Type: image/webp` and sends 1-year cache headers.
+
 ---
 
 ## 2. Directory Structure and Responsibilities
@@ -638,12 +645,19 @@ Four starter themes are seeded by `database/migrations/007_v1.5.0_theme_system.s
 
 To prevent shared PHP hosting RAM exhaustion and CPU timeouts when admins upload modern camera photos (up to 40 MB, iPhone HEIC files, or 48 MP uncompressed raw images), the entire image resizing, conversion, and metadata stripping pipeline runs client-side in the admin's browser (`assets/js/admin-image-optimizer.js`):
 
-- **Client-Side Engine:** HTML5 Canvas resizes incoming images to web-standard limits (max 1600px along the longest dimension for products/gifts, 1000px for logos) maintaining aspect ratio, and exports to modern, SEO-friendly WebP format at configurable quality (default 82%).
+- **Client-Side Engine:** HTML5 Canvas resizes incoming images to web-standard limits (max 1600px along the longest dimension for products/gifts, 1000px for logos) maintaining aspect ratio, and exports to modern, SEO-friendly WebP format at configurable quality (slider range 10% to 90%, default 30%).
 - **EXIF & GPS Sanitization:** Because Canvas rasterization extracts only raw pixel data, sensitive GPS coordinates, device models, and camera metadata are completely stripped from the exported image. Backend functions (`handleProductImageUpload` and `handleBrandingImageUpload`) provide defense-in-depth verification via `getimagesize()` and re-encoding.
 - **On-Demand HEIC Support:** iPhone HEIC/HEIF files are decoded in-browser using a vendored, lazy-loaded converter (`assets/js/vendor/heic2any.min.js`), imposing zero processing load on the server.
-- **Interactive Live Preview:** Admins view immediate before/after size comparisons (often 90–98%+ savings, e.g. 35 MB down to ~250 KB), dimensions, and an interactive quality slider with live recalculation.
+- **Interactive Live Preview:** Admins view immediate before/after size comparisons (often 90–98%+ savings, e.g. 35 MB down to ~250 KB), dimensions, and an interactive quality slider with live recalculation, plus full-screen Zoom & Pan inspection and original photo comparison.
 - **Transparent Form Integration:** Using standard `DataTransfer`, compressed files populate the underlying file inputs, allowing standard multipart POST form submissions with CSRF tokens to proceed without custom AJAX workflows.
 - **RULE-UI001 Compliance:** Fully responsive layout with custom mobile, tablet, and desktop views.
+
+### 6.13 Web Server Architecture and WebP Image Delivery (`img.php` & `.htaccess`) — Introduced in 1.13.0
+
+On DirectAdmin shared hosting, server MIME tables often omit `image/webp`. Combined with the `X-Content-Type-Options: nosniff` security header, browsers refuse to render WebP images served with generic MIME types:
+- **Zero-Dependency `img.php` Proxy:** A standalone PHP script in the web root that validates the requested path against directory traversal, reads the file from `uploads/`, sends optimal cache headers (1-year `Cache-Control: public, max-age=31536000, immutable` and ETag / 304 Not Modified support), and guarantees `Content-Type: image/webp`.
+- **Root `.htaccess` Routing:** Real `.webp` files under `uploads/` are intercepted via `RewriteRule ^uploads/(.+\.webp)$ /img.php?f=/uploads/$1 [QSA,L]`. Using a root-relative leading slash (`/img.php`) is required to avoid Apache treating the substitution as a local filesystem path under PHP-FPM. Non-WebP assets (JPG, PNG, GIF, SVG) bypass PHP entirely and are served directly by the web server.
+- **Clean `uploads/.htaccess`:** To prevent Apache 500 configuration errors triggered by DirectAdmin's strict `AllowOverride`, all non-permitted directives (`Options -ExecCGI`, `php_flag`, and `ForceType`) are excluded from `uploads/.htaccess`, preserving only standard script blocking and directory listing denial.
 
 ## 7. Versioning and Change Documentation
 

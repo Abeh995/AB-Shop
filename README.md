@@ -24,14 +24,15 @@ and store accounting. See `docs/ARCHITECTURE.md` for the complete map.
 
 ## Why framework-free PHP
 
-The production host is a shared hosting plan: PHP 8.x, no shell access
+The production host is a shared hosting plan on DirectAdmin (Nginx reverse
+proxy in front of an Apache backend with PHP-FPM): PHP 8.x, no shell access
 beyond a file manager and phpMyAdmin, 1.5 GB disk, a 200 MB database, and
 80 GB/month of bandwidth. No Composer, no build step, no queue worker, no
 Redis. Every architectural decision in this codebase — how migrations are
-applied, how uploads are validated, how a background job would even be
-possible — is downstream of that constraint, not of unfamiliarity with the
-alternatives. `AGENTS.md` spells this out in more detail for anyone (human
-or AI) about to make a change here.
+applied, how uploads are validated and proxied for WebP MIME compatibility,
+how `.htaccess` rules avoid restricted directives — is downstream of that
+constraint, not of unfamiliarity with the alternatives. `AGENTS.md` spells
+this out in more detail for anyone (human or AI) about to make a change here.
 
 ## What's built
 

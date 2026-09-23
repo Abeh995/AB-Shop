@@ -272,6 +272,7 @@ function handleProductImageUpload(array $file, string $entityType = '', int $ent
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return ['ok' => false, 'error' => 'خطا در ذخیره فایل روی سرور.'];
     }
+    @chmod($destination, 0644);
 
     // Defense-in-depth: if JPEG file still contains EXIF/GPS metadata, re-save to strip it
     if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {

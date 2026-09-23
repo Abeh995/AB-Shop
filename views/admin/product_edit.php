@@ -90,7 +90,7 @@
             <?php if (!empty($product['image'])): ?>
                 <img src="<?= UPLOAD_URL . e($product['image']) ?>" style="width:90px; height:90px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
             <?php endif; ?>
-            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="product" data-max-dimension="1600" data-default-quality="0.82">
+            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="product" data-max-dimension="1600" data-default-quality="0.30">
         </div>
 
         <div class="form-group">
@@ -111,7 +111,7 @@
                 <p style="font-size:.82rem; color:var(--color-muted); margin-bottom:10px;">بعد از اولین ذخیره محصول، می‌توانید تصاویر گالری اضافه کنید (پایین همین صفحه دوباره ظاهر می‌شود).</p>
             <?php endif; ?>
 
-            <input class="form-control" type="file" name="gallery_images[]" accept="image/*,.heic,.heif" multiple data-optimize-image="gallery" data-max-dimension="1600" data-default-quality="0.82">
+            <input class="form-control" type="file" name="gallery_images[]" accept="image/*,.heic,.heif" multiple data-optimize-image="gallery" data-max-dimension="1600" data-default-quality="0.30">
             <p style="font-size:.78rem; color:var(--color-muted); margin-top:4px;">می‌توانید چند فایل را هم‌زمان انتخاب کنید (Ctrl/Cmd را نگه دارید). هر بار ذخیره فرم، فایل‌های انتخاب‌شده به گالری اضافه می‌شوند.</p>
         </div>
 
