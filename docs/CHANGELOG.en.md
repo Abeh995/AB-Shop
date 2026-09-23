@@ -1,3 +1,14 @@
+## 1.13.0 — 2026-09-23
+
+### Critical post-deploy bug fixes
+
+- **WebP images not rendering on live site** — Root cause: shared host had `AllowOverride FileInfo` disabled, silently ignoring `AddType image/webp` in `.htaccess`. Three-layer fix:
+  1. New `img.php` — lightweight PHP proxy that serves all `/uploads/**/*.webp` (and JPG, PNG, SVG) requests with a correct `Content-Type` header, Conditional GET (ETag + Last-Modified), and one-year Cache-Control.
+  2. Updated root `.htaccess` — new `RewriteRule` that routes all `/uploads/` image requests through `img.php` before the generic real-file passthrough rule.
+  3. Updated `uploads/.htaccess` — triple fallback: `AddType`, `Header set Content-Type`, and `ForceType` for environments where Apache serves files directly.
+- **CSS cached on browser after deploy** — `style.css` and `admin.css` `<link>` tags now include `?v=APP_VERSION`; each version bump forces browsers to re-fetch stylesheets.
+- `tools/build-deploy.ps1` updated to include `img.php` in the production package allowlist.
+
 ## 1.12.0 — 2026-09-23
 
 ### Optimized & Fixed (BUG-A001)

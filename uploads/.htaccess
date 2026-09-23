@@ -1,4 +1,4 @@
-# Prevent script execution inside the uploads directory, including malicious uploads.
+# Prevent PHP/script execution inside uploads (security)
 <IfModule mod_php7.c>
     php_flag engine off
 </IfModule>
@@ -17,3 +17,37 @@
 </FilesMatch>
 
 Options -Indexes -ExecCGI
+
+# ── MIME types: Method 1 – mod_mime (AddType) ────────────────────────────
+# Works when AllowOverride FileInfo is enabled.
+<IfModule mod_mime.c>
+    AddType image/webp  .webp
+    AddType image/svg+xml .svg .svgz
+    AddType image/jpeg  .jpg .jpeg
+    AddType image/png   .png
+</IfModule>
+
+# ── MIME types: Method 2 – mod_headers (Header set) ─────────────────────
+# Works on most shared hosts even when AllowOverride FileInfo is off.
+<IfModule mod_headers.c>
+    <FilesMatch "\.webp$">
+        Header set Content-Type "image/webp"
+    </FilesMatch>
+    <FilesMatch "\.(jpg|jpeg)$">
+        Header set Content-Type "image/jpeg"
+    </FilesMatch>
+    <FilesMatch "\.png$">
+        Header set Content-Type "image/png"
+    </FilesMatch>
+    <FilesMatch "\.svg$">
+        Header set Content-Type "image/svg+xml"
+    </FilesMatch>
+</IfModule>
+
+# ── MIME types: Method 3 – ForceType per extension ───────────────────────
+# Additional fallback for hosts where AddType is blocked.
+<FilesMatch "\.webp$">
+    <IfModule mod_mime.c>
+        ForceType image/webp
+    </IfModule>
+</FilesMatch>

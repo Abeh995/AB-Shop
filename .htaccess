@@ -8,6 +8,13 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
 # RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
 
+# ── Route uploaded images through img.php so PHP sets the correct MIME type.
+# This is the most reliable fix for shared hosts where AllowOverride FileInfo
+# is off and AddType/ForceType in .htaccess have no effect.
+# Only applies to real files (RewriteCond -f) inside the uploads directory.
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^uploads/(.+\.(webp|jpg|jpeg|png|gif|svg))$ img.php?f=/uploads/$1 [QSA,L]
+
 # --- مسیرهای واقعی فایل/پوشه مستقیم سرو شوند (assets, uploads, admin, install.php) ---
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
@@ -26,6 +33,16 @@ RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# --- تعریف MIME type استاندارد برای وب ---
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType image/svg+xml .svg .svgz
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType font/woff2 .woff2
+    AddType font/woff .woff
 </IfModule>
 
 # --- غیرفعال کردن Directory Listing ---

@@ -48,7 +48,7 @@ $searchQuery = $_GET['q'] ?? '';
 <meta name="theme-color" content="#582B1C">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/style.css?v=<?= APP_VERSION ?>">
 <?php $themeCss = activeThemeCssVars(); if ($themeCss !== ''): ?>
 <style id="active-theme-vars"><?= $themeCss ?></style>
 <?php endif; ?>

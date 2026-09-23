@@ -18,8 +18,8 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="/assets/css/style.css">
-<link rel="stylesheet" href="/assets/css/admin.css">
+<link rel="stylesheet" href="/assets/css/style.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="/assets/css/admin.css?v=<?= APP_VERSION ?>">
 </head>
 <body class="admin-body">
 

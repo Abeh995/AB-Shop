@@ -1,3 +1,14 @@
+## 1.13.0 — 2026-09-23
+
+### رفع باگ‌های حیاتی پس از استقرار ۱.۱۲
+
+- **رفع WebP: تصاویر در سایت نمایش داده نمی‌شدند** — علت ریشه‌ای: هاست اشتراکی `AllowOverride FileInfo` را غیرفعال کرده بود، در نتیجه `AddType image/webp` در `.htaccess` بی‌اثر بود. راه‌حل سه‌لایه‌ای:
+  1. فایل جدید `img.php` — پروکسی PHP سبک‌وزن که همه درخواست‌های `/uploads/**/*.webp` (و JPG, PNG, SVG) را با هدر `Content-Type` درست سرو می‌کند. شامل پشتیبانی از Conditional GET (ETag + Last-Modified) و Cache-Control یک‌ساله.
+  2. به‌روزرسانی `.htaccess` — قانون جدید `RewriteRule` که قبل از passthrough «فایل واقعی»، همه درخواست‌های `/uploads/` را به `img.php` هدایت می‌کند.
+  3. به‌روزرسانی `uploads/.htaccess` — روش‌های بازگشتی `AddType`، `Header set Content-Type` و `ForceType` برای محیط‌هایی که Apache مستقیم سرو می‌کند.
+- **رفع CSS کش شده** — هر دو هدر `style.css` و `admin.css` اکنون پارامتر `?v=APP_VERSION` دارند؛ هر بار که نسخه بامپ می‌شود مرورگرها فایل‌ها را دوباره فچ می‌کنند.
+- `tools/build-deploy.ps1` به‌روز شد تا `img.php` را در بسته استقرار بگنجاند.
+
 ## 1.12.0 — 2026-09-23
 
 ### بهینه‌سازی و حل باگ (BUG-A001)
