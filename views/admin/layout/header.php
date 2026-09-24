@@ -27,7 +27,7 @@ try {
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= APP_VERSION ?>">
 </head>
-<body class="admin-body">
+<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : '' ?>">
 
 <div class="admin-wrap">
     <aside class="admin-sidebar">

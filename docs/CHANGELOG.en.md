@@ -1,3 +1,28 @@
+## 1.16.0 — 2026-09-25
+
+### Modern Visual Redesign of Admin Dashboard Tab (High-Density UI & Adaptive Layout)
+
+- **Complete Visual Redesign of Dashboard Tab (`views/admin/dashboard.php`)**:
+  - Re-engineered the dashboard tab visually without touching or disrupting other admin tabs/sections, strictly scoped via `.admin-page-dashboard` body class.
+  - Eliminated oversized greeting banners, duplicate action buttons, and status texts; placed the 5 core KPI metric cards right at the very top (Above the Fold) with zero scroll required.
+  - Unlocked 100% full viewport width on desktop for the dashboard tab by removing the static 256px sidebar and introducing a centered, frosted glass **Floating Dock Bottom Navigation Bar** with 5 primary tabs.
+  - Reduced global base font scale to 13.5px and refined card paddings/spacings, delivering a modern high information density UI matching tools like Linear and Stripe.
+- **Dynamic Live Revenue & Orders Trend Chart (SVG Area Spline)**:
+  - Computed real 7-day revenue and order counts dynamically from database records.
+  - Interactive data nodes with floating tooltips displaying formatted revenue and order count for each day.
+- **Recent Orders Table & Adaptive Mobile Cards Stack**:
+  - Enforced `white-space: nowrap` on order codes (`#ORD-XXXX`), customer names, phone numbers, prices, and status badges, permanently resolving text-wrapping and squishing bugs on lower resolutions.
+  - Responsive layout: clean table on viewports $\ge 860$px, and automatic seamless transition to an **Adaptive Order Cards Stack** on smaller tablet/mobile viewports ($< 860$px).
+  - 1-click clipboard copy for order codes with visual checkmark toast feedback.
+- **Operational Real-time Feeds & Widgets**:
+  - Quick Actions hub with 4 direct links: New Product, Pricing Management, Appearance/Landing, and SMS Patterns.
+  - Card-to-Card instant review widget: displays the latest pending receipt with direct jump to order detail, or a clean verified state when none is pending.
+  - Critical low-stock monitoring widget displaying items with stock $\le 5$ with capacity progress bars.
+- **Command Palette & Keyboard Navigation**:
+  - Compact search trigger button in the topbar with `Ctrl+K` keycap, opening a modern search modal connected to `/ajax/admin_search.php`.
+- **Versioning**:
+  - Bumped `APP_VERSION` to `1.16.0` in `app/bootstrap.php`.
+
 ## 1.15.0 — 2026-09-24
 
 ### Admin Architecture Redesign (FEAT-A003), Global Live Search (FEAT-A004), SMS Patterns Management (FEAT-A002), and Landing Section Controls (FEAT-A005 / FEAT-C002)
