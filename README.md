@@ -92,15 +92,12 @@ lists recommended Agent Skills for this stack.
 | File | Covers |
 |---|---|
 | `AGENTS.md` | Start here for any code change — constraints, critical rules, process |
-| `docs/ARCHITECTURE.md` / `.en.md` | Full technical design, by domain, including why several past bugs happened |
+| `docs/ARCHITECTURE.md` & `docs/architecture/` | Modular technical design by domain (lifecycle, finance, auth, media) |
 | `docs/DESIGN.md` | Visual design system and the current UI/UX redesign direction |
 | `docs/SEO.md` | SEO standards, what's implemented, what's planned |
 | `SECURITY.md` | Security posture and hardening roadmap |
 | `CONTRIBUTING.md` | Commit conventions, versioning, code style |
-| `docs/CHANGELOG.md` / `.en.md` | Full version history |
-
-Persian versions of bilingual docs are canonical; English versions are
-translations for wider readability.
+| `docs/CHANGELOG.md` & `docs/CHANGELOG-ARCHIVE.md` | Version history and archived releases |
 
 ## License
 

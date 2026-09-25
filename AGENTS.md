@@ -99,6 +99,29 @@ them silently is worse than asking first.
    1.3.0 changelog entry). User-facing strings (labels, page content, admin
    panel text, error messages shown to the store owner or customer) stay in
    Persian. Don't translate UI text; don't leave new comments in Persian.
+7. **Anti-Bloat & Strict Layer Boundaries.** Keep code compact and extensible:
+   - **Controllers**: Soft ceiling 80 lines, hard ceiling 120 lines. A controller
+     must ONLY parse input, delegate to services, and hand data to a view.
+     Never write raw SQL queries or business logic directly inside a controller.
+   - **Views (`views/`)**: Pure presentation only. Exactly 0 SQL queries (`db()`),
+     0 DB mutations, and 0 direct form processing (`$_POST`).
+   - **Services (`app/services/`)**: All business logic, validations, calculations,
+     and DB operations live here as plain global functions returning
+     `['ok' => bool, 'error' => string]`.
+   - **The Boy Scout Rule**: Never leave code more bloated than you found it.
+     If a feature touches an existing long file, decompose it rather than appending.
+8. **Atomic Releases & GitHub Integration.** Every version bump in `APP_VERSION`
+   MUST be an atomic release:
+   - Update `docs/CHANGELOG.md` (English, single source of truth; keep recent ~5 releases, older in `docs/CHANGELOG-ARCHIVE.md`).
+   - Create an annotated Git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
+   - Push with tags: `git push origin main --follow-tags`.
+   - Create the GitHub Release directly via GitHub CLI (`gh release create vX.Y.Z --title "Release vX.Y.Z" --notes-file ...`).
+     Never leave untagged versions or missing GitHub releases.
+9. **Quality Gate Verification before claiming Done.** Always run:
+   ```
+   php tools/verify.php
+   ```
+   Fix all syntax errors, controller bloat, view impurities, and version mismatches.
 
 ## Making a change
 
@@ -117,50 +140,41 @@ them silently is worse than asking first.
    `ALTER TABLE`) and must never silently drop or truncate data.
 3. **Bump `APP_VERSION` in `app/bootstrap.php`** using semver
    (MAJOR.MINOR.PATCH) for anything beyond a trivial typo fix.
-4. **Update both changelogs and both architecture docs** — `docs/CHANGELOG.md`
-   and `.en.md`, and `docs/ARCHITECTURE.md` and `.en.md` if the change alters
-   documented behavior. Persian is canonical; keep the English version a
-   faithful translation, not a shorter summary. See "Documentation hygiene"
-   below before adding yet another entry to an already-large file.
+4. **Update changelog and architecture docs if behavior changed**:
+   - Add a dated entry in `docs/CHANGELOG.md` in English.
+   - If the change alters system architecture or domain design, update the
+     specific affected domain file in `docs/architecture/<domain>.md` (e.g.
+     `financial-and-stock.md`, `auth-and-security.md`, `theme-and-media.md`,
+     or `core-and-lifecycle.md`). Do not pollute architecture docs with
+     historical bug-fix narratives.
 5. **Never rewrite history in a way that breaks an existing variant/product
    id.** A recurring class of bug in this codebase has been "delete and
    recreate" logic that silently orphaned IDs other tables referenced (fixed
-   in 1.5.0 for product variants — see `docs/ARCHITECTURE.md` §5.18). Prefer
+   in 1.5.0 for product variants — see `docs/architecture/financial-and-stock.md`). Prefer
    upsert-in-place. If you're about to write a `DELETE FROM x WHERE
    parent_id = ?` followed by re-inserting everything, stop and check
    whether anything else references those rows' ids first.
 
 ## Documentation hygiene
 
-`docs/CHANGELOG.md` and `docs/ARCHITECTURE.md` (and their `.en.md` pairs)
-have grown large over many versions and now cost meaningful context to read
-in full. Handle this actively, don't just keep appending forever:
+Documentation must remain compact, modular, and token-efficient for AI agents:
 
-- **Changelog**: keep full detail for roughly the last 5 versions. When it
-  grows past that, fold older entries into a short one-paragraph summary per
-  version (or per version range) rather than deleting them — move the full
-  original text to `docs/CHANGELOG-ARCHIVE.md` if it's worth keeping
-  verbatim, referenced from the top of `CHANGELOG.md`. Do this in one
-  consolidation pass across several old versions at once, not on every
-  release.
-- **Architecture doc**: organized by system/domain, not strictly
-  chronological — that's intentional, keep it that way. If a numbered
-  section (5.x, 6.x, ...) describes something that a later change fully
-  superseded, rewrite that section to describe the current design instead of
-  appending a newer section that contradicts it. If the whole file grows
-  past a size where loading it costs more than it's worth for a typical
-  task, split a self-contained domain (e.g. accounting, or the eventual
-  design system) into its own `docs/<domain>.md` and leave a short pointer
-  behind, rather than letting one file grow indefinitely.
-- Prefer editing a section down when its content is superseded over leaving
-  the old version in place "for history" — that's what git history and the
-  changelog are for.
+- **Changelog**: `docs/CHANGELOG.md` is unified in English. Keep full detail
+  for roughly the last 5 versions. Releases older than that belong in
+  `docs/CHANGELOG-ARCHIVE.md`. `tools/verify.php` guards against changelog
+  bloat.
+- **Architecture docs**: Modularized by domain under `docs/architecture/`.
+  Architecture documents represent the *current state of the system*, not a
+  historical journal. When code changes, update the relevant domain file in
+  place rather than appending historical diaries.
+- **No duplicate files**: Never maintain parallel full-text translations or
+  duplicate deployment notes.
 
 ## Where things are
 
-- `docs/ARCHITECTURE.md` / `.en.md` — how the system works and why,
-  organized by domain, with a §8 "Known Extension Points" listing what the
-  design deliberately leaves room for.
+- `docs/ARCHITECTURE.md` & `docs/architecture/` — modular technical design by
+  domain (overview, core, finance/stock, auth/security, theme/media).
+- `docs/CHANGELOG.md` & `docs/CHANGELOG-ARCHIVE.md` — version history.
 - `docs/DESIGN.md` — visual design system and the current UI/UX redesign
   direction (read before writing any CSS/HTML for the redesign effort).
 - `docs/SEO.md` — SEO standards and what's implemented vs. planned.

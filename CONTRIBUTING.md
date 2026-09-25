@@ -29,12 +29,11 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`), tracked in `APP_VERSION`
 Every version, however small, gets:
 
 1. A bumped `APP_VERSION`.
-2. A new dated entry at the top of `docs/CHANGELOG.md` and `.en.md`.
+2. A new dated entry at the top of `docs/CHANGELOG.md` in English (keep ~5 recent versions; archive older in `docs/CHANGELOG-ARCHIVE.md`).
 3. A migration file if the schema changed (`database/migrations/`), mirrored
    into `database/schema.sql`.
-4. An `docs/ARCHITECTURE.md`/`.en.md` update if the change alters documented
-   behavior — see "Documentation hygiene" in `AGENTS.md` before adding to an
-   already-large section.
+4. A `docs/architecture/<domain>.md` update if the change alters documented system
+   architecture or domain design.
 
 ## Commit messages
 

@@ -1,799 +1,119 @@
+﻿# Changelog
+
+All notable changes to the AB-Socks project.
+This project adheres to [Semantic Versioning](https://semver.org/).
+
+> **Looking for older releases?** Releases prior to v1.12.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+
+---
+
+
 ## 1.16.0 — 2026-09-25
 
-### بازطراحی مدرن و ارتقای بصری تب داشبورد پنل ادمین (Visual Redesign & High-Density UI)
+### Modern Visual Redesign of Admin Dashboard Tab (High-Density UI & Adaptive Layout)
 
-- **بازطراحی کامل بصری تب داشبورد (`views/admin/dashboard.php`)**:
-  - بازطراحی تب داشبورد بدون دست‌زدن یا برهم‌زدن سایر صفحات پنل ادمین (ایزوله‌سازی دقیق از طریق کلاس اسکپ‌شده `.admin-page-dashboard`).
-  - حذف بنرهای حجیم و متن‌های تکراری و قرارگیری کارت‌های آمار کلیدی ۵ گانه فروش در بالاترین نقطه دید صفحه (Above the Fold) بدون نیاز به اسکرول.
-  - آزادسازی ۱۰۰٪ پهنای نمایشگر در دسکتاپ از طریق حذف سایدبار پهن در تب داشبورد و استفاده از نوار ناوبری معلق شیشه‌ای (Floating Dock) در پایین صفحه شامل ۵ تب اصلی.
-  - کاهش اندازه فونت پایه به ۱۳.۵ پیکسل و فشردگی استاندارد فاصله‌ها و کارت‌ها مطابق با دیزاین سیستم‌های مدرن جهانی جهت افزایش چشمگیر تراکم داده‌ها (High Information Density).
-- **نمودار داینامیک روند فروش و سفارش‌ها (Dynamic SVG Sales Chart)**:
-  - رسم دقیق و تعاملی مساحت و خط روند ۷ روز اخیر بر اساس داده‌های واقعی پایگاه داده و مبالغ تراکنش‌های موفق.
-  - نودهای تعاملی همراه با تولتیپ شناور مبالغ و تعداد سفارش‌های هر روز.
-- **جدول سفارش‌های اخیر و نمایش تطبیقی (Adaptive View)**:
-  - تثبیت متون، کد سفارش‌ها (`#ORD-XXXX`) و شماره‌های تماس با قانون `white-space: nowrap` جهت جلوگیری از هرگونه چندخطی شدن یا لهیدگی در رزولوشن‌های متوسط و پایین (حل باگ ارسالی کاربر).
-  - تبدیل خودکار جدول به کارت‌های فشرده و منظم (Order Cards Stack) در صفحات تبلت و موبایل (< 860px).
-  - کپی ۱-کلیکه کد سفارش با فیدبک بصری فوری و چیپ‌های رنگی تفکیک پرداخت آنلاین و کارت‌به‌کارت.
-- **ویجت‌های عملیاتی لحظه‌ای**:
-  - کارت دسترسی سریع ادمین به تعریف محصول، مدیریت قیمت‌ها، ظاهر فروشگاه و الگوهای پیامک.
-  - باکس بررسی سریع فیش کارت‌به‌کارت و اتصال به جزئیات سفارش.
-  - مانیتورینگ موجودی‌های بحرانی انبار با نوارهای پیشرفت پرشدگی ظرفیت.
-- **پالت رنگ و کامند پالت (Command Palette)**:
-  - دکمه کامپکت جستجو با کلید میانبر `Ctrl+K` و بازشدن پنجره مودال سریع جستجو متصل به اندپوینت ایجکس ادمین.
-- **نسخه‌بندی**:
-  - ارتقای نسخه سیستم به `1.16.0` در `app/bootstrap.php`.
+- **Complete Visual Redesign of Dashboard Tab (`views/admin/dashboard.php`)**:
+  - Re-engineered the dashboard tab visually without touching or disrupting other admin tabs/sections, strictly scoped via `.admin-page-dashboard` body class.
+  - Eliminated oversized greeting banners, duplicate action buttons, and status texts; placed the 5 core KPI metric cards right at the very top (Above the Fold) with zero scroll required.
+  - Unlocked 100% full viewport width on desktop for the dashboard tab by removing the static 256px sidebar and introducing a centered, frosted glass **Floating Dock Bottom Navigation Bar** with 5 primary tabs.
+  - Reduced global base font scale to 13.5px and refined card paddings/spacings, delivering a modern high information density UI matching tools like Linear and Stripe.
+- **Dynamic Live Revenue & Orders Trend Chart (SVG Area Spline)**:
+  - Computed real 7-day revenue and order counts dynamically from database records.
+  - Interactive data nodes with floating tooltips displaying formatted revenue and order count for each day.
+- **Recent Orders Table & Adaptive Mobile Cards Stack**:
+  - Enforced `white-space: nowrap` on order codes (`#ORD-XXXX`), customer names, phone numbers, prices, and status badges, permanently resolving text-wrapping and squishing bugs on lower resolutions.
+  - Responsive layout: clean table on viewports $\ge 860$px, and automatic seamless transition to an **Adaptive Order Cards Stack** on smaller tablet/mobile viewports ($< 860$px).
+  - 1-click clipboard copy for order codes with visual checkmark toast feedback.
+- **Operational Real-time Feeds & Widgets**:
+  - Quick Actions hub with 4 direct links: New Product, Pricing Management, Appearance/Landing, and SMS Patterns.
+  - Card-to-Card instant review widget: displays the latest pending receipt with direct jump to order detail, or a clean verified state when none is pending.
+  - Critical low-stock monitoring widget displaying items with stock $\le 5$ with capacity progress bars.
+- **Command Palette & Keyboard Navigation**:
+  - Compact search trigger button in the topbar with `Ctrl+K` keycap, opening a modern search modal connected to `/ajax/admin_search.php`.
+- **Versioning**:
+  - Bumped `APP_VERSION` to `1.16.0` in `app/bootstrap.php`.
 
 ## 1.15.0 — 2026-09-24
 
-### تحول ساختار و ناوبری پنل ادمین (FEAT-A003)، جستجوی زنده سراسری (FEAT-A004)، مدیریت الگوهای پیامک (FEAT-A002) و کنترل بخش‌های صفحه اصلی (FEAT-A005 / FEAT-C002)
+### Admin Architecture Redesign (FEAT-A003), Global Live Search (FEAT-A004), SMS Patterns Management (FEAT-A002), and Landing Section Controls (FEAT-A005 / FEAT-C002)
 
-- **بازطراحی ساختار ناوبری پنل ادمین با Bottom Navigation Bar موبایل و تبلت (FEAT-A003)**:
-  - کاهش بیش از ۲۵ لینک شلوغ و درهم‌ریخته سایدبار به **۵ گروه اصلی و محوری**:
-    1. 📊 **داشبورد** (`index.php`)
-    2. 📦 **سفارش‌ها** (`orders.php`, `card_to_card_payments.php`) — همراه با نشانگر عددی (Badge) تعداد سفارش‌های در انتظار بررسی
-    3. 🛍️ **محصولات** (`products.php`, `categories.php`, `pricing.php`, `gift_items.php`)
-    4. 📈 **مالی** (`finance_dashboard.php`, `expenses.php`)
-    5. ⚙️ **تنظیمات** (`settings.php`, `appearance.php`, `sms_patterns.php`, `email_accounts.php`, `shipping_methods.php`, `users.php`, `diagnostics.php`)
-  - پیاده‌سازی **Bottom Navigation Bar** شناور، مدرن و ثابت در پایین صفحه برای صفحات موبایل و تبلت با Glassmorphism مات و دسترسی آسان با یک دست.
-  - حذف سایدبار عمودی در نمایشگرهای موبایل/تبلت برای اختصاص ۱۰۰٪ پهنای نمایشگر به فضای کار ادمین و پیشگیری از اسکرول‌های طولانی.
-  - پیاده‌سازی نوار افقی دسترسی سریع به تاپیک‌ها (`views/admin/layout/sub_nav.php`) به صورت خودکار در بالای تمامی صفحات هر بخش با اسکرول لمسی نرم.
-- **جستجوی زنده و سراسری با پیشنهاد خودکار در پنل ادمین (FEAT-A004)**:
-  - اینپوت جستجوی هوشمند و یکپارچه در بالای پنل ادمین با کلید میانبر `Ctrl+K` یا کلید `/`.
-  - اندپوینت اختصاصی و ایمن با احراز دسترسی ادمین (`ajax/admin_search.php`).
-  - پیشنهاد لحظه‌ای دسته‌بندی‌شده بین:
-    - ⚙️ **صفحات و تنظیمات ادمین** (جستجو در نام و کلمات کلیدی تمام بخش‌ها)
-    - 📦 **سفارشات** (بر اساس کد سفارش، نام مشتری، شماره همراه و کد پیگیری با نمایش بج وضعیت)
-    - 🛍️ **محصولات** (بر اساس نام محصول، SKU، موجودی لحظه‌ای و تصویر بندانگشتی)
-  - کنترل کامل کیبورد (ArrowDown / ArrowUp / Enter / Escape) و بستن با کلیک در خارج منو در `assets/js/admin.js`.
-- **مدیریت کامل الگوهای پیامک فراز اس‌ام‌اس (FEAT-A002)**:
-  - ایجاد جدول جدید `sms_patterns` در پایگاه داده برای ثبت کد پترن، عنوان، متن الگو، توضیحات، رویداد متناظر سیستمی، تعداد متغیرها و وضعیت فعال/غیرفعال.
-  - صفحات جدید `admin/sms_patterns.php` و `admin/sms_pattern_edit.php` به همراه کنترلرها و ویوهای اختصاصی.
-  - فرم‌ساز متغیرهای داینامیک: امکان افزودن پویای ردیف‌های متغیر با تعیین نام انگلیسی، نوع داده (عددی، متنی، حروف‌عدد)، سقف کاراکتر و برچسب فارسی با ذخیره‌سازی ساخت‌یافته در JSON.
-  - کارت تست زنده ارسال پیامک با متغیرهای تنظیم‌شده به هر شماره دلخواه همراه با اعتبارسنجی دقیق.
-  - ارتقای `FarazSmsService.php`: پشتیبانی از الگوهای دیتابیس به صورت اولویت اول، با Fallback خودکار و ایمن به ثابت‌های `config.php` در صورت نبود رکورد دیتابیس.
-- **کنترل و مدیریت بخش‌های صفحه اصلی و ظاهر سایت (FEAT-A005 و FEAT-C002)**:
-  - ایجاد صفحه و تاپیک اختصاصی «ظاهر و صفحه اصلی» (`admin/appearance.php`).
-  - امکان روشن/خاموش کردن و ویرایش تیترهای نمایشی ۵ بخش صفحه اصلی: متن معرفی بالا (پیش‌فرض خاموش)، کارت‌های بزرگ دسته‌بندی‌ها (پیش‌فرض خاموش جهت بهینه‌سازی موبایل)، اسلایدر پیشنهاد ویژه، اسلایدر جدیدترین‌ها، و نوار افقی دسته‌بندی‌ها.
-  - اجرای بهینه و مشروط کوئری‌های دیتابیس در `app/controllers/site/home.php` به گونه‌ای که با خاموش بودن هر بخش، کوئری آن هرگز اجرا نمی‌شود.
-  - انتقال کنترل‌های لوگو، قالب و تم، نوار اعلان و فوتر به بخش ظاهر و خلوت‌سازی اساسی صفحه `settings.php` (حل باگ ساختاری BUG-A006).
-- **پایگاه داده و نسخه‌بندی**:
-  - ایجاد مایگریشن `database/migrations/016_v1.15.0_sms_patterns_and_home_sections.sql` و انعکاس در `database/schema.sql`.
-  - ارتقای نسخه سیستم به `1.15.0` در `app/bootstrap.php`.
+- **Admin Navigation Restructure & Mobile Bottom Navigation Bar (FEAT-A003)**:
+  - Streamlined 25+ cluttered sidebar links down to **5 core functional groups**:
+    1. 📊 **Dashboard** (`index.php`)
+    2. 📦 **Orders** (`orders.php`, `card_to_card_payments.php`) — includes a live numeric badge showing count of pending orders.
+    3. 🛍️ **Products** (`products.php`, `categories.php`, `pricing.php`, `gift_items.php`)
+    4. 📈 **Finance** (`finance_dashboard.php`, `expenses.php`)
+    5. ⚙️ **Settings** (`settings.php`, `appearance.php`, `sms_patterns.php`, `email_accounts.php`, `shipping_methods.php`, `users.php`, `diagnostics.php`)
+  - Introduced a floating, frosted glass **Bottom Navigation Bar** for Mobile & Tablet viewports for effortless single-hand thumb reach.
+  - Eliminated the giant vertical sidebar on mobile screens (`< 900px`), maximizing usable content space.
+  - Implemented an automatic horizontal topic sub-navigation pill strip (`views/admin/layout/sub_nav.php`) rendered at the top of every section with smooth touch scrolling.
+- **Admin Global Live Search with Auto-suggest (FEAT-A004)**:
+  - Embedded an intelligent search input in the admin topbar with keyboard shortcut support (`Ctrl+K` or `/`).
+  - Secure, authenticated JSON endpoint at `/ajax/admin_search.php`.
+  - Instant grouped suggestions across:
+    - ⚙️ **Admin Pages & Topics** (instant search across page names and semantic keywords)
+    - 📦 **Orders** (searches by order code, customer name, mobile phone number, or courier tracking code with status pills)
+    - 🛍️ **Products** (searches by title and SKU, showing thumbnails, prices, and live inventory)
+  - Full keyboard accessibility (ArrowDown, ArrowUp, Enter, Escape) and click-outside dismissal in `assets/js/admin.js`.
+- **SMS Patterns Management via Admin Panel (FEAT-A002)**:
+  - Created new `sms_patterns` table storing pattern codes, titles, reference pattern texts, descriptions, system event keys, variable counts, and active status.
+  - New admin pages `admin/sms_patterns.php` and `admin/sms_pattern_edit.php` with dedicated controllers and views.
+  - Dynamic Variable Builder: dynamically add/remove variables with custom variable name, data type (numeric, string, alphanumeric), max length limit, and Persian label, serialized as structured JSON.
+  - Live test sending card: test send SMS patterns with real attributes to any mobile number with instant validation.
+  - Service upgrade: `FarazSmsService.php` prioritizes database patterns for OTP and events, while preserving zero-breakage fallback to `config.php` constants.
+- **Home / Landing Section Visibility & Appearance Controls (FEAT-A005 & FEAT-C002)**:
+  - Dedicated "Appearance & Storefront" page (`admin/appearance.php`).
+  - Independent visibility and title controls for all 5 homepage sections: top intro banner (disabled by default per FEAT-C002), large category cards (disabled by default on mobile), featured carousel, newest carousel, and category pill strip.
+  - Conditional querying in `app/controllers/site/home.php`: disabled sections bypass database queries entirely.
+  - Reorganized `settings.php` into a clean responsive grid and moved branding/themes/announcements to Appearance, directly resolving BUG-A006.
+- **Database & Versioning**:
+  - Migration file `database/migrations/016_v1.15.0_sms_patterns_and_home_sections.sql` mirrored in baseline `database/schema.sql`.
+  - Bumped `APP_VERSION` to `1.15.0` in `app/bootstrap.php`.
 
 ## 1.14.0 — 2026-09-23
 
-### رفع باگ بحرانی انتخاب واریانت (BUG-C001) و جستجوی زنده (FEAT-C001)
+### Default Variant Selection Bug Fix (BUG-C001) & Live Search Autocomplete (FEAT-C001)
 
-- **رفع باگ انتخاب پیش‌فرض Variant موجود در صفحه محصول (BUG-C001)**:
-  - در صفحه محصولات دارای تنوع (سایز/رنگ)، اکنون اولین واریانتی که دارای موجودی باشد (`stock > 0`) به صورت خودکار در زمان بارگذاری صفحه انتخاب و علامت‌گذاری (`checked` و کلاس `.selected`) می‌شود تا کلیک مستقیم روی «افزودن به سبد خرید» هرگز با خطای نادرست عدم موجودی روبرو نشود.
-  - نمایش برچسب واریانت انتخاب‌شده روبه‌روی عنوان مشخصات (`سایز / رنگ: ...`) برای وضوح بصری و شفافیت تصمیم کاربر.
-  - به‌روزرسانی تعاملی قیمت (در صورت وجود `price_override` روی واریانت)، وضعیت موجودی همان واریانت و تنظیم سقف فیلد تعداد سفارش (`qty`) هنگام انتخاب هر واریانت.
-  - حفظ وضعیت بصری انتخاب واریانت پس از ثبت موفق در سبد خرید بدون پرش یا برهم‌خوردن فرم.
-  - اصلاح و اعتبارسنجی بک‌اند در `ajax/cart_add.php`: اجباری شدن انتخاب واریانت برای کالاهای دارای تنوع و بررسی دقیق سقف موجودی درخواستی نسبت به انبار.
-- **جستجوی زنده و هوشمند محصولات در فروشگاه (FEAT-C001)**:
-  - اندپوینت اختصاصی و پرسرعت `/ajax/search_suggest.php` با پاسخ بهینه JSON.
-  - منوی بازشونده پیشنهادات زنده (Autocomplete Dropdown) زیر نوار جستجوی هدر شامل عکس محصول، نام با هایلایت عبارت جستجو (`<mark>`)، برچسب دسته‌بندی، قیمت و تخفیف، و برچسب وضعیت موجودی.
-  - قابلیت پیشنهاد دسته‌بندی‌های مرتبط در بالای لیست و دکمه «مشاهده همه نتایج (X محصول)» در پایین منو.
-  - عملکرد سبک و پایدار روی هاست اشتراکی: مکانیزم Debounce (۲۵۰ میلی‌ثانیه)، لغو درخواست‌های منقضی‌شده با `AbortController`، و کش هوشمند کلاینت‌ساید در حافظه مرورگر برای جلوگیری از درخواست‌های تکراری روی Backspace و اصلاح تایپ.
-  - ناوبری کامل با کیبورد: کلیدهای جهت‌نمای بالا و پایین برای حرکت روی آیتم‌ها، Enter برای رفتن به لینک انتخاب‌شده، و Esc برای بستن منو؛ همراه با دکمه پاک‌کردن سریع متن (Clear button).
-  - رعایت دقیق قانون `RULE-UI001` با بهینه‌سازی مستقل و لمس آسان برای موبایل، تبلت و دسکتاپ.
-- **تنظیمات داینامیک جستجو از پنل ادمین**:
-  - کارت تنظیمات جدید در بخش تنظیمات فروشگاه: فعال/غیرفعال کردن جستجوی زنده، تنظیم سقف تعداد محصولات پیشنهادی (پیش‌فرض: ۶)، حداقل کاراکتر شروع جستجو (پیش‌فرض: ۲)، تعیین حوزه جستجو (نام محصول، توضیحات) و فعال‌سازی پیشنهاد دسته‌بندی‌ها بدون نیاز به Hardcode.
-  - ایجاد مایگریشن دیتابیس `database/migrations/015_v1.14.0_search_settings.sql` و اعمال در `schema.sql`.
+- **Product Page Default In-Stock Variant Selection (BUG-C001)**:
+  - On products with size/color variants, the first in-stock variant (`stock > 0`) is now automatically selected and highlighted (`checked` and `.selected`) on page load. Direct clicks on "Add to Cart" no longer fail with false out-of-stock messages caused by missing variant IDs.
+  - Displays selected variant label prominently next to the section title (`سایز / رنگ: ...`) for instant visual clarity.
+  - Real-time client updates on variant change: adjusts displayed price (for variants with `price_override`), updates stock status badge for that variant, and syncs the quantity stepper max limit.
+  - Preserves selected variant state visually after adding to cart, enabling immediate follow-up additions without disorientation.
+  - Backend validation hardened in `ajax/cart_add.php`: enforces variant selection whenever a product has variants, and verifies that the requested quantity is within the variant's actual inventory.
+- **Storefront Live Search & Autocomplete (FEAT-C001)**:
+  - Dedicated lightweight JSON endpoint at `/ajax/search_suggest.php`.
+  - Dropdown suggestion menu under the header search bar displaying product thumbnail, name with search query highlighted (`<mark>`), category badge, sale price/discount, and stock status.
+  - Matching category suggestion pills above products and a "View all results (X products)" footer link.
+  - Shared hosting performance optimizations: 250ms debouncing, in-flight request cancellation via `AbortController`, and an in-memory client cache to eliminate redundant requests when editing queries with Backspace.
+  - Full keyboard accessibility: Arrow Up/Down navigation across suggestions, Enter to navigate to highlighted item, Escape to dismiss, plus a quick clear button.
+  - Strict compliance with `RULE-UI001` with dedicated touch and layout considerations across Mobile, Tablet, and Desktop.
+- **Configurable Storefront Search Settings in Admin Panel**:
+  - New settings card under Store Settings: toggle live search on/off, set suggestion limit (default: 6), minimum character threshold (default: 2), search scope checkboxes (product name, description), and category suggestions toggle.
+  - Database migration `database/migrations/015_v1.14.0_search_settings.sql` and mirrored into `schema.sql`.
 
 ## 1.13.0 — 2026-09-23
 
-### رفع باگ‌های حیاتی پس از استقرار ۱.۱۲ و ارتقای بهینه‌ساز تصویر
+### Critical post-deploy bug fixes & Image Optimizer Enhancements
 
-- **رفع قطعی خطای ۵۰۰ پوشه `uploads` و سرو WebP** — علت ریشه‌ای: سرور از ترکیب Nginx Reverse Proxy + Apache در DirectAdmin استفاده می‌کند و به دلیل محدودیت `AllowOverride`، دستوراتی نظیر `Options -ExecCGI`، `php_flag` و `ForceType` در `uploads/.htaccess` منجر به خطای پیکربندی آپاچی (500 Internal Server Error) می‌شدند.
-  1. پاکسازی کامل `uploads/.htaccess`: حذف دستورات ناسازگار و باقی گذاشتن تنها قوانین مسدودسازی اجرای اسکریپت‌ها (`<FilesMatch> Require all denied </FilesMatch>`) و `Options -Indexes`.
-  2. به‌روزرسانی قاعده ریشه `.htaccess`: هدایت فقط فایل‌های `.webp` واقعی به `/img.php?f=/uploads/$1` با اسلش مطلق جهت سازگاری کامل با PHP-FPM. سایر پسوندها (jpg, png, svg) به صورت Native توسط وب‌سرور سرو می‌شوند.
-  3. پروکسی `img.php`: تزریق قطعی `Content-Type: image/webp`، پشتیبانی از اعتبارسنجی مشروط ETag / 304 و کش یک‌ساله.
-- **ارتقای بازه و مقدار پیش‌فرض فشرده‌سازی تصویر**:
-  - بازه درصد فشرده‌سازی/کیفیت تصویر به دامنه **۱۰٪ تا ۹۰٪** تغییر یافت.
-  - مقدار پیش‌فرض فشرده‌سازی روی **۳۰٪** تنظیم شد (در تمامی فرم‌های آپلود شامل تصویر اصلی محصول، گالری، گیفت آیتم و لوگوی سایت).
-- **بازرس تمام‌صفحه بررسی کیفیت (Full-Screen Inspector)**:
-  - مودال تمام‌صفحه با قابلیت بزرگ‌نمایی (Zoom از ۲۰٪ تا ۵۰۰٪ با دکمه و غلتک ماوس)، جابجایی تصویر (Pan / Drag)، اسلایدر کیفیت زنده و دکمه نگه‌داشتن برای مقایسه لحظه‌ای با تصویر خام اصلی.
-- **رفع CSS کش شده** — هر دو هدر `style.css` و `admin.css` اکنون پارامتر `?v=APP_VERSION` دارند.
-- **مستندسازی محدودیت‌های هاست**: ثبت کامل مشخصات Nginx + Apache در DirectAdmin و محدودیت‌های `.htaccess` در `AGENTS.md`، `README.md`، `ARCHITECTURE.md` و `ARCHITECTURE.en.md`.
+- **Resolved WebP 500 Internal Server Error & rendering on live site** — Root cause: production runs on DirectAdmin with Nginx reverse proxy + Apache backend (PHP-FPM). DirectAdmin's restricted `AllowOverride` caused directives (`Options -ExecCGI`, `php_flag`, and `ForceType`) in `uploads/.htaccess` to trigger an immediate Apache 500 error on any `/uploads/` request.
+  1. Completely sanitized `uploads/.htaccess`: removed non-permitted directives and retained only standard script execution denial (`<FilesMatch> Require all denied </FilesMatch>`) and `Options -Indexes`.
+  2. Updated root `.htaccess`: targeted `/img.php?f=/uploads/$1` with leading slash (required for PHP-FPM) and restricted proxying specifically to real `.webp` files, allowing JPG, PNG, GIF, and SVG to be served natively with zero PHP overhead.
+  3. `img.php` proxy: enforces `Content-Type: image/webp`, supports conditional GET (ETag / 304), and sets 1-year Cache-Control.
+- **Image optimization quality range & default adjustments**:
+  - Quality/compression slider range widened to **10% – 90%** (step 5).
+  - Default optimization quality set to **30%** (across main product images, gallery, gift items, and logo).
+- **Full-Screen Quality Inspector**:
+  - Modal with interactive Zoom (20% to 500% via mouse wheel and buttons), Pan/drag support, live recompression slider, and hold-to-compare against original raw image.
+- **CSS cached on browser after deploy** — `style.css` and `admin.css` `<link>` tags now include `?v=APP_VERSION`; each version bump forces browsers to re-fetch stylesheets.
+- **Hosting constraints documentation**: fully documented DirectAdmin Nginx+Apache stack and `.htaccess` limits across `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, and `ARCHITECTURE.en.md`.
 
 ## 1.12.0 — 2026-09-23
 
-### بهینه‌سازی و حل باگ (BUG-A001)
-- پایپ‌لاین بهینه‌سازی کلاینت‌ساید تصاویر با Canvas در مرورگر ادمین (`assets/js/admin-image-optimizer.js`): تبدیل خودکار به WebP، ریسایز هوشمند با حفظ نسبت، و کاهش حجم تا بیش از ۹۰ الی ۹۸ درصد بدون فشار به RAM و CPU هاست اشتراکی.
-- پشتیبانی کامل از فایل‌های حجیم (تا ۳۰ الی ۴۰ مگابایت) و فرمت اختصاصی دوربین آیفون (HEIC/HEIF) با کتابخانه لود درجا (`assets/js/vendor/heic2any.min.js`).
-- حذف ۱۰۰٪ اطلاعات حساس، موقعیت مکانی (GPS) و متادیتای دوربین (EXIF) در مرورگر و لایه دفاعی تکمیلی در بک‌اند.
-- پیش‌نمایش زنده (Live Preview) با کارت مقایسه حجم قبل/بعد، درصد صرفه‌جویی، ابعاد و اسلایدر تعاملی تنظیم کیفیت.
-- یکپارچه‌سازی با تصویر اصلی و گالری محصولات، گیفت‌باکس‌ها و لوگوی سایت (با حفظ وکتور SVG).
-- رعایت کامل قانون RULE-UI001 برای ریسپانسیو اختصاصی در موبایل، تبلت و دسکتاپ.
-- اعتبارسنجی بک‌اند با `getimagesize()` و پالایش تکمیلی امنیتی در `functions.php` و `settings.php`.
-
-## 1.11.0 — 2026-09-22
-
-### افزوده‌شده (FEAT-A001)
-- نام‌گذاری استاندارد تمام فایل‌های آپلودی: تصاویر اصلی محصول (`product-{ID}-main-{hash}.ext`)، گالری (`product-{ID}-g{sort}-{hash}.ext`)، گیفت آیتم (`giftitem-{ID}-main-{hash}.ext`) و لوگو (`logo-site-{hash}.ext`).
-- توابع جدید `generateStandardFilename()` و `renameUploadedImage()` در `app/core/functions.php` برای تولید نام‌های معنادار و rename فایل‌های موقت بعد از INSERT.
-- تابع `handleProductImageUpload()` پارامترهای `$entityType`، `$entityId` و `$role` را پشتیبانی می‌کند.
-- اسکریپت migration یکبار‌مصرف (`admin/migrate_image_names.php`) برای rename تصاویر قبلی — فقط super_admin.
-
-## 1.10.0 — 2026-09-16
-
-### Added
-- Admin mailbox client with switchable email accounts, IMAP inbox viewing, message reading, and SMTP sending via PHPMailer.
-- Encrypted mailbox passwords at rest using the application secret.
-- Admin email-account configuration and a dedicated mailbox navigation section.
-- Release deployment builder now creates a web-root-only package without database files or runtime uploads.
-
-# تاریخچه تغییرات (Changelog)
-
-## 1.9.1 — بسته‌بندی حرفه‌ای استقرار و انتقال محتوای عمومی به دیتابیس
-
-- محتوای عمومی کسب‌وکار و صفحات قانونی به‌طور کامل به جدول `settings` منتقل شد و فایل‌های seed خصوصی حذف شدند.
-- اسکریپت `tools/build-deploy.ps1` برای ساخت درخت تمیز `deploy/` و فایل `dist/AB-Socks-vX.Y.Z-deploy.zip` اضافه شد.
-- بسته استقرار بر پایه allowlist تولید می‌شود و متادیتای Git، ابزارهای توسعه/هوش مصنوعی، مستندات، فایل‌های دیتابیس، secrets محلی و آپلودهای runtime را وارد نمی‌کند.
-- راهنماهای استقرار از روت پروژه به `docs/deployment/` منتقل شدند.
-
-
-این سند تمام نسخه‌های پروژه را با جزئیات دقیق فهرست می‌کند. هر نسخه جدید، تغییرات را **مو‌به‌مو نسبت به نسخه قبل** توضیح می‌دهد.
-
-فرمت شماره نسخه: `MAJOR.MINOR.PATCH` (Semantic Versioning)
-
----
-
-## [۱.۹.۰] — احراز مشتری پیش از Checkout و پرداخت کارت‌به‌کارت
-
-### خلاصه
-فرآیند خرید مهمان از حالت ثبت مستقیم سفارش خارج شد: مهمان همچنان می‌تواند بدون ورود کالا را به سبد اضافه کند، اما برای نهایی‌کردن خرید ابتدا به ثبت‌نام/ورود هدایت می‌شود و احراز شماره موبایل باید با موفقیت انجام شود. همچنین «پرداخت در محل» حذف و دو روش پرداخت «زرین‌پال» و «کارت‌به‌کارت» جایگزین شدند.
-
-### 👤 Checkout و Guest Cart
-- سبد مهمان همچنان Session-based باقی می‌ماند و افزودن/ویرایش کالا بدون ورود مجاز است.
-- ورود به `/checkout` برای کاربر مهمان به `/signup?next=/checkout` هدایت می‌شود.
-- مسیر `next` از ثبت‌نام/ورود ناقص تا احراز موبایل و در صورت نیاز احراز ایمیل حفظ می‌شود.
-- پس از احراز موفق موبایل، سبد Session مهمان طبق منطق قبلی به سبد دائمی حساب منتقل می‌شود و سپس کاربر به Checkout برمی‌گردد.
-- ایجاد سفارش فقط برای مشتری احراز‌شده انجام می‌شود.
-
-### 💳 روش‌های پرداخت
-- پرداخت در محل/هماهنگی تلفنی از Checkout حذف شد.
-- زرین‌پال از پنل تنظیمات قابل فعال/غیرفعال‌کردن است.
-- کارت‌به‌کارت با شماره کارت، نام صاحب کارت و توضیحات اختیاری از پنل تنظیمات پیکربندی می‌شود.
-- سفارش کارت‌به‌کارت فقط بعد از ارسال موفق تصویر رسید ایجاد می‌شود؛ بنابراین قبل از ارسال رسید، موجودی کالا بی‌دلیل رزرو نمی‌شود.
-- وضعیت پرداخت کارت‌به‌کارت تا بررسی ادمین `unpaid` باقی می‌ماند و ادمین می‌تواند آن را تأیید (`paid`) یا رد (`failed`) کند.
-
-### 🧾 رسید کارت‌به‌کارت
-- صفحه اختصاصی `/payment/card-to-card` اضافه شد.
-- شماره کارت و مبلغ نهایی با یک کلیک قابل کپی هستند.
-- آپلود رسید دارای Drag & Drop، پیش‌نمایش فوری، درصد پیشرفت زنده و امکان تغییر تصویر است.
-- فقط JPG/PNG/WEBP و حداکثر ۲ مگابایت پذیرفته می‌شود و فایل‌ها در storage خصوصی نگهداری می‌شوند.
-- رسید مستقیماً از وب قابل دسترسی نیست و فقط از endpoint احراز‌شده پنل ادمین سرو می‌شود.
-
-### 🛠️ پنل مدیریت
-- بخش «بررسی کارت‌به‌کارت» به Sidebar اضافه شد.
-- ادمین می‌تواند رسید را مشاهده، وضعیت پرداخت را تأیید/رد و وضعیت خود سفارش را تغییر دهد.
-- تغییر وضعیت سفارش پیامک وضعیت سفارش را فعال می‌کند؛ تغییر پرداخت به تأیید یا رد نیز پیامک پرداخت مربوطه را ثبت/ارسال می‌کند.
-
-### 🗄️ دیتابیس
-- Migration جدید `012_v1.9.0_guest_checkout_card_to_card.sql` اضافه شد.
-- ستون‌های `orders.payment_method`, `orders.card_to_card_receipt` و `orders.card_to_card_submitted_at` اضافه شدند.
-- تنظیمات پرداخت جدید در جدول موجود `settings` ذخیره می‌شوند؛ جدول جدیدی برای تنظیمات لازم نیست.
-
-## [۱.۸.۲] — مدیریت داینامیک محتوای عمومی و اطلاعات کسب‌وکار
-
-### خلاصه
-صفحات «درباره ما»، «قوانین و مقررات»، «حریم خصوصی و امنیت» و اطلاعات تماس از حالت Hard-code خارج شدند و از پنل مدیریت قابل ویرایش هستند. برای جلوگیری از انتشار اطلاعات واقعی کسب‌وکار در GitHub، مقادیر اولیه واقعی در `config/private_content.php` نگهداری می‌شوند؛ این فایل gitignored است و بعد از ذخیره توسط ادمین، دیتابیس منبع اصلی اطلاعات خواهد بود.
-
-### ✨ محتوای داینامیک
-- اطلاعات تماس و کسب‌وکار در جدول موجود `settings` ذخیره می‌شوند.
-- متن About، Terms و Privacy از پنل ادمین قابل ویرایش است.
-- برای متن صفحات از قالب محدود و امن `## heading` / `- item` / پاراگراف استفاده می‌شود و HTML دلخواه پذیرفته نمی‌شود.
-- Footer نیز از اطلاعات تماس و متن برند ذخیره‌شده در تنظیمات استفاده می‌کند.
-
-### 🔒 جداسازی اطلاعات خصوصی از Repository
-- `config/private_content.php` به `.gitignore` اضافه شد.
-- `config/private_content.example.php` فقط Placeholder دارد و قابل انتشار است.
-- متن واقعی About، Terms، Privacy، آدرس، تلفن، موبایل و ایمیل در فایل‌های عمومی Repository قرار نمی‌گیرند.
-
-### 🧩 صفحات عمومی
-- Route جدید `/privacy` و Controller/View مربوط به آن اضافه شد.
-- Terms و About از محتوای ذخیره‌شده در تنظیمات استفاده می‌کنند.
-- Contact اطلاعات تماس را به‌صورت داینامیک نمایش می‌دهد و دیگر موفقیت کاذب برای فرم غیرفعال نشان نمی‌دهد.
-
-### 🗄️ تغییرات دیتابیس
-هیچ جدول یا ستون جدیدی لازم نیست. جدول Key-Value موجود `settings` برای این قابلیت کافی است و Migration جدیدی وجود ندارد.
-
-## [۱.۸.۱] — تکمیل خودکار OTP پیامکی و به‌روزرسانی پترن فراز
-
-### خلاصه
-این نسخه پشتیبانی از OTP وابسته به دامنه برای صفحه احراز شماره موبایل را اضافه می‌کند و اتصال فراز اس‌ام‌اس را با پترن جدید ثبت‌شده هماهنگ می‌کند. منطق فعلی احراز سمت سرور، Schema دیتابیس، اعتبار کد، محدودیت تعداد تلاش و فاصله ارسال مجدد بدون تغییر باقی مانده‌اند. این نسخه فقط تغییر سطح برنامه و یکپارچه‌سازی مرورگر است و Migration جدیدی برای دیتابیس ندارد.
-
-### ✨ به‌روزرسانی پترن فراز (`app/services/FarazSmsService.php`)
-پترن ثبت‌شده فعلی فراز به دو متغیر نیاز دارد، چون مقدار OTP باید هم در بخش قابل‌خواندن برای کاربر و هم در خط پایانی استاندارد مربوط به OTP وابسته به دامنه قرار بگیرد:
-
-```text
-کد احراز:
-%code%
-AB Socks-Shop
-
-@absocks.ir #%code2%
-```
-
-متد `FarazSmsService::sendOtp()` همان کد شش‌رقمی را برای هر دو متغیر می‌فرستد: `%code% = $code` و `%code2% = $code`. نام متغیر اصلی همچنان از طریق `FARAZ_OTP_PATTERN_VAR` قابل تنظیم است؛ متغیر دوم یعنی `code2` ثابت مانده چون بخشی از پترن فعلی ثبت‌شده در پنل فراز است. پارامتر `number_format = 'english'` نیز همان مقدار صحیح API باقی مانده است.
-
-خط آخر پیامک عمداً آخرین خط باقی می‌ماند و OTP را با ساختار استاندارد `@domain #OTP` به دامنه `absocks.ir` متصل می‌کند.
-
-### ✨ تکمیل خودکار کد در مرورگر (`views/site/verify_phone.php`)
-فیلد ورود کد احراز اکنون این موارد را اعلام می‌کند:
-
-- `autocomplete="one-time-code"` برای شناسایی/تکمیل خودکار OTP توسط مرورگر
-- `inputmode="numeric"` و `pattern="[0-9]{6}"` برای مشخص‌کردن کد عددی شش‌رقمی
-- `maxlength="6"` برای هماهنگی با طول OTP سمت سرور
-
-علاوه بر این، صفحه در صورت پشتیبانی مرورگر، WebOTP API را نیز فعال می‌کند. در مرورگرهای سازگار، `navigator.credentials.get()` با Transport پیامک صدا زده می‌شود؛ کد دریافت‌شده داخل همان input موجود قرار می‌گیرد و همان فرم احراز فعلی ارسال می‌شود. مرورگرهای بدون پشتیبانی بدون خطا به Flow ورود دستی ادامه می‌دهند.
-
-WebOTP به HTTPS نیاز دارد و پشتیبانی مرورگری آن کامل نیست؛ بنابراین قابلیت تکمیلی محسوب می‌شود، نه تنها مسیر احراز. مسیر Cross-Browser اصلی همچنان ترکیب `autocomplete="one-time-code"` و فرمت استاندارد پیامک وابسته به دامنه است.
-
-### ⚠️ محدودیت فعلی Flow
-در حال حاضر کنترلرهای ثبت‌نام و ورود ناقص، SMS را **قبل از redirect به `/verify-phone`** ارسال می‌کنند. در نتیجه listener مربوط به WebOTP بعد از ارسال درخواست پیامک فعال می‌شود. اگر SMS قبل از فعال‌شدن درخواست WebOTP برسد، ممکن است WebOTP برنامه‌ای کد را نگیرد؛ با این حال AutoFill استاندارد `one-time-code` همچنان می‌تواند مستقل از WebOTP عمل کند. قطعی‌کردن زمان‌بندی WebOTP نیازمند این است که ارسال SMS بعد از شروع listener و با یک درخواست Client-initiated انجام شود؛ چون این کار Flow فعلی احراز را تغییر می‌دهد، عمداً در نسخه ۱.۸.۱ انجام نشده است.
-
-### 🔒 قرارداد امنیتی/احراز
-قرارداد دیتابیس و قوانین فعلی تغییر نکرده‌اند:
-
-- OTP همچنان شش‌رقمی و با `random_int()` تولید می‌شود
-- فقط Hash با `sha256` در دیتابیس ذخیره می‌شود
-- اعتبار کد همچنان ۱۰ دقیقه است
-- حداکثر تلاش نادرست همچنان ۵ بار است
-- فاصله ارسال مجدد همچنان ۶۰ ثانیه است
-- `verifyCode()` همچنان جدیدترین رکورد مصرف‌نشده را بررسی می‌کند
-
-هیچ Migration جدیدی لازم نیست.
-
----
-
-## [۱.۸.۰] — حسابداری فروشگاه: سودآوری سفارش، دفتر هزینه‌ها، داشبورد مالی
-
-### خلاصه
-زیرساخت حسابداری‌ای که تاریخچه قیمت (۱.۵.۰)، ردیابی هدیه/پیشنهاد بعد از سبد (۱.۶.۰)، و هزینه ارسال (۱.۷.۰) گذاشته بودند را تکمیل می‌کند: حالا هر سفارش می‌تواند دقیقاً نشان دهد چقدر سود ایجاد کرده، یک دفتر هزینه عمومی هزینه‌هایی که به یک فروش مشخص وابسته نیستند را ثبت می‌کند، و یک داشبورد مالی هر دو را در یک بازه زمانی خلاصه می‌کند. همه‌چیز اینجا گزارش‌گیری فقط-خواندنی روی داده‌ای است که بخش‌های دیگر سیستم از قبل Snapshot کرده‌اند — هیچ‌چیز به یک سفارش، محصول، یا رکورد قیمت بازنویسی نمی‌شود. Migration ۰۱۱ یک ستون قابل‌NULL به `order_items` اضافه می‌کند، `shipping_methods.cost` را به یک جفت دریافتی/واقعی می‌شکند، و جدول `expenses` را اضافه می‌کند؛ فراتر از این، چیزی از قبل موجود جایی تغییر نمی‌کند.
-
-### ✨ سودآوری سطح-سفارش (`app/services/AccountingService.php`)
-تابع `getOrderProfitability()` درآمد یک سفارش (اقلام منهای تخفیف، به‌علاوه درآمد پیشنهاد بعد از سبد و ارسال) را در برابر هزینه‌اش (هزینه محصول/واریانت در لحظه فروش، هزینه هدیه/پیشنهاد بعد از سبد، هزینه واقعی ارسال) محاسبه می‌کند تا به سود ناخالص برسد — که به‌صورت یک تفکیک کامل در صفحه جزئیات سفارش پنل ادمین نشان داده می‌شود. این نیازمند بستن یک شکاف واقعی بود: `order_items` هیچ‌وقت ثبت نمی‌کرد که یک محصول واقعاً در لحظه فروش چقدر برای فروشگاه هزینه داشته، فقط تاریخچه `price` آن را داشت. ستون `order_items.unit_cost_price` حالا این را Snapshot می‌کند، با همان اولویت «واریانت روی محصول» که `price_override` از قبل برای قیمت فروش استفاده می‌کند، و فقط یک‌بار در لحظه Checkout پر می‌شود — تابع `cartDetails()` (در `app/core/cart.php`) باید شروع می‌کرد به انتخاب `cost_price` در کنار فیلدهایی که از قبل برمی‌گرداند تا این ممکن شود. سفارش‌های قبل از این نسخه، و هر خطی که محصولش هیچ قیمت تمام‌شده‌ای ثبت‌شده نداشته، از جمع هزینه کنار گذاشته می‌شوند به‌جای این‌که حدس زده شوند، و نتیجه علامت‌گذاری می‌شود تا UI بتواند آن را به‌عنوان یک هشدار نشان دهد، نه این‌که یک سود بیشتر از واقعیت را به‌عنوان عدد دقیق نمایش دهد.
-
-### ✨ سمت هزینه ارسال
-`shipping_methods.cost` (آنچه از مشتری گرفته می‌شود، از ۱.۷.۰) و ستون جدید `shipping_methods.actual_cost` (آنچه فروشگاه واقعاً به پیک/پست می‌پردازد) حالا جدا هستند — ۱.۷.۰ فقط اولی را ردیابی می‌کرد، که یعنی از دید خود فروشگاه هر سفارش انگار رایگان ارسال شده بود. `actual_cost` برای روش‌های موجود برابر `cost` پر شد تا هیچ‌کدام ناگهان یک حاشیه سود ۱۰۰٪ ساختگی نشان ندهد؛ ادمین می‌تواند عدد واقعی را جدا تنظیم کند. `orders.shipping_actual_cost` آن را به‌ازای هر سفارش Snapshot می‌کند، دقیقاً کاری که `shipping_method_name` از قبل انجام می‌دهد، و صرف‌نظر کردن از آستانه ارسال رایگان یک روش، فقط هزینه دریافتی از مشتری را صرف‌نظر می‌کند، نه هزینه واقعی فروشگاه را.
-
-### ✨ دفتر هزینه‌ها (`admin/expenses.php`, `expense_edit.php`)
-یک دفتر عمومی برای هزینه‌هایی که یک فروش مشخص محصول نیستند — هاست، بسته‌بندی، تبلیغات، و مانند آن — با یک دسته‌بندی متنی آزاد (پیشنهادشده از یک `<datalist>`، نه یک Enum، پس یک دسته‌بندی جدید هیچ‌وقت نیاز به Migration ندارد)، جستجو، و فیلتر دسته‌بندی/تاریخ. «حذف» یک هزینه آن را بایگانی می‌کند (`status = 'archived'`) به‌جای حذف واقعی ردیف، پس از همه گزارش‌ها بیرون می‌افتد درحالی‌که خودِ رکورد و این‌که چه کسی آن را ساخته باقی می‌مانند.
-
-### ✨ داشبورد مالی (`admin/finance_dashboard.php`)
-خلاصه‌ای بر اساس بازه زمانی (پیش‌فرض: ماه جاری) که سودآوری همه سفارش‌های غیر-لغوشده را با دفتر هزینه‌ها ترکیب می‌کند: مجموع فروش، هزینه تمام‌شده کالا/هدیه/ارسال، سود ناخالص، مجموع هزینه‌های عملیاتی، و سود خالص، به‌علاوه تفکیک هزینه‌ها بر اساس دسته‌بندی. دسترسی دقیقاً مثل هر صفحه ادمین دیگر محافظت می‌شود — نه محدود به `super_admin`، چون سیستم Permission دقیق‌تری برای محدودش کردن وجود ندارد و نیاز کسب‌وکار صریحاً گفته بود بخش مالی نباید پیش‌فرض فقط-Super-Admin باشد.
-
-### 🗄️ تغییرات دیتابیس
-`database/migrations/011_v1.8.0_accounting.sql` — `order_items.unit_cost_price`؛ `shipping_methods.actual_cost` (پرشده از `cost`) و `orders.shipping_actual_cost`؛ جدول `expenses`.
-
----
-
-## [۱.۷.۰] — محاسبه هزینه ارسال
-
-### خلاصه
-جایگزین `$shippingCost = 0` ثابتی می‌شود که از همان نسخه اول در `checkout.php` وجود داشت، با یک هزینه ارسال واقعی و قابل‌تنظیم از پنل ادمین، که به‌ازای هر سفارش بر اساس استان مشتری محاسبه می‌شود و یک تخمین زنده قبل از ارسال فرم نشان داده می‌شود. هیچ تغییری در رفتار موجود، غیر از خودِ خط هزینه ارسال، ایجاد نشده؛ Migration ۰۱۰ فقط افزودنی است.
-
-### ✨ روش‌های ارسال (`admin/shipping_methods.php`)
-یک ردیف `shipping_methods` به یکی از دو روش با یک سفارش تطبیق داده می‌شود: `province_contains` وقتی اعمال می‌شود که فیلد آزاد استان مشتری شامل یک مقدار تنظیم‌شده باشد (مثلا «تهران»)، و `default` همان Fallback است که وقتی چیز دقیق‌تری تطبیق نداشت استفاده می‌شود. روش‌ها به‌ترتیبی قابل‌تنظیم بررسی می‌شوند (با دکمه‌های بالا/پایین در لیست ادمین قابل جابه‌جایی)، پس قوانین دقیق‌تر می‌توانند جلوتر از Fallback قرار بگیرند. هر روش همچنین یک `free_above_amount` اختیاری دارد — به‌محض رسیدن جمع سبد سفارش به آن مقدار، هزینه آن روش صرف‌نظر می‌شود. دو روش اولیه seed شده‌اند، منطبق با متن ارسالی که از قبل در فوتر سایت نمایش داده می‌شود (نرخ پیک برای تهران و نرخ پست پیش‌فرض برای بقیه جاها)، هر دو با هزینه صفر تا وقتی ادمین قیمت‌های واقعی را تنظیم کند.
-
-### ✨ تخمین زنده هزینه ارسال در Checkout
-صفحه Checkout حالا یک تخمین هزینه ارسال نشان می‌دهد که با تایپ استان توسط مشتری به‌روز می‌شود، از طریق یک Endpoint جدید `ajax/shipping_estimate.php` — هر بار از نو و سمت‌سرور محاسبه می‌شود (هیچ‌وقت به هزینه‌ای که از سمت کاربر بیاید اعتماد نمی‌کند)، و صرفاً یک راحتی نمایشی است: محاسبه قطعی و اصلی دوباره و مستقل، در لحظه ثبت واقعی سفارش انجام می‌شود. صفحه سبد خرید یک یادداشت اطلاع‌رسانی نشان می‌دهد که هزینه ارسال در مرحله بعدی (Checkout) محاسبه می‌شود، چون در آن لحظه هنوز آدرس مشتری معلوم نیست.
-
-### 🗄️ Snapshot
-`orders.shipping_method_name` نام روش تطبیق‌یافته را در لحظه سفارش، در کنار ستون موجود `shipping_cost`، ثبت می‌کند — با همان استدلال هر ستون Snapshot دیگری که از قبل روی `orders`/`order_items`/`order_gift_items` هست: تغییر بعدی نام یا قیمت یک روش ارسال نباید چیزی که یک سفارش موجود می‌گوید با آن ارسال شده را عوض کند. هم صفحه جزئیات سفارش در پنل ادمین و هم صفحه تاریخچه سفارش خود مشتری، حالا خط هزینه ارسال (و در صورت وجود، افزودنی‌های پولی پیشنهاد بعد از سبد) را نشان می‌دهند، که قبل از این نسخه اصلاً نمایش داده نمی‌شدند.
-
-### 🗄️ تغییرات دیتابیس
-`database/migrations/010_v1.7.0_shipping.sql` — جدول `shipping_methods` (با دو روش اولیه seed‌شده) و ستون `orders.shipping_method_name`.
-
-### 📋 برنامه بعدی
-حسابداری فروشگاه (به بخش ۸ در `ARCHITECTURE.md` نگاه کنید) طراحی شده اما هنوز پیاده‌سازی نشده — به تاریخچه قیمت، هدیه/پیشنهاد بعد از سبد، و هزینه ارسال این نسخه نیاز دارد که همگی از قبل تاریخچه خودشان را ثبت کنند، که حالا این‌طور است.
-
----
-
-## [۱.۶.۰] — آیتم هدیه / پیشنهاد بعد از سبد
-
-### خلاصه
-یک مفهوم کاتالوگ جدید و واحد معرفی می‌شود — «آیتم هدیه» — که ادمین می‌تواند آن را رایگان به یک سفارش اختصاص دهد، به مشتری به‌عنوان یک افزودنی پولی در Checkout پیشنهاد دهد، یا هر دو، بدون این‌که این دو تا سیستم جدا باشند. هر اختصاص به یک سفارش کاملاً Snapshot می‌شود، دقیقاً همان کاری که از قبل برای محصولات انجام می‌شود، پس یک تغییر بعدی در هزینه یا قیمت یک آیتم هیچ‌وقت اعداد یک سفارش موجود را بازنویسی نمی‌کند. هیچ تغییری در رفتار موجود ایجاد نشده؛ Migration ۰۰۹ فقط افزودنی است.
-
-### ✨ کاتالوگ هدیه / پیشنهاد بعد از سبد (`gift_items`)
-یک ردیف `gift_items` نام، تصویر، موجودی، و `cost_price` خودش را دارد، به‌علاوه دو پرچم مستقل: `is_giftable` (ادمین می‌تواند آن را رایگان به یک سفارش اختصاص دهد) و `is_post_orderable` (مشتری می‌تواند آن را به‌عنوان یک افزودنی پولی با `post_order_price` خودش، مستقل از هزینه تمام‌شده، به سبدش اضافه کند). هر دو پرچم می‌توانند همزمان فعال باشند — همان آیتم می‌تواند امروز هدیه رایگان باشد و فردا افزودنی پولی، بدون این‌که از نو ساخته شود، چون هیچ‌وقت تفاوت واقعی‌ای بین این دو، فراتر از این‌که یک اختصاص خاص چطور استفاده می‌شود، وجود نداشته است. از `admin/gift_items.php` (لیست) و `admin/gift_item_edit.php` (ساخت/ویرایش) مدیریت می‌شود، با استفاده از همان مسیر آپلود تصویر محصولات.
-
-### ✨ ادمین: اهدای یک آیتم به یک سفارش
-`admin/order_detail.php` حالا یک فرم برای اختصاص یک آیتم قابل‌اهدا، با تعداد و یادداشت اختیاری، به هر سفارش موجود دارد. تابع `assignGiftToOrder()` (در `app/services/GiftService.php`) ردیف آیتم را قفل می‌کند، موجودی را با یک به‌روزرسانی شرطی محافظت‌شده کم می‌کند، و یک ردیف `order_gift_items` با `unit_selling_price = 0` ثبت می‌کند — هیچ هزینه‌ای از مشتری گرفته نمی‌شود، اما هزینه واقعی فروشگاه برای گزارش‌های مالی آینده حفظ می‌شود. صفحه جزئیات سفارش هر چیزی که از قبل اختصاص داده شده، چه هدیه چه پیشنهاد بعد از سبد، را با این‌که چه کسی و چه زمانی اختصاص داده، فهرست می‌کند.
-
-### ✨ سایت: افزودنی پیشنهاد بعد از سبد در Checkout
-صفحه سبد خرید حالا آیتم‌های فعال، موجود، و قابل‌فروش را به‌عنوان افزودنی پولی اختیاری پیشنهاد می‌دهد؛ انتخاب مشتری در `$_SESSION['post_order_selection']` نگه‌داری می‌شود، همان الگوی مبتنی‌بر Session که از قبل برای کد تخفیف اعمال‌شده استفاده می‌شد. این انتخاب هم در صفحه سبد خرید و هم دوباره در ابتدای `checkout.php` در برابر کاتالوگ زنده اعتبارسنجی می‌شود — یک خطی که در آن لحظه رد شود (مثلاً موجودی تمام شده باشد) به‌جای متوقف‌کردن سفارش، بی‌سروصدا کنار گذاشته می‌شود، چون یک افزودنی اختیاری است، نه چیزی که مشتری برای خریدنش آمده. خطوط انتخاب‌شده پیشنهاد بعد از سبد در `orders.gift_items_total` و مبلغ نهایی سفارش لحاظ می‌شوند و داخل همان تراکنشی که بقیه سفارش نوشته می‌شود، در `order_gift_items` ثبت می‌شوند — یک شکست موجودی روی یک آیتم هدیه، دقیقاً مثل شکست موجودی روی یک محصول عادی، کل سفارش را Rollback می‌کند.
-
-### 🐛 رفع باگ: تابع کمکی آپلود تصویر داخل یک کنترلر گیر افتاده بود
-تابع `handleProductImageUpload()` داخل `app/controllers/admin/product_edit.php` تعریف شده بود و فقط در طول همان یک درخواست وجود داشت — صدا زدنش از هر جای دیگر یک خطای Fatal «تابع تعریف‌نشده» بود. این مشکل هنگام سیم‌کشی آپلود تصویر آیتم هدیه پیدا شد؛ به `app/core/functions.php` منتقل شد، که در هر درخواستی لود می‌شود، پس هم `product_edit.php` و هم `gift_item_edit.php` جدید می‌توانند از آن استفاده کنند.
-
-### 🗄️ تغییرات دیتابیس
-`database/migrations/009_v1.6.0_gift_post_order.sql` — جداول `gift_items`, `order_gift_items`، به‌علاوه `orders.gift_items_total`.
-
-### 📋 برنامه بعدی
-محاسبه هزینه ارسال و حسابداری فروشگاه طراحی شده‌اند (به بخش ۸ در `ARCHITECTURE.md` نگاه کنید) اما هنوز پیاده‌سازی نشده‌اند. حسابداری بعد از هزینه ارسال قرار گرفته چون اعدادش به ثبت‌شدن قبلی هزینه ارسال هر سفارش وابسته است.
-
----
-
-## [۱.۵.۰] — تاریخچه قیمت تمام‌شده/فروش، تغییر قیمت گروهی، سیستم تم قابل‌مدیریت در پنل ادمین، و بازسازمان‌دهی نویگیشن ادمین
-
-### خلاصه
-این نسخه زیرساخت لازم برای قابلیت‌های حسابداری و انبارداری فروشگاه که در راه هستند را می‌سازد: از این پس هر تغییر قیمت تمام‌شده و فروش به‌طور جداگانه ثبت و قابل‌بازبینی است، یک ابزار تغییر قیمت گروهی امکان تغییر همزمان قیمت چند محصول نامرتبط را با یک مرحله پیش‌نمایش قبل از هر نوشتنی فراهم می‌کند، و یک باگ قدیمی که با هر بار ذخیره محصول، ID واریانت‌ها را بی‌سروصدا ریست می‌کرد رفع شد. در کنار این‌ها، سیستم رنگی معرفی‌شده در ۱.۴.۰ حالا یک سیستم چند-تمی واقعی و قابل‌مدیریت از پنل ادمین است، نه یک فایل CSS ثابت، و Sidebar پنل ادمین به گروه‌های برچسب‌دار بازسازمان‌دهی شد. هیچ تغییر Breaking‌ای وجود ندارد؛ Migration های ۰۰۷ و ۰۰۸ فقط افزودنی هستند.
-
-### ✨ تاریخچه قیمت تمام‌شده/فروش
-هم `products` و هم `product_variants` یک ستون `cost_price` مستقل از ستون‌های قیمت فروش موجود گرفتند. هیچ‌کدام مستقیم نوشته نمی‌شوند — هر تغییری از مسیر `recordPriceChange()` (در `app/services/PricingService.php`) عبور می‌کند، که ردیف هدف را قفل می‌کند، مقدار جدید را از روی مبلغ ثابت، درصد، یا مقدار مستقیم محاسبه می‌کند، و تغییر را در یک جدول جدید `price_history` ثبت می‌کند: مقدار قبلی، مقدار جدید، مبلغ/درصد محاسبه‌شده، روش، دلیل اختیاری، و انجام‌دهنده. یک ردیف `price_history` حتی بعد از حذف بعدیِ واریانتش هم معنادار می‌ماند (`ON DELETE SET NULL` به‌علاوه یک `variant_label` ذخیره‌شده، دقیقاً مثل کاری که `order_items` از قبل می‌کند). `admin/product_edit.php` تاریخچه کامل قیمت هر محصول را پایین صفحه ویرایش نشان می‌دهد.
-
-### ✨ تغییر قیمت گروهی (`admin/pricing.php`)
-به ادمین اجازه می‌دهد هر مجموعه‌ای از محصولات — نه لزوماً از یک دسته‌بندی — را انتخاب و یک تغییر قیمت یکسان را روی همه آن‌ها در یک درخواست اعمال کند. جریان کار پیش‌نمایش-سپس-تأیید است: ارسال یک انتخاب، مقدار جدید هر محصول را بدون نوشتن هیچ‌چیزی محاسبه و نمایش می‌دهد، و فقط یک ارسال دوم و صریح آن را واقعاً اعمال می‌کند. هر درخواست گروهی یک ردیف `bulk_price_operations` می‌سازد و هر ردیف `price_history` که نتیجه می‌شود به آن ارجاع می‌دهد، پس بعداً سوالی مثل «این تغییر گروهی دقیقاً چه چیزی را عوض کرد» پاسخ مستقیم دارد. تغییر هر محصول تراکنش مستقل خودش است — شکست‌خوردن یکی (مثلاً یک ویرایش همزمان) بقیه یک دسته در غیر این‌صورت موفق را باطل نمی‌کند.
-
-### 🐛 رفع باگ: واریانت‌های محصول با هر ذخیره، هویتشان را از دست می‌دادند
-`admin/product_edit.php` قبلاً با هر بار ذخیره، همه واریانت‌های یک محصول را حذف و از نو می‌ساخت، صرف‌نظر از این‌که چیزی راجع به آن‌ها واقعاً تغییر کرده باشد — پس ID یک واریانت (و هر چیزی که به آن ارجاع می‌داد) بعد از همان ویرایش بعدی بی‌معنا می‌شد. فرم حالا ID هر واریانت را در یک فیلد مخفی نگه می‌دارد؛ ذخیره‌کردن، ردیف‌های مطابق را در جا به‌روزرسانی می‌کند، ردیف‌های واقعاً جدید را insert می‌کند، و فقط ردیف‌هایی را که واقعاً از فرم حذف شده‌اند پاک می‌کند. این باگ مشخصاً به این دلیل پیدا و رفع شد که قابلیت جدید تاریخچه قیمت نیاز داشت ID واریانت‌ها بین ویرایش‌ها ثابت بماند.
-
-### 🎨 سیستم تم قابل‌مدیریت در پنل ادمین
-سیستم رنگی حالا روی جداول `themes`/`theme_tokens` سوار است، نه اینکه در `assets/css/style.css` ثابت باشد. یک ادمین می‌تواند از `admin/themes.php` و `admin/theme_edit.php` پالت‌های رنگی کامل بسازد، ویرایش کند، و بین آن‌ها جابه‌جا شود؛ تم فعال با تزریق Tokenهایش به‌صورت یک بازنویسی `<style>` در `<head>` سایت، به‌طور سراسری اعمال می‌شود — بدون نیاز به تغییر فایل یا Deploy برای تغییر ظاهر سایت. چهار تم اولیه، منطبق با پالت‌های مقایسه‌شده در `theme-preview.html`، به‌صورت خودکار seed می‌شوند. اگر تمی هیچ Tokenای نداشته باشد، به‌طور تمیز به پیش‌فرض‌های داخل خود فایل CSS برمی‌گردد.
-
-### 🗂️ بازسازمان‌دهی نویگیشن ادمین
-Sidebar پنل ادمین حالا بر اساس حوزه گروه‌بندی شده (محصولات، سفارش‌ها، تنظیمات، و یک گروه مدیریت که فقط برای `super_admin` قابل مشاهده است)، نه یک لیست تخت، تا با اضافه‌شدن صفحات بیشتر همچنان قابل‌پیمایش بماند — صفحات جدید «تغییر قیمت گروهی» و «قالب» به‌ترتیب زیر محصولات و تنظیمات قرار گرفتند، نه در انتهای لیست.
-
-### 🗄️ تغییرات دیتابیس
-- `database/migrations/007_v1.5.0_theme_system.sql` — جداول `themes`, `theme_tokens`، به‌علاوه چهار پالت اولیه seed‌شده.
-- `database/migrations/008_v1.5.0_price_history.sql` — ستون `cost_price` روی `products`/`product_variants`، به‌علاوه جداول `bulk_price_operations` و `price_history`.
-
-### 📋 برنامه بعدی
-آیتم هدیه/پیشنهاد بعد از سبد، محاسبه هزینه ارسال، و حسابداری فروشگاه طراحی شده‌اند (به بخش ۸ در `ARCHITECTURE.md` نگاه کنید) اما هنوز پیاده‌سازی نشده‌اند — هرکدام به زیرساخت تاریخچه قیمت این نسخه وابسته‌اند، و حسابداری علاوه بر آن به آن دو مورد دیگر هم وابسته است، پس به همین ترتیب و نه موازی ساخته می‌شوند.
-
----
-
-## [۱.۴.۰] — پالت رنگی برند، بازطراحی صفحه اصلی، و فاوآیکون
-
-### خلاصه
-این نسخه یک به‌روزرسانی متمرکز روی Front-end و UI است. پالت رنگی سایت بر اساس رنگ‌های اصلی هویت بصری جدید تنظیم شده، صفحه اصلی با تمرکز بیشتر روی دسته‌بندی‌ها و نمایش کاروسلی محصولات بازطراحی شده و فاوآیکون و آیکون‌های موردنیاز مرورگر و دستگاه‌های موبایل اضافه شده‌اند. این نسخه هیچ تغییر دیتابیسی ندارد.
-
-### 🎨 پالت رنگی برند
-پالت قبلی با توجه به هویت بصری جدید سایت دیگر مناسب نبود. پالت جدید بر اساس رنگ‌های اصلی لوگو انتخاب شده و تمام رنگ‌های اصلی رابط کاربری در یک بلوک `:root` در `assets/css/style.css` متمرکز شده‌اند:
-
-```css
---color-bg:            #F9E9DA;  /* پس‌زمینه صفحه */
---color-surface:        #F5E5D6;  /* کارت‌ها / بخش‌ها */
---color-primary:       #582B1C;  /* دکمه‌ها / CTA */
---color-primary-dark:  #3E1D12;  /* هاور دکمه / جزئیات تیره */
---color-primary-light: #EAD6C7;  /* بج‌ها / بخش‌های رنگی */
---color-accent:        #B89180;  /* جزئیات ثانویه */
---color-text:          #7D5141;
---color-muted:         #9C7C6C;
---color-border:        #E7D2BF;
-```
-
-برای عناصر دارای متن سفید، از تُن‌های تیره‌تر استفاده شده است. رنگ `#B89180` برای متن سفید کنتراست کافی ندارد و بنابراین برای دکمه‌های اصلی و نوار اعلان استفاده نمی‌شود. این رنگ در بج‌ها، هاور و جزئیات ثانویه به کار می‌رود.
-
-یک فایل کاری به نام `theme-preview.html` نیز برای مقایسه چند پالت در نظر گرفته شده است. این فایل بخشی از منطق اجرایی سایت نیست و فقط برای ارزیابی بصری پالت‌ها استفاده می‌شود.
-
-### 🖼️ فاوآیکون و آیکون‌های دستگاه
-آیکون‌های سایت از لوگوی فروشگاه ساخته شده‌اند:
-
-- `favicon.ico` در اندازه‌های ۱۶، ۳۲ و ۴۸ پیکسل
-- `favicon-16x16.png`
-- `favicon-32x32.png`
-- `apple-touch-icon.png` در اندازه ۱۸۰ پیکسل
-- `android-chrome-192x192.png`
-- `android-chrome-512x512.png`
-- `site.webmanifest`
-
-لینک این فایل‌ها هم در Layout سایت و هم در Layout پنل مدیریت اضافه شده است تا آیکون در صفحات عمومی و مدیریتی به شکل یکسان نمایش داده شود.
-
-### 🏠 بازطراحی صفحه اصلی
-`app/controllers/site/home.php` اکنون ۶ محصول «پیشنهاد ویژه» و ۶ محصول «آخرین محصولات» را واکشی می‌کند. `views/site/home.php` نیز با ساختار زیر بازطراحی شده است:
-
-1. مقدمه‌ای کوتاه که تنها `<h1>` صفحه اصلی را در خود دارد.
-2. گرید دسته‌بندی‌ها در ابتدای صفحه.
-3. کاروسل «پیشنهاد ویژه» با ۶ محصول.
-4. کاروسل «آخرین محصولات» با ۶ محصول.
-5. نوار افقی دسته‌بندی‌ها در بخش پایینی صفحه برای دسترسی سریع‌تر.
-
-کاروسل‌ها در `assets/css/style.css` با CSS `scroll-snap` و بدون وابستگی به کتابخانه خارجی پیاده‌سازی شده‌اند. اندازه کارت‌ها به‌صورت واکنش‌گرا تنظیم می‌شود:
-
-- دسکتاپ: ۳ کارت
-- تبلت: ۲ کارت
-- موبایل: یک کارت کامل به‌همراه بخشی از کارت بعدی برای ایجاد نشانه بصری Swipe
-
-دکمه‌های قبلی/بعدی در `assets/js/main.js` به اندازه عرض فعلی ترک اسکرول می‌کنند و جهت حرکت را با توجه به `direction` صفحه تشخیص می‌دهند تا رفتار در RTL و LTR صحیح باقی بماند.
-
-برای دسته‌بندی‌ها دو نمایش متفاوت در نظر گرفته شده است: گرید کامل در بخش بالایی و نوار افقی سبک‌تر در انتهای صفحه. این تکرار، دسترسی به دسته‌بندی‌ها را بعد از مرور محصولات ساده‌تر می‌کند.
-
-در هر دو بخش دسته‌بندی، به‌جای تصاویر جای‌گیرنده از یک آیکون SVG عمومی استفاده شده است؛ زیرا در وضعیت فعلی پنل مدیریت، برای `categories.image` هنوز رابط بارگذاری تصویر در نظر گرفته نشده است.
-
-### 🗄️ تغییرات دیتابیس
-این نسخه هیچ Migration جدیدی ندارد و Schema دیتابیس بدون تغییر باقی مانده است.
-
-## [۱.۳.۰] — برند فروشگاه، بازطراحی هدر و فوتر، جستجوی سایت، سئوی تگ، و رفع دو باگ پنل ادمین
-
-### خلاصه
-این نسخه شش درخواست جدا را پوشش می‌دهد: نمایش مستقیم واریانت خریداری‌شده در لیست سفارش‌های پنل ادمین، امکان بارگذاری لوگوی فروشگاه از پنل ادمین، بازطراحی کامل هدر و فوتر (جستجو، نوار اعلان، محتوای فوتر، شبکه‌های اجتماعی، جای‌گاه نماد اینماد)، یک اصلاح واقعی (هرچند کوچک) سئو در نحوه لینک‌شدن تگ‌های محصول، و یک باگ CSS که ستون عملیات را در ردیف‌های بلند جدول ادمین بدجور می‌چید. در همین مسیر، تمام کامنت‌های فارسی *کد* (نه متن‌های قابل‌مشاهده برای کاربر) در سراسر پروژه به انگلیسی ترجمه شد، و `app/controllers/admin/settings.php` با یک الگوی ذخیره‌سازی بخش‌به‌بخش مقاوم‌تر بازنویسی شد.
-
-### 🐛 رفع باگ: واریانت خریداری‌شده در لیست سفارش‌های ادمین دیده نمی‌شد
-**مشکل:** ستون `order_items.variant_label` از قبل درست در لحظه Checkout ذخیره می‌شد و `order_detail.php` هم آن را درست نشان می‌داد — اما **لیست** سفارش‌ها (`admin/orders.php`) فقط فیلدهای سطح سفارش (کد، مشتری، مبلغ، وضعیت) را نشان می‌داد. دیدن این‌که کدام سایز/رنگ خریداری شده، نیازمند باز کردن تک‌تک سفارش‌ها بود.
-
-**راه‌حل:** `app/controllers/admin/orders.php` حالا با یک Query گروه‌بندی‌شده (`order_items WHERE order_id IN (...)`) اقلام همه سفارش‌های قابل‌نمایش را یک‌جا واکشی می‌کند و `views/admin/orders.php` آن‌ها را در یک ستون جدید «اقلام سفارش» به‌صورت «نام محصول (واریانت) × تعداد» نمایش می‌دهد.
-
-### ✨ قابلیت جدید: بارگذاری لوگوی فروشگاه
-- بخش جدید «لوگوی فروشگاه» در `admin/settings.php`: بارگذاری (JPG/PNG/WEBP/SVG، سقف ۲ مگابایت، بررسی واقعی نوع فایل با `finfo`) و حذف لوگو.
-- ذخیره در `uploads/branding/`، مشتق‌شده از ثابت‌های موجود `UPLOAD_DIR`/`UPLOAD_URL` (`BRANDING_UPLOAD_DIR`/`BRANDING_UPLOAD_URL`، یک‌بار در `app/bootstrap.php` محاسبه می‌شوند) — نیازی به افزودن ثابت جدید به `config.php` سایت‌هایی که از قبل روی سرور هستند نیست.
-- تابع `siteLogoUrl()` (در `app/core/functions.php`) آدرس لوگو یا `null` را برمی‌گرداند؛ هم `views/layout/header.php` و هم `views/layout/footer.php` در نبود لوگو به نام متنی فروشگاه (`SITE_NAME`) برمی‌گردند.
-
-### ✨ قابلیت جدید: نوار جستجو و نوار اعلان در هدر
-- یک پنل تاشوی جستجوی واحد که با کلیک روی آیکون ذره‌بین باز می‌شود و دقیقاً یکسان روی موبایل و دسکتاپ رندر می‌شود (عمداً از دو چیدمان Responsive جدا پرهیز شد، چون همان چیزی است که باگ‌های `order` در Flexbox سر بریک‌پوینت‌ها را ایجاد می‌کند). مسیر جدید `search` → `app/controllers/site/search.php` / `views/site/search.php`، یک جستجوی `LIKE` صفحه‌بندی‌شده روی نام و توضیحات محصول.
-- یک نوار اعلان سراسری درست زیر هدر (تنظیمات `announcement_bar_enabled/text/link`) که در همه صفحات نمایش داده می‌شود و در صورت تنظیم لینک، کل نوار قابل‌کلیک می‌شود (مثلاً به کانال تلگرام).
-
-### ✨ قابلیت جدید: بازطراحی فوتر
-- یک خط دعوت‌کننده بالای فوتر که به `/about` لینک می‌شود (`footer_about_teaser_text`).
-- ستون برند: لوگو، تگ‌لاین، شماره تماس (`store_phone`، در `/contact` هم استفاده می‌شود)، متن نماد ارسال (`footer_shipping_badge_text`).
-- لینک شبکه‌های اجتماعی اینستاگرام، تلگرام، بله و ترب — هرکدام مستقل با کلید فعال/غیرفعال و لینک خودش از پنل ادمین قابل تنظیم؛ فقط لینک‌های فعال و دارای آدرس غیرخالی رندر می‌شوند، با آیکون‌های خطی عمومی (بدون استفاده از لوگوی برند هر پلتفرم).
-- جای‌گاه اینماد: ادمین بعد از دریافت گواهی از enamad.ir، کد بج خودش را Paste می‌کند (`enamad_embed_code`)؛ تا وقتی کدی وارد نشده، هیچ‌چیز (نه حتی یک بج جایگزین ساختگی) نمایش داده نمی‌شود.
-- صفحه `/about` حالا داستان واقعی شروع فروشگاه را دارد، نه متن پیش‌فرض جای‌گیرنده.
-
-### 🔍 بررسی سئوی تگ محصول
-- اسلاگ تگ‌ها از قبل هم با خط تیره ساخته می‌شد (`slugify()`)، که همان جداکننده کلمه‌ای است که گوگل توصیه می‌کند — برخلاف زیرخط که اغلب موتورهای جستجو آن را به کلمات جدا نمی‌شکنند. تغییری در این بخش لازم نبود.
-- علامت `#` جلوی هر تگ در صفحه محصول قبلاً متن واقعی لینک بود (`#<?= e($tag['name']) ?>`)؛ حالا با `::before` در CSS (کلاس `.tag-pill` در `assets/css/style.css`) اضافه می‌شود، پس متن واقعی `<a>` که موتورهای جستجو و صفحه‌خوان‌ها می‌بینند فقط نام تمیز تگ است. ویژگی `rel="tag"` هم اضافه شد.
-- `app/controllers/site/tag.php` حالا یک `$metaDescription` اختصاصی همان تگ می‌سازد به‌جای بازگشت به توضیحات عمومی سایت، و `views/site/tag.php` برای عنوان اصلی از `<h1>` به‌جای `<h2>` استفاده می‌کند.
-
-### 🐛 رفع باگ: چینش ستون عملیات در ردیف‌های بلند جدول ادمین به‌هم می‌ریخت
-**مشکل:** در `admin/products.php`، ردیفی که خلاصه موجودی واریانت‌هایش چند خط می‌شد، به‌طور محسوسی از بقیه ردیف‌ها بلندتر بود، اما دکمه‌های «عملیات» در همان ردیف بالا می‌ماندند، برخلاف بقیه ستون‌ها که عمودی وسط‌چین بودند.
-
-**علت ریشه‌ای:** `<td class="admin-actions">` مقدار `display: flex` را مستقیم روی سلول جدول اعمال می‌کرد. این کار نوع داخلی `display: table-cell` سلول را بازنویسی می‌کند — همان چیزی که `vertical-align: middle` برای اثرگذاری به آن نیاز دارد — پس همان یک سلول به‌طور نامحسوس دیگر از وسط‌چینی عمودی ردیف پیروی نمی‌کرد.
-
-**راه‌حل:** `<td>` عملیات به‌صورت یک سلول عادی باقی ماند؛ `class="admin-actions"` به یک `<div>` داخلی در `products.php`, `categories.php` و `users.php` منتقل شد. همچنین `vertical-align: middle` صریح روی `.admin-table th, .admin-table td` در `assets/css/admin.css` اضافه شد تا همین دسته باگ از تفاوت پیش‌فرض مرورگرها دوباره سر بر نیاورد.
-
-### 🔧 معماری تنظیمات پنل ادمین
-`app/controllers/admin/settings.php` بازنویسی شد تا هر بخش تنظیمات یک `<form>` مستقل با یک فیلد مخفی `section` داشته باشد و کنترلر فقط کلیدهای همان بخش را بنویسد. این جایگزین الگوی قبلی شد که هر فرم مجبور بود مقادیر همه بخش‌های دیگر را هم به‌صورت Input مخفی دوباره ارسال کند تا آن‌ها ریست نشوند — الگویی که با هر تنظیم جدید (و این نسخه تنظیمات زیادی اضافه می‌کند) شکننده‌تر می‌شود.
-
-### 🗄️ تغییرات دیتابیس (`database/migrations/006_v1.3.0_header_footer_branding_social.sql`)
-هیچ جدول یا ستون جدیدی لازم نبود — `settings` از قبل یک Key-Value عمومی است. Migration فقط کلیدهای جدید (لوگو، نوار اعلان، محتوای فوتر، شبکه‌های اجتماعی، اینماد) را با مقدار پیش‌فرض امن (خالی/غیرفعال) و با `INSERT IGNORE` می‌سازد، پس اجرای دوباره‌اش کاملاً بی‌خطر است و هیچ مقداری را که ادمین از قبل تنظیم کرده بازنویسی نمی‌کند.
-
-### 🧹 نظافت کد: ترجمه کامنت‌ها به انگلیسی
-تمام کامنت‌های فارسی در فایل‌های PHP/JS/CSS/SQL پروژه (کنترلرها، هسته، سرویس‌ها، View ها، `schema.sql`، Migration ها) به انگلیسی ترجمه شدند تا کدبیس برای هرکسی که آن را روی گیت‌هاب مرور می‌کند یکدست باشد. این تغییر هیچ متن فارسی قابل‌مشاهده برای کاربر (محتوای صفحات، لیبل‌ها، متن‌های پنل ادمین) یا اسناد فارسی داخل `docs/` را دست نزده است، طبق قرارداد اعلام‌شده پروژه.
-
----
-
-## [۱.۲.۲] — ابزار عیب‌یابی پیامک/ایمیل و گالری چند‌تصویری محصول
-
-### خلاصه
-این نسخه یک مجموعه ابزار عیب‌یابی برای بررسی مستقل اتصال پیامک و ایمیل اضافه کرد. ابزارها روی محیط عملیاتی اجرا می‌شوند و هر تلاش ارسال، چه موفق و چه ناموفق، با جزئیات فنی در دیتابیس ثبت می‌شود.
-
-### 🔍 بررسی اولیه پیکربندی پیامک
-```
-FARAZ_LINE_NUMBER = '<configured value>'
-```
-این مقدار **غیرمعمول** است — شماره خط‌های پیامکی معمولاً ۹ تا ۱۱ رقم و بدون پیش‌شماره `+98` هستند، نه یک رشته ۱۷ کاراکتری. این می‌تواند دلیل اصلی رد شدن درخواست از سمت API فراز باشد. صفحه جدید «عیب‌یابی» این مقدار را خودکار تشخیص داده و هشدار می‌دهد.
-
-### ✨ قابلیت جدید: صفحه عیب‌یابی زنده (`/admin/diagnostics.php`، فقط super_admin)
-سه تست مستقیم برای بررسی اتصال پیامک و ایمیل در نظر گرفته شد:
-1. **تست کلید API فراز**: موجودی حساب را می‌خواند. هیچ پیامکی ارسال نمی‌کند و هزینه‌ای ندارد؛ اگر کلید نامعتبر باشد یا اتصال برقرار نشود، پیام خطای دقیق API را نشان می‌دهد.
-2. **بررسی جزئیات پترن**: نام واقعی متغیر(های) پترن ثبت‌شده در پنل فراز را می‌گیرد تا با `FARAZ_OTP_PATTERN_VAR` در `config.php` مقایسه کنید — چون این نام باید دقیقاً یکی باشد وگرنه ارسال شکست می‌خورد مقدار متغیر باید با متغیر تعریف‌شده در پترن یکسان باشد.
-3. **تست اتصال SMTP**: بدون ارسال ایمیل واقعی، فقط اتصال + STARTTLS + احراز هویت را بررسی می‌کند و کل مکالمه خام SMTP را نشان می‌دهد (برای مثال اگر مشکل از timeout شبکه یا رد شدن رمز عبور باشد، دقیقاً در همان مکالمه معلوم می‌شود).
-
-همچنین یک جدول از تمام مقادیر فعلی Config (با کلیدهای حساس جزئی مخفی‌شده، مثل `Eb0c••••••••••1Eg4bJ`) در بالای صفحه نمایش داده می‌شود تا اشتباهات تایپی به‌سرعت قابل تشخیص باشند.
-
-### ✨ قابلیت جدید: لاگ کامل تلاش‌های ارسال (`/admin/notifications_log.php`)
-از این نسخه، **هر تلاش واقعی ارسال OTP** (چه موفق، چه ناموفق، چه فقط لاگ‌شده به‌خاطر پیکربندی‌نشدن) با جزئیات کامل ذخیره می‌شود:
-- `sms_log` و جدول جدید `email_log` حالا یک ستون `debug_info` دارند که شامل: URL درخواست، بدنه درخواست، کد HTTP پاسخ، خطای cURL (در صورت وجود)، و متن خام پاسخ سرور (برای پیامک) یا کل مکالمه خط‌به‌خط SMTP (برای ایمیل) است.
-- صفحه جدید پنل با دو تب (پیامک/ایمیل)، ۱۰۰ رکورد آخر را با جزئیات قابل‌گسترش (`<details>`) نشان می‌دهد — یعنی از این پس، بدون نیاز به SSH یا دسترسی مستقیم به لاگ سرور، علت خطای هر پیامک یا ایمیل از همین صفحه قابل بررسی است.
-- این لاگ‌ها امکان بررسی مستقیم علت خطای هر تلاش ارسال را فراهم می‌کنند.
-
-### 🧪 محدودیت مهم این نسخه که باید بدانید
-این تست‌ها برای اجرا در محیط عملیاتی طراحی شده‌اند تا وضعیت واقعی اتصال و پاسخ سرویس‌های خارجی مشخص شود. نتیجه نهایی تحویل پیامک یا ایمیل باید در همان محیط عملیاتی بررسی شود.
-
-### ✨ قابلیت جدید: گالری چند‌تصویری محصول (تعداد دلخواه)
-- جدول `product_images` از نسخه ۱.۰.۰ در دیتابیس وجود داشت و سمت نمایش سایت (گالری تصاویر صفحه محصول) از قبل به آن وصل بود، اما **پنل ادمین امکان مدیریتش را نداشت** — فقط یک «تصویر اصلی» قابل آپلود بود. این نسخه این خلأ را پر می‌کند.
-- در فرم محصول، فیلد جدید «گالری تصاویر بیشتر» با `multiple` امکان انتخاب هم‌زمان چند فایل را فراهم می‌کند؛ همه با اعتبارسنجی امن (نوع فایل واقعی با `finfo`، نه فقط پسوند/Content-Type ادعایی) آپلود و به ترتیب اضافه می‌شوند.
-- تصاویر موجود گالری با یک چک‌باکس «حذف» زیر هرکدام نمایش داده می‌شوند؛ حذف و افزودن تصویر جدید می‌توانند در یک ذخیره‌سازی هم‌زمان انجام شوند.
-- تصویر اصلی (کاور، همانی که در کارت محصول/صفحه اصلی/JSON-LD استفاده می‌شود) مستقل باقی می‌ماند؛ گالری فقط برای تصاویر اضافه‌تر است.
-- **تست شد:** آپلود هم‌زمان ۳ تصویر روی محصول جدید، نمایش هر ۳ در گالری صفحه محصول سایت، حذف یک تصویر همراه با افزودن یک تصویر جدید در همان ذخیره‌سازی (ترتیب `sort_order` درست حفظ شد و فایل حذف‌شده از دیسک هم پاک شد)، و رد شدن یک فایل PHP مخرب که با MIME Type جعلی `image/jpeg` سعی در آپلود شدن داشت.
-
-### 🗄️ تغییرات دیتابیس (`database/migrations/005_v1.2.2_debug_logging.sql`)
-- `sms_log`: ستون جدید `debug_info` (TEXT، Nullable)
-- جدول جدید: `email_log` (با همان ساختار `sms_log` به‌علاوه `debug_info`)
-- بدون تغییر در `product_images` (جدول از قبل موجود بود، فقط منطق/UI اضافه شد)
-- **تست شد:** روی یک کپی شبیه‌سازی‌شده از دیتابیس v1.2.1 با رکورد واقعی در `sms_log` اجرا شد؛ داده قبلی حفظ شد و ستون/جدول جدید بدون خطا اضافه شدند.
-
-### 🐛 دو باگ شناسایی‌شده پس از استقرار این نسخه
-بعد از Deploy این نسخه و استفاده از ابزارهای عیب‌یابی بالا، دو علت دقیق دیگر برای عدم ارسال پیدا کردید و مستقیم در کد اصلاح کردید. برای ثبت کامل تاریخچه، هر دو اینجا مستند می‌شوند:
-
-**۱) مقدار اشتباه `number_format` در درخواست فراز اس‌ام‌اس**
-در `app/services/FarazSmsService.php`، پارامتر ارسالی به API به‌اشتباه `'number_format' => 'en'` بود. مقدار درست مورد انتظار API فراز `'english'` است، نه کد کوتاه `'en'`. چون این پارامتر نامعتبر بود، API درخواست را رد می‌کرد و در نتیجه هیچ پیامکی ارسال نمی‌شد — این توضیح می‌دهد که چرا حتی بعد از اصلاح `FARAZ_LINE_NUMBER`، مشکل ارسال پیامک ادامه داشت.
-```php
-// قبل (اشتباه):
-'number_format' => 'en',
-// بعد (درست):
-'number_format' => 'english',
-```
-
-**۲) صفحه احراز ایمیل کد را فقط با «ارسال مجدد» می‌فرستاد، نه در بار اول باز شدن**
-در `app/controllers/site/verify_email.php`، منطق اولیه فقط زمانی `VerificationService::sendCode()` را صدا می‌زد که کاربر دکمه «ارسال مجدد» را می‌زد؛ اولین بار که کاربر وارد `/verify-email` می‌شد (چه از مسیر ثبت‌نام، چه از پروفایل)، هیچ کدی ارسال نمی‌شد و کاربر مجبور بود همیشه یک بار «ارسال مجدد» را دستی بزند. راه‌حل: به شرط بررسی «ایمیل قبلاً تایید شده؟» یک `else` اضافه شد که در اولین بازدید از صفحه (وقتی ایمیل هست ولی هنوز تایید نشده) بلافاصله کد را ارسال می‌کند:
-```php
-if (!empty($customer['email_verified_at'])) {
-    setFlash('info', 'ایمیل ادمین قبلاً تایید شده است.');
-    redirect('/account');
-} else {
-    $result = VerificationService::sendCode($customer['id'], 'email', $customer['email']);
-    if ($result['ok']) {
-        $info = 'کد جدید ایمیل شد.';
-    } else {
-        $error = $result['error'] ?: 'امکان ارسال ایمیل در حال حاضر وجود ندارد. با پشتیبانی تماس بگیرید.';
-    }
-}
-```
-**نکته فنی برای هماهنگی مستندات:** این تغییر رفتار صفحه را از «فقط دکمه ارسال مجدد کد می‌فرستد» به «هم بار اول باز شدن صفحه، هم دکمه ارسال مجدد، کد می‌فرستند» تغییر می‌دهد. از آنجا که `VerificationService::sendCode()` از قبل یک محدودیت ۶۰ ثانیه‌ای بین دو ارسال متوالی دارد (بخش ۵.۸ در `docs/ARCHITECTURE.md`)، این تغییر خطر ارسال تکراری/هزینه اضافه ایجاد نمی‌کند؛ اگر کاربر صفحه را رفرش کند یا دوباره باز کند، در صورتی که کمتر از ۶۰ ثانیه از آخرین ارسال گذشته باشد، `sendCode()` به‌جای ارسال پیامک/ایمیل تازه، پیام «لطفاً کمی صبر کنید» برمی‌گرداند.
-
----
-
-## [۱.۲.۱] — تگ محصول، پروفایل کامل، احراز شماره موبایل/ایمیل، سئو، و رفع باگ لیبل ناموجود
-
-### 🐛 رفع باگ گزارش‌شده: لیبل «ناموجود» اشتباه روی محصولات دارای واریانت
-**مشکل:** در صفحات فروشگاه (خانه، دسته‌بندی)، هر محصول دارای واریانت همیشه لیبل «ناموجود» می‌گرفت، حتی اگر واریانت‌هایش موجودی داشتند.
-**علت ریشه‌ای:** از نسخه ۱.۲.۰، وقتی محصولی «دارای واریانت» علامت می‌خورد، ستون `products.stock` همیشه عمداً `0` ذخیره می‌شود (چون موجودی واقعی باید از جمع واریانت‌ها بیاید، نه از این ستون — این بخشی از منطق درست ۱.۲.۰ بود). اما کارت محصول (`product_card.php`) در کوئری‌های لیست (صفحه اصلی، دسته‌بندی) هنوز مستقیم از همین ستون `stock` برای تصمیم «ناموجود یا نه» استفاده می‌کرد، بدون در نظر گرفتن واریانت‌ها.
-**راه‌حل:** تابع کمکی جدید `effectiveStockSqlFragment()` در `app/core/functions.php` اضافه شد که یک قطعه SQL برمی‌گرداند: اگر محصول واریانت داشته باشد، جمع موجودی واریانت‌ها؛ در غیر این‌صورت ستون `stock` خودش. این قطعه در کوئری‌های صفحه اصلی (`home.php`، دو کوئری Featured/Newest)، صفحه دسته‌بندی (`category.php`) و صفحه جدید تگ (`tag.php`) به‌عنوان ستون محاسبه‌شده `effective_stock` اضافه شد، و `product_card.php` حالا اول این ستون را چک می‌کند (در صورت وجود) و فقط در نبودش به `stock` ساده برمی‌گردد.
-**تست شد:** یک محصول با `stock=0` ولی یک واریانت با موجودی ۱۲ ساخته شد — دیگر لیبل «ناموجود» نشان داده نمی‌شود؛ یک محصول با واریانتِ موجودی صفر هم درست لیبل «ناموجود» را نشان می‌دهد (هر دو جهت تست شد).
-
-### 🐛 باگ مهم دیگری که در حین تست همین نسخه کشف و رفع شد: عدم هماهنگی منطقه زمانی PHP و MySQL
-**مشکل:** MySQL روی هاست معمولاً با منطقه زمانی UTC اجرا می‌شود، در حالی که PHP این پروژه از ابتدا روی `Asia/Tehran` (`UTC+3:30`) تنظیم شده. نتیجه: هر مقداری که با `CURRENT_TIMESTAMP`/`NOW()` در دیتابیس ذخیره می‌شود (مثلا `cart_items.added_at`، `verification_codes.created_at`)، وقتی با `time()`/`strtotime()` در PHP مقایسه شود، حدود ۳.۵ ساعت اختلاف نشان می‌دهد.
-**کجا اثر داشت:**
-- منطق **تضمین قیمت سبد خرید** (از ۱.۲.۰): محاسبه سن سبد بر همین مقایسه استوار است. چون آستانه پیش‌فرض ۷ روز (با گرانولاریتی روزانه) است، این اختلاف ۳.۵ ساعته در عمل به‌ندرت باعث تغییر نتیجه نهایی می‌شد، اما از نظر فنی همیشه اشتباه بود.
-- منطق **فاصله ارسال مجدد کد تایید** (جدید در ۱.۲.۱): چون آستانه‌اش فقط ۶۰ ثانیه است، این اختلاف ۳.۵ ساعته باعث می‌شد محدودیت اصلاً هیچ‌وقت اعمال نشود — یعنی می‌شد بدون محدودیت، کد جدید درخواست داد (تست مستقیم این را نشان داد: یک درخواست بلافاصله بعد از قبلی، رد نمی‌شد).
-**راه‌حل:** در `app/core/db.php`، بلافاصله بعد از اتصال PDO، یک `SET time_zone = '+03:30'` (محاسبه‌شده دقیقاً از تنظیم `date_default_timezone_get()` پروژه، نه به‌صورت Hardcode) روی Session دیتابیس اجرا می‌شود تا ساعت MySQL همیشه دقیقاً با PHP یکی باشد.
-**تست شد:** بعد از این رفع، `NOW()` در MySQL و `date('Y-m-d H:i:s')` در PHP دقیقاً یکسان شدند؛ تست فاصله ارسال مجدد کد تایید (اولین درخواست موفق، درخواست فوری بعدی رد می‌شود با پیام «لطفاً کمی صبر کنید») و تست تضمین قیمت سبد خرید (بلافاصله بعد از افزودن آیتم، تضمین فعال است) هر دو دوباره تایید شدند.
-
-### ✨ قابلیت جدید: تگ محصولات
-- دو جدول جدید: `tags` (نام/اسلاگ یکتا) و `product_tags` (رابطه چند-به-چند با محصولات).
-- در فرم افزودن/ویرایش محصول، همه تگ‌های موجود در سایت (روی هر محصولی، چه فعال چه غیرفعال) به‌صورت چک‌باکس نمایش داده می‌شوند؛ **هر ادمینی، هر زمان** می‌تواند تگ‌های هر محصولی را تغییر دهد (بدون محدودیت مالکیت). یک فیلد متنی هم برای افزودن تگ تازه (با کاما جدا) وجود دارد؛ اگر تگ از قبل نباشد، همان لحظه ساخته می‌شود.
-- تنظیم جدید در پنل «تنظیمات فروشگاه» (`show_product_tags`, پیش‌فرض فعال): نمایش/عدم‌نمایش تگ‌ها در صفحه محصول، برای همه ادمین‌ها قابل تغییر.
-- صفحه جدید سایت `/tag/{اسلاگ}`: لیست محصولات دارای آن تگ — هم برای «پیشنهاد محصولات مشابه» به کاربر، هم برای سئو (هر تگ یک URL مجزا و قابل ایندکس دارد).
-- روی صفحه محصول، تگ‌ها به‌صورت لینک‌های کوچک (`#تگ`) نمایش داده می‌شوند که به همین صفحه تگ می‌روند.
-
-### ✨ قابلیت جدید: صفحه پروفایل کامل مشتری
-- بازطراحی کامل `/account`: کارت اطلاعات شخصی قابل‌ویرایش (نام، ایمیل)، نشان‌های «تایید شده ✓» / «تایید نشده ⚠» برای موبایل/ایمیل، خلاصه سبد خرید فعلی، و جدول تاریخچه سفارش‌ها.
-- صفحه جدید `/account/order/{کد سفارش}`: جزئیات کامل یک سفارش خاص (اقلام، مبالغ، آدرس ارسال) — با بررسی سمت سرور که سفارش واقعاً متعلق به همان مشتری لاگین‌شده باشد (در غیر این‌صورت ۴۰۴، نه نمایش اطلاعات کاربر دیگر).
-- تغییر ایمیل از پروفایل، وضعیت تایید ایمیل را خودکار ریست می‌کند (باید دوباره تایید شود).
-
-### ✨ قابلیت جدید: احراز شماره موبایل با کد پیامکی (فراز اس‌ام‌اس)
-- **تغییر مهم در فرآیند ثبت‌نام:** از این نسخه، ثبت‌نام دیگر بلافاصله کاربر را وارد حساب نمی‌کند. حساب ساخته می‌شود، یک کد ۶ رقمی پیامک می‌شود، و کاربر باید در صفحه جدید `/verify-phone` این کد را وارد کند تا Session کامل (ورود واقعی) شکل بگیرد.
-- اگر کاربری با رمز درست ولی حساب تایید‌نشده وارد شود، به‌جای ورود کامل، دوباره به `/verify-phone` هدایت می‌شود (با یک کد تازه).
-- حساب‌های ساخته‌شده در نسخه‌های قبل (۱.۲.۰ و ماقبل)، در Migration به‌صورت خودکار «تایید‌شده» علامت می‌خورند تا قفل نشوند (این الزام موقع ثبت‌نامشان وجود نداشته).
-- سرویس جدید `app/services/FarazSmsService.php`: اتصال به API الگو-محور (Pattern-Based) فراز اس‌ام‌اس / Iran Payamak (مستندات رسمی‌شان بررسی و پیاده‌سازی بر همان اساس انجام شد). چون این نوع پیامک نیاز به یک «پترن» از پیش تایید‌شده در پنل دارد، کد `FARAZ_OTP_PATTERN_CODE` و نام متغیرش (`FARAZ_OTP_PATTERN_VAR`) در Config قابل تنظیم‌اند.
-  - ⚠️ **نیاز به تکمیل دستی:** مقدار `FARAZ_LINE_NUMBER` باید از پنل سرویس پیامک تکمیل شود و در مستندات عمومی نباید مقدار واقعی آن قرار گیرد.
-  - Fail-Safe by default: تا وقتی `FARAZ_SMS_ENABLED` روی `true` و کلید/پترن/خط تنظیم نشوند، پیامک واقعی ارسال نمی‌شود و فقط در جدول `sms_log` لاگ می‌گردد؛ سایت کرش نمی‌کند.
-
-### ✨ قابلیت جدید: احراز ایمیل با کد ارسالی از طریق SMTP
-- سرویس جدید `app/services/EmailService.php` با **PHPMailer واقعی** (نسخه رسمی v6.9.1، مستقیم از GitHub دانلود و بدون نیاز به Composer در پوشه `app/vendor/PHPMailer/` قرار داده شده — فقط آپلود فایل کافی است).
-- چرا PHPMailer به‌جای تابع `mail()` داخلی PHP؟ چون `mail()` معمولاً روی هاست اشتراکی توسط Gmail/Outlook و... به‌عنوان Spam رد می‌شود؛ ارسال با SMTP احراز‌شده نرخ تحویل به‌مراتب بهتری دارد.
-- صفحه جدید `/verify-email`: بعد از تایید موبایل (اگر ایمیل موقع ثبت‌نام وارد شده) یا هر زمان از پروفایل، کاربر می‌تواند ایمیلش را با کد ۶ رقمی تایید کند. تایید ایمیل اختیاری است (فقط اگر ایمیل وارد شده باشد) و مسدودکننده ورود نیست — فقط موبایل الزامی است.
-- Fail-Safe by default: تا `SMTP_ENABLED` را `true` نکنید و اطلاعات واقعی SMTP را وارد نکنید، ایمیل واقعی ارسال نمی‌شود؛ خطای قابل‌فهم برمی‌گردد بدون کرش.
-
-### 🔒 سرویس مشترک کدهای تایید (`app/services/VerificationService.php`)
-منطق مشترک بین احراز موبایل و ایمیل، در یک سرویس واحد:
-- هر کد ۱۰ دقیقه اعتبار دارد.
-- حداکثر ۵ تلاش نادرست مجاز است؛ بعدش باید کد جدید بگیرید.
-- بین دو درخواست ارسال کد، حداقل ۶۰ ثانیه فاصله لازم است (جلوگیری از هزینه/سوءاستفاده پیامکی و ایمیلی).
-- کد به‌صورت Hash شده (`sha256`) ذخیره می‌شود، نه متن خام — حتی اگر دیتابیس لو برود، کدهای فعال قابل استخراج نیستند.
-- همه این رفتارها به‌صورت مستقیم (فراخوانی توابع سرویس، نه فقط از روی کد) تست شدند: کد اشتباه رد می‌شود، کد درست یک‌بار مصرف می‌شود (استفاده دوباره از همان کد رد می‌شود)، و محدودیت فاصله ارسال مجدد اعمال می‌شود.
-
-### ✨ قابلیت جدید: کنترل سئو و ایندکس گوگل
-- تنظیم جدید `seo_indexing_enabled` در پنل ادمین (**پیش‌فرض: غیرفعال**) — تا زمانی که محصولات واقعی و محتوای نهایی آماده نشده‌اند، ایندکس‌نشدن صفحات ناقص به‌صورت پیش‌فرض فعال است.
-- `robots.txt` و `sitemap.xml` اکنون پویا هستند (`robots.php` و `sitemap.php` در ریشه پروژه، با Rewrite در `.htaccess`):
-  - وقتی غیرفعال: `Disallow: /` برای همه ربات‌ها.
-  - وقتی فعال: صفحات عمومی (خانه، درباره/تماس، دسته‌بندی‌ها، محصولات) Allow می‌شوند؛ صفحات خصوصی/بی‌ارزش برای سئو (پنل ادمین، AJAX، سبد خرید، Checkout، حساب کاربری) همیشه Disallow هستند؛ آدرس Sitemap هم اعلام می‌شود.
-  - `sitemap.xml` لیست همه دسته‌بندی‌ها و محصولات فعال را با `lastmod` می‌سازد.
-- در `<head>` هر صفحه: تگ `robots` (بر اساس همین تنظیم)، `canonical`، و تگ‌های پایه Open Graph (`og:title`, `og:description`, `og:image` در صورت وجود) اضافه شد.
-- صفحه محصول اضافه‌تر: توضیحات اختصاصی (خلاصه‌شده از توضیح محصول)، تصویر برای Open Graph، و **Schema.org Product JSON-LD کامل** (نام، تصویر، SKU، قیمت به ریال طبق استاندارد schema.org، وضعیت موجودی — با استفاده از همان منطق درست‌شده موجودی مؤثر واریانت‌ها) برای نمایش بهتر در نتایج جستجوی گوگل (مثلا Rich Snippets قیمت/موجودی).
-
-### 🗄️ تغییرات دیتابیس (`database/migrations/004_v1.2.1_tags_verification_seo.sql`)
-- جداول جدید: `tags`, `product_tags`, `verification_codes`
-- `customers`: ستون‌های جدید `email`, `phone_verified_at`, `email_verified_at`
-- مشتریان موجود از قبل، خودکار `phone_verified_at = created_at` می‌گیرند (توضیح بالا)
-- تنظیمات جدید: `show_product_tags` (پیش‌فرض `1`)، `seo_indexing_enabled` (پیش‌فرض `0`)
-- **تست شد:** این Migration روی یک کپی شبیه‌سازی‌شده از دیتابیس v1.2.0 حاوی مشتری و سفارش واقعی اجرا شد؛ هیچ داده‌ای از دست نرفت و مشتری موجود خودکار تایید‌شده علامت خورد.
-
-### ⚙️ تنظیمات جدید مورد نیاز در `config.php`
-این نسخه چند ثابت پیکربندی جدید دارد که همگی به‌صورت پیش‌فرض غیرفعال/خالی هستند (Fail-Safe؛ نبودشان سایت را خراب نمی‌کند):
-`FARAZ_SMS_ENABLED`, `FARAZ_API_KEY`, `FARAZ_OTP_PATTERN_CODE`, `FARAZ_OTP_PATTERN_VAR`, `FARAZ_LINE_NUMBER`, `SMTP_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`. جزئیات کامل تکمیل این مقادیر در `README-DEPLOY.md` آمده است.
-
----
----
-
-## [۱.۲.۰] — حساب کاربری مشتری، سبد خرید دائمی، تضمین قیمت، زیردسته‌بندی و بهبودهای مدیریت محصول
-
-### خلاصه
-این نسخه، فروشگاه را از یک مدل «فقط Guest Checkout» به یک فروشگاه دارای حساب کاربری واقعی برای مشتریان ارتقا می‌دهد، و مجموعه‌ای از ابزارهای مدیریتی (زیردسته‌بندی، چند-واریانتی هوشمند، SKU خودکار، حذف سفارش، دسترسی سریع به محصولات ویژه) را به پنل ادمین اضافه می‌کند. هیچ کدام از تغییرات این نسخه ساختار v1.1.0 (جداسازی app/views) را بر هم نمی‌زند؛ همه‌چیز روی همان پایه ساخته شده.
-
-### ✨ قابلیت جدید: حساب کاربری مشتری بر اساس شماره موبایل
-- جدول جدید `customers` (phone منحصربه‌فرد، password_hash، full_name).
-- صفحات جدید سایت: `/signup`، `/login`، `/logout`، `/account` (پروفایل + تاریخچه سفارش‌های ثبت‌شده با آن حساب).
-- **تصمیم طراحی مهم:** ورود بر اساس شماره موبایل + **رمز عبور** پیاده‌سازی شد، نه کد یک‌بارمصرف پیامکی (OTP). دلیل: `SmsService` در این پروژه به‌صورت پیش‌فرض در حالت Log-Only است (تا سرویس واقعی پیامک متصل نشود)، بنابراین ورود مبتنی بر OTP در حالت پیش‌فرض عملاً غیرقابل‌استفاده می‌بود. این تصمیم در کد (`app/core/customer_auth.php`) مستند شده و افزودن OTP به‌عنوان گزینه دوم در آینده امکان‌پذیر است.
-- امنیت: `password_hash`/`password_verify`، `session_regenerate_id` بعد از ورود/ثبت‌نام (جلوگیری از Session Fixation)، محدودسازی سرعت تلاش‌های ناموفق (`usleep`)، جلوگیری از Open Redirect در پارامتر `next` صفحه ورود (فقط مسیرهای داخلی پذیرفته می‌شوند).
-- فرم Checkout برای کاربر لاگین‌شده با نام/موبایل حسابش از قبل پر می‌شود (فقط راحتی کاربر؛ اعتبارسنجی کامل باز هم سمت سرور انجام می‌شود).
-- ستون `customer_id` (اختیاری، Nullable) به `orders` اضافه شد؛ سفارش مهمان (بدون حساب) هم همچنان کامل کار می‌کند.
-
-### ✨ قابلیت جدید: سبد خرید دائمی برای کاربران لاگین‌شده
-- جدول جدید `cart_items` (customer_id + product_id + variant_id با UNIQUE KEY ترکیبی؛ `variant_id` به‌جای NULL از مقدار `0` برای «بدون واریانت» استفاده می‌کند چون MySQL چند NULL را در UNIQUE KEY تکراری حساب نمی‌کند).
-- `app/core/cart.php` به‌طور کامل بازنویسی شد تا دو مسیر مجزا داشته باشد:
-  - **مهمان:** دقیقاً مثل قبل، در `$_SESSION['cart']`.
-  - **کاربر لاگین‌شده:** در دیتابیس، پایدار بین دستگاه‌ها/جلسات مختلف.
-  - رابط توابع (`cartAdd`, `cartUpdateQty`, `cartRemove`, `cartClear`, `cartCount`, `cartDetails`) برای هر دو حالت یکسان است؛ کنترلرها و View ها نیازی به دانستن نوع کاربر ندارند.
-- **ادغام سبد مهمان بعد از ورود/ثبت‌نام:** اگر کاربر قبل از لاگین به‌عنوان مهمان چیزی به سبد اضافه کرده باشد، `mergeGuestCartIntoCustomerCart()` آن‌ها را به سبد دائمی حسابش منتقل می‌کند (نه جایگزین، بلکه با حساب موجود Merge می‌شود) تا چیزی گم نشود.
-- **تست شده:** یک کاربر آیتمی را در یک Session کاملاً جدید (Cookie جدید، شبیه‌سازی دستگاه دیگر) بعد از ورود مجدد مشاهده کرد — یعنی سبد واقعاً به حساب متصل است، نه به مرورگر.
-
-### ✨ قابلیت جدید: تضمین قیمت سبد خرید (Price Guarantee)
-این پیچیده‌ترین منطق این نسخه است؛ به همین دلیل با دقت بیشتری تست شد.
-
-- هر ردیف `cart_items` یک `locked_unit_price` دارد: قیمت مؤثر محصول/واریانت در **لحظه افزودن** به سبد.
-- «تاریخ شروع» تضمین قیمت سبد = `MIN(added_at)` بین ردیف‌های فعلی سبد کاربر (قدیمی‌ترین آیتم موجود). چون این مقدار از روی ردیف‌های *فعلی* محاسبه می‌شود، اگر سبد کاملاً خالی شود و بعداً آیتم تازه‌ای اضافه شود، این تاریخ به‌طور خودکار از نو شروع می‌شود — نیازی به ستون یا منطق جداگانه برای «ریست کردن» نبود.
-- تنظیمات قابل مدیریت در پنل ادمین (`admin/settings.php`، جدول جدید Key-Value به‌نام `settings`):
-  - فعال/غیرفعال بودن کل قابلیت (`price_guarantee_enabled`)
-  - تعداد روزهای تضمین (`price_guarantee_days`, پیش‌فرض ۷)
-- منطق محاسبه در `cartDetailsForCustomer()`: اگر سن سبد کمتر از مهلت تضمین باشد، `locked_unit_price` هر آیتم استفاده می‌شود؛ در غیر این‌صورت قیمت زنده (Live) محصول جایگزین می‌شود — به‌صورت همیشگی برای آن سبد (تا وقتی خالی و دوباره پر نشود).
-- در صفحه سبد خرید، یک بنر وضعیت نشان می‌دهد: «قیمت تا تاریخ X تضمین شده» یا «مهلت تضمین تمام شده، قیمت‌ها به‌روز محاسبه شدند»، و کنار هر آیتمِ دارای قیمت قفل‌شده، برچسب «قیمت تضمین‌شده» نمایش داده می‌شود.
-- **سه سناریو زیر عملاً تست شدند** (نه فقط از روی کد بررسی شدند):
-  1. افزایش قیمت محصول در بازه ۷ روزه → مجموع سبد کاربر **بدون تغییر** ماند (قیمت قدیم).
-  2. همان سبد را با `added_at` دستکاری‌شده به «۸ روز پیش» شبیه‌سازی کردیم → مجموع سبد بلافاصله به قیمت زنده (جدید) پرید.
-  3. غیرفعال‌سازی کامل قابلیت از پنل ادمین → حتی سبدِ کاملاً تازه هم بلافاصله قیمت زنده را نشان داد.
-
-### ✨ قابلیت جدید: حذف سفارش توسط مدیر کل (Super Admin)
-- دکمه «حذف کامل سفارش» هم در لیست سفارش‌ها و هم در صفحه جزئیات سفارش اضافه شد؛ فقط برای `super_admin` قابل مشاهده است.
-- محافظت **سمت سرور** با `requireSuperAdmin()` انجام می‌شود، نه فقط پنهان‌سازی دکمه در UI — یعنی حتی اگر یک ادمین عادی درخواست POST را مستقیم و دستی بسازد، رد می‌شود (تست شد).
-- حذف سفارش با `ON DELETE CASCADE` روی `order_items` همراه است؛ نیازی به Query دستی برای پاک کردن اقلام سفارش نبود.
-
-### ✨ قابلیت جدید: زیردسته‌بندی محصولات
-- ستون `parent_id` (Nullable، خودارجاع) به جدول `categories` اضافه شد.
-- در پنل ادمین (`admin/categories.php`)، هر دسته می‌تواند یک «دسته والد» انتخاب کند (فقط دسته‌های سطح اول به‌عنوان گزینه والد قابل انتخاب‌اند تا تودرتویی بیش از یک سطح ایجاد نشود؛ محدودیتی عمدی برای ساده ماندن).
-- در سایت، صفحه یک دسته‌بندی اصلی، زیردسته‌هایش را به‌صورت Chip قابل‌کلیک نمایش می‌دهد و **محصولات زیردسته‌ها را هم در لیست خودش نشان می‌دهد** (`getCategoryAndChildIds()`) — یعنی مشتری با ورود به «جوراب مردانه» محصولات «ساق کوتاه» را هم می‌بیند، حتی اگر مستقیماً وارد آن زیردسته نشده باشد.
-- منوی بالای سایت فقط دسته‌های سطح اول را نشان می‌دهد تا شلوغ نشود؛ زیردسته‌ها داخل صفحه دسته والد در دسترس‌اند.
-
-### ✨ قابلیت جدید: تولید خودکار و یکتای SKU
-- تابع جدید `generateUniqueSku()` در `app/core/functions.php`: کد به فرمت `SOCK-XXXXXX` (رشته Hex تصادفی) تولید می‌کند و قبل از پذیرفتن، در دیتابیس بررسی می‌کند که تکراری نباشد (تا ۱۰ بار تلاش با Fallback نهایی بر اساس `uniqid`).
-- در فرم افزودن محصول، اگر SKU خالی گذاشته شود، خودکار ساخته می‌شود. اگر SKU دستی وارد شود، یکتا بودنش نسبت به بقیه محصولات بررسی و در صورت تکراری بودن رد می‌شود (تست شد).
-- ستون `products.sku` یک `UNIQUE KEY` واقعی در دیتابیس گرفت (قبلاً فقط `VARCHAR` ساده بود، بدون قید یکتایی).
-- **Migration برای داده‌های موجود:** محصولاتی که از قبل SKU نداشتند (خالی/NULL)، در حین Migration با یک کد پیش‌فرض (`SOCK-010001`، `SOCK-010002`, ...) پر می‌شوند؛ SKU های دستیِ از قبل موجود دست‌نخورده باقی می‌مانند (تست شد: یک SKU دستی نمونه `MYOWN-001` بعد از Migration بدون تغییر ماند).
-
-### ✨ قابلیت جدید: چک‌باکس «دارای واریانت» در فرم محصول
-- چک‌باکس جدید `has_variants` به فرم افزودن/ویرایش محصول اضافه شد.
-- با فعال بودنش (جاوااسکریپت سمت کلاینت):
-  - فیلد «موجودی کلی» غیرفعال (Disabled) و کم‌رنگ می‌شود، چون موجودی باید از طریق ردیف‌های واریانت مدیریت شود.
-  - بخش «سایزها/رنگ‌ها» فعال و برجسته می‌شود.
-- منطق سمت سرور مستقل از جاوااسکریپت است (دفاع در عمق): اگر `has_variants` ارسال نشده باشد، ردیف‌های واریانت فرم کاملاً نادیده گرفته می‌شوند؛ اگر ارسال شده باشد، فیلد «موجودی کلی» صرف‌نظر از مقدار ارسالی همیشه با `0` در دیتابیس ذخیره می‌شود (چون موجودی واقعی از جمع واریانت‌ها به دست می‌آید). این رفتار مستقیماً تست شد.
-
-### ✨ قابلیت جدید: نمایش موجودی هر واریانت در لیست محصولات ادمین
-- در `admin/products.php`، ستون «موجودی» برای محصولات دارای واریانت، به‌جای یک عدد کلی، موجودی هر واریانت را جدا نشان می‌دهد (مثلا `39-42 مشکی: 15` و `43-46 مشکی: 8` در دو خط زیر هم).
-- به‌جای N+1 Query برای هر محصول، از یک Subquery با `GROUP_CONCAT` در همان Query اصلی لیست محصولات استفاده شد تا Performance حفظ شود.
-
-### ✨ قابلیت جدید: دسترسی سریع به «محصولات ویژه» در پنل ادمین
-- لینک جدید در ساید‌بار ادمین («⭐ پیشنهاد ویژه») که مستقیم به `products.php?featured=1` می‌رود.
-- همان کنترلر/View لیست محصولات استفاده شده (بدون تکرار کد)؛ فقط یک شرط `WHERE is_featured = 1` اضافه به Query موجود.
-
-### 🗄️ تغییرات دیتابیس (`database/migrations/003_v1.2.0_customer_accounts_cart_price_guarantee.sql`)
-- جدول جدید: `customers`
-- جدول جدید: `cart_items`
-- جدول جدید: `settings` (به همراه دو مقدار اولیه: `price_guarantee_enabled=1`, `price_guarantee_days=7`)
-- `categories`: ستون جدید `parent_id` (Nullable, Self-referencing Foreign Key)
-- `products`: Backfill مقدار `sku` برای رکوردهای بدون کد + افزودن `UNIQUE KEY` روی `sku`
-- `orders`: ستون جدید `customer_id` (Nullable Foreign Key به `customers`)
-- **تست شد:** این Migration روی یک کپی شبیه‌سازی‌شده از دیتابیس v1.1.0 حاوی داده واقعی (سفارش، محصول، ادمین) اجرا شد؛ هیچ داده‌ای از دست نرفت و SKU های دستیِ از قبل موجود حفظ شدند.
-
-### 🎨 تغییرات رابط کاربری
-- آیکون ورود/حساب کاربری در کنار آیکون سبد خرید در Header سایت اضافه شد (بسته به وضعیت لاگین، به `/login` یا `/account` می‌رود).
-- منوی اصلی سایت اکنون فقط دسته‌های سطح اول را نشان می‌دهد (زیردسته‌ها داخل صفحه دسته والد در دسترس‌اند) تا شلوغ نشود.
-- بنر وضعیت تضمین قیمت و برچسب «قیمت تضمین‌شده» در صفحه سبد خرید.
-
-### 📌 نکته سازگاری با نسخه‌های قبل
-- هیچ Breaking Change ای برای مسیرهای موجود (سایت/ادمین) وجود ندارد. کاربران مهمان دقیقاً مثل قبل کار می‌کنند.
-- بعد از اجرای Migration، اجرای فایل `install.php` قبلی (اگر هنوز حذف نکرده‌اید) هیچ تأثیری روی جدول `admins` ندارد؛ آن فایل مخصوص اولین نصب است و اگر ادمینی از قبل وجود داشته باشد، خودکار قفل می‌ماند.
-
----
----
-
-## [۱.۱.۰] — به‌روزرسانی درگاه پرداخت، پیامک، کد تخفیف، چند-ادمینی و بازساختاردهی کد
-
-### خلاصه
-
-### 🐛 رفع باگ
-- **[Critical] خطای Forbidden روی صفحه سبد خرید (`/cart`)**
-  - **علت ریشه‌ای:** یک پوشه فیزیکی به نام `cart/` (حاوی `add.php`, `update.php`, `remove.php` برای عملیات AJAX) با نام Route صفحه سبد خرید (`/cart`) یکی بود. قانون Rewrite در `.htaccess` وقتی می‌بیند مسیر درخواستی به یک پوشه *واقعی* روی دیسک می‌خورد، Rewrite را متوقف می‌کند؛ چون نمایش لیست پوشه (`Options -Indexes`) غیرفعال است، Apache به‌جای اجرای منطق سبد خرید، خطای ۴۰۳ Forbidden برمی‌گرداند.
-  - **راه‌حل:** پوشه `cart/` به `ajax/` تغییر نام یافت و فایل‌های داخلش به `cart_add.php`, `cart_update.php`, `cart_remove.php` تغییر نام گرفتند تا با هیچ Route تعریف‌شده‌ای در `index.php` هم‌نام نباشند. تمام ارجاعات (`assets/js/main.js`, فرم‌های `views/site/cart.php`) به‌روزرسانی شدند.
-  - **درس گرفته‌شده:** این قانون به `docs/ARCHITECTURE.md` بخش ۶ اضافه شد: «هیچ پوشه فیزیکی نباید هم‌نام یکی از Route های تعریف‌شده در index.php باشد».
-
-- **[Minor] اصلاح گزارش نادرست تعداد جدول‌های دیتابیس**
-  - در توضیحات نسخه قبل به اشتباه گفته شد Schema شامل ۹ جدول است؛ تعداد واقعی در نسخه ۱.۰.۰، **۸ جدول** بود (`admins, categories, coupons, orders, order_items, product_images, product_variants, products`). این خطای گزارشی بود، نه خطای کد. در نسخه ۱.۱.۰ با افزودن `sms_log`، تعداد واقعی جدول‌ها به **۹** رسیده است.
-
-### ♻️ بازساختاردهی (Refactor) — جداسازی منطق از نمایش
-- پوشه `includes/` حذف و محتوایش بازتوزیع شد:
-  - `db.php`, `functions.php`, `csrf.php`, `auth.php`, `cart.php`, `bootstrap.php` → منتقل به `app/core/` و `app/bootstrap.php`
-  - `header.php`, `footer.php` (سایت) → منتقل به `views/layout/`
-  - `admin_header.php`, `admin_footer.php` → منتقل به `views/admin/layout/`
-- پوشه `pages/` حذف شد. هر صفحه به دو فایل مجزا شکسته شد:
-  - **کنترلر** (منطق/Query/پردازش فرم) → `app/controllers/site/{page}.php`
-  - **View** (فقط HTML) → `views/site/{page}.php`
-  - همین الگو برای تمام صفحات پنل ادمین هم اجرا شد: `app/controllers/admin/{page}.php` + `views/admin/{page}.php`
-- پوشه `admin/` دیگر شامل منطق نیست؛ فقط شامل فایل‌های «نازک» (Thin Entry Point) است که Bootstrap را لود، سطح دسترسی را چک، و کنترلر واقعی را require می‌کنند.
-- تابع جدید `renderView($view, $data)` به `app/bootstrap.php` اضافه شد تا کنترلرها بدون دسترسی مستقیم به فایل‌سیستم View، بتوانند آن را با داده مشخص رندر کنند.
-- پوشه‌های `app/` و `views/` هر دو با `.htaccess` (`Require all denied`) از دسترسی مستقیم مرورگر محافظت می‌شوند (این پوشه‌ها فقط از طریق `require` سمت سرور در دسترس‌اند).
-- **دلیل این تصمیم:** توسعه آینده (مثلا تغییر ظاهر یک صفحه) دیگر نیازی به دست‌زدن به منطق تجاری ندارد و برعکس؛ همچنین احتمال باگ‌هایی مثل مورد بالا (تداخل نام Route با پوشه فیزیکی) به‌شدت کاهش می‌یابد چون منطق دیگر در کنار فایل‌های مستقیماً قابل‌دسترس قرار ندارد.
-
-- کلاس جدید `app/services/ZarinpalService.php` بر اساس REST API نسخه ۴ زرین‌پال.
-- در فرآیند Checkout، گزینه «پرداخت آنلاین (زرین‌پال)» در کنار «پرداخت در محل» اضافه شد (کاربر انتخاب می‌کند).
-- Endpoint جدید `payment/zarinpal_callback.php`: بازگشت کاربر از درگاه را مدیریت و تراکنش را نهایی می‌کند.
-- Endpoint جدید `payment/retry.php`: امکان تلاش مجدد پرداخت برای سفارشی که قبلاً ثبت شده ولی پرداختش ناموفق بوده (بدون از دست رفتن سفارش/موجودی کسرشده).
-- صفحه جدید `/order/failed/{کد}` برای نمایش شکست پرداخت با دکمه تلاش مجدد.
-- ستون‌های جدید در جدول `orders`: `payment_status`, `payment_authority`, `payment_ref_id`.
-
-### ✨ قابلیت جدید: سیستم پیامک
-- کلاس جدید `app/services/SmsService.php`، آماده اتصال به کاوه‌نگار (Kavenegar).
-- طراحی Fail-Safe: اگر کلید API تنظیم نشده باشد یا `SMS_ENABLED=false`، هیچ پیامک واقعی ارسال نمی‌شود؛ فقط پیام در جدول جدید `sms_log` ثبت می‌شود (سایت هرگز به‌خاطر نبود تنظیمات پیامک خطا نمی‌دهد).
-- پیامک خودکار در دو رویداد ارسال می‌شود: تایید پرداخت موفق آنلاین، و تغییر وضعیت سفارش توسط ادمین.
-
-### ✨ قابلیت جدید: فعال‌سازی کد تخفیف در فرآیند خرید
-- کلاس جدید `app/services/CouponService.php` (اعتبارسنجی + محاسبه تخفیف).
-- فیلد اعمال کد تخفیف به صفحه سبد خرید (`views/site/cart.php`) اضافه شد.
-- کد تخفیف اعمال‌شده در `$_SESSION['coupon']` نگه‌داری و در Checkout دوباره Validate می‌شود (در برابر انقضا/تمام‌شدن ظرفیت بین این فاصله).
-- Endpoint های جدید: `ajax/coupon_apply.php`, `ajax/coupon_remove.php`.
-- ستون جدید `coupon_id` در جدول `orders` (برای پیوند دقیق‌تر با رکورد کوپن، جدا از `coupon_code` متنی که از قبل بود).
-
-### ✨ قابلیت جدید: پشتیبانی از چند ادمین با سطح دسترسی
-- ستون‌های جدید در جدول `admins`: `role` (`super_admin` | `admin`, پیش‌فرض `admin`)، `is_active`.
-- صفحه جدید پنل مدیریت: `admin/users.php` (فقط برای `super_admin` قابل مشاهده) با امکانات:
-  - افزودن ادمین جدید با تعیین سطح دسترسی
-  - تغییر رمز عبور هر ادمین
-  - فعال/غیرفعال کردن حساب (بدون حذف کامل)
-  - حذف حساب (با محافظت: نمی‌توان آخرین `super_admin` را حذف/غیرفعال کرد، و نمی‌توان حساب خود را حذف/غیرفعال کرد)
-- تابع‌های جدید در `app/core/auth.php`: `requireSuperAdmin()`, `isSuperAdmin()`.
-- اولین ادمینی که از طریق `install.php` ساخته می‌شود، خودکار `super_admin` می‌شود.
-- لینک «مدیریت ادمین‌ها» در نوار کناری پنل فقط برای `super_admin` نمایش داده می‌شود.
-
-### 🗄️ تغییرات دیتابیس
-- فایل Migration جدید: `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql`
-  - این فایل برای دیتابیس‌هایی است که از قبل نسخه ۱.۰.۰ روی آن‌ها نصب شده (مثل سایت لایو فعلی)؛ فقط ستون/جدول اضافه می‌کند، **هیچ داده‌ای حذف/بازنویسی نمی‌شود**.
-  - سفارش‌های قبلی (قبل از این آپدیت) که وضعیتشان `confirmed` به بعد بوده، به‌صورت خودکار `payment_status = paid` علامت می‌خورند (چون در نسخه قبل مفهوم پرداخت آنلاین اصلاً وجود نداشت).
-  - اولین ادمین موجود در دیتابیس خودکار `super_admin` می‌شود.
-- فایل پایه `database/schema.sql` هم به‌روزرسانی شد تا نصب‌های تازه (از صفر) مستقیم همه این ستون‌ها/جدول‌ها را داشته باشند — نیازی به اجرای جداگانه Migration برای نصب‌های جدید نیست.
-
-### ⚙️ تغییرات پیکربندی (`config/config.php`)
-شش ثابت جدید اضافه شد:
-```php
-define('ZARINPAL_MERCHANT_ID', '00000000-0000-0000-0000-000000000000'); // مرچنت آزمایشی پیش‌فرض
-define('SMS_ENABLED', false);
-define('SMS_PROVIDER_API_KEY', '');
-define('SMS_SENDER_LINE', '');
-```
-
-### 📄 مستندسازی
-- سند جدید `docs/ARCHITECTURE.md`: مرجع کامل معماری، جریان درخواست‌ها، مدل داده، و منطق‌های حیاتی امنیتی.
-- همین سند (`docs/CHANGELOG.md`) برای اولین بار ایجاد شد.
-- ثابت جدید `APP_VERSION` در `app/bootstrap.php` برای ردیابی نسخه فعلی برنامه در کد.
-
-### ✅ تست‌های انجام‌شده برای این نسخه
-تمام موارد زیر روی یک محیط PHP 8.3 + MariaDB واقعی (نه فقط بازبینی کد) تست و تایید شدند:
-- Lint کامل تمام فایل‌های PHP (صفر خطا)
-- اجرای Migration روی یک دیتابیس شبیه‌سازی‌شده از نسخه ۱.۰.۰ (بدون از دست رفتن داده)
-- رفع باگ صفحه سبد خرید (قبل: ۴۰۳ Forbidden ← بعد: ۲۰۰ OK)، با شبیه‌سازی دقیق رفتار Apache/mod_rewrite
-- اعمال و حذف کد تخفیف، و صحت محاسبه تخفیف در جمع نهایی سفارش
-- ثبت سفارش کامل با پرداخت در محل (COD)
-- ورود ادمین اول (`super_admin`) و ساخت ادمین دوم (`admin`) از پنل
-- تایید محدودیت دسترسی: ادمین سطح `admin` از صفحه مدیریت ادمین‌ها بلاک و به داشبورد هدایت می‌شود؛ به بقیه پنل دسترسی دارد
-- شبیه‌سازی Callback ناموفق زرین‌پال → صفحه شکست پرداخت با دکمه تلاش مجدد رندر صحیح دارد
-
-### ⚠️ نکات مهم برای استقرار این نسخه در محیط عملیاتی
-1. **قبل از هر چیز، از دیتابیس فعلی Backup بگیرید** (از DirectAdmin یا phpMyAdmin → Export).
-2. فایل `database/migrations/002_v1.1.0_payment_sms_coupons_admins.sql` را فقط **یک‌بار** از phpMyAdmin (تب SQL) روی دیتابیس لایو اجرا کنید.
-3. کل ساختار جدید پروژه (تمام پوشه‌ها اعم از `app/`, `views/`, `ajax/`, `payment/`) باید **جایگزین** نسخه قبلی روی هاست شود، نه صرفاً اضافه — پوشه‌های قدیمی `includes/`, `pages/`, `cart/` باید حذف شوند تا تداخلی پیش نیاید.
-4. مقادیر `config/config.php` سایت لایو (اطلاعات دیتابیس واقعی) باید در فایل جدید `config.php` دوباره وارد شود؛ فایل جدید فقط Placeholder دارد.
-5. بعد از آپلود، حتماً یک سفارش آزمایشی با هر دو روش پرداخت (آنلاین و COD) تست شود.
-
----
----
-
-## [۱.۰.۰] — نسخه اول (MVP)
-
-اولین نسخه قابل‌استفاده فروشگاه؛ شامل:
-- فروشگاه سمت مشتری: صفحه اصلی، دسته‌بندی، جزئیات محصول (با واریانت سایز/رنگ)، سبد خرید (Session-based)، Checkout با پرداخت در محل، صفحه موفقیت سفارش، صفحات درباره/تماس/قوانین.
-- پنل مدیریت: داشبورد، CRUD محصولات (با آپلود تصویر و مدیریت واریانت)، CRUD دسته‌بندی، مدیریت سفارش‌ها و تغییر وضعیت.
-- زیرساخت: PHP خام بدون فریم‌ورک، MySQL، احراز هویت ادمین با Session، محافظت CSRF/XSS/SQL Injection، نصب اولیه بدون CLI (`install.php`).
-- Deploy مستقیم روی هاست اشتراکی DirectAdmin بدون Composer/npm/SSH.
+### Optimized & Fixed (BUG-A001)
+- Client-side Canvas-based image optimization pipeline in admin panel (`assets/js/admin-image-optimizer.js`): automatic WebP conversion, intelligent aspect-preserving resizing, and 90-98%+ file size reduction without shared hosting RAM/CPU overhead.
+- Full support for large raw uploads (up to 30-40 MB) and iPhone camera format (HEIC/HEIF) via on-demand vendored decoder (`assets/js/vendor/heic2any.min.js`).
+- Complete elimination of sensitive data, GPS coordinates, and camera EXIF metadata in the browser, with defense-in-depth verification on backend.
+- Interactive Live Preview widget showing original vs compressed file sizes, savings percentage, dimensions, and live quality slider.
+- Integrated across product main and gallery images, gift box / gift item images, and site branding logo (preserving vector SVG).
+- Full compliance with RULE-UI001 with custom responsive views for mobile, tablet, and desktop.
+- Backend verification with `getimagesize()` and EXIF sanitization in `functions.php` and `settings.php`.

@@ -48,11 +48,5 @@ Options -Indexes
 
 # --- جلوگیری از نمایش فایل‌های حساس در صورت اشتباه در آپلود ---
 <FilesMatch "\.(sql|log|md|env)$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Deny from all
-    </IfModule>
+    Require all denied
 </FilesMatch>

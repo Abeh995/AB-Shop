@@ -1,12 +1,6 @@
 # Prevent script execution inside uploads (security)
 <FilesMatch "\.(php|php[3-8]?|phtml|pl|py|cgi|asp|sh)$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Deny from all
-    </IfModule>
+    Require all denied
 </FilesMatch>
 
 # Disable directory listing
