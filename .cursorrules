@@ -1,0 +1,7 @@
+# Cursor Rules for AB-Socks
+
+Instructions for Cursor AI working on this repository:
+1. You MUST read and follow `AGENTS.md` before making any modifications.
+2. When the user asks to "commit", "save", or "کامیت کن", follow the **Mandatory Commit & Release Workflow** in `AGENTS.md` (bump `APP_VERSION`, update `docs/CHANGELOG.md`, run `php tools/verify.php`, commit with Conventional Commits, tag `vX.Y.Z`, push with `--follow-tags`, and create GitHub release via `gh`).
+3. Never write raw SQL queries or money logic outside services (`PricingService`, `GiftService`, `OrderService`).
+4. Keep controllers under 80-120 lines and views pure presentation (0 SQL queries).

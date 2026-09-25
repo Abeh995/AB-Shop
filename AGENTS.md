@@ -110,18 +110,52 @@ them silently is worse than asking first.
      `['ok' => bool, 'error' => string]`.
    - **The Boy Scout Rule**: Never leave code more bloated than you found it.
      If a feature touches an existing long file, decompose it rather than appending.
-8. **Atomic Releases & GitHub Integration.** Every version bump in `APP_VERSION`
-   MUST be an atomic release:
-   - Update `docs/CHANGELOG.md` (English, single source of truth; keep recent ~5 releases, older in `docs/CHANGELOG-ARCHIVE.md`).
+8. **Atomic Releases & GitHub Integration.** Every code change (feature, bug fix, refactor)
+   that alters application behavior MUST be shipped as an **Atomic Release**:
+   - Bump `APP_VERSION` in `app/bootstrap.php` (semver).
+   - Add a dated entry at the top of `docs/CHANGELOG.md` (English, single source of truth; keep recent ~5 releases, older in `docs/CHANGELOG-ARCHIVE.md`).
+   - If domain architecture changed, update `docs/architecture/<domain>.md`.
+   - Run verification quality gate: `php tools/verify.php`.
+   - Commit with Conventional Commits format.
    - Create an annotated Git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
    - Push with tags: `git push origin main --follow-tags`.
-   - Create the GitHub Release directly via GitHub CLI (`gh release create vX.Y.Z --title "Release vX.Y.Z" --notes-file ...`).
-     Never leave untagged versions or missing GitHub releases.
+   - Create the GitHub Release directly via GitHub CLI (`gh release create vX.Y.Z --title "Release vX.Y.Z" --notes-file ...` or inline notes).
+   - **NEVER** leave untagged versions, unpushed tags, or missing GitHub releases.
 9. **Quality Gate Verification before claiming Done.** Always run:
    ```
    php tools/verify.php
    ```
    Fix all syntax errors, controller bloat, view impurities, and version mismatches.
+
+## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")
+
+Whenever the user instructs to **"commit"**, **"save changes"**, **"کامیت کن"**, or **"release"**, DO NOT just execute a bare `git commit`. Follow this exact sequence:
+
+1. **Pre-flight Quality Gate**:
+   - Run `php tools/verify.php` (or check `php -l` on all modified files).
+   - If financial/stock logic was touched (`PricingService`, `GiftService`, `OrderService`, `cart.php`), re-verify concurrency row-locking (`SELECT ... FOR UPDATE` and conditional `WHERE stock >= ?`).
+2. **Classify Change & Bump Version**:
+   - `PATCH` (`1.16.x`): bug fixes, UI/UX polish, internal refactors.
+   - `MINOR` (`1.x.0`): new features, database schema additions (`database/migrations/` + `schema.sql`).
+   - *Skip bump only for pure documentation/typo fixes with zero code modifications.*
+   - Bump `APP_VERSION` in `app/bootstrap.php`.
+3. **Update Documentation**:
+   - Prepend new entry to `docs/CHANGELOG.md` under `## X.Y.Z — YYYY-MM-DD` in English.
+   - If system architecture or domain invariants changed, update the relevant `docs/architecture/<domain>.md` file in place.
+4. **Git Commit with Conventional Commits**:
+   ```bash
+   git add <modified_files>
+   git commit -m "type(scope): concise imperative title" -m "Release: vX.Y.Z`n`n- what changed and why`n- Migration: NNN_vX.Y.Z_... (if applicable)"
+   ```
+5. **Tag & Push**:
+   ```bash
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   git push origin main --follow-tags
+   ```
+6. **Create GitHub Release via CLI**:
+   ```bash
+   gh release create vX.Y.Z --title "Release vX.Y.Z" --notes "### Release Summary for vX.Y.Z..."
+   ```
 
 ## Making a change
 
@@ -138,16 +172,7 @@ them silently is worse than asking first.
    fresh-install baseline) in the same commit. Migrations must be safe to
    re-run (`CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`, guarded
    `ALTER TABLE`) and must never silently drop or truncate data.
-3. **Bump `APP_VERSION` in `app/bootstrap.php`** using semver
-   (MAJOR.MINOR.PATCH) for anything beyond a trivial typo fix.
-4. **Update changelog and architecture docs if behavior changed**:
-   - Add a dated entry in `docs/CHANGELOG.md` in English.
-   - If the change alters system architecture or domain design, update the
-     specific affected domain file in `docs/architecture/<domain>.md` (e.g.
-     `financial-and-stock.md`, `auth-and-security.md`, `theme-and-media.md`,
-     or `core-and-lifecycle.md`). Do not pollute architecture docs with
-     historical bug-fix narratives.
-5. **Never rewrite history in a way that breaks an existing variant/product
+3. **Never rewrite history in a way that breaks an existing variant/product
    id.** A recurring class of bug in this codebase has been "delete and
    recreate" logic that silently orphaned IDs other tables referenced (fixed
    in 1.5.0 for product variants — see `docs/architecture/financial-and-stock.md`). Prefer
