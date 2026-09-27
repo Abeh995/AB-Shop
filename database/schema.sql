@@ -284,6 +284,7 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_status ENUM('unpaid','paid','failed') NOT NULL DEFAULT 'unpaid',
     payment_authority VARCHAR(64) DEFAULT NULL,
     payment_ref_id VARCHAR(64) DEFAULT NULL,
+    tracking_code VARCHAR(100) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,

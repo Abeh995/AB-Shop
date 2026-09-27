@@ -1,12 +1,20 @@
-﻿# Changelog Archive (v1.0.0 â€” v1.11.0)
+# Changelog Archive (v1.0.0 — v1.12.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.11.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.12.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 1.12.0 — 2026-09-23
 
-## 1.11.0 — 2026-09-22
+### Optimized & Fixed (BUG-A001)
+- Client-side Canvas-based image optimization pipeline in admin panel (`assets/js/admin-image-optimizer.js`): automatic WebP conversion, intelligent aspect-preserving resizing, and 90-98%+ file size reduction without shared hosting RAM/CPU overhead.
+- Full support for large raw uploads (up to 30-40 MB) and iPhone camera format (HEIC/HEIF) via on-demand vendored decoder (`assets/js/vendor/heic2any.min.js`).
+- Complete elimination of sensitive data, GPS coordinates, and camera EXIF metadata in the browser, with defense-in-depth verification on backend.
+- Interactive Live Preview widget showing original vs compressed file sizes, savings percentage, dimensions, and live quality slider.
+- Integrated across product main and gallery images, gift box / gift item images, and site branding logo (preserving vector SVG).
+- Full compliance with RULE-UI001 with custom responsive views for mobile, tablet, and desktop.
+- Backend verification with `getimagesize()` and EXIF sanitization in `functions.php` and `settings.php`.
 
 ### Added (FEAT-A001)
 - Standardized naming for all uploaded files: product main images (`product-{ID}-main-{hash}.ext`), gallery (`product-{ID}-g{sort}-{hash}.ext`), gift items (`giftitem-{ID}-main-{hash}.ext`), and site logo (`logo-site-{hash}.ext`).

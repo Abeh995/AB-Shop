@@ -445,3 +445,148 @@ function setActiveTheme(int $themeId): void
         throw $e;
     }
 }
+
+/**
+ * Convert Gregorian date to Jalali (Solar Hijri / Shamsi)
+ * Pure PHP algorithm, zero dependencies, shared-hosting safe.
+ *
+ * @param int $gy Gregorian year (e.g. 2026)
+ * @param int $gm Gregorian month (1-12)
+ * @param int $gd Gregorian day (1-31)
+ * @return array{0: int, 1: int, 2: int} [jy, jm, jd]
+ */
+function gregorianToJalali(int $gy, int $gm, int $gd): array
+{
+    $g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    if ($gy > 1600) {
+        $jy = 979;
+        $gy -= 1600;
+    } else {
+        $jy = 0;
+        $gy -= 621;
+    }
+    $gy2 = ($gm > 2) ? ($gy + 1) : $gy;
+    $days = (365 * $gy) + ((int)(($gy2 + 3) / 4)) - ((int)(($gy2 + 99) / 100))
+        + ((int)(($gy2 + 399) / 400)) - 80 + $gd + $g_d_m[$gm - 1];
+    $jy += 33 * ((int)($days / 12053));
+    $days %= 12053;
+    $jy += 4 * ((int)($days / 1461));
+    $days %= 1461;
+    if ($days > 365) {
+        $jy += (int)(($days - 1) / 365);
+        $days = ($days - 1) % 365;
+    }
+    $jm = ($days < 186) ? 1 + (int)($days / 31) : 7 + (int)(($days - 186) / 30);
+    $jd = 1 + (($days < 186) ? ($days % 31) : (($days - 186) % 30));
+    return [$jy, $jm, $jd];
+}
+
+/**
+ * Universal project date/time formatter.
+ * Handles Gregorian (میلادی), Jalali (شمسی), and precise time.
+ * Can return formatted strings or a structured array.
+ *
+ * @param string|int|DateTimeInterface|null $dateTime Timestamp, date string (e.g. 'Y-m-d H:i:s'), or null for now
+ * @param string $format 'shamsi'|'shamsi_text'|'gregorian'|'time'|'time_full'|'full_shamsi'|'full_gregorian'|'array'
+ * @return string|array
+ */
+function appDateTime($dateTime = null, string $format = 'shamsi_text')
+{
+    if ($dateTime === null) {
+        $ts = time();
+    } elseif (is_numeric($dateTime)) {
+        $ts = (int) $dateTime;
+    } elseif ($dateTime instanceof DateTimeInterface) {
+        $ts = $dateTime->getTimestamp();
+    } else {
+        $parsed = strtotime((string) $dateTime);
+        $ts = ($parsed !== false) ? $parsed : time();
+    }
+
+    $gy = (int) date('Y', $ts);
+    $gm = (int) date('n', $ts);
+    $gd = (int) date('j', $ts);
+    $hour = date('H', $ts);
+    $min = date('i', $ts);
+    $sec = date('s', $ts);
+    $wDay = (int) date('w', $ts); // 0=Sun, 6=Sat
+
+    [$jy, $jm, $jd] = gregorianToJalali($gy, $gm, $gd);
+
+    $shamsiMonths = [
+        1 => 'فروردین', 2 => 'اردیبهشت', 3 => 'خرداد',
+        4 => 'تیر', 5 => 'مرداد', 6 => 'شهریور',
+        7 => 'مهر', 8 => 'آبان', 9 => 'آذر',
+        10 => 'دی', 11 => 'بهمن', 12 => 'اسفند',
+    ];
+
+    $persianWeekdays = [
+        6 => 'شنبه',
+        0 => 'یکشنبه',
+        1 => 'دوشنبه',
+        2 => 'سه‌شنبه',
+        3 => 'چهارشنبه',
+        4 => 'پنجشنبه',
+        5 => 'جمعه',
+    ];
+
+    $monthName = $shamsiMonths[$jm] ?? '';
+    $weekdayName = $persianWeekdays[$wDay] ?? '';
+
+    $padJm = str_pad((string)$jm, 2, '0', STR_PAD_LEFT);
+    $padJd = str_pad((string)$jd, 2, '0', STR_PAD_LEFT);
+    $padGm = str_pad((string)$gm, 2, '0', STR_PAD_LEFT);
+    $padGd = str_pad((string)$gd, 2, '0', STR_PAD_LEFT);
+
+    $shamsiDigits = toPersianDigits("{$jy}/{$padJm}/{$padJd}");
+    $shamsiText = "{$weekdayName} " . toPersianDigits((string)$jd) . " {$monthName} " . toPersianDigits((string)$jy);
+    $timeFormatted = toPersianDigits("{$hour}:{$min}");
+    $timeFull = toPersianDigits("{$hour}:{$min}:{$sec}");
+    $gregorianFormatted = "{$gy}-{$padGm}-{$padGd}";
+
+    switch ($format) {
+        case 'shamsi':
+            return $shamsiDigits;
+        case 'shamsi_text':
+            return $shamsiText;
+        case 'gregorian':
+            return $gregorianFormatted;
+        case 'time':
+            return $timeFormatted;
+        case 'time_full':
+            return $timeFull;
+        case 'full_shamsi':
+            return "{$shamsiText}، ساعت {$timeFormatted}";
+        case 'full_gregorian':
+            return "{$gregorianFormatted} {$hour}:{$min}:{$sec}";
+        case 'array':
+            return [
+                'timestamp' => $ts,
+                'jalali' => [
+                    'year' => $jy,
+                    'month' => $jm,
+                    'day' => $jd,
+                    'month_name' => $monthName,
+                    'weekday_name' => $weekdayName,
+                    'formatted' => $shamsiDigits,
+                    'formatted_text' => $shamsiText,
+                ],
+                'gregorian' => [
+                    'year' => $gy,
+                    'month' => $gm,
+                    'day' => $gd,
+                    'formatted' => $gregorianFormatted,
+                    'formatted_full' => "{$gregorianFormatted} {$hour}:{$min}:{$sec}",
+                ],
+                'time' => [
+                    'hour' => $hour,
+                    'minute' => $min,
+                    'second' => $sec,
+                    'formatted' => $timeFormatted,
+                    'formatted_full' => $timeFull,
+                ],
+            ];
+        default:
+            return $shamsiText;
+    }
+}

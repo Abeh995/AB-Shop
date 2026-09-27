@@ -35,34 +35,6 @@ if (!empty($pathCoords)) {
 }
 ?>
 
-<!-- ======================================================================= -->
-<!-- Compact Dashboard Header (Brand + Search Trigger + Store Link)           -->
-<!-- ======================================================================= -->
-<div class="dash-topbar">
-    <div class="dash-topbar-right">
-        <div class="dash-brand-badge">AB</div>
-        <div class="dash-title-wrap">
-            <span class="dash-main-title">داشبورد مدیریت <?= e(SITE_NAME) ?></span>
-            <span class="dash-title-sub">نمای تحلیلی و عملیات فروشگاه</span>
-        </div>
-    </div>
-
-    <div class="dash-topbar-left">
-        <!-- Compact Search Button (Opens Command Palette / Ctrl+K) -->
-        <button type="button" class="btn-dash-search" onclick="openAdminCmdPalette()" title="جستجوی سریع در پنل (Ctrl+K)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <span>جستجو در سیستم...</span>
-            <kbd class="dash-keycap">Ctrl K</kbd>
-        </button>
-
-        <!-- Direct Storefront Link -->
-        <a href="/" target="_blank" class="btn-dash-store" title="مشاهده سایت سمت مشتری">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            <span>مشاهده فروشگاه</span>
-        </a>
-    </div>
-</div>
-
 <div class="dash-workspace">
 
     <!-- =================================================================== -->

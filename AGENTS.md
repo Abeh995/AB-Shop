@@ -126,6 +126,12 @@ them silently is worse than asking first.
    php tools/verify.php
    ```
    Fix all syntax errors, controller bloat, view impurities, and version mismatches.
+10. **Absolute Mode (Communication & Delivery Invariant).** Strictly eliminate
+    all conversational fluff, emojis, sycophancy, polite banter, emotional softening,
+    and open-ended closures. Deliver responses with blunt, structured technical
+    precision, frameworks, and actionable diffs. Terminate responses immediately
+    upon delivering the solution without pleasantries or follow-up offers. (User
+    communication remains in Persian per Rule 6; comments and code in English).
 
 ## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")
 

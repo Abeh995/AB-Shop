@@ -52,92 +52,210 @@
     line-height: 1.2;
 }
 
-.admin-main { flex: 1; padding: 26px 32px; max-width: 100%; overflow-x: auto; }
+.admin-main { flex: 1; padding: 0 0 95px 0; max-width: 100%; overflow-x: auto; min-height: 100vh; }
+body:not(.admin-page-dashboard):not(.admin-page-orders) .admin-main > :not(.dash-topbar) {
+    margin-right: 28px;
+    margin-left: 28px;
+}
 
-/* Admin Topbar & Global Live Search (FEAT-A004) */
-.admin-topbar {
+/* ==========================================================================
+   Unified Modern Admin Topbar & Global Pill Search (FEAT-A004)
+   ========================================================================== */
+.dash-topbar {
+    height: 56px;
+    background: rgba(247, 245, 240, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-border, #E8E2D9);
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    padding: 0 20px;
+    margin: 0 0 16px 0;
+    width: 100%;
+    box-sizing: border-box;
 }
-.admin-topbar-title-wrap h1 {
-    font-size: 1.35rem;
-    margin: 0;
-    font-weight: 800;
-    color: #221912;
+
+.dash-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
 }
+
+.dash-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Responsive Pill Search Bar */
 .admin-search-box {
     position: relative;
-    flex: 1;
-    max-width: 480px;
-    min-width: 220px;
+    width: 280px;
+    max-width: 100%;
+    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.admin-search-box:focus-within {
+    width: 360px;
 }
 .admin-search-input-wrap {
     position: relative;
     display: flex;
     align-items: center;
-    background: #FFF;
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 4px 12px 4px 12px;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border, #E8E2D9);
+    border-radius: 9999px; /* Pill Border Radius */
+    padding: 6px 14px;
+    gap: 8px;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 .admin-search-input-wrap:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(88, 43, 28, 0.12);
+    border-color: var(--color-primary, #8C472E);
+    box-shadow: 0 0 0 3px rgba(140, 71, 46, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .admin-search-icon {
-    color: #8A7A69;
+    color: var(--color-muted, #8A7A69);
     flex-shrink: 0;
-    margin-left: 8px;
 }
 .admin-search-input {
     flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
-    font-size: 0.88rem;
-    padding: 6px 0;
+    font-size: 0.82rem;
+    font-family: inherit;
     color: #221912;
     direction: rtl;
+    padding: 0;
+}
+.admin-search-input::placeholder {
+    color: #9E9182;
+    font-size: 0.8rem;
 }
 .admin-search-kbd {
     font-family: monospace;
-    font-size: 0.68rem;
-    background: #F0EDE7;
+    font-size: 0.65rem;
+    background: #F4EFEA;
     color: #8A7A69;
-    border-radius: 4px;
-    padding: 2px 6px;
-    border: 1px solid #D8CDBF;
+    border-radius: 9999px;
+    padding: 2px 7px;
+    border: 1px solid #E2D9CD;
     user-select: none;
     line-height: 1.2;
+    flex-shrink: 0;
 }
-.admin-topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.admin-user { font-size: .88rem; color: var(--color-muted); }
-.admin-storefront-btn {
+
+/* Compact Storefront Link Button */
+.btn-dash-store-compact {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: #FFF;
-    border: 1px solid var(--color-border);
+    gap: 5px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #584A3E;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border, #E8E2D9);
+    border-radius: 9999px; /* Matches pill search aesthetics */
     text-decoration: none;
-    font-size: 1.1rem;
+    white-space: nowrap;
     transition: all 0.15s ease;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
-.admin-storefront-btn:hover {
-    background: #FAF8F5;
-    border-color: var(--color-primary);
+.btn-dash-store-compact:hover {
+    color: var(--color-primary, #8C472E);
+    border-color: var(--color-primary, #8C472E);
+    background: #FAF5F0;
+    transform: translateY(-1px);
+}
+
+/* Stacked 2-Line Real-Time Live Date & Clock Widget */
+.dash-live-datetime {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* In RTL, flex-end is flush left */
+    justify-content: center;
+    line-height: 1.25;
+    text-align: left;
+    user-select: none;
+}
+.live-clock-time {
+    font-family: monospace;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--color-primary, #8C472E);
+    direction: ltr;
+    letter-spacing: 0.5px;
+}
+.live-clock-date {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #8A7A69;
+    direction: rtl;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+/* Topbar Responsive Rules */
+@media (max-width: 768px) {
+    .dash-topbar {
+        padding: 0 12px;
+        gap: 8px;
+        height: 52px;
+        margin-bottom: 12px;
+    }
+    .admin-search-box {
+        width: 100%;
+        max-width: 200px;
+    }
+    .admin-search-box:focus-within {
+        width: 100%;
+        max-width: 240px;
+    }
+    .admin-search-kbd {
+        display: none;
+    }
+    .admin-search-input {
+        font-size: 0.78rem;
+    }
+    .btn-dash-store-compact {
+        padding: 5px 8px;
+        font-size: 0.72rem;
+    }
+    .live-clock-time {
+        font-size: 0.82rem;
+    }
+    .live-clock-date {
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-search-box {
+        max-width: 145px;
+    }
+    .admin-search-box:focus-within {
+        max-width: 170px;
+    }
+    .btn-dash-store-compact .store-btn-text {
+        display: none;
+    }
+    .btn-dash-store-compact {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+    }
 }
 
 /* Global Search Results Dropdown */
@@ -996,34 +1114,39 @@
    Modern Dashboard Tab Redesign (Scoped strictly to .admin-page-dashboard)
    All other admin tabs and sub-pages remain unchanged.
    ========================================================================== */
-.admin-page-dashboard {
+.admin-page-dashboard,
+.admin-page-orders {
     background-color: #F7F5F0 !important;
     font-size: 13.5px !important;
     line-height: 1.5;
 }
 
-.admin-page-dashboard .admin-wrap {
+.admin-page-dashboard .admin-wrap,
+.admin-page-orders .admin-wrap {
     display: block !important;
 }
 
-.admin-page-dashboard .admin-sidebar {
+.admin-page-dashboard .admin-sidebar,
+.admin-page-orders .admin-sidebar {
     display: none !important;
 }
 
-.admin-page-dashboard .admin-topbar,
-.admin-page-dashboard .sub-nav-wrapper {
+.admin-page-dashboard .sub-nav-wrapper,
+.admin-page-orders .sub-nav-wrapper {
     display: none !important;
 }
 
-.admin-page-dashboard .admin-main {
+.admin-page-dashboard .admin-main,
+.admin-page-orders .admin-main {
     max-width: 100% !important;
     padding: 0 0 95px 0 !important;
     margin: 0 !important;
     min-height: 100vh;
 }
 
-/* Floating Bottom Navigation Dock for Dashboard */
-.admin-page-dashboard .admin-bottom-nav {
+/* Floating Bottom Navigation Dock for Dashboard & Orders */
+.admin-page-dashboard .admin-bottom-nav,
+.admin-page-orders .admin-bottom-nav {
     display: flex !important;
     position: fixed !important;
     bottom: 20px !important;
@@ -1042,7 +1165,8 @@
     justify-content: center !important;
 }
 
-.admin-page-dashboard .admin-bottom-nav-item {
+.admin-page-dashboard .admin-bottom-nav-item,
+.admin-page-orders .admin-bottom-nav-item {
     flex-direction: row !important;
     gap: 7px !important;
     padding: 7px 14px !important;
@@ -1054,32 +1178,37 @@
     transition: all 0.18s ease !important;
 }
 
-.admin-page-dashboard .admin-bottom-nav-item:hover {
+.admin-page-dashboard .admin-bottom-nav-item:hover,
+.admin-page-orders .admin-bottom-nav-item:hover {
     color: #FFF !important;
     background: rgba(255, 255, 255, 0.08) !important;
     transform: translateY(-2px) !important;
 }
 
-.admin-page-dashboard .admin-bottom-nav-item.active {
+.admin-page-dashboard .admin-bottom-nav-item.active,
+.admin-page-orders .admin-bottom-nav-item.active {
     background: linear-gradient(135deg, #C46C46 0%, #8C472E 100%) !important;
     color: #FFF !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 12px rgba(196, 108, 70, 0.4) !important;
 }
 
-.admin-page-dashboard .admin-bottom-nav-item.active .nav-icon-wrap {
+.admin-page-dashboard .admin-bottom-nav-item.active .nav-icon-wrap,
+.admin-page-orders .admin-bottom-nav-item.active .nav-icon-wrap {
     color: #FFF !important;
 }
 
 @media (max-width: 600px) {
-    .admin-page-dashboard .admin-bottom-nav {
+    .admin-page-dashboard .admin-bottom-nav,
+    .admin-page-orders .admin-bottom-nav {
         bottom: 12px !important;
         padding: 5px 8px !important;
         gap: 4px !important;
         width: calc(100% - 24px) !important;
         border-radius: 16px !important;
     }
-    .admin-page-dashboard .admin-bottom-nav-item {
+    .admin-page-dashboard .admin-bottom-nav-item,
+    .admin-page-orders .admin-bottom-nav-item {
         padding: 6px 8px !important;
         font-size: 0.72rem !important;
         flex-direction: column !important;

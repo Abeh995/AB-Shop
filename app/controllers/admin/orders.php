@@ -1,46 +1,77 @@
 <?php
-$pageTitle = 'سفارش‌ها';
+/**
+ * Modern Admin Orders Tab Controller
+ * Handles filtering, pagination, live actions, and hands data to views/admin/orders.php.
+ */
+$pageTitle = 'مدیریت سفارش‌ها';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    verifyCsrf();
-    requireSuperAdmin();
-    $id = (int) ($_POST['id'] ?? 0);
-    db()->prepare("DELETE FROM orders WHERE id = ?")->execute([$id]);
-    setFlash('success', 'سفارش حذف شد.');
-    redirect('orders.php');
-}
-
-$statusFilter = $_GET['status'] ?? '';
 $statusLabels = [
-    'pending' => 'در انتظار بررسی', 'confirmed' => 'تأیید شده', 'processing' => 'در حال پردازش',
-    'shipped' => 'ارسال شده', 'delivered' => 'تحویل داده شده', 'cancelled' => 'لغو شده',
+    'pending'    => 'در انتظار بررسی',
+    'confirmed'  => 'تأیید شده',
+    'processing' => 'در حال بسته‌بندی',
+    'shipped'    => 'ارسال شده با پست',
+    'delivered'  => 'تحویل داده شده',
+    'cancelled'  => 'لغو شده',
 ];
 
-$where = '1=1';
-$params = [];
-if ($statusFilter && isset($statusLabels[$statusFilter])) {
-    $where = 'status = ?';
-    $params[] = $statusFilter;
-}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
+    $action = $_POST['action'] ?? '';
 
-$stmt = db()->prepare("SELECT * FROM orders WHERE $where ORDER BY created_at DESC");
-$stmt->execute($params);
-$orders = $stmt->fetchAll();
+    if ($action === 'delete') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $res = OrderService::deleteOrder($id);
+        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'سفارش با موفقیت حذف شد.' : $res['error']);
+        redirect('orders.php');
+    }
 
-// Load a compact "product (variant) x qty" summary per order in a single query,
-// so the admin can see which variant was purchased directly from the list
-// without opening every order individually.
-$itemsByOrder = [];
-if ($orders) {
-    $orderIds = array_column($orders, 'id');
-    $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
-    $itemsStmt = db()->prepare("SELECT order_id, product_name, variant_label, quantity
-                                 FROM order_items WHERE order_id IN ($placeholders)
-                                 ORDER BY id ASC");
-    $itemsStmt->execute($orderIds);
-    foreach ($itemsStmt->fetchAll() as $row) {
-        $itemsByOrder[$row['order_id']][] = $row;
+    if ($action === 'update_status') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $newStatus = trim($_POST['status'] ?? '');
+        $trackingCode = isset($_POST['tracking_code']) ? trim($_POST['tracking_code']) : null;
+        $res = OrderService::updateOrderStatus($id, $newStatus, $trackingCode);
+        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'وضعیت سفارش به‌روزرسانی شد.' : $res['error']);
+        redirect('orders.php');
+    }
+
+    if ($action === 'update_tracking') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $code = trim($_POST['tracking_code'] ?? '');
+        $res = OrderService::updateTrackingCode($id, $code);
+        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'کد رهگیری پستی ذخیره شد.' : $res['error']);
+        redirect('orders.php');
+    }
+
+    if ($action === 'verify_c2c') {
+        $id = (int) ($_POST['id'] ?? 0);
+        $decision = ($_POST['decision'] ?? '') === 'approved';
+        $res = OrderService::verifyCardToCardReceipt($id, $decision);
+        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? ($decision ? 'فیش کارت‌به‌کارت تأیید و وضعیت به در حال بسته‌بندی تغییر یافت.' : 'فیش کارت‌به‌کارت رد شد.') : $res['error']);
+        redirect('orders.php');
+    }
+
+    if ($action === 'bulk_status') {
+        $orderIds = explode(',', (string)($_POST['order_ids'] ?? ''));
+        $newStatus = trim($_POST['bulk_new_status'] ?? '');
+        $res = OrderService::bulkUpdateStatus($orderIds, $newStatus);
+        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? "وضعیت {$res['count']} سفارش تغییر یافت." : $res['error']);
+        redirect('orders.php');
     }
 }
 
-renderView('admin/orders', compact('pageTitle', 'statusFilter', 'statusLabels', 'orders', 'itemsByOrder'));
+// Read Filter and Pagination Parameters
+$filters = [
+    'status'         => trim($_GET['status'] ?? ''),
+    'search'         => trim($_GET['search'] ?? ''),
+    'payment_method' => trim($_GET['payment_method'] ?? ''),
+    'payment_status' => trim($_GET['payment_status'] ?? ''),
+    'date_range'     => trim($_GET['date_range'] ?? ''),
+];
+$page = (int) ($_GET['page'] ?? 1);
+$perPage = 15;
+
+$ordersData   = OrderService::getAdminOrders($filters, $page, $perPage);
+$orderStats   = OrderService::getAdminOrderStats();
+$statusCounts = OrderService::getAdminStatusCounts();
+
+renderView('admin/orders', compact('pageTitle', 'statusLabels', 'filters', 'ordersData', 'orderStats', 'statusCounts'));

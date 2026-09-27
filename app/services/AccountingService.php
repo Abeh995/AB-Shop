@@ -69,6 +69,8 @@ function getOrderProfitability(int $orderId): array
     $discount = (int) $order['discount_total'];
     $revenue = $productRevenue - $discount + $postOrderRevenue + $shippingRevenue;
     $totalCost = $productCost + $giftCost + $shippingCost;
+    $grossProfit = $revenue - $totalCost;
+    $marginPercent = ($revenue > 0) ? round(($grossProfit / $revenue) * 100, 1) : 0.0;
 
     return [
         'ok' => true,
@@ -81,10 +83,12 @@ function getOrderProfitability(int $orderId): array
         'gift_cost' => $giftCost,
         'shipping_cost' => $shippingCost,
         'total_cost' => $totalCost,
-        'gross_profit' => $revenue - $totalCost,
+        'gross_profit' => $grossProfit,
+        'margin_percent' => $marginPercent,
         'has_incomplete_cost_data' => $hasIncompleteCostData,
     ];
 }
+
 
 /**
  * Store-wide financial summary for a date range (inclusive), combining

@@ -159,19 +159,41 @@ class CardToCardReceiptService
 
     /**
      * Resolve the absolute path for a stored receipt file.
-     * Guards strictly against directory traversal and accepts both new standard names and legacy names.
+     * Guards strictly against directory traversal and accepts standard names and legacy names.
      */
     public static function pathForStoredFile(string $filename): ?string
     {
-        if (basename($filename) !== $filename) {
+        $filename = basename(trim($filename));
+        if ($filename === '') {
             return null;
         }
-        // Match standard format (receipt-order-{id}-{code}-{datetime}-{hash}.webp) or legacy (receipt-{48 hex}.(jpg|png|webp))
-        if (!preg_match('/^receipt-(order-\d+-[a-zA-Z0-9\-]+|[a-f0-9]{48})\.(jpg|png|webp)$/', $filename)) {
+
+        // Guard strictly against directory traversal
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
             return null;
         }
-        $path = CARD_TO_CARD_UPLOAD_DIR . $filename;
-        return is_file($path) ? $path : null;
+
+        // Validate image extension
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return null;
+        }
+
+        // Check canonical location first, then robust fallback directories
+        $candidates = [
+            CARD_TO_CARD_UPLOAD_DIR . $filename,
+            (defined('APP_ROOT') ? APP_ROOT . '/uploads/card_to_card/' . $filename : null),
+            (defined('UPLOAD_DIR') ? dirname(rtrim(UPLOAD_DIR, '/\\')) . '/card_to_card/' . $filename : null),
+            CARD_TO_CARD_TMP_DIR . $filename,
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($cand && is_file($cand)) {
+                return $cand;
+            }
+        }
+
+        return null;
     }
 
     /**

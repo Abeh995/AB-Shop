@@ -8,10 +8,7 @@ $pageTitle = $pageTitle ?? 'پنل مدیریت';
 $flash = getFlash();
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 
-$pendingOrdersCount = 0;
-try {
-    $pendingOrdersCount = (int) db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'payment_pending')")->fetchColumn();
-} catch (Exception $e) {}
+$pendingOrdersCount = class_exists('OrderService') ? OrderService::getPendingCount() : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -26,8 +23,11 @@ try {
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= APP_VERSION ?>">
+<?php if (in_array($currentPage, ['orders.php', 'order_detail.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= APP_VERSION ?>">
+<?php endif; ?>
 </head>
-<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : '' ?>">
+<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php'], true) ? 'admin-page-orders' : '') ?>">
 
 <div class="admin-wrap">
     <aside class="admin-sidebar">
@@ -47,9 +47,6 @@ try {
                 <?php if ($pendingOrdersCount > 0): ?>
                     <span class="admin-badge-count"><?= $pendingOrdersCount ?></span>
                 <?php endif; ?>
-            </a>
-            <a href="card_to_card_payments.php" class="<?= $currentPage === 'card_to_card_payments.php' ? 'active' : '' ?>">
-                <span class="nav-icon">💳</span> بررسی کارت‌به‌کارت
             </a>
 
             <div class="nav-group-label">محصولات</div>
@@ -72,6 +69,9 @@ try {
             <div class="nav-group-label">مالی</div>
             <a href="finance_dashboard.php" class="<?= $currentPage === 'finance_dashboard.php' ? 'active' : '' ?>">
                 <span class="nav-icon">📈</span> داشبورد مالی
+            </a>
+            <a href="card_to_card_payments.php" class="<?= $currentPage === 'card_to_card_payments.php' ? 'active' : '' ?>">
+                <span class="nav-icon">💳</span> فیش‌های کارت‌به‌کارت
             </a>
             <a href="expenses.php" class="<?= in_array($currentPage, ['expenses.php', 'expense_edit.php'], true) ? 'active' : '' ?>">
                 <span class="nav-icon">🧾</span> هزینه‌ها
@@ -109,29 +109,40 @@ try {
     </aside>
 
     <main class="admin-main">
-        <div class="admin-topbar">
-            <div class="admin-topbar-title-wrap">
-                <h1><?= e($pageTitle) ?></h1>
-            </div>
-
-            <!-- Global Live Search (FEAT-A004) -->
-            <div class="admin-search-box">
-                <div class="admin-search-input-wrap">
-                    <svg class="admin-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="search" id="adminGlobalSearch" class="admin-search-input" placeholder="جستجو در ادمین (صفحات، سفارش، کالا)..." autocomplete="off" spellcheck="false">
-                    <kbd class="admin-search-kbd">Ctrl+K</kbd>
+        <!-- Unified Modern Admin Topbar (Global across all tabs) -->
+        <header class="dash-topbar" id="adminGlobalTopbar">
+            <div class="dash-topbar-right">
+                <!-- Global Responsive Pill Search Bar -->
+                <div class="admin-search-box">
+                    <div class="admin-search-input-wrap">
+                        <svg class="admin-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="search" id="adminGlobalSearch" class="admin-search-input" placeholder="جستجو در پنل..." autocomplete="off" spellcheck="false" dir="rtl">
+                        <kbd class="admin-search-kbd">Ctrl K</kbd>
+                    </div>
+                    <div id="adminSearchResults" class="admin-search-results" style="display:none;"></div>
                 </div>
-                <div id="adminSearchResults" class="admin-search-results" style="display:none;"></div>
+
+                <!-- Compact Storefront Link -->
+                <a href="/" target="_blank" class="btn-dash-store-compact" title="مشاهده فروشگاه آنلاین (تب جدید)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    <span class="store-btn-text">فروشگاه</span>
+                </a>
             </div>
 
-            <div class="admin-topbar-user">
-                <span class="admin-user">👤 <?= e($_SESSION['admin_username'] ?? '') ?> <small style="opacity:.7;">(<?= isSuperAdmin() ? 'مدیر کل' : 'ادمین' ?>)</small></span>
-                <a href="/" target="_blank" class="admin-storefront-btn" title="مشاهده فروشگاه">🌐</a>
+            <div class="dash-topbar-left">
+                <!-- Stacked 2-Line Real-Time Live Date & Clock Widget (Zero Emojis, No Width Waste, Strict Alignment) -->
+                <div class="dash-live-datetime" id="dashLiveDateTime" title="ساعت و تاریخ جاری سیستم">
+                    <div class="live-clock-time" id="liveClockTime" dir="ltr"><?= appDateTime(null, 'time_full') ?></div>
+                    <div class="live-clock-date" id="liveClockDate" dir="rtl"><?= appDateTime(null, 'shamsi_text') ?></div>
+                </div>
             </div>
-        </div>
+        </header>
 
         <?php if ($flash): ?>
             <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
         <?php endif; ?>
 
-        <?php require APP_ROOT . '/views/admin/layout/sub_nav.php'; ?>
+        <?php if (!in_array($currentPage, ['index.php', 'orders.php', 'order_detail.php'], true)): ?>
+            <?php require APP_ROOT . '/views/admin/layout/sub_nav.php'; ?>
+        <?php endif; ?>
+

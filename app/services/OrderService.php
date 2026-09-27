@@ -168,4 +168,447 @@ class OrderService
             ];
         }
     }
+
+    /**
+     * Check if the tracking_code column exists in orders table (defensive for pending migrations)
+     */
+    public static function hasTrackingCodeColumn(): bool
+    {
+        static $has = null;
+        if ($has === null) {
+            try {
+                db()->query("SELECT tracking_code FROM orders LIMIT 0");
+                $has = true;
+            } catch (Throwable $e) {
+                $has = false;
+            }
+        }
+        return $has;
+    }
+
+    /**
+     * Get paginated admin orders with items and filters
+     */
+    public static function getAdminOrders(array $filters = [], int $page = 1, int $perPage = 15): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, min(100, $perPage));
+        $offset = ($page - 1) * $perPage;
+
+        $where = ['1=1'];
+        $params = [];
+
+        // Status Filter
+        if (!empty($filters['status']) && in_array($filters['status'], ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'], true)) {
+            $where[] = 'orders.status = ?';
+            $params[] = $filters['status'];
+        }
+
+        // Payment Method Filter
+        if (!empty($filters['payment_method']) && in_array($filters['payment_method'], ['zarinpal', 'card_to_card'], true)) {
+            $where[] = 'orders.payment_method = ?';
+            $params[] = $filters['payment_method'];
+        }
+
+        // Payment Status Filter
+        if (!empty($filters['payment_status']) && in_array($filters['payment_status'], ['paid', 'unpaid', 'failed'], true)) {
+            $where[] = 'orders.payment_status = ?';
+            $params[] = $filters['payment_status'];
+        }
+
+        // Date Range Filter
+        if (!empty($filters['date_range'])) {
+            switch ($filters['date_range']) {
+                case 'today':
+                    $where[] = 'DATE(orders.created_at) = CURDATE()';
+                    break;
+                case '3days':
+                    $where[] = 'orders.created_at >= DATE_SUB(NOW(), INTERVAL 3 DAY)';
+                    break;
+                case 'this_week':
+                    $where[] = 'orders.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+                    break;
+                case 'this_month':
+                    $where[] = 'orders.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+                    break;
+            }
+        }
+
+        // Search Query
+        if (!empty($filters['search'])) {
+            $q = '%' . trim($filters['search']) . '%';
+            if (self::hasTrackingCodeColumn()) {
+                $where[] = '(orders.order_code LIKE ? OR orders.customer_name LIKE ? OR orders.phone LIKE ? OR orders.city LIKE ? OR orders.province LIKE ? OR orders.tracking_code LIKE ?)';
+                $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q;
+            } else {
+                $where[] = '(orders.order_code LIKE ? OR orders.customer_name LIKE ? OR orders.phone LIKE ? OR orders.city LIKE ? OR orders.province LIKE ?)';
+                $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q;
+            }
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        // Count Total
+        $countStmt = db()->prepare("SELECT COUNT(*) FROM orders WHERE $whereSql");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+
+        // Fetch Orders
+        $selectCols = "orders.*";
+        $stmt = db()->prepare("SELECT $selectCols FROM orders WHERE $whereSql ORDER BY orders.created_at DESC LIMIT $perPage OFFSET $offset");
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll();
+
+        // Batch load order items and gift items
+        if (!empty($orders)) {
+            $orderIds = array_column($orders, 'id');
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+            // Load items
+            $itemStmt = db()->prepare("SELECT order_id, product_name, variant_label, quantity, unit_price, line_total
+                                       FROM order_items WHERE order_id IN ($placeholders)
+                                       ORDER BY id ASC");
+            $itemStmt->execute($orderIds);
+            $itemsMap = [];
+            foreach ($itemStmt->fetchAll() as $it) {
+                $itemsMap[$it['order_id']][] = $it;
+            }
+
+            // Load gift items
+            $giftMap = [];
+            try {
+                $giftStmt = db()->prepare("SELECT order_id, name, quantity, role FROM order_gift_items WHERE order_id IN ($placeholders)");
+                $giftStmt->execute($orderIds);
+                foreach ($giftStmt->fetchAll() as $g) {
+                    $giftMap[$g['order_id']][] = $g;
+                }
+            } catch (Throwable $e) {}
+
+            foreach ($orders as &$ord) {
+                $ord['items'] = $itemsMap[$ord['id']] ?? [];
+                $ord['gifts'] = $giftMap[$ord['id']] ?? [];
+                $ord['has_gift'] = !empty($ord['gifts']);
+                if (!isset($ord['tracking_code'])) {
+                    $ord['tracking_code'] = null;
+                }
+            }
+            unset($ord);
+        }
+
+        $pages = (int) ceil($total / $perPage);
+
+        return [
+            'orders'   => $orders,
+            'total'    => $total,
+            'pages'    => max(1, $pages),
+            'page'     => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
+    /**
+     * Get KPI summary metrics for admin orders dashboard
+     */
+    public static function getAdminOrderStats(): array
+    {
+        $pdo = db();
+        $stats = [
+            'pending_count'    => 0,
+            'total_sales'      => 0,
+            'total_orders'     => 0,
+            'processing_count' => 0,
+        ];
+
+        try {
+            $stats['pending_count'] = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pending'")->fetchColumn();
+            $stats['total_orders'] = (int) $pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn();
+            $stats['processing_count'] = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'processing'")->fetchColumn();
+            $stats['total_sales'] = (int) $pdo->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE payment_status = 'paid' OR status NOT IN ('cancelled')")->fetchColumn();
+        } catch (Throwable $e) {
+            error_log('Failed to fetch admin order stats: ' . $e->getMessage());
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Get order count per status tab
+     */
+    public static function getAdminStatusCounts(): array
+    {
+        $counts = [
+            'all'        => 0,
+            'pending'    => 0,
+            'confirmed'  => 0,
+            'processing' => 0,
+            'shipped'    => 0,
+            'delivered'  => 0,
+            'cancelled'  => 0,
+        ];
+
+        try {
+            $stmt = db()->query("SELECT status, COUNT(*) as cnt FROM orders GROUP BY status");
+            $rows = $stmt->fetchAll();
+            $all = 0;
+            foreach ($rows as $r) {
+                $st = $r['status'];
+                $cnt = (int) $r['cnt'];
+                $counts[$st] = $cnt;
+                $all += $cnt;
+            }
+            $counts['all'] = $all;
+        } catch (Throwable $e) {
+            error_log('Failed to fetch status counts: ' . $e->getMessage());
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Update an order's status and optionally tracking code
+     */
+    public static function updateOrderStatus(int $orderId, string $newStatus, ?string $trackingCode = null): array
+    {
+        $allowed = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+        if (!in_array($newStatus, $allowed, true)) {
+            return ['ok' => false, 'error' => 'وضعیت انتخاب‌شده معتبر نیست.'];
+        }
+
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return ['ok' => false, 'error' => 'سفارش مورد نظر یافت نشد.'];
+        }
+
+        try {
+            $statusLabels = [
+                'pending' => 'در انتظار بررسی', 'confirmed' => 'تأیید شده', 'processing' => 'در حال پردازش',
+                'shipped' => 'ارسال شده', 'delivered' => 'تحویل داده شده', 'cancelled' => 'لغو شده',
+            ];
+
+            if ($trackingCode !== null && self::hasTrackingCodeColumn()) {
+                $upd = $pdo->prepare("UPDATE orders SET status = ?, tracking_code = ? WHERE id = ?");
+                $upd->execute([$newStatus, trim($trackingCode) ?: null, $orderId]);
+            } else {
+                $upd = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                $upd->execute([$newStatus, $orderId]);
+            }
+
+            if ($newStatus !== $order['status']) {
+                SmsService::notifyOrderStatusChanged($order['phone'], $order['order_code'], $statusLabels[$newStatus] ?? $newStatus);
+            }
+
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to update order status: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در ثبت وضعیت سفارش.'];
+        }
+    }
+
+    /**
+     * Update postal tracking code
+     */
+    public static function updateTrackingCode(int $orderId, string $trackingCode): array
+    {
+        if (!self::hasTrackingCodeColumn()) {
+            return ['ok' => false, 'error' => 'ستون کد رهگیری پستی در پایگاه‌داده هنوز اعمال نشده است.'];
+        }
+
+        try {
+            $stmt = db()->prepare("UPDATE orders SET tracking_code = ? WHERE id = ?");
+            $stmt->execute([trim($trackingCode) ?: null, $orderId]);
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to update tracking code: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در ثبت کد رهگیری پستی.'];
+        }
+    }
+
+    /**
+     * Verify or reject card-to-card receipt for an order
+     */
+    public static function verifyCardToCardReceipt(int $orderId, bool $approved): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return ['ok' => false, 'error' => 'سفارش مورد نظر یافت نشد.'];
+        }
+
+        $newPaymentStatus = $approved ? 'paid' : 'failed';
+        $newOrderStatus = ($approved && $order['status'] === 'pending') ? 'processing' : $order['status'];
+
+        try {
+            $upd = $pdo->prepare("UPDATE orders SET payment_status = ?, status = ? WHERE id = ?");
+            $upd->execute([$newPaymentStatus, $newOrderStatus, $orderId]);
+
+            if (!empty($order['phone'])) {
+                SmsService::notifyPaymentStatusChanged($order['phone'], $order['order_code'], $newPaymentStatus);
+            }
+
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to verify c2c receipt: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در ثبت وضعیت فیش کارت‌به‌کارت.'];
+        }
+    }
+
+    /**
+     * Update order payment status
+     */
+    public static function updatePaymentStatus(int $orderId, string $newPaymentStatus): array
+    {
+        $allowed = ['unpaid', 'paid', 'failed'];
+        if (!in_array($newPaymentStatus, $allowed, true)) {
+            return ['ok' => false, 'error' => 'وضعیت پرداخت نامعتبر است.'];
+        }
+
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return ['ok' => false, 'error' => 'سفارش یافت نشد.'];
+        }
+
+        if ($newPaymentStatus === 'paid' && $order['payment_method'] === 'card_to_card' && empty($order['card_to_card_receipt'])) {
+            return ['ok' => false, 'error' => 'برای تایید پرداخت کارت‌به‌کارت ابتدا باید رسید موجود باشد.'];
+        }
+
+        try {
+            $pdo->prepare("UPDATE orders SET payment_status = ? WHERE id = ?")->execute([$newPaymentStatus, $orderId]);
+            if ($newPaymentStatus !== $order['payment_status'] && in_array($newPaymentStatus, ['paid', 'failed'], true)) {
+                if (!empty($order['phone'])) {
+                    SmsService::notifyPaymentStatusChanged($order['phone'], $order['order_code'], $newPaymentStatus);
+                }
+            }
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to update payment status: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در ثبت وضعیت پرداخت.'];
+        }
+    }
+
+    /**
+     * Transactional bulk status update
+     */
+    public static function bulkUpdateStatus(array $orderIds, string $newStatus): array
+    {
+        $allowed = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+        if (!in_array($newStatus, $allowed, true)) {
+            return ['ok' => false, 'error' => 'وضعیت نامعتبر است.'];
+        }
+
+        $orderIds = array_filter(array_map('intval', $orderIds));
+        if (empty($orderIds)) {
+            return ['ok' => false, 'error' => 'سفارشی انتخاب نشده است.'];
+        }
+
+        $pdo = db();
+        try {
+            $pdo->beginTransaction();
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+            $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id IN ($placeholders)");
+            $params = array_merge([$newStatus], $orderIds);
+            $stmt->execute($params);
+            $pdo->commit();
+            return ['ok' => true, 'error' => null, 'count' => count($orderIds)];
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('Bulk status update failed: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در تغییر وضعیت گروهی سفارشات.'];
+        }
+    }
+
+    /**
+     * Delete order (SuperAdmin only)
+     */
+    public static function deleteOrder(int $orderId): array
+    {
+        if (!isSuperAdmin()) {
+            return ['ok' => false, 'error' => 'تنها مدیر کل مجاز به حذف سفارش است.'];
+        }
+
+        try {
+            $stmt = db()->prepare("DELETE FROM orders WHERE id = ?");
+            $stmt->execute([$orderId]);
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to delete order: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در حذف سفارش.'];
+        }
+    }
+
+    /**
+     * Get count of pending orders for badge display.
+     */
+    public static function getPendingCount(): int
+    {
+        try {
+            return (int) db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'payment_pending')")->fetchColumn();
+        } catch (Throwable $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Find single order by ID.
+     */
+    public static function getOrder(int $orderId): ?array
+    {
+        $stmt = db()->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        return $order ?: null;
+    }
+
+    /**
+     * Get order items enriched with product gallery images for responsive view & lightbox.
+     *
+     * @param int $orderId
+     * @return array
+     */
+    public static function getOrderItemsWithGallery(int $orderId): array
+    {
+        $pdo = db();
+        $itemsStmt = $pdo->prepare("
+            SELECT oi.*, p.image AS product_main_image
+            FROM order_items oi
+            LEFT JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ");
+        $itemsStmt->execute([$orderId]);
+        $items = $itemsStmt->fetchAll();
+
+        $productIds = array_filter(array_unique(array_column($items, 'product_id')));
+        $productImagesMap = [];
+        if (!empty($productIds)) {
+            $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+            $galStmt = $pdo->prepare("SELECT product_id, image_path FROM product_images WHERE product_id IN ($placeholders) ORDER BY sort_order ASC, id ASC");
+            $galStmt->execute(array_values($productIds));
+            while ($row = $galStmt->fetch()) {
+                $productImagesMap[$row['product_id']][] = $row['image_path'];
+            }
+        }
+
+        foreach ($items as &$it) {
+            $imgs = !empty($it['product_main_image']) ? [$it['product_main_image']] : [];
+            $extra = (!empty($it['product_id']) && isset($productImagesMap[$it['product_id']])) ? $productImagesMap[$it['product_id']] : [];
+            $rawImgs = array_values(array_unique(array_merge($imgs, $extra)));
+            $fullUrls = [];
+            foreach ($rawImgs as $r) {
+                $fullUrls[] = UPLOAD_URL . $r;
+            }
+            $it['images'] = !empty($fullUrls) ? $fullUrls : ['/assets/img/placeholder-sock.svg'];
+            $it['thumb_url'] = !empty($fullUrls) ? $fullUrls[0] : '/assets/img/placeholder-sock.svg';
+        }
+        unset($it);
+
+        return $items;
+    }
 }
+

@@ -9,6 +9,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initAdminGlobalSearch();
+        initLiveClock();
     });
 
     function initAdminGlobalSearch() {
@@ -213,5 +214,63 @@
             resultsWrap.innerHTML = html;
             resultsWrap.style.display = 'block';
         }
+    }
+
+    /**
+     * Real-Time Live Clock with correct Persian date ordering (FEAT-A004)
+     * Format: Line 1 = HH:MM:SS (LTR), Line 2 = weekday, day month year (RTL)
+     */
+    function initLiveClock() {
+        var timeEl = document.getElementById('liveClockTime');
+        var dateEl = document.getElementById('liveClockDate');
+        if (!timeEl && !dateEl) return;
+
+        function toFaDigits(str) {
+            return ('' + str).replace(/\d/g, function (d) {
+                return '۰۱۲۳۴۵۶۷۸۹'[d];
+            });
+        }
+
+        function getJalaliDate(d) {
+            try {
+                var formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                var parts = formatter.formatToParts(d);
+                var weekday = '', day = '', month = '', year = '';
+                parts.forEach(function (p) {
+                    if (p.type === 'weekday') weekday = p.value;
+                    if (p.type === 'day') day = p.value;
+                    if (p.type === 'month') month = p.value;
+                    if (p.type === 'year') year = p.value;
+                });
+                if (weekday && day && month && year) {
+                    return weekday + '، ' + day + ' ' + month + ' ' + year;
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        function tick() {
+            var now = new Date();
+            if (timeEl) {
+                var h = String(now.getHours()).padStart(2, '0');
+                var m = String(now.getMinutes()).padStart(2, '0');
+                var s = String(now.getSeconds()).padStart(2, '0');
+                timeEl.textContent = toFaDigits(h + ':' + m + ':' + s);
+            }
+            if (dateEl) {
+                var jDate = getJalaliDate(now);
+                if (jDate) {
+                    dateEl.textContent = jDate;
+                }
+            }
+        }
+
+        tick();
+        setInterval(tick, 1000);
     }
 })();

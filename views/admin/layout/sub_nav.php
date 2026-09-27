@@ -9,10 +9,6 @@ $currentQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 // Determine active group based on current page
 $groups = [
-    'orders' => [
-        ['label' => 'همه سفارش‌ها', 'url' => 'orders.php', 'active' => in_array($currentPage, ['orders.php', 'order_detail.php'], true)],
-        ['label' => '💳 بررسی کارت‌به‌کارت', 'url' => 'card_to_card_payments.php', 'active' => $currentPage === 'card_to_card_payments.php'],
-    ],
     'products' => [
         ['label' => '📦 همه محصولات', 'url' => 'products.php', 'active' => $currentPage === 'products.php' && empty($_GET['featured']) || $currentPage === 'product_edit.php'],
         ['label' => '⭐ پیشنهاد ویژه', 'url' => 'products.php?featured=1', 'active' => $currentPage === 'products.php' && !empty($_GET['featured'])],
@@ -39,15 +35,17 @@ if (isSuperAdmin()) {
 }
 
 $activeGroupKey = null;
-foreach ($groups as $groupKey => $items) {
-    foreach ($items as $item) {
+foreach ($groups as $groupKey => $groupTopics) {
+    foreach ($groupTopics as $item) {
         if ($item['active']) {
             $activeGroupKey = $groupKey;
             break 2;
         }
     }
 }
+unset($groupKey, $groupTopics, $item);
 ?>
+
 
 <?php if ($activeGroupKey && !empty($groups[$activeGroupKey])): ?>
 <div class="admin-topic-bar-wrap">
