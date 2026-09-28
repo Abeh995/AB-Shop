@@ -1,11 +1,28 @@
-# Changelog Archive (v1.0.0 — v1.12.0)
+# Changelog Archive (v1.0.0 — v1.13.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.12.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.13.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 1.13.0 — 2026-09-23
+
+### Critical post-deploy bug fixes & Image Optimizer Enhancements
+
+- **Resolved WebP 500 Internal Server Error & rendering on live site** — Root cause: production runs on DirectAdmin with Nginx reverse proxy + Apache backend (PHP-FPM). DirectAdmin's restricted `AllowOverride` caused directives (`Options -ExecCGI`, `php_flag`, and `ForceType`) in `uploads/.htaccess` to trigger an immediate Apache 500 error on any `/uploads/` request.
+  1. Completely sanitized `uploads/.htaccess`: removed non-permitted directives and retained only standard script execution denial (`<FilesMatch> Require all denied </FilesMatch>`) and `Options -Indexes`.
+  2. Updated root `.htaccess`: targeted `/img.php?f=/uploads/$1` with leading slash (required for PHP-FPM) and restricted proxying specifically to real `.webp` files, allowing JPG, PNG, GIF, and SVG to be served natively with zero PHP overhead.
+  3. `img.php` proxy: enforces `Content-Type: image/webp`, supports conditional GET (ETag / 304), and sets 1-year Cache-Control.
+- **Image optimization quality range & default adjustments**:
+  - Quality/compression slider range widened to **10% – 90%** (step 5).
+  - Default optimization quality set to **30%** (across main product images, gallery, gift items, and logo).
+- **Full-Screen Quality Inspector**:
+  - Modal with interactive Zoom (20% to 500% via mouse wheel and buttons), Pan/drag support, live recompression slider, and hold-to-compare against original raw image.
+- **CSS cached on browser after deploy** — `style.css` and `admin.css` `<link>` tags now include `?v=APP_VERSION`; each version bump forces browsers to re-fetch stylesheets.
+- **Hosting constraints documentation**: fully documented DirectAdmin Nginx+Apache stack and `.htaccess` limits across `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, and `ARCHITECTURE.en.md`.
+
 ## 1.12.0 — 2026-09-23
+
 
 ### Optimized & Fixed (BUG-A001)
 - Client-side Canvas-based image optimization pipeline in admin panel (`assets/js/admin-image-optimizer.js`): automatic WebP conversion, intelligent aspect-preserving resizing, and 90-98%+ file size reduction without shared hosting RAM/CPU overhead.

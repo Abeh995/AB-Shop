@@ -51,7 +51,7 @@ $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount);
 <div class="admin-wrap">
     <aside class="admin-sidebar" id="adminSidebar" aria-label="ناوبری اصلی پنل مدیریت">
         <div class="admin-sidebar-header">
-            <a href="index.php" class="admin-logo" title="پیشخوان مدیریت <?= e(SITE_NAME) ?>">
+            <a href="index.php" class="admin-logo" id="adminSidebarLogo" title="پیشخوان مدیریت <?= e(SITE_NAME) ?>" data-nav-tooltip="باز کردن منو ( [ )">
                 <span class="logo-mark">AB</span>
                 <div class="logo-text">
                     <span class="logo-title"><?= e(SITE_NAME) ?></span>
@@ -141,10 +141,32 @@ $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount);
             </div>
 
             <div class="dash-topbar-left">
-                <!-- Stacked 2-Line Real-Time Live Date & Clock Widget (Zero Emojis, No Width Waste, Strict Alignment) -->
-                <div class="dash-live-datetime" id="dashLiveDateTime" title="ساعت و تاریخ جاری سیستم">
-                    <div class="live-clock-time" id="liveClockTime" dir="ltr"><?= appDateTime(null, 'time_full') ?></div>
-                    <div class="live-clock-date" id="liveClockDate" dir="rtl"><?= appDateTime(null, 'shamsi_text') ?></div>
+                <?php
+                $nowDateInfo = appDateTime(null, 'array');
+                $weekdayName = $nowDateInfo['jalali']['weekday_name'] ?? '';
+                $shamsiDateNum = $nowDateInfo['jalali']['formatted'] ?? '';
+                $gregorianDateNum = str_replace('-', '/', $nowDateInfo['gregorian']['formatted'] ?? '');
+                $timeFull = appDateTime(null, 'time_full');
+                ?>
+                <div class="dash-live-datetime" id="dashLiveDateTime" title="<?= e($nowDateInfo['jalali']['formatted_text'] ?? '') ?> | <?= e($gregorianDateNum) ?>">
+                    <!-- Desktop View (>= 769px): Live Clock + Full Numeric Dates -->
+                    <div class="dash-datetime-desktop">
+                        <span class="live-clock-time" id="liveClockTime" dir="ltr"><?= e($timeFull) ?></span>
+                        <span class="live-datetime-divider">|</span>
+                        <span class="live-weekday"><?= e($weekdayName) ?></span>
+                        <span class="live-date-shamsi" id="liveDateShamsi"><?= e($shamsiDateNum) ?></span>
+                        <span class="live-datetime-divider">/</span>
+                        <span class="live-date-gregorian" dir="ltr"><?= e($gregorianDateNum) ?></span>
+                    </div>
+                    <!-- Mobile View (<= 768px): Weekday + Numeric Dates (No Clock) -->
+                    <div class="dash-datetime-mobile">
+                        <div class="mobile-weekday"><?= e($weekdayName) ?></div>
+                        <div class="mobile-dates">
+                            <span class="mobile-shamsi"><?= e($shamsiDateNum) ?></span>
+                            <span class="mobile-date-sep">·</span>
+                            <span class="mobile-gregorian" dir="ltr"><?= e($gregorianDateNum) ?></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>

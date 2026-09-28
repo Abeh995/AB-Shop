@@ -256,6 +256,9 @@
         }
 
         function tick() {
+            if (window.innerWidth <= 768) {
+                return;
+            }
             var now = new Date();
             if (timeEl) {
                 var h = String(now.getHours()).padStart(2, '0');
@@ -281,10 +284,12 @@
      * - Accordion category sub-menus with active-group auto-expansion
      * - LocalStorage persistence for both sidebar state & open accordions
      * - Keyboard shortcut ( [ or Ctrl+B ) to toggle sidebar
+     * - Collapsed mode: logo badge click expands sidebar
      */
     function initAdminSidebar() {
         var sidebar = document.getElementById('adminSidebar');
         var toggleBtn = document.getElementById('sidebarToggleBtn');
+        var logoEl = document.getElementById('adminSidebarLogo') || (sidebar ? sidebar.querySelector('.admin-logo') : null);
         if (!sidebar) return;
 
         var STORAGE_KEY_COLLAPSED = 'admin_sidebar_collapsed';
@@ -297,6 +302,11 @@
         } catch (e) {}
 
         function applySidebarState(collapsed) {
+            if (window.innerWidth <= 900) {
+                document.documentElement.classList.remove('sidebar-collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+                return;
+            }
             if (collapsed) {
                 document.documentElement.classList.add('sidebar-collapsed');
                 document.body.classList.add('sidebar-collapsed');
@@ -323,6 +333,30 @@
                 toggleSidebar();
             });
         }
+
+        // In collapsed desktop rail mode, clicking the logo badge expands the sidebar
+        if (logoEl) {
+            logoEl.addEventListener('click', function (e) {
+                if (window.innerWidth > 900 && document.documentElement.classList.contains('sidebar-collapsed')) {
+                    e.preventDefault();
+                    toggleSidebar();
+                }
+            });
+        }
+
+        // Window resize listener: protect mobile from desktop collapsed class and restore on expand
+        window.addEventListener('resize', function () {
+            if (window.innerWidth <= 900) {
+                document.documentElement.classList.remove('sidebar-collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                var saved = false;
+                try {
+                    saved = localStorage.getItem(STORAGE_KEY_COLLAPSED) === 'true';
+                } catch (e) {}
+                applySidebarState(saved);
+            }
+        });
 
         // Keyboard Shortcut: press [ or Ctrl+B to toggle sidebar (when not inside inputs)
         document.addEventListener('keydown', function (e) {
