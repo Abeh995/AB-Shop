@@ -21,91 +21,102 @@ $pendingOrdersCount = class_exists('OrderService') ? OrderService::getPendingCou
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="/assets/css/style.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="/assets/css/admin.css?v=<?= APP_VERSION ?>">
+<?php
+$styleCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/style.css') ?: 1);
+$adminCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin.css') ?: 1);
+$adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-orders.css') ?: 1);
+?>
+<link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
+<link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
 <?php if (in_array($currentPage, ['orders.php', 'order_detail.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= $adminOrdersCssVer ?>">
 <?php endif; ?>
+<script>
+(function(){
+    try {
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true' && window.innerWidth > 900) {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    } catch(e){}
+})();
+</script>
 </head>
 <body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php'], true) ? 'admin-page-orders' : '') ?>">
 
+<?php
+require_once APP_ROOT . '/views/admin/layout/nav_config.php';
+$adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount);
+?>
+
 <div class="admin-wrap">
-    <aside class="admin-sidebar">
-        <div class="admin-logo">
-            <a href="index.php" style="color:inherit; text-decoration:none;">
-                <?= e(SITE_NAME) ?><br><small>پنل مدیریت</small>
+    <aside class="admin-sidebar" id="adminSidebar" aria-label="ناوبری اصلی پنل مدیریت">
+        <div class="admin-sidebar-header">
+            <a href="index.php" class="admin-logo" title="پیشخوان مدیریت <?= e(SITE_NAME) ?>">
+                <span class="logo-mark">AB</span>
+                <div class="logo-text">
+                    <span class="logo-title"><?= e(SITE_NAME) ?></span>
+                    <span class="logo-subtitle">پنل مدیریت</span>
+                </div>
+            </a>
+            <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="تغییر وضعیت سایدبار (کلید میانبر: [ )" aria-label="جمع کردن یا باز کردن سایدبار">
+                <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+        </div>
+
+        <nav class="admin-sidebar-nav" id="adminSidebarNav">
+            <?php foreach ($adminNav as $groupKey => $group): ?>
+                <?php if (empty($group['sub_items'])): ?>
+                    <div class="nav-item-wrap">
+                        <a href="<?= e($group['url']) ?>" class="nav-item-single <?= $group['active'] ? 'active' : '' ?>" data-nav-tooltip="<?= e($group['label']) ?>">
+                            <span class="nav-icon-box"><?= $group['icon'] ?></span>
+                            <span class="nav-item-label"><?= e($group['label']) ?></span>
+                            <?php if (!empty($group['badge']) && $group['badge'] > 0): ?>
+                                <span class="admin-badge-count"><?= (int) $group['badge'] ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="nav-group <?= $group['active'] ? 'active-group open' : '' ?>" data-group="<?= e($groupKey) ?>">
+                        <button type="button" class="nav-group-toggle <?= $group['active'] ? 'active' : '' ?>" aria-expanded="<?= $group['active'] ? 'true' : 'false' ?>" data-nav-tooltip="<?= e($group['label']) ?>">
+                            <div class="nav-group-lead">
+                                <span class="nav-icon-box"><?= $group['icon'] ?></span>
+                                <span class="nav-item-label"><?= e($group['label']) ?></span>
+                            </div>
+                            <div class="nav-group-meta">
+                                <?php if (!empty($group['badge']) && $group['badge'] > 0): ?>
+                                    <span class="admin-badge-count"><?= (int) $group['badge'] ?></span>
+                                <?php endif; ?>
+                                <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                        </button>
+                        <div class="nav-sub-list">
+                            <div class="nav-flyout-header" style="display:none;"><?= e($group['label']) ?></div>
+                            <?php foreach ($group['sub_items'] as $sub): ?>
+                                <a href="<?= e($sub['url']) ?>" class="nav-sub-item <?= $sub['active'] ? 'active' : '' ?>">
+                                    <span class="sub-indicator"></span>
+                                    <span class="sub-label"><?= e($sub['label']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <a href="/" target="_blank" class="sidebar-footer-link" data-nav-tooltip="مشاهده فروشگاه ↗">
+                <span class="nav-icon-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </span>
+                <span class="footer-link-text">مشاهده فروشگاه</span>
+            </a>
+            <a href="logout.php" class="sidebar-footer-link logout-link" data-nav-tooltip="خروج از حساب">
+                <span class="nav-icon-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </span>
+                <span class="footer-link-text">خروج</span>
             </a>
         </div>
-        <nav>
-            <a href="index.php" class="<?= $currentPage === 'index.php' ? 'active' : '' ?>">
-                <span class="nav-icon">📊</span> داشبورد
-            </a>
-
-            <div class="nav-group-label">سفارش‌ها</div>
-            <a href="orders.php" class="<?= in_array($currentPage, ['orders.php', 'order_detail.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">📦</span> همه سفارش‌ها
-                <?php if ($pendingOrdersCount > 0): ?>
-                    <span class="admin-badge-count"><?= $pendingOrdersCount ?></span>
-                <?php endif; ?>
-            </a>
-
-            <div class="nav-group-label">محصولات</div>
-            <a href="products.php" class="<?= ($currentPage === 'products.php' && empty($_GET['featured'])) || $currentPage === 'product_edit.php' ? 'active' : '' ?>">
-                <span class="nav-icon">🛍️</span> همه محصولات
-            </a>
-            <a href="products.php?featured=1" class="<?= $currentPage === 'products.php' && !empty($_GET['featured']) ? 'active' : '' ?>">
-                <span class="nav-icon">⭐</span> پیشنهاد ویژه
-            </a>
-            <a href="categories.php" class="<?= $currentPage === 'categories.php' ? 'active' : '' ?>">
-                <span class="nav-icon">📁</span> دسته‌بندی‌ها
-            </a>
-            <a href="pricing.php" class="<?= $currentPage === 'pricing.php' ? 'active' : '' ?>">
-                <span class="nav-icon">💰</span> تغییر قیمت گروهی
-            </a>
-            <a href="gift_items.php" class="<?= in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">🎁</span> هدیه و آفر بعد از سبد
-            </a>
-
-            <div class="nav-group-label">مالی</div>
-            <a href="finance_dashboard.php" class="<?= $currentPage === 'finance_dashboard.php' ? 'active' : '' ?>">
-                <span class="nav-icon">📈</span> داشبورد مالی
-            </a>
-            <a href="card_to_card_payments.php" class="<?= $currentPage === 'card_to_card_payments.php' ? 'active' : '' ?>">
-                <span class="nav-icon">💳</span> فیش‌های کارت‌به‌کارت
-            </a>
-            <a href="expenses.php" class="<?= in_array($currentPage, ['expenses.php', 'expense_edit.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">🧾</span> هزینه‌ها
-            </a>
-
-            <div class="nav-group-label">تنظیمات</div>
-            <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">
-                <span class="nav-icon">⚙️</span> تنظیمات عمومی
-            </a>
-            <a href="appearance.php" class="<?= in_array($currentPage, ['appearance.php', 'themes.php', 'theme_edit.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">🎨</span> ظاهر و صفحه اصلی
-            </a>
-            <a href="sms_patterns.php" class="<?= in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">📱</span> الگوهای پیامک
-            </a>
-            <a href="email_accounts.php" class="<?= in_array($currentPage, ['email_accounts.php', 'emails.php', 'email_read.php', 'email_compose.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">📧</span> ایمیل‌ها
-            </a>
-            <a href="shipping_methods.php" class="<?= in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">🚚</span> روش‌های ارسال
-            </a>
-
-            <?php if (isSuperAdmin()): ?>
-            <a href="users.php" class="<?= $currentPage === 'users.php' ? 'active' : '' ?>">
-                <span class="nav-icon">👥</span> مدیران سایت
-            </a>
-            <a href="diagnostics.php" class="<?= in_array($currentPage, ['diagnostics.php', 'notifications_log.php'], true) ? 'active' : '' ?>">
-                <span class="nav-icon">🔧</span> عیب‌یابی و لاگ
-            </a>
-            <?php endif; ?>
-
-            <a href="/" target="_blank" style="margin-top:16px; border-top:1px solid rgba(255,255,255,.08); padding-top:16px;">مشاهده فروشگاه ↗</a>
-            <a href="logout.php" class="logout-link">خروج</a>
-        </nav>
     </aside>
 
     <main class="admin-main">

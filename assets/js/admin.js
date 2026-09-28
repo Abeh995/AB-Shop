@@ -10,6 +10,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         initAdminGlobalSearch();
         initLiveClock();
+        initAdminSidebar();
     });
 
     function initAdminGlobalSearch() {
@@ -272,5 +273,119 @@
 
         tick();
         setInterval(tick, 1000);
+    }
+
+    /**
+     * Modern Admin Sidebar Controller
+     * - Collapsible Sidebar (Expanded 240px <-> Slim Rail 68px)
+     * - Accordion category sub-menus with active-group auto-expansion
+     * - LocalStorage persistence for both sidebar state & open accordions
+     * - Keyboard shortcut ( [ or Ctrl+B ) to toggle sidebar
+     */
+    function initAdminSidebar() {
+        var sidebar = document.getElementById('adminSidebar');
+        var toggleBtn = document.getElementById('sidebarToggleBtn');
+        if (!sidebar) return;
+
+        var STORAGE_KEY_COLLAPSED = 'admin_sidebar_collapsed';
+        var STORAGE_KEY_GROUPS = 'admin_sidebar_groups';
+
+        // 1. Initial State Restoration
+        var isCollapsed = false;
+        try {
+            isCollapsed = localStorage.getItem(STORAGE_KEY_COLLAPSED) === 'true';
+        } catch (e) {}
+
+        function applySidebarState(collapsed) {
+            if (collapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            } else {
+                document.documentElement.classList.remove('sidebar-collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            }
+        }
+
+        applySidebarState(isCollapsed);
+
+        function toggleSidebar() {
+            var current = document.documentElement.classList.contains('sidebar-collapsed');
+            var next = !current;
+            applySidebarState(next);
+            try {
+                localStorage.setItem(STORAGE_KEY_COLLAPSED, next ? 'true' : 'false');
+            } catch (e) {}
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                toggleSidebar();
+            });
+        }
+
+        // Keyboard Shortcut: press [ or Ctrl+B to toggle sidebar (when not inside inputs)
+        document.addEventListener('keydown', function (e) {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+                return;
+            }
+            if (e.key === '[' || (e.ctrlKey && (e.key === 'b' || e.key === 'B'))) {
+                if (window.innerWidth > 900) {
+                    e.preventDefault();
+                    toggleSidebar();
+                }
+            }
+        });
+
+        // 2. Accordion Groups with Persistence & Contextual Auto-Expansion
+        var groups = sidebar.querySelectorAll('.nav-group');
+        var groupStates = {};
+        try {
+            groupStates = JSON.parse(localStorage.getItem(STORAGE_KEY_GROUPS) || '{}');
+        } catch (e) {}
+
+        groups.forEach(function (groupEl) {
+            var groupKey = groupEl.getAttribute('data-group');
+            var toggle = groupEl.querySelector('.nav-group-toggle');
+            var isActiveGroup = groupEl.classList.contains('active-group');
+
+            // Contextual Rule: If group contains the active page, it must ALWAYS open initially
+            if (isActiveGroup) {
+                groupEl.classList.add('open');
+                if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            } else if (groupKey && groupStates[groupKey] === true) {
+                groupEl.classList.add('open');
+                if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            } else if (groupKey && groupStates[groupKey] === false) {
+                groupEl.classList.remove('open');
+                if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            }
+
+            if (toggle) {
+                toggle.addEventListener('click', function (e) {
+                    // In collapsed mode on desktop, clicking expands sidebar so user can interact directly
+                    if (document.documentElement.classList.contains('sidebar-collapsed')) {
+                        applySidebarState(false);
+                        try {
+                            localStorage.setItem(STORAGE_KEY_COLLAPSED, 'false');
+                        } catch (err) {}
+                        groupEl.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                        return;
+                    }
+
+                    var isOpen = groupEl.classList.toggle('open');
+                    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                    if (groupKey) {
+                        try {
+                            var currentStates = JSON.parse(localStorage.getItem(STORAGE_KEY_GROUPS) || '{}');
+                            currentStates[groupKey] = isOpen;
+                            localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(currentStates));
+                        } catch (err) {}
+                    }
+                });
+            }
+        });
     }
 })();

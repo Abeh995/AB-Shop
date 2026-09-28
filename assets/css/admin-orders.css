@@ -1394,72 +1394,6 @@ body.admin-page-orders {
     transform: translateY(0);
 }
 
-/* ==========================================================================
-   Floating Bottom Navigation Dock (5 Main Hubs)
-   ========================================================================== */
-.admin-bottom-nav {
-    display: flex !important;
-    position: fixed !important;
-    bottom: 20px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    background: rgba(28, 22, 18, 0.94) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    border-radius: var(--radius-pill) !important;
-    padding: 6px 14px !important;
-    gap: 8px !important;
-    box-shadow: 0 16px 36px -6px rgba(28, 22, 19, 0.35) !important;
-    z-index: 1000 !important;
-    justify-content: center !important;
-}
-
-.admin-bottom-nav-item {
-    display: flex !important;
-    align-items: center !important;
-    flex-direction: row !important;
-    gap: 7px !important;
-    padding: 7px 14px !important;
-    border-radius: var(--radius-pill) !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
-    color: #C8BEB4 !important;
-    text-decoration: none !important;
-    transition: all 0.18s ease !important;
-}
-
-.admin-bottom-nav-item:hover {
-    color: #FFF !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    transform: translateY(-2px) !important;
-}
-
-.admin-bottom-nav-item.active {
-    background: var(--brand-gradient) !important;
-    color: #FFF !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 12px rgba(196, 108, 70, 0.4) !important;
-}
-
-.nav-icon-wrap {
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.nav-badge {
-    background: #E08B7A;
-    color: #FFF;
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 1px 5px;
-    border-radius: 999px;
-    position: absolute;
-    top: -6px;
-    left: -8px;
-}
 
 /* ==========================================================================
    Mobile Responsive Architecture & Bottom Sheet Styles (< 860px)
@@ -1990,20 +1924,6 @@ body.admin-page-orders {
         font-size: 0.72rem !important;
     }
 
-    /* Floating Bottom Nav on Mobile */
-    .admin-bottom-nav {
-        bottom: 12px !important;
-        padding: 5px 8px !important;
-        gap: 4px !important;
-        width: calc(100% - 20px) !important;
-        max-width: 440px !important;
-    }
-
-    .admin-bottom-nav-item {
-        padding: 6px 8px !important;
-        font-size: 0.7rem !important;
-        gap: 4px !important;
-    }
 }
 
 /* Compact Topbar Storefront Link */

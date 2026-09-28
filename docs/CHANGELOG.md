@@ -7,6 +7,23 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.17.1 — 2026-09-28
+
+### Admin Navigation DRY Architecture, Mobile Floating Pill Dock & Layer Hardening
+
+- **Mobile Bottom Navigation Bar (BNB) DRY Architecture & Route Gatekeeper (`views/admin/layout/nav_config.php`, `views/admin/layout/footer.php`)**:
+  - Implemented `shouldShowAdminBottomNav()` centralized gatekeeper in `nav_config.php`: restricts BNB rendering exclusively to the 5 primary hubs (`index.php`, `dashboard.php`, `orders.php`, `products.php`, `finance_dashboard.php`, `settings.php`).
+  - Completely omitted `<nav class="admin-bottom-nav">` from DOM on all detail/sub/editor pages, permanently eliminating visual overlap and blocking of sticky action docks (e.g. `#mobileQuickDock` on `order_detail.php`).
+- **Unified Floating Pill Dock Styling (`assets/css/admin.css`, `assets/css/admin-orders.css`)**:
+  - Consolidated floating pill dock styles into `assets/css/admin.css` as single source of truth across all admin tabs (Dashboard, Orders, Products, Finance, Settings).
+  - Stripped all redundant, conflicting `.admin-bottom-nav` CSS rules and media queries from `admin-orders.css`.
+  - Converted floating dock positioning to standard `left: 0; right: 0; margin-inline: auto; width: fit-content;` preventing sub-pixel transform jitter and RTL coordinate inversion across mobile browsers.
+- **Dynamic Asset Cache-Busting (`views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
+  - Attached dynamic `filemtime` timestamps (`?v=APP_VERSION.timestamp`) to all admin stylesheets (`style.css`, `admin.css`, `admin-orders.css`) and scripts (`main.js`, `admin-image-optimizer.js`, `admin.js`), guaranteeing immediate client cache invalidation on deployment without requiring manual `Ctrl+F5`.
+- **Defensive Styling & Fallback Hardening**:
+  - Added strict user-agent button resets (`appearance: none; background: transparent; border: none;`) to all `.admin-sidebar button` elements to prevent unstyled white box defaults.
+  - Added inline `style="display:none;"` to `.nav-flyout-header`, ensuring it remains hidden in standard layout flow while cleanly appearing in collapsed flyouts via `!important`.
+
 ## 1.17.0 — 2026-09-28
 
 ### Modern Visual Redesign of Admin Orders Hub & Order Detail Experience

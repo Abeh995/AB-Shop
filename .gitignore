@@ -116,6 +116,7 @@ Desktop.ini
 *.rar
 opencode.json
 README-DEPLOY.md
+*_bug.png
 
 # Generated production deployment tree
 /deploy/
