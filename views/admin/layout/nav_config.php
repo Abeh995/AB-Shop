@@ -116,6 +116,11 @@ if (!function_exists('getAdminNavConfig')) {
                         'active' => in_array($currentPage, ['appearance.php', 'themes.php', 'theme_edit.php'], true)
                     ],
                     [
+                        'label' => 'روش‌های ارسال',
+                        'url' => 'shipping_methods.php',
+                        'active' => in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true)
+                    ],
+                    [
                         'label' => 'الگوهای پیامک',
                         'url' => 'sms_patterns.php',
                         'active' => in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true)
@@ -124,11 +129,6 @@ if (!function_exists('getAdminNavConfig')) {
                         'label' => 'ایمیل‌ها',
                         'url' => 'email_accounts.php',
                         'active' => in_array($currentPage, ['email_accounts.php', 'emails.php', 'email_read.php', 'email_compose.php'], true)
-                    ],
-                    [
-                        'label' => 'روش‌های ارسال',
-                        'url' => 'shipping_methods.php',
-                        'active' => in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true)
                     ],
                 ]
             ],

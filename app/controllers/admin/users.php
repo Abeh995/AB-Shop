@@ -1,11 +1,12 @@
 <?php
 /**
  * Admin account management — accessible only to super_admin.
- * Features: add a new admin, change password, activate/deactivate, delete.
+ * All business logic and SQL queries are delegated to AdminUserService (Rule 7).
  */
 
 requireSuperAdmin();
 $pageTitle = 'مدیریت ادمین‌ها';
+$currentAdminId = (int) $_SESSION['admin_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
@@ -17,61 +18,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         $role = ($_POST['role'] ?? 'admin') === 'super_admin' ? 'super_admin' : 'admin';
 
-        if (mb_strlen($username) < 3) {
-            setFlash('error', 'نام کاربری باید حداقل ۳ کاراکتر باشد.');
-        } elseif (mb_strlen($password) < 8) {
-            setFlash('error', 'رمز عبور باید حداقل ۸ کاراکتر باشد.');
+        $res = createAdminUserRecord($username, $fullName, $password, $role);
+        if ($res['ok']) {
+            setFlash('success', 'ادمین جدید با موفقیت اضافه شد.');
         } else {
-            $check = db()->prepare("SELECT id FROM admins WHERE username = ?");
-            $check->execute([$username]);
-            if ($check->fetch()) {
-                setFlash('error', 'این نام کاربری قبلاً استفاده شده است.');
-            } else {
-                $hash = password_hash($password, PASSWORD_BCRYPT);
-                db()->prepare("INSERT INTO admins (username, password_hash, role, full_name, is_active) VALUES (?,?,?,?,1)")
-                    ->execute([$username, $hash, $role, $fullName ?: null]);
-                setFlash('success', 'ادمین جدید با موفقیت اضافه شد.');
-            }
+            setFlash('error', $res['error']);
         }
     } elseif ($action === 'toggle_active') {
         $id = (int) ($_POST['id'] ?? 0);
-        if ($id === (int) $_SESSION['admin_id']) {
-            setFlash('error', 'نمی‌توانید حساب خودتان را غیرفعال کنید.');
-        } else {
-            db()->prepare("UPDATE admins SET is_active = 1 - is_active WHERE id = ?")->execute([$id]);
+        $res = toggleAdminUserActiveStatus($id, $currentAdminId);
+        if ($res['ok']) {
             setFlash('success', 'وضعیت حساب به‌روزرسانی شد.');
+        } else {
+            setFlash('error', $res['error']);
         }
     } elseif ($action === 'change_password') {
         $id = (int) ($_POST['id'] ?? 0);
         $password = $_POST['password'] ?? '';
-        if (mb_strlen($password) < 8) {
-            setFlash('error', 'رمز عبور باید حداقل ۸ کاراکتر باشد.');
-        } else {
-            $hash = password_hash($password, PASSWORD_BCRYPT);
-            db()->prepare("UPDATE admins SET password_hash = ? WHERE id = ?")->execute([$hash, $id]);
+        $res = changeAdminUserPasswordRecord($id, $password);
+        if ($res['ok']) {
             setFlash('success', 'رمز عبور با موفقیت تغییر کرد.');
+        } else {
+            setFlash('error', $res['error']);
         }
     } elseif ($action === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
-        if ($id === (int) $_SESSION['admin_id']) {
-            setFlash('error', 'نمی‌توانید حساب خودتان را حذف کنید.');
+        $res = deleteAdminUserRecord($id, $currentAdminId);
+        if ($res['ok']) {
+            setFlash('success', 'حساب ادمین با موفقیت حذف شد.');
         } else {
-            $superCount = (int) db()->query("SELECT COUNT(*) FROM admins WHERE role = 'super_admin'")->fetchColumn();
-            $target = db()->prepare("SELECT role FROM admins WHERE id = ?");
-            $target->execute([$id]);
-            $targetRole = $target->fetchColumn();
-            if ($targetRole === 'super_admin' && $superCount <= 1) {
-                setFlash('error', 'باید حداقل یک مدیر کل در سیستم باقی بماند.');
-            } else {
-                db()->prepare("DELETE FROM admins WHERE id = ?")->execute([$id]);
-                setFlash('success', 'حساب ادمین حذف شد.');
-            }
+            setFlash('error', $res['error']);
         }
     }
-
     redirect('users.php');
 }
 
-$admins = db()->query("SELECT id, username, full_name, role, is_active, created_at FROM admins ORDER BY created_at ASC")->fetchAll();
+$admins = getAdminUsersList();
 
-renderView('admin/users', compact('pageTitle', 'admins'));
+renderView('admin/users', compact('pageTitle', 'admins', 'currentAdminId'));

@@ -7,6 +7,32 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.17.5 — 2026-09-30
+
+### Settings Hub Architecture Overhaul, Dedicated Service Layers & Two-Tier Bento Modernization
+
+- **Settings Hub Architecture & Service Layer Encapsulation (`app/services/SettingService.php`, `app/services/ThemeService.php`, `app/services/SmsPatternService.php`, `app/services/AdminUserService.php`, `app/services/ShippingService.php`, `app/services/MailboxService.php`, `app/bootstrap.php`)**:
+  - Introduced `SettingService.php`: single source of truth for grouped store settings, safe file uploads, and branding logo sanitization (JPG, PNG, WebP, SVG with XML/script sanitization and EXIF metadata stripping).
+  - Introduced `ThemeService.php`: encapsulates theme list, active theme switching, transactional duplication with color tokens, and safe deletion guards.
+  - Introduced `SmsPatternService.php`: handles SMS pattern CRUD, dynamic variable configs with JSON serialization, and live testing via `FarazSmsService`.
+  - Introduced `AdminUserService.php`: manages administrator accounts, secure BCRYPT password hashing, status toggles, and prevents self-deactivation or orphan super_admin deletion.
+  - Enhanced `ShippingService.php` with administrative CRUD methods and adjacent sort order reordering.
+  - Enhanced `MailboxService.php` with full accounts persistence and secret encryption.
+- **Settings Hub Controller Modernization & Rule 7 Anti-Bloat Compliance**:
+  - Eliminated 100% of raw SQL mutations and database queries from all 10 Settings Hub controllers, permanently fixing 11 architectural violations:
+    - `settings.php`: Decomposed from 246 lines down to 32 lines.
+    - `appearance.php`: Decomposed from 169 lines down to 32 lines.
+    - `sms_pattern_edit.php`: Decomposed from 184 lines down to 74 lines.
+    - `themes.php` (36 lines), `theme_edit.php` (38 lines), `sms_patterns.php` (34 lines), `shipping_methods.php` (32 lines), `shipping_method_edit.php` (34 lines), `email_accounts.php` (24 lines), `users.php` (55 lines).
+  - Purged 238 lines of duplicate upload logic, raw SQL, and bloated switches across controllers.
+- **Two-Tier Bento Settings Directory & Information Architecture (`views/admin/settings.php`, `views/admin/layout/nav_config.php`)**:
+  - Re-architected `settings.php` into a Two-Tier system:
+    - Tier 1: 6 Bento Hub tiles at the top linking to specialized workstations (Appearance & Themes, Shipping & Logistics, SMS Patterns & Alerts, Mailbox & IMAP, Team & Admins, Diagnostics & System) with real-time status badges.
+    - Tier 2: Categorized, clean cards for General Store Settings (Business Info & Contact, Payment Gateways & Card-to-Card, Live Search & Catalog Settings, Social Media & Enamad, SEO Indexing).
+  - Purged duplicate branding, announcement, and footer fields from `settings.php`, consolidating them exclusively in `appearance.php`.
+  - Implemented client-side tabbed switching for legal and static CMS pages (About Us, Terms & Conditions, Privacy Policy), eliminating giant vertical scroll overflow.
+  - Reordered sub-navigation tabs in `views/admin/layout/nav_config.php` for optimal desktop and mobile reach.
+
 ## 1.17.4 — 2026-09-30
 
 ### Finance Hub Architecture Overhaul, Batch Aggregation Optimization & Modern Bento Workstation

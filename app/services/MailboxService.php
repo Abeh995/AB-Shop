@@ -36,5 +36,40 @@ class MailboxService
     public static function send(array $a,string $to,string $subject,string $body): array {
         $mail=new PHPMailer(true); try{ $mail->isSMTP(); $mail->Host=$a['smtp_host']; $mail->SMTPAuth=true; $mail->Username=$a['email_address']; $mail->Password=self::password($a); $mail->SMTPSecure=$a['smtp_encryption']==='ssl' ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS; $mail->Port=(int)$a['smtp_port']; $mail->CharSet='UTF-8'; $mail->Timeout=20; $mail->setFrom($a['email_address'],$a['display_name']); $mail->addAddress($to); $mail->isHTML(false); $mail->Subject=$subject; $mail->Body=$body; $mail->send(); self::logSend($to, $subject, 'sent'); return ['ok'=>true,'error'=>null]; } catch(PHPMailerException $e){ self::logSend($to, $subject, 'failed: '.$mail->ErrorInfo); return ['ok'=>false,'error'=>$mail->ErrorInfo]; }
     }
-    private static function logSend(string $to, string $subject, string $status): void { try { db()->prepare("INSERT INTO email_log (email, subject, status, debug_info) VALUES (?, ?, ?, ?)")->execute([$to, $subject, $status, null]); } catch (Throwable $e) { error_log('Mailbox email_log insert failed: '.$e->getMessage()); } }
+    public static function allAccounts(): array {
+        return db()->query("SELECT id, email_address, display_name, imap_host, imap_port, imap_encryption, smtp_host, smtp_port, smtp_encryption, is_active FROM email_accounts ORDER BY id ASC")->fetchAll();
+    }
+
+    public static function saveAccountRecord(?int $id, array $data): array {
+        $email = trim($data['email_address'] ?? '');
+        $name = trim($data['display_name'] ?? '');
+        $pass = $data['password'] ?? '';
+        $ih = trim($data['imap_host'] ?? '');
+        $ip = (int) ($data['imap_port'] ?? 993);
+        $ie = $data['imap_encryption'] ?? 'ssl';
+        $sh = trim($data['smtp_host'] ?? '');
+        $sp = (int) ($data['smtp_port'] ?? 587);
+        $se = $data['smtp_encryption'] ?? 'tls';
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $name === '' || $ih === '' || $sh === '' || $ip < 1 || $sp < 1 || (!$id && $pass === '')) {
+            return ['ok' => false, 'error' => 'اطلاعات حساب کامل یا معتبر نیست.'];
+        }
+
+        $pdo = db();
+        if ($id && $id > 0) {
+            if ($pass !== '') {
+                $q = $pdo->prepare("UPDATE email_accounts SET email_address=?, display_name=?, imap_host=?, imap_port=?, imap_encryption=?, smtp_host=?, smtp_port=?, smtp_encryption=?, password_encrypted=? WHERE id=?");
+                $q->execute([$email, $name, $ih, $ip, $ie, $sh, $sp, $se, encryptMailboxSecret($pass), $id]);
+            } else {
+                $q = $pdo->prepare("UPDATE email_accounts SET email_address=?, display_name=?, imap_host=?, imap_port=?, imap_encryption=?, smtp_host=?, smtp_port=?, smtp_encryption=? WHERE id=?");
+                $q->execute([$email, $name, $ih, $ip, $ie, $sh, $sp, $se, $id]);
+            }
+        } else {
+            $q = $pdo->prepare("INSERT INTO email_accounts (email_address, display_name, imap_host, imap_port, imap_encryption, smtp_host, smtp_port, smtp_encryption, password_encrypted) VALUES (?,?,?,?,?,?,?,?,?)");
+            $q->execute([$email, $name, $ih, $ip, $ie, $sh, $sp, $se, encryptMailboxSecret($pass)]);
+        }
+
+        return ['ok' => true, 'error' => null];
+    }
 }
+
