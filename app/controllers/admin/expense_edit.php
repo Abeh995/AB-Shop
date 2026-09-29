@@ -1,62 +1,61 @@
 <?php
 /**
- * Create/edit a single expense record.
+ * Expense Edit & Create Controller
+ * Thin controller managing individual expense records.
  */
 
 $id = (int) ($_GET['id'] ?? 0);
-$expense = null;
+$expense = $id > 0 ? getExpenseById($id) : null;
 
-if ($id) {
-    $stmt = db()->prepare("SELECT * FROM expenses WHERE id = ?");
-    $stmt->execute([$id]);
-    $expense = $stmt->fetch();
-    if (!$expense) redirect('expenses.php');
+if ($id > 0 && !$expense) {
+    setFlash('error', 'سند هزینه مورد نظر یافت نشد.');
+    redirect('expenses.php');
 }
 
-$pageTitle = $expense ? 'ویرایش هزینه' : 'ثبت هزینه جدید';
+$pageTitle = $expense ? 'ویرایش سند هزینه' : 'ثبت هزینه جدید';
 $errors = [];
 
-// Suggested categories for the <datalist> — the column itself is free text,
-// so this is guidance, not an enforced list.
 $suggestedCategories = [
-    'خرید جوراب/محصول', 'خرید Gift Box', 'بسته‌بندی', 'تجهیزات', 'هاست', 'دامنه',
-    'سرویس‌های آنلاین', 'تبلیغات', 'حمل‌ونقل', 'خدمات', 'تعمیرات', 'سایر',
+    'خرید جوراب و کالای فروشگاه',
+    'خرید جعبه هدیه و Gift Box',
+    'ملزومات بسته‌بندی و پاکت پستی',
+    'تجهیزات و سخت‌افزار',
+    'هاست، سرور و دامنه',
+    'سرویس‌های آنلاین و پنل پیامک',
+    'تبلیغات، اینفلوئنسر و مارکتینگ',
+    'کرایه حمل‌ونقل و پیک',
+    'تعمیرات و نگهداری',
+    'سایر مخارج عملیاتی',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+    $adminId = (int) ($_SESSION['admin_id'] ?? 0);
+    $payload = $_POST;
+    $payload['id'] = $id;
 
-    $title = trim($_POST['title'] ?? '');
-    $amount = (int) preg_replace('/\D/', '', $_POST['amount'] ?? '0');
-    $expenseDate = trim($_POST['expense_date'] ?? '');
-    $category = trim($_POST['category'] ?? '');
-    $description = trim($_POST['description'] ?? '');
+    $result = saveExpense($payload, $adminId);
 
-    if ($title === '') $errors[] = 'عنوان هزینه الزامی است.';
-    if ($amount < 1) $errors[] = 'مبلغ معتبر وارد کنید.';
-    if ($category === '') $errors[] = 'دسته‌بندی الزامی است.';
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $expenseDate) || !strtotime($expenseDate)) {
-        $errors[] = 'تاریخ معتبر وارد کنید.';
-    }
-
-    if (empty($errors)) {
-        if ($expense) {
-            $stmt = db()->prepare("UPDATE expenses SET title=?, amount=?, expense_date=?, category=?, description=? WHERE id=?");
-            $stmt->execute([$title, $amount, $expenseDate, $category, $description ?: null, $id]);
-            setFlash('success', 'هزینه به‌روزرسانی شد.');
-        } else {
-            $adminId = (int) ($_SESSION['admin_id'] ?? 0);
-            $stmt = db()->prepare("INSERT INTO expenses (title, amount, expense_date, category, description, created_by) VALUES (?,?,?,?,?,?)");
-            $stmt->execute([$title, $amount, $expenseDate, $category, $description ?: null, $adminId]);
-            setFlash('success', 'هزینه ثبت شد.');
-        }
+    if ($result['ok']) {
+        setFlash('success', $id > 0 ? 'سند هزینه با موفقیت به‌روزرسانی شد.' : 'سند هزینه جدید با موفقیت ثبت شد.');
         redirect('expenses.php');
+    } else {
+        $errors = $result['errors'] ?? ['خطا در ثبت هزینه.'];
+        // Preserve user input
+        $expense = array_merge($expense ?? [], [
+            'title' => trim($_POST['title'] ?? ''),
+            'amount' => trim($_POST['amount'] ?? ''),
+            'expense_date' => trim($_POST['expense_date'] ?? ''),
+            'category' => trim($_POST['category'] ?? ''),
+            'description' => trim($_POST['description'] ?? ''),
+        ]);
     }
-
-    $expense = [
-        'id' => $id, 'title' => $title, 'amount' => $amount,
-        'expense_date' => $expenseDate, 'category' => $category, 'description' => $description,
-    ];
 }
 
-renderView('admin/expense_edit', compact('pageTitle', 'expense', 'errors', 'suggestedCategories'));
+renderView('admin/expense_edit', compact(
+    'pageTitle',
+    'id',
+    'expense',
+    'errors',
+    'suggestedCategories'
+));

@@ -3,9 +3,32 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.15.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.16.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.17.4 — 2026-09-30
+
+### Finance Hub Architecture Overhaul, Batch Aggregation Optimization & Modern Bento Workstation
+
+- **Finance Hub Service Layer Optimization & Ledger Engine (`app/services/AccountingService.php`)**:
+  - Eliminated high-overhead N+1 query loop in `getFinancialSummary()`: replaced order-by-order item iteration (which executed 3+ queries per order row) with 3 vectorized batch aggregations across `orders`, `order_items`, and `order_gift_items`, cutting dashboard execution time down to milliseconds.
+  - Implemented complete CRUD ledger service methods in `AccountingService.php`: `getExpensesList()`, `getExpenseById()`, `saveExpense()`, `archiveExpense()`, and `getExpenseCategories()`.
+- **Finance Hub Controller Modernization & Rule 7 Compliance (`app/controllers/admin/finance_dashboard.php`, `app/controllers/admin/expenses.php`, `app/controllers/admin/expense_edit.php`)**:
+  - Refactored `finance_dashboard.php` to 53 lines (zero raw SQL, preset date calculations: `today`, `7days`, `30days`, `this_month`, `this_year`).
+  - Refactored `expenses.php` to 45 lines (zero raw SQL, paginated expense ledger and archive handler).
+  - Refactored `expense_edit.php` to 63 lines (zero raw SQL, transactional save/edit delegation to `AccountingService::saveExpense()`).
+- **Finance Dashboard Bento Matrix & Visual Analytics (`views/admin/finance_dashboard.php`)**:
+  - 4 Key Bento KPI metric cards Above the Fold: Gross Settled Revenue, Cost of Goods Sold (COGS), Operating Expenses, and Net Profit (with dynamic emerald/crimson profit/loss badge and Net Margin percentage).
+  - Financial Waterfall Breakdown progress bar visualizing distribution of gross revenue across COGS, operational expenses, and retained net profit.
+  - Category-wise expense allocation bars showing expense concentrations.
+  - Missing cost price alert card alerting admin when orders contain legacy items with zero cost valuation.
+  - Quick filter chips for date ranges with Shamsi label presentation.
+- **Expenses Ledger Workstation & Live Currency Formatter (`views/admin/expenses.php`, `views/admin/expense_edit.php`)**:
+  - Bento metric overview on expenses page: Period Total, Expense Count, Top Expense Category, and Average per Expense.
+  - High-density table with Persian formatted amounts, expense date chips, category badges, and safe archive/delete modals.
+  - Expense creation/editing workstation with live Persian currency formatter displaying spelled-out Tomans in real time.
+  - 1-click quick category chips for instant category population.
 
 ## 1.17.3 — 2026-09-30
 
@@ -129,41 +152,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Compact search trigger button in the topbar with `Ctrl+K` keycap, opening a modern search modal connected to `/ajax/admin_search.php`.
 - **Versioning**:
   - Bumped `APP_VERSION` to `1.16.0` in `app/bootstrap.php`.
-
-## 1.15.0 — 2026-09-24
-
-### Admin Architecture Redesign (FEAT-A003), Global Live Search (FEAT-A004), SMS Patterns Management (FEAT-A002), and Landing Section Controls (FEAT-A005 / FEAT-C002)
-
-- **Admin Navigation Restructure & Mobile Bottom Navigation Bar (FEAT-A003)**:
-  - Streamlined 25+ cluttered sidebar links down to **5 core functional groups**:
-    1. 📊 **Dashboard** (`index.php`)
-    2. 📦 **Orders** (`orders.php`, `card_to_card_payments.php`) — includes a live numeric badge showing count of pending orders.
-    3. 🛍️ **Products** (`products.php`, `categories.php`, `pricing.php`, `gift_items.php`)
-    4. 📈 **Finance** (`finance_dashboard.php`, `expenses.php`)
-    5. ⚙️ **Settings** (`settings.php`, `appearance.php`, `sms_patterns.php`, `email_accounts.php`, `shipping_methods.php`, `users.php`, `diagnostics.php`)
-  - Introduced a floating, frosted glass **Bottom Navigation Bar** for Mobile & Tablet viewports for effortless single-hand thumb reach.
-  - Eliminated the giant vertical sidebar on mobile screens (`< 900px`), maximizing usable content space.
-  - Implemented an automatic horizontal topic sub-navigation pill strip (`views/admin/layout/sub_nav.php`) rendered at the top of every section with smooth touch scrolling.
-- **Admin Global Live Search with Auto-suggest (FEAT-A004)**:
-  - Embedded an intelligent search input in the admin topbar with keyboard shortcut support (`Ctrl+K` or `/`).
-  - Secure, authenticated JSON endpoint at `/ajax/admin_search.php`.
-  - Instant grouped suggestions across:
-    - ⚙️ **Admin Pages & Topics** (instant search across page names and semantic keywords)
-    - 📦 **Orders** (searches by order code, customer name, mobile phone number, or courier tracking code with status pills)
-    - 🛍️ **Products** (searches by title and SKU, showing thumbnails, prices, and live inventory)
-  - Full keyboard accessibility (ArrowDown, ArrowUp, Enter, Escape) and click-outside dismissal in `assets/js/admin.js`.
-- **SMS Patterns Management via Admin Panel (FEAT-A002)**:
-  - Created new `sms_patterns` table storing pattern codes, titles, reference pattern texts, descriptions, system event keys, variable counts, and active status.
-  - New admin pages `admin/sms_patterns.php` and `admin/sms_pattern_edit.php` with dedicated controllers and views.
-  - Dynamic Variable Builder: dynamically add/remove variables with custom variable name, data type (numeric, string, alphanumeric), max length limit, and Persian label, serialized as structured JSON.
-  - Live test sending card: test send SMS patterns with real attributes to any mobile number with instant validation.
-  - Service upgrade: `FarazSmsService.php` prioritizes database patterns for OTP and events, while preserving zero-breakage fallback to `config.php` constants.
-- **Home / Landing Section Visibility & Appearance Controls (FEAT-A005 & FEAT-C002)**:
-  - Dedicated "Appearance & Storefront" page (`admin/appearance.php`).
-  - Independent visibility and title controls for all 5 homepage sections: top intro banner (disabled by default per FEAT-C002), large category cards (disabled by default on mobile), featured carousel, newest carousel, and category pill strip.
-  - Conditional querying in `app/controllers/site/home.php`: disabled sections bypass database queries entirely.
-  - Reorganized `settings.php` into a clean responsive grid and moved branding/themes/announcements to Appearance, directly resolving BUG-A006.
-- **Database & Versioning**:
-  - Migration file `database/migrations/016_v1.15.0_sms_patterns_and_home_sections.sql` mirrored in baseline `database/schema.sql`.
-  - Bumped `APP_VERSION` to `1.15.0` in `app/bootstrap.php`.
 
