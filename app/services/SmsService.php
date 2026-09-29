@@ -95,4 +95,11 @@ class SmsService
             : SITE_NAME . "\nپرداخت سفارش {$orderCode} تایید نشد. لطفاً برای پیگیری با پشتیبانی تماس بگیرید.";
         self::send($phone, $message);
     }
+
+    public static function notifyPaymentRejectedWithReason(string $phone, string $orderCode, string $reason): void
+    {
+        $cleanReason = trim($reason);
+        $message = SITE_NAME . "\nپرداخت سفارش {$orderCode} تأیید نشد." . ($cleanReason !== '' ? "\nعلت: " . $cleanReason : '') . "\nجهت بررسی یا ارسال مجدد فیش با پشتیبانی تماس بگیرید.";
+        self::send($phone, $message);
+    }
 }

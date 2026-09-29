@@ -190,3 +190,116 @@ function getOrderGiftItems(int $orderId): array
     $stmt->execute([$orderId]);
     return $stmt->fetchAll();
 }
+
+/**
+ * Administrative list of gift/post-order catalog items.
+ */
+function getAdminGiftItemsList(string $search = ''): array
+{
+    $where = '1=1';
+    $params = [];
+    if ($search !== '') {
+        $where .= ' AND name LIKE ?';
+        $params[] = '%' . $search . '%';
+    }
+    $stmt = db()->prepare("SELECT * FROM gift_items WHERE $where ORDER BY created_at DESC");
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Fetch a single gift item by ID.
+ */
+function getAdminGiftItemById(int $id): ?array
+{
+    $stmt = db()->prepare("SELECT * FROM gift_items WHERE id = ?");
+    $stmt->execute([$id]);
+    $item = $stmt->fetch();
+    return $item ?: null;
+}
+
+/**
+ * Save (create or update) a gift/post-order catalog item.
+ *
+ * @param array $data Form fields
+ * @param array|null $file $_FILES['image'] or null
+ * @param int $adminId
+ * @return array{ok: bool, id?: int, errors?: array}
+ */
+function saveGiftItem(array $data, ?array $file, int $adminId): array
+{
+    $id = (int) ($data['id'] ?? 0);
+    $name = trim($data['name'] ?? '');
+    $isActive = isset($data['is_active']) ? 1 : 0;
+    $isGiftable = isset($data['is_giftable']) ? 1 : 0;
+    $isPostOrderable = isset($data['is_post_orderable']) ? 1 : 0;
+    $costPrice = (int) preg_replace('/\D/', '', $data['cost_price'] ?? '0');
+    $postOrderPriceRaw = trim($data['post_order_price'] ?? '');
+    $postOrderPrice = $postOrderPriceRaw === '' ? null : (int) preg_replace('/\D/', '', $postOrderPriceRaw);
+    $stock = (int) ($data['stock'] ?? 0);
+
+    $errors = [];
+    if ($name === '') $errors[] = 'نام آیتم الزامی است.';
+    if ($costPrice < 1) $errors[] = 'قیمت تمام‌شده معتبر وارد کنید.';
+    if (!$isGiftable && !$isPostOrderable) $errors[] = 'حداقل یکی از دو حالت «قابل اهدا» یا «قابل فروش به‌عنوان پیشنهاد بعد از سبد» را انتخاب کنید.';
+    if ($isPostOrderable && $postOrderPrice === null) $errors[] = 'برای آیتم قابل‌فروش، قیمت پیشنهاد بعد از سبد را وارد کنید.';
+    if ($stock < 0) $errors[] = 'موجودی نمی‌تواند منفی باشد.';
+
+    $existingItem = $id > 0 ? getAdminGiftItemById($id) : null;
+    $newImageName = $existingItem['image'] ?? null;
+
+    if ($file && !empty($file['name']) && ($file['error'] ?? 1) === UPLOAD_ERR_OK) {
+        $uploadResult = $existingItem
+            ? handleProductImageUpload($file, 'giftitem', $id, 'main')
+            : handleProductImageUpload($file);
+        if ($uploadResult['ok']) {
+            if ($newImageName && file_exists(UPLOAD_DIR . $newImageName)) {
+                @unlink(UPLOAD_DIR . $newImageName);
+            }
+            $newImageName = $uploadResult['filename'];
+        } else {
+            $errors[] = $uploadResult['error'];
+        }
+    }
+
+    if (!empty($errors)) {
+        return ['ok' => false, 'errors' => $errors];
+    }
+
+    $pdo = db();
+    if ($existingItem) {
+        $stmt = $pdo->prepare("UPDATE gift_items SET name=?, image=?, is_active=?, is_giftable=?, is_post_orderable=?, cost_price=?, post_order_price=?, stock=? WHERE id=?");
+        $stmt->execute([$name, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $stock, $id]);
+        $itemId = $id;
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO gift_items (name, image, is_active, is_giftable, is_post_orderable, cost_price, post_order_price, stock, created_by) VALUES (?,?,?,?,?,?,?,?,?)");
+        $stmt->execute([$name, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $stock, $adminId]);
+        $itemId = (int) $pdo->lastInsertId();
+
+        if ($newImageName) {
+            $renamed = renameUploadedImage($newImageName, 'giftitem', $itemId, 'main');
+            if ($renamed) {
+                $pdo->prepare("UPDATE gift_items SET image = ? WHERE id = ?")->execute([$renamed, $itemId]);
+            }
+        }
+    }
+
+    return ['ok' => true, 'id' => $itemId];
+}
+
+/**
+ * Delete a gift item and its image.
+ */
+function deleteGiftItem(int $id): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT image FROM gift_items WHERE id = ?");
+    $stmt->execute([$id]);
+    $img = $stmt->fetchColumn();
+    if ($img && file_exists(UPLOAD_DIR . $img)) {
+        @unlink(UPLOAD_DIR . $img);
+    }
+
+    $pdo->prepare("DELETE FROM gift_items WHERE id = ?")->execute([$id]);
+    return ['ok' => true];
+}

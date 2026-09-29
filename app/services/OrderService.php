@@ -458,6 +458,195 @@ class OrderService
     }
 
     /**
+     * Reject a card-to-card receipt with a specific reason and notify customer via SMS.
+     */
+    public static function rejectCardToCardReceiptWithReason(int $orderId, string $reason): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return ['ok' => false, 'error' => 'سفارش مورد نظر یافت نشد.'];
+        }
+
+        try {
+            $upd = $pdo->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?");
+            $upd->execute([$orderId]);
+
+            if (!empty($order['phone'])) {
+                SmsService::notifyPaymentRejectedWithReason($order['phone'], $order['order_code'], $reason);
+            }
+
+            return ['ok' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to reject c2c receipt: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در ثبت رد فیش کارت‌به‌کارت.'];
+        }
+    }
+
+    /**
+     * Batch approve card-to-card receipts for multiple orders.
+     */
+    public static function batchVerifyCardToCardReceipts(array $orderIds): array
+    {
+        $ids = array_filter(array_map('intval', $orderIds), fn($id) => $id > 0);
+        if (empty($ids)) {
+            return ['ok' => false, 'error' => 'هیچ سفارشی انتخاب نشده است.'];
+        }
+
+        $successCount = 0;
+        foreach ($ids as $id) {
+            $res = self::verifyCardToCardReceipt($id, true);
+            if ($res['ok']) {
+                $successCount++;
+            }
+        }
+
+        return [
+            'ok' => true,
+            'count' => $successCount,
+            'error' => null,
+        ];
+    }
+
+    /**
+     * Attach an admin-uploaded receipt image to an existing order.
+     */
+    public static function attachAdminUploadedReceipt(int $orderId, array $file): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT id, order_code, payment_method FROM orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return ['ok' => false, 'error' => 'سفارش مورد نظر یافت نشد.'];
+        }
+
+        $res = CardToCardReceiptService::saveDirectForOrder((int)$order['id'], $order['order_code'], $file);
+        if (!$res['ok']) {
+            return $res;
+        }
+
+        try {
+            $upd = $pdo->prepare("UPDATE orders SET card_to_card_receipt = ?, card_to_card_submitted_at = NOW() WHERE id = ?");
+            $upd->execute([$res['filename'], $orderId]);
+            return ['ok' => true, 'filename' => $res['filename'], 'error' => null];
+        } catch (Throwable $e) {
+            error_log('Failed to attach admin receipt: ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'خطا در پیوست فیش به سفارش.'];
+        }
+    }
+
+    /**
+     * Get paginated card-to-card payment orders with filtering and batch-loaded order items.
+     */
+    public static function getCardToCardOrders(array $filters = [], int $page = 1, int $perPage = 25): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, min(100, $perPage));
+        $offset = ($page - 1) * $perPage;
+
+        $where = ["orders.payment_method = 'card_to_card'"];
+        $params = [];
+
+        $tab = $filters['tab'] ?? 'pending';
+        if ($tab === 'pending') {
+            $where[] = "orders.payment_status = 'unpaid' AND orders.card_to_card_receipt IS NOT NULL AND orders.card_to_card_receipt != ''";
+        } elseif ($tab === 'paid') {
+            $where[] = "orders.payment_status = 'paid'";
+        } elseif ($tab === 'failed') {
+            $where[] = "orders.payment_status = 'failed'";
+        } elseif ($tab === 'no_receipt') {
+            $where[] = "orders.payment_status = 'unpaid' AND (orders.card_to_card_receipt IS NULL OR orders.card_to_card_receipt = '')";
+        }
+
+        if (!empty($filters['search'])) {
+            $s = '%' . trim((string)$filters['search']) . '%';
+            $where[] = "(orders.order_code LIKE ? OR orders.customer_name LIKE ? OR orders.phone LIKE ?)";
+            $params[] = $s;
+            $params[] = $s;
+            $params[] = $s;
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        $pdo = db();
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE $whereSql");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+
+        $totalPages = (int) ceil($total / $perPage);
+        if ($totalPages > 0 && $page > $totalPages) {
+            $page = $totalPages;
+            $offset = ($page - 1) * $perPage;
+        }
+
+        $orderSql = "SELECT * FROM orders WHERE $whereSql ORDER BY orders.created_at DESC LIMIT $perPage OFFSET $offset";
+        $stmt = $pdo->prepare($orderSql);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll();
+
+        if (!empty($orders)) {
+            $orderIds = array_column($orders, 'id');
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+            $itemStmt = $pdo->prepare("SELECT order_id, product_name, variant_label, quantity, unit_price, line_total FROM order_items WHERE order_id IN ($placeholders) ORDER BY id ASC");
+            $itemStmt->execute($orderIds);
+            $itemsMap = [];
+            foreach ($itemStmt->fetchAll() as $it) {
+                $itemsMap[$it['order_id']][] = $it;
+            }
+
+            foreach ($orders as &$ord) {
+                $ord['items'] = $itemsMap[$ord['id']] ?? [];
+            }
+            unset($ord);
+        }
+
+        return [
+            'orders'     => $orders,
+            'total'      => $total,
+            'page'       => $page,
+            'perPage'    => $perPage,
+            'totalPages' => $totalPages,
+            'tab'        => $tab,
+            'search'     => $filters['search'] ?? '',
+        ];
+    }
+
+    /**
+     * Get aggregate statistics for card-to-card queue.
+     */
+    public static function getCardToCardStats(): array
+    {
+        $pdo = db();
+        $sql = "SELECT
+            COUNT(CASE WHEN payment_status = 'unpaid' AND card_to_card_receipt IS NOT NULL AND card_to_card_receipt != '' THEN 1 END) AS pending_count,
+            COALESCE(SUM(CASE WHEN payment_status = 'unpaid' AND card_to_card_receipt IS NOT NULL AND card_to_card_receipt != '' THEN total ELSE 0 END), 0) AS pending_sum,
+            COUNT(CASE WHEN payment_status = 'paid' AND DATE(created_at) = CURDATE() THEN 1 END) AS paid_today_count,
+            COALESCE(SUM(CASE WHEN payment_status = 'paid' AND DATE(created_at) = CURDATE() THEN total ELSE 0 END), 0) AS paid_today_sum,
+            COUNT(CASE WHEN payment_status = 'unpaid' AND (card_to_card_receipt IS NULL OR card_to_card_receipt = '') THEN 1 END) AS no_receipt_count,
+            COUNT(CASE WHEN payment_status = 'failed' THEN 1 END) AS failed_count,
+            COUNT(*) AS total_count
+        FROM orders
+        WHERE payment_method = 'card_to_card'";
+
+        $stmt = $pdo->query($sql);
+        $stats = $stmt->fetch();
+
+        return [
+            'pending_count'    => (int) ($stats['pending_count'] ?? 0),
+            'pending_sum'      => (int) ($stats['pending_sum'] ?? 0),
+            'paid_today_count' => (int) ($stats['paid_today_count'] ?? 0),
+            'paid_today_sum'   => (int) ($stats['paid_today_sum'] ?? 0),
+            'no_receipt_count' => (int) ($stats['no_receipt_count'] ?? 0),
+            'failed_count'     => (int) ($stats['failed_count'] ?? 0),
+            'total_count'      => (int) ($stats['total_count'] ?? 0),
+        ];
+    }
+
+    /**
      * Update order payment status
      */
     public static function updatePaymentStatus(int $orderId, string $newPaymentStatus): array
@@ -550,6 +739,18 @@ class OrderService
     {
         try {
             return (int) db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'payment_pending')")->fetchColumn();
+        } catch (Throwable $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get count of pending card-to-card receipts awaiting review.
+     */
+    public static function getPendingCardToCardCount(): int
+    {
+        try {
+            return (int) db()->query("SELECT COUNT(*) FROM orders WHERE payment_method = 'card_to_card' AND payment_status = 'unpaid' AND card_to_card_receipt IS NOT NULL AND card_to_card_receipt != ''")->fetchColumn();
         } catch (Throwable $e) {
             return 0;
         }

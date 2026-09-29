@@ -9,6 +9,7 @@ $flash = getFlash();
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 
 $pendingOrdersCount = class_exists('OrderService') ? OrderService::getPendingCount() : 0;
+$pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardToCardCount() : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -28,7 +29,7 @@ $adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/adm
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
-<?php if (in_array($currentPage, ['orders.php', 'order_detail.php'], true)): ?>
+<?php if (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= $adminOrdersCssVer ?>">
 <?php endif; ?>
 <script>
@@ -41,11 +42,11 @@ $adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/adm
 })();
 </script>
 </head>
-<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php'], true) ? 'admin-page-orders' : '') ?>">
+<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true) ? 'admin-page-orders' : '') ?>">
 
 <?php
 require_once APP_ROOT . '/views/admin/layout/nav_config.php';
-$adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount);
+$adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount, $pendingC2CCount);
 ?>
 
 <div class="admin-wrap">
@@ -175,7 +176,7 @@ $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount);
             <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
         <?php endif; ?>
 
-        <?php if (!in_array($currentPage, ['index.php', 'orders.php', 'order_detail.php'], true)): ?>
+        <?php if (!in_array($currentPage, ['index.php', 'order_detail.php'], true)): ?>
             <?php require APP_ROOT . '/views/admin/layout/sub_nav.php'; ?>
         <?php endif; ?>
 

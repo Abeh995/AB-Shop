@@ -3,9 +3,39 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.14.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.15.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.17.3 — 2026-09-30
+
+### Products Hub & Card-to-Card Verification Workstation Architecture Overhaul
+
+- **Products Hub Architecture & Dedicated Service Layer (`app/services/ProductService.php`, `app/bootstrap.php`)**:
+  - Introduced `ProductService.php` as single source of truth for products catalog, pagination, inventory valuation, variant upserts, category trees, and safe image/entity deletions.
+  - Eliminated 100% of raw SQL mutations and database queries from all 6 Products Hub controllers (`products.php`, `product_edit.php`, `categories.php`, `pricing.php`, `gift_items.php`, `gift_item_edit.php`), reducing them to clean, thin controllers strictly below 80 lines (Rule 7 compliant).
+  - Decomposed `app/controllers/admin/product_edit.php` from 247 lines down to 74 lines, fully delegating complex transactional logic (slugs, SKUs, uploads, variants, tags, gallery) to `ProductService::saveProduct()`.
+- **Card-to-Card Verification Workstation Overhaul (`views/admin/card_to_card_payments.php`, `app/controllers/admin/card_to_card_payments.php`, `app/services/OrderService.php`)**:
+  - Re-engineered `card_to_card_payments.php` into a desktop verification workstation with Split-View inspection modal, sticky decision footer, 1-click preset rejection reasons, zoom/rotate image viewport, and admin receipt upload.
+  - Optimized order item listing with high-density presentation and full viewport height scrolling.
+  - Controller refactored to 54 lines with zero SQL queries, delegating to `OrderService` and `CardToCardReceiptService`.
+- **Global Underline Tab Strip Sub-Navigation (`views/admin/layout/sub_nav.php`, `views/admin/layout/header.php`, `views/admin/layout/nav_config.php`, `assets/css/admin.css`)**:
+  - Implemented the sleek Global Underline Tab Strip across all admin tabs as the unified sub-navigation standard.
+  - Replaced ad-hoc dock pills with symmetric, accessible underline tabs with live numeric notification badges.
+  - Streamlined Products Hub sub-navigation into 4 distinct functional workstations: All Products (`products.php`), Categories (`categories.php`), Bulk Pricing (`pricing.php`), and Gifts & Add-ons (`gift_items.php`).
+  - Relocated "Featured" filter from sub-navigation tabs to an interactive status chip within `products.php`.
+- **Products Catalog Visual Redesign & Bento Metrics (`views/admin/products.php`)**:
+  - 4 Key Bento KPI metric cards Above the Fold: Total Catalog Products, Low Stock Warning ($\le 3$), Out-of-Stock Items (0), and Total Inventory Capital Valuation (Toman).
+  - Segmented status filter chips: All, Active, Featured, Low Stock, Out of Stock, Discounted.
+  - Live search input, category dropdown filter, multi-criteria sorting, quick boolean toggles for active and featured states, and modern numeric pagination.
+- **Product Edit Workstation & Live Profit Margin Calculator (`views/admin/product_edit.php`)**:
+  - Professional Two-Column Desktop Workstation: 65% Core & Pricing column and 35% Sticky Media & Publishing sidebar.
+  - Dynamic JavaScript Live Profit Margin Calculator: real-time gross profit and margin percentage calculation upon editing sale price and cost price.
+  - Interactive multi-variant matrix (size, color, stock, variant-specific cost price) and enhanced image gallery manager.
+- **Categories & Pricing & Gifts Refinements (`views/admin/categories.php`, `views/admin/pricing.php`, `views/admin/gift_items.php`, `views/admin/gift_item_edit.php`)**:
+  - Modern Split-View workstation for Categories with fast-add panel and visual depth tree.
+  - Two-phase bulk price simulation wizard with variance highlights and audit history log.
+  - Enhanced catalog presentation for post-order items and order gift box catalog.
 
 ## 1.17.2 — 2026-09-28
 
@@ -136,25 +166,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Database & Versioning**:
   - Migration file `database/migrations/016_v1.15.0_sms_patterns_and_home_sections.sql` mirrored in baseline `database/schema.sql`.
   - Bumped `APP_VERSION` to `1.15.0` in `app/bootstrap.php`.
-
-## 1.14.0 — 2026-09-23
-
-### Default Variant Selection Bug Fix (BUG-C001) & Live Search Autocomplete (FEAT-C001)
-
-- **Product Page Default In-Stock Variant Selection (BUG-C001)**:
-  - On products with size/color variants, the first in-stock variant (`stock > 0`) is now automatically selected and highlighted (`checked` and `.selected`) on page load. Direct clicks on "Add to Cart" no longer fail with false out-of-stock messages caused by missing variant IDs.
-  - Displays selected variant label prominently next to the section title (`سایز / رنگ: ...`) for instant visual clarity.
-  - Real-time client updates on variant change: adjusts displayed price (for variants with `price_override`), updates stock status badge for that variant, and syncs the quantity stepper max limit.
-  - Preserves selected variant state visually after adding to cart, enabling immediate follow-up additions without disorientation.
-  - Backend validation hardened in `ajax/cart_add.php`: enforces variant selection whenever a product has variants, and verifies that the requested quantity is within the variant's actual inventory.
-- **Storefront Live Search & Autocomplete (FEAT-C001)**:
-  - Dedicated lightweight JSON endpoint at `/ajax/search_suggest.php`.
-  - Dropdown suggestion menu under the header search bar displaying product thumbnail, name with search query highlighted (`<mark>`), category badge, sale price/discount, and stock status.
-  - Matching category suggestion pills above products and a "View all results (X products)" footer link.
-  - Shared hosting performance optimizations: 250ms debouncing, in-flight request cancellation via `AbortController`, and an in-memory client cache to eliminate redundant requests when editing queries with Backspace.
-  - Full keyboard accessibility: Arrow Up/Down navigation across suggestions, Enter to navigate to highlighted item, Escape to dismiss, plus a quick clear button.
-  - Strict compliance with `RULE-UI001` with dedicated touch and layout considerations across Mobile, Tablet, and Desktop.
-- **Configurable Storefront Search Settings in Admin Panel**:
-  - New settings card under Store Settings: toggle live search on/off, set suggestion limit (default: 6), minimum character threshold (default: 2), search scope checkboxes (product name, description), and category suggestions toggle.
-  - Database migration `database/migrations/015_v1.14.0_search_settings.sql` and mirrored into `schema.sql`.
 

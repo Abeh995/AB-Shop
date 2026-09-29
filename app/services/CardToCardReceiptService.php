@@ -122,6 +122,54 @@ class CardToCardReceiptService
     }
 
     /**
+     * Upload, optimize, and directly attach a receipt for an existing order (e.g. by admin).
+     */
+    public static function saveDirectForOrder(int $orderId, string $orderCode, array $file): array
+    {
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return ['ok' => false, 'error' => 'بارگذاری تصویر رسید انجام نشد.'];
+        }
+        if (($file['size'] ?? 0) < 1 || $file['size'] > self::MAX_SIZE) {
+            return ['ok' => false, 'error' => 'حجم فایل انتخاب‌شده بیش از سقف مجاز (۳۰ مگابایت) است.'];
+        }
+        if (!is_uploaded_file($file['tmp_name'])) {
+            return ['ok' => false, 'error' => 'فایل بارگذاری‌شده معتبر نیست.'];
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!isset(self::ALLOWED_MIMES[$mime])) {
+            return ['ok' => false, 'error' => 'فقط تصاویر با فرمت JPG، PNG یا WEBP مجاز هستند.'];
+        }
+        if (@getimagesize($file['tmp_name']) === false) {
+            return ['ok' => false, 'error' => 'فایل انتخاب‌شده یک تصویر معتبر نیست.'];
+        }
+
+        self::ensureDirectories();
+
+        $cleanCode = preg_replace('/[^a-zA-Z0-9]/', '', $orderCode);
+        $dateTime = date('Ymd-His');
+        $hash4 = substr(bin2hex(random_bytes(2)), 0, 4);
+
+        $finalFilename = "receipt-order-{$orderId}-{$cleanCode}-{$dateTime}-{$hash4}.webp";
+        $destination = CARD_TO_CARD_UPLOAD_DIR . $finalFilename;
+
+        $optimized = self::optimizeToWebp($file['tmp_name'], $destination, 1200, 307200);
+        if (!$optimized || !file_exists($destination)) {
+            return ['ok' => false, 'error' => 'پردازش و ذخیره تصویر رسید با خطا مواجه شد.'];
+        }
+        @chmod($destination, 0644);
+
+        return [
+            'ok' => true,
+            'filename' => $finalFilename,
+            'submitted_at' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
      * Restore a finalized receipt back to pending status if the checkout transaction failed.
      */
     public static function restorePending(string $finalFilename): void

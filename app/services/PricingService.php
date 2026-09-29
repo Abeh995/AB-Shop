@@ -188,3 +188,80 @@ function getProductPriceHistory(int $productId): array
     $stmt->execute([$productId]);
     return $stmt->fetchAll();
 }
+
+/**
+ * Fetch products list for bulk pricing selection.
+ */
+function getBulkPricingCandidates(string $search = ''): array
+{
+    $where = '1=1';
+    $params = [];
+    if ($search !== '') {
+        $where .= ' AND (p.name LIKE ? OR p.sku LIKE ?)';
+        $params[] = '%' . $search . '%';
+        $params[] = '%' . $search . '%';
+    }
+    $stmt = db()->prepare("
+        SELECT p.id, p.name, p.sku, p.price, p.cost_price, c.name AS category_name
+        FROM products p 
+        JOIN categories c ON c.id = p.category_id
+        WHERE $where 
+        ORDER BY p.name ASC
+    ");
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Fetch recent bulk price operations log.
+ */
+function getRecentBulkPriceOperations(int $limit = 10): array
+{
+    $stmt = db()->prepare("
+        SELECT bo.*, a.username AS admin_username
+        FROM bulk_price_operations bo
+        LEFT JOIN admins a ON a.id = bo.admin_id
+        ORDER BY bo.created_at DESC 
+        LIMIT " . (int) $limit . "
+    ");
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+/**
+ * Calculate preview rows for a proposed bulk price change without committing to DB.
+ */
+function getPricingPreviewRows(array $productIds, string $field, string $method, float $value): array
+{
+    if (empty($productIds)) {
+        return [];
+    }
+
+    $column = $field === 'cost_price' ? 'cost_price' : 'price';
+    $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+    $stmt = db()->prepare("
+        SELECT id, name, sku, $column AS current_value 
+        FROM products 
+        WHERE id IN ($placeholders) 
+        ORDER BY name ASC
+    ");
+    $stmt->execute($productIds);
+    $rows = $stmt->fetchAll();
+
+    $previewRows = [];
+    foreach ($rows as $row) {
+        $current = $row['current_value'] !== null ? (int) $row['current_value'] : null;
+        $computed = computeNewPrice($method, $current, $value);
+        $previewRows[] = [
+            'id' => $row['id'],
+            'name' => $row['name'],
+            'sku' => $row['sku'],
+            'current_value' => $current,
+            'new_value' => $computed['new_value'],
+            'change_amount' => $computed['change_amount'],
+            'change_percentage' => $computed['change_percentage'],
+        ];
+    }
+
+    return $previewRows;
+}

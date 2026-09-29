@@ -1,9 +1,30 @@
-# Changelog Archive (v1.0.0 — v1.13.0)
+# Changelog Archive (v1.0.0 — v1.14.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.13.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.14.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.14.0 — 2026-09-23
+
+### Default Variant Selection Bug Fix (BUG-C001) & Live Search Autocomplete (FEAT-C001)
+
+- **Product Page Default In-Stock Variant Selection (BUG-C001)**:
+  - On products with size/color variants, the first in-stock variant (`stock > 0`) is now automatically selected and highlighted (`checked` and `.selected`) on page load. Direct clicks on "Add to Cart" no longer fail with false out-of-stock messages caused by missing variant IDs.
+  - Displays selected variant label prominently next to the section title (`سایز / رنگ: ...`) for instant visual clarity.
+  - Real-time client updates on variant change: adjusts displayed price (for variants with `price_override`), updates stock status badge for that variant, and syncs the quantity stepper max limit.
+  - Preserves selected variant state visually after adding to cart, enabling immediate follow-up additions without disorientation.
+  - Backend validation hardened in `ajax/cart_add.php`: enforces variant selection whenever a product has variants, and verifies that the requested quantity is within the variant's actual inventory.
+- **Storefront Live Search & Autocomplete (FEAT-C001)**:
+  - Dedicated lightweight JSON endpoint at `/ajax/search_suggest.php`.
+  - Dropdown suggestion menu under the header search bar displaying product thumbnail, name with search query highlighted (`<mark>`), category badge, sale price/discount, and stock status.
+  - Matching category suggestion pills above products and a "View all results (X products)" footer link.
+  - Shared hosting performance optimizations: 250ms debouncing, in-flight request cancellation via `AbortController`, and an in-memory client cache to eliminate redundant requests when editing queries with Backspace.
+  - Full keyboard accessibility: Arrow Up/Down navigation across suggestions, Enter to navigate to highlighted item, Escape to dismiss, plus a quick clear button.
+  - Strict compliance with `RULE-UI001` with dedicated touch and layout considerations across Mobile, Tablet, and Desktop.
+- **Configurable Storefront Search Settings in Admin Panel**:
+  - New settings card under Store Settings: toggle live search on/off, set suggestion limit (default: 6), minimum character threshold (default: 2), search scope checkboxes (product name, description), and category suggestions toggle.
+  - Database migration `database/migrations/015_v1.14.0_search_settings.sql` and mirrored into `schema.sql`.
 
 ## 1.13.0 — 2026-09-23
 

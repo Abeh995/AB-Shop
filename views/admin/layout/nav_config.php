@@ -12,7 +12,7 @@
  */
 
 if (!function_exists('getAdminNavConfig')) {
-    function getAdminNavConfig(string $currentPage, int $pendingOrdersCount = 0): array
+    function getAdminNavConfig(string $currentPage, int $pendingOrdersCount = 0, int $pendingC2CCount = 0): array
     {
         $isFeatured = !empty($_GET['featured']);
 
@@ -42,7 +42,8 @@ if (!function_exists('getAdminNavConfig')) {
                     [
                         'label' => 'فیش‌های کارت‌به‌کارت',
                         'url' => 'card_to_card_payments.php',
-                        'active' => ($currentPage === 'card_to_card_payments.php')
+                        'active' => ($currentPage === 'card_to_card_payments.php'),
+                        'badge' => $pendingC2CCount,
                     ],
                 ]
             ],
@@ -57,12 +58,7 @@ if (!function_exists('getAdminNavConfig')) {
                     [
                         'label' => 'همه محصولات',
                         'url' => 'products.php',
-                        'active' => ($currentPage === 'products.php' && !$isFeatured) || ($currentPage === 'product_edit.php')
-                    ],
-                    [
-                        'label' => 'پیشنهاد ویژه',
-                        'url' => 'products.php?featured=1',
-                        'active' => ($currentPage === 'products.php' && $isFeatured)
+                        'active' => in_array($currentPage, ['products.php', 'product_edit.php'], true)
                     ],
                     [
                         'label' => 'دسته‌بندی‌ها',
@@ -75,7 +71,7 @@ if (!function_exists('getAdminNavConfig')) {
                         'active' => ($currentPage === 'pricing.php')
                     ],
                     [
-                        'label' => 'هدیه و پیشنهاد بعد از سبد',
+                        'label' => 'هدایای سبد و جانبی',
                         'url' => 'gift_items.php',
                         'active' => in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true)
                     ],

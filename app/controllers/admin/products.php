@@ -1,45 +1,70 @@
 <?php
-$featuredOnly = isset($_GET['featured']);
-$pageTitle = $featuredOnly ? 'محصولات ویژه' : 'محصولات';
+/**
+ * Products Catalog Controller
+ * Thin controller managing catalog listing, quick toggles, filters, and deletions.
+ */
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+$pageTitle = 'محصولات';
+
+// Handle POST actions (delete, toggle)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+    $action = $_POST['action'] ?? '';
     $id = (int) ($_POST['id'] ?? 0);
 
-    $stmt = db()->prepare("SELECT image FROM products WHERE id = ?");
-    $stmt->execute([$id]);
-    $img = $stmt->fetchColumn();
-    if ($img && file_exists(UPLOAD_DIR . $img)) {
-        @unlink(UPLOAD_DIR . $img);
+    if ($action === 'delete' && $id > 0) {
+        $result = deleteProduct($id);
+        if ($result['ok']) {
+            setFlash('success', 'محصول با موفقیت حذف شد.');
+        } else {
+            setFlash('error', $result['error'] ?? 'خطا در حذف محصول.');
+        }
+    } elseif ($action === 'toggle' && $id > 0) {
+        $field = $_POST['field'] ?? '';
+        $toggleRes = quickToggleProductField($id, $field);
+        if ($toggleRes['ok']) {
+            setFlash('success', 'وضعیت محصول به‌روزرسانی شد.');
+        } else {
+            setFlash('error', $toggleRes['error'] ?? 'خطا در تغییر وضعیت.');
+        }
     }
 
-    db()->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
-    setFlash('success', 'محصول حذف شد.');
-    redirect($featuredOnly ? 'products.php?featured=1' : 'products.php');
+    $redirectUrl = $_POST['return_url'] ?? 'products.php';
+    redirect($redirectUrl);
 }
 
+// Map query parameters and legacy filters
 $search = trim($_GET['q'] ?? '');
-$where = '1=1';
-$params = [];
-if ($search !== '') {
-    $where .= ' AND p.name LIKE ?';
-    $params[] = '%' . $search . '%';
+$categoryId = (int) ($_GET['category_id'] ?? 0);
+$status = trim($_GET['status'] ?? '');
+if ($status === '' && isset($_GET['featured'])) {
+    $status = 'featured';
 }
-if ($featuredOnly) {
-    $where .= ' AND p.is_featured = 1';
+if ($status === '') {
+    $status = 'all';
 }
+$sort = trim($_GET['sort'] ?? 'newest');
+$page = (int) ($_GET['page'] ?? 1);
 
-// Pre-built variant-stock summary string (size/color: stock) so the products
-// table can show each variant's stock separately instead of one overall number.
-$stmt = db()->prepare("SELECT p.*, c.name AS category_name,
-        (SELECT GROUP_CONCAT(
-                CONCAT(TRIM(CONCAT(COALESCE(v.size,''), ' ', COALESCE(v.color,''))), ': ', v.stock)
-                SEPARATOR ' | ')
-         FROM product_variants v WHERE v.product_id = p.id) AS variant_stock_summary
-        FROM products p
-        JOIN categories c ON c.id = p.category_id
-        WHERE $where ORDER BY p.created_at DESC");
-$stmt->execute($params);
-$products = $stmt->fetchAll();
+$filters = [
+    'q' => $search,
+    'category_id' => $categoryId,
+    'status' => $status,
+    'sort' => $sort,
+];
 
-renderView('admin/products', compact('pageTitle', 'search', 'products', 'featuredOnly'));
+// Delegate to service
+$catalog = getProductsCatalog($filters, $page, 20);
+$stats = getProductCatalogStats();
+$categories = getCategoriesForDropdown();
+
+renderView('admin/products', compact(
+    'pageTitle',
+    'search',
+    'categoryId',
+    'status',
+    'sort',
+    'catalog',
+    'stats',
+    'categories'
+));
