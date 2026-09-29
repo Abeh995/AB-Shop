@@ -3,9 +3,39 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.16.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.17.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.18.0 — 2026-09-30
+
+### 5-Hub Storefront Architecture, Liquid Glass Bottom Dock, Customer Service Domain & DRY Refactoring
+
+- **Storefront 5-Hub Information Architecture (`index.php`, `views/layout/header.php`, `views/layout/footer.php`, `views/site/partials/bottom_dock.php`)**:
+  - Unified the entire client experience into 5 primary hubs:
+    1. **Home Hub** (`/`): mobile product carousel showing ~3 cards per viewport with unconstrained horizontal swiping (`[FEAT-C003]`).
+    2. **Categories Hub** (`/categories`): dedicated hierarchy tree with live product counts and subcategory chips.
+    3. **Cart & Checkout Hub** (`/cart`, `/checkout`): modular card-to-card workflow and mobile responsive table-card conversion.
+    4. **Search Hub** (`/search`): interactive trigger connected to live autocomplete search panel.
+    5. **Account Hub** (`/account`): customer order history, active cart sidebar, and profile management (`[BUG-C005]`).
+  - Implemented the **Floating Liquid Glass Bottom Dock** (`[FEAT-C004]`) for mobile & tablet viewports ($\le 992$px) featuring `backdrop-filter: blur(20px)`, dynamic cart badge counter (`#dockCartBadge`), active hub detection, and zero content overlap via safe area padding.
+- **Dedicated Customer Service Layer & Controller Anti-Bloat (`app/services/CustomerService.php`, `app/controllers/site/account.php`, `app/bootstrap.php`)**:
+  - Introduced `CustomerService.php`: encapsulated customer profile retrieval (`getById`), profile updating with duplicate email guards (`updateProfile`), and order history retrieval (`getOrders`).
+  - Refactored `app/controllers/site/account.php` from direct SQL updates down to 35 lines of service delegation, adhering strictly to Rule 7.
+- **Complete Customer Account Hub Visual Overhaul (`views/site/account.php`, `views/site/account_order.php`, `[BUG-C005]`)**:
+  - Purged all admin styling leakages (`.admin-card`, `.admin-table`) from customer account views.
+  - Implemented client-tailored components: `.customer-card`, `.customer-order-card`, `.account-user-meta`, Shamsi date pills, and active cart sidebar.
+- **Card-to-Card Script Modularization (`views/site/card_to_card.php`, `assets/js/card-to-card.js`)**:
+  - Extracted 274 lines of inline JavaScript (client-side WebP canvas compression, image validation, card-number auto-spacing) into cacheable asset `assets/js/card-to-card.js`.
+  - Reduced `views/site/card_to_card.php` down to 207 presentation lines.
+- **Order Service Payment Authority & Checkout Refactoring (`app/services/OrderService.php`, `app/controllers/site/checkout.php`)**:
+  - Added `setPaymentAuthority(int $orderId, string $authority)` and `statusLabels()` helper methods to `OrderService.php`.
+  - Refactored `app/controllers/site/checkout.php` down to 77 lines (< 80 lines ceiling), eliminating direct database updates.
+  - Initialized `$formData` to eliminate raw `$_POST` reads in `views/site/checkout.php` and `views/site/signup.php`.
+- **Reusable Pagination Partial & View Purity Guard (`views/site/partials/pagination.php`, `app/core/functions.php`, `views/layout/header.php`)**:
+  - Introduced shared partial `views/site/partials/pagination.php` and integrated it across `views/site/category.php` and `views/site/search.php`.
+  - Created `getNavCategories()` in `app/core/functions.php`, eliminating raw SQL query from `views/layout/header.php`.
+  - Reduced `app/controllers/site/product.php` to 71 lines and eliminated variant calculation logic from `views/site/product.php`.
 
 ## 1.17.5 — 2026-09-30
 
@@ -153,29 +183,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Controller Refactoring & Anti-Bloat Architecture**:
   - Refactored `app/controllers/admin/orders.php` into 55 lines and `app/controllers/admin/order_detail.php` into 74 lines of clean service delegation, adhering strictly to Rule 7 (< 80 lines ceiling) with 0 raw SQL mutations.
   - Added robust transactional administrative methods to `app/services/OrderService.php`: `getAdminOrders()`, `getAdminOrderStats()`, `getAdminStatusCounts()`, `updateOrderStatus()`, `updateTrackingCode()`, `bulkUpdateStatus()`, `deleteOrder()`, `getOrder()`, and `getOrderItemsWithGallery()`.
-
-## 1.16.0 — 2026-09-25
-
-### Modern Visual Redesign of Admin Dashboard Tab (High-Density UI & Adaptive Layout)
-
-- **Complete Visual Redesign of Dashboard Tab (`views/admin/dashboard.php`)**:
-  - Re-engineered the dashboard tab visually without touching or disrupting other admin tabs/sections, strictly scoped via `.admin-page-dashboard` body class.
-  - Eliminated oversized greeting banners, duplicate action buttons, and status texts; placed the 5 core KPI metric cards right at the very top (Above the Fold) with zero scroll required.
-  - Unlocked 100% full viewport width on desktop for the dashboard tab by removing the static 256px sidebar and introducing a centered, frosted glass **Floating Dock Bottom Navigation Bar** with 5 primary tabs.
-  - Reduced global base font scale to 13.5px and refined card paddings/spacings, delivering a modern high information density UI matching tools like Linear and Stripe.
-- **Dynamic Live Revenue & Orders Trend Chart (SVG Area Spline)**:
-  - Computed real 7-day revenue and order counts dynamically from database records.
-  - Interactive data nodes with floating tooltips displaying formatted revenue and order count for each day.
-- **Recent Orders Table & Adaptive Mobile Cards Stack**:
-  - Enforced `white-space: nowrap` on order codes (`#ORD-XXXX`), customer names, phone numbers, prices, and status badges, permanently resolving text-wrapping and squishing bugs on lower resolutions.
-  - Responsive layout: clean table on viewports $\ge 860$px, and automatic seamless transition to an **Adaptive Order Cards Stack** on smaller tablet/mobile viewports ($< 860$px).
-  - 1-click clipboard copy for order codes with visual checkmark toast feedback.
-- **Operational Real-time Feeds & Widgets**:
-  - Quick Actions hub with 4 direct links: New Product, Pricing Management, Appearance/Landing, and SMS Patterns.
-  - Card-to-Card instant review widget: displays the latest pending receipt with direct jump to order detail, or a clean verified state when none is pending.
-  - Critical low-stock monitoring widget displaying items with stock $\le 5$ with capacity progress bars.
-- **Command Palette & Keyboard Navigation**:
-  - Compact search trigger button in the topbar with `Ctrl+K` keycap, opening a modern search modal connected to `/ajax/admin_search.php`.
-- **Versioning**:
-  - Bumped `APP_VERSION` to `1.16.0` in `app/bootstrap.php`.
 

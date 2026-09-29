@@ -21,6 +21,10 @@ switch ($page) {
         require $controllersDir . '/home.php';
         break;
 
+    case 'categories':
+        require $controllersDir . '/categories.php';
+        break;
+
     case 'category':
         $_GET['slug'] = $segments[1] ?? '';
         require $controllersDir . '/category.php';

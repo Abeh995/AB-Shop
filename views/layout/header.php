@@ -8,7 +8,7 @@ $pageTitle = $pageTitle ?? SITE_NAME;
 $flash = getFlash();
 
 // Top-level categories for the main nav (subcategories are shown inside the parent category page)
-$navCategories = db()->query("SELECT id, name, slug FROM categories WHERE is_active = 1 AND parent_id IS NULL ORDER BY sort_order ASC LIMIT 8")->fetchAll();
+$navCategories = getNavCategories();
 
 // ---------- SEO: control search-engine indexing from the admin settings ----------
 $seoIndexingEnabled = getSetting('seo_indexing_enabled', '0') === '1';
@@ -76,6 +76,7 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 
         <nav class="main-nav" id="mainNav">
             <a href="/">خانه</a>
+            <a href="/categories">دسته‌بندی‌ها</a>
             <?php foreach ($navCategories as $cat): ?>
                 <a href="/category/<?= e($cat['slug']) ?>"><?= e($cat['name']) ?></a>
             <?php endforeach; ?>

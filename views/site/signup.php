@@ -11,15 +11,15 @@
         <?= csrfField() ?>
         <div class="form-group">
             <label>شماره موبایل</label>
-            <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($_POST['phone'] ?? '') ?>" required>
+            <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($formData['phone'] ?? '') ?>" required>
         </div>
         <div class="form-group">
             <label>نام کامل (اختیاری)</label>
-            <input class="form-control" type="text" name="full_name" value="<?= e($_POST['full_name'] ?? '') ?>">
+            <input class="form-control" type="text" name="full_name" value="<?= e($formData['full_name'] ?? '') ?>">
         </div>
         <div class="form-group">
             <label>ایمیل (اختیاری — در صورت وارد کردن، بعداً باید تایید شود)</label>
-            <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($_POST['email'] ?? '') ?>">
+            <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($formData['email'] ?? '') ?>">
         </div>
         <div class="form-group">
             <label>رمز عبور (حداقل ۶ کاراکتر)</label>

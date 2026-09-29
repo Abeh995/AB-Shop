@@ -2,12 +2,8 @@
 /**
  * Product detail page controller
  */
-
 $slug = $_GET['slug'] ?? '';
-
-$stmt = db()->prepare("SELECT p.*, c.name AS category_name, c.slug AS category_slug
-                        FROM products p JOIN categories c ON c.id = p.category_id
-                        WHERE p.slug = ? AND p.is_active = 1 LIMIT 1");
+$stmt = db()->prepare("SELECT p.*, c.name AS category_name, c.slug AS category_slug FROM products p JOIN categories c ON c.id = p.category_id WHERE p.slug = ? AND p.is_active = 1 LIMIT 1");
 $stmt->execute([$slug]);
 $product = $stmt->fetch();
 
@@ -28,46 +24,39 @@ if (empty($gallery) && $product['image']) $gallery = [$product['image']];
 $varStmt = db()->prepare("SELECT * FROM product_variants WHERE product_id = ? ORDER BY id ASC");
 $varStmt->execute([$product['id']]);
 $variants = $varStmt->fetchAll();
-
 $hasVariants = count($variants) > 0;
 $totalStock = $hasVariants ? array_sum(array_column($variants, 'stock')) : (int) $product['stock'];
-
 $discount = discountPercent($product);
 $finalPrice = effectivePrice($product);
 
-// BUG-C001: Select the first in-stock variant by default, or fallback to the first variant
 $defaultVariantId = null;
+$selectedVariant = null;
 if ($hasVariants) {
     foreach ($variants as $v) {
-        if ((int) $v['stock'] > 0) {
-            $defaultVariantId = (int) $v['id'];
+        if ((int)$v['stock'] > 0) {
+            $selectedVariant = $v;
+            $defaultVariantId = (int)$v['id'];
             break;
         }
     }
-    if ($defaultVariantId === null && !empty($variants)) {
-        $defaultVariantId = (int) $variants[0]['id'];
+    if (!$selectedVariant && !empty($variants)) {
+        $selectedVariant = $variants[0];
+        $defaultVariantId = (int)$variants[0]['id'];
     }
 }
+$selectedVariantLabel = $selectedVariant ? (trim(($selectedVariant['size'] ?? '') . ' ' . ($selectedVariant['color'] ?? '')) ?: 'استاندارد') : '';
+$initialVariantStock = $selectedVariant ? (int)$selectedVariant['stock'] : $totalStock;
+$initialMaxQty = min(max(1, $initialVariantStock), 20);
+$initialPrice = ($selectedVariant && $selectedVariant['price_override'] !== null) ? (float)$selectedVariant['price_override'] : (float)$finalPrice;
 
-$showTags = getSetting('show_product_tags', '1') === '1';
-$tags = $showTags ? getProductTags($product['id']) : [];
-
-// ---------- SEO: this product's description and JSON-LD ----------
-$metaDescription = $product['description']
-    ? mb_substr(strip_tags($product['description']), 0, 160)
-    : ($product['name'] . ' — ' . SITE_NAME);
+$tags = (getSetting('show_product_tags', '1') === '1') ? getProductTags($product['id']) : [];
+$metaDescription = $product['description'] ? mb_substr(strip_tags($product['description']), 0, 160) : ($product['name'] . ' — ' . SITE_NAME);
 $ogImage = rtrim(SITE_URL, '/') . $mainImage;
 $jsonLd = [
-    '@context' => 'https://schema.org',
-    '@type' => 'Product',
-    'name' => $product['name'],
-    'image' => $ogImage,
-    'description' => $metaDescription,
-    'sku' => $product['sku'],
+    '@context' => 'https://schema.org', '@type' => 'Product', 'name' => $product['name'], 'image' => $ogImage,
+    'description' => $metaDescription, 'sku' => $product['sku'],
     'offers' => [
-        '@type' => 'Offer',
-        'priceCurrency' => 'IRR',
-        'price' => (string) ((int) $finalPrice * 10), // Toman to Rial, as expected by the schema.org standard
+        '@type' => 'Offer', 'priceCurrency' => 'IRR', 'price' => (string) ((int) $finalPrice * 10),
         'availability' => $totalStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         'url' => rtrim(SITE_URL, '/') . '/product/' . $product['slug'],
     ],
@@ -75,5 +64,6 @@ $jsonLd = [
 
 renderView('site/product', compact(
     'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice', 'tags',
-    'defaultVariantId', 'metaDescription', 'ogImage', 'jsonLd'
+    'defaultVariantId', 'selectedVariant', 'selectedVariantLabel', 'initialVariantStock', 'initialMaxQty', 'initialPrice',
+    'metaDescription', 'ogImage', 'jsonLd'
 ));

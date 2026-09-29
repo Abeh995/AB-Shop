@@ -18,28 +18,6 @@
             <div class="cat-label"><a href="/category/<?= e($product['category_slug']) ?>"><?= e($product['category_name']) ?></a></div>
             <h1><?= e($product['name']) ?></h1>
 
-            <?php
-            $selectedVariant = null;
-            $selectedVariantLabel = '';
-            if ($hasVariants) {
-                foreach ($variants as $v) {
-                    if ($defaultVariantId !== null && (int)$v['id'] === (int)$defaultVariantId) {
-                        $selectedVariant = $v;
-                        break;
-                    }
-                }
-                if (!$selectedVariant && !empty($variants)) {
-                    $selectedVariant = $variants[0];
-                }
-                if ($selectedVariant) {
-                    $selectedVariantLabel = trim(($selectedVariant['size'] ?? '') . ' ' . ($selectedVariant['color'] ?? '')) ?: 'استاندارد';
-                }
-            }
-            $initialVariantStock = $selectedVariant ? (int)$selectedVariant['stock'] : $totalStock;
-            $initialMaxQty = min(max(1, $initialVariantStock), 20);
-            $initialPrice = ($selectedVariant && $selectedVariant['price_override'] !== null) ? (float)$selectedVariant['price_override'] : (float)$finalPrice;
-            ?>
-
             <div class="price-box" id="productPriceBox">
                 <span class="price-current" id="productPriceCurrent"><?= formatPrice($initialPrice) ?></span>
                 <?php if ($discount > 0): ?>

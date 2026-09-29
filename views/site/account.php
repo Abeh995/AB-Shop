@@ -1,86 +1,152 @@
-<?php require APP_ROOT . '/views/layout/header.php'; ?>
+<?php
+/**
+ * Customer Account Hub — Profile settings, order history, and active cart.
+ * Pure presentation; all data prepared by CustomerService and OrderService.
+ */
+require APP_ROOT . '/views/layout/header.php';
+?>
 
 <div class="container section">
-    <h1 style="margin-bottom:20px;">حساب کاربری</h1>
+    <div class="account-hub-header">
+        <div class="account-user-meta">
+            <div class="account-avatar">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="account-title"><?= !empty($customer['full_name']) ? e($customer['full_name']) : 'کاربر گرامی' ?></h1>
+                <p class="account-subtitle">
+                    شماره همراه: <span dir="ltr"><?= e($customer['phone']) ?></span>
+                    <span class="badge-verified">✓ تایید شده</span>
+                </p>
+            </div>
+        </div>
+        <a href="/logout" class="account-logout-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            خروج از حساب
+        </a>
+    </div>
 
     <?php if ($errors): ?>
-        <div class="alert alert-error"><?php foreach ($errors as $err): ?><div><?= e($err) ?></div><?php endforeach; ?></div>
+        <div class="alert alert-error">
+            <?php foreach ($errors as $err): ?><div><?= e($err) ?></div><?php endforeach; ?>
+        </div>
     <?php endif; ?>
 
-    <div class="cart-layout">
-        <div>
-            <!-- ---------- کارت پروفایل ---------- -->
-            <div class="admin-card">
-                <h3 style="margin-bottom:16px;">اطلاعات من</h3>
-                <form method="post">
+    <div class="account-hub-grid">
+        <div class="account-main-col">
+            <!-- 1. Orders Section -->
+            <div class="customer-card">
+                <div class="customer-card-header">
+                    <h3>سفارش‌های من</h3>
+                    <span class="customer-card-badge"><?= toPersianDigits((string)count($orders)) ?> سفارش</span>
+                </div>
+
+                <?php if (!$orders): ?>
+                    <div class="empty-state" style="padding: 24px 0;">
+                        هنوز سفارشی ثبت نکرده‌اید.<br><br>
+                        <a href="/" class="btn btn-primary btn-sm">مشاهده و خرید محصولات</a>
+                    </div>
+                <?php else: ?>
+                    <div class="customer-orders-list">
+                        <?php foreach ($orders as $o): ?>
+                        <div class="customer-order-card">
+                            <div class="customer-order-header">
+                                <div class="customer-order-code-wrap">
+                                    <span class="customer-order-label">کد سفارش:</span>
+                                    <strong class="customer-order-code" dir="ltr"><?= e($o['order_code']) ?></strong>
+                                </div>
+                                <span class="status-pill status-<?= e($o['status']) ?>">
+                                    <?= e($statusLabels[$o['status']] ?? $o['status']) ?>
+                                </span>
+                            </div>
+                            <div class="customer-order-details">
+                                <div class="customer-order-detail-item">
+                                    <span class="customer-order-detail-label">مبلغ کل:</span>
+                                    <strong class="customer-order-price"><?= formatPrice($o['total']) ?></strong>
+                                </div>
+                                <div class="customer-order-detail-item">
+                                    <span class="customer-order-detail-label">تاریخ ثبت:</span>
+                                    <span><?= toPersianDigits(date('Y/m/d', strtotime($o['created_at']))) ?></span>
+                                </div>
+                            </div>
+                            <div class="customer-order-footer">
+                                <a href="/account/order/<?= e($o['order_code']) ?>" class="btn btn-sm btn-outline customer-order-btn">
+                                    مشاهده جزئیات و فاکتور &larr;
+                                </a>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- 2. Profile Edit Card -->
+            <div class="customer-card" style="margin-top: 24px;">
+                <div class="customer-card-header">
+                    <h3>اطلاعات حساب کاربری</h3>
+                </div>
+                <form method="post" action="/account">
                     <?= csrfField() ?>
                     <div class="form-row">
                         <div class="form-group">
                             <label>نام و نام‌خانوادگی</label>
-                            <input class="form-control" type="text" name="full_name" value="<?= e($customer['full_name'] ?? '') ?>">
+                            <input class="form-control" type="text" name="full_name" value="<?= e($customer['full_name'] ?? '') ?>" placeholder="نام خود را وارد کنید">
                         </div>
                         <div class="form-group">
                             <label>شماره موبایل</label>
                             <input class="form-control" type="text" dir="ltr" value="<?= e($customer['phone']) ?>" disabled>
-                            <span style="color:var(--color-success); font-size:.78rem;">✓ تایید شده</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>ایمیل</label>
-                        <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($customer['email'] ?? '') ?>" placeholder="ایمیل خود را وارد کنید">
+                        <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($customer['email'] ?? '') ?>" placeholder="example@email.com">
                         <?php if (!empty($customer['email'])): ?>
                             <?php if (!empty($customer['email_verified_at'])): ?>
-                                <span style="color:var(--color-success); font-size:.78rem;">✓ تایید شده</span>
+                                <span class="customer-field-note note-success">✓ ایمیل تایید شده است</span>
                             <?php else: ?>
-                                <span style="color:#B7791F; font-size:.78rem;">⚠ تایید نشده — <a href="/verify-email" style="color:var(--color-primary); font-weight:600;">تایید کنید</a></span>
+                                <span class="customer-field-note note-warning">
+                                    ⚠ ایمیل تایید نشده — <a href="/verify-email">تایید ایمیل</a>
+                                </span>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
-                    <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                    <button type="submit" class="btn btn-primary">ذخیره تغییرات مشخصات</button>
                 </form>
-                <p style="margin-top:14px;"><a href="/logout" style="color:var(--color-danger); font-size:.88rem;">خروج از حساب</a></p>
             </div>
+        </div>
 
-            <!-- ---------- تاریخچه سفارش‌ها ---------- -->
-            <div class="admin-card">
-                <h3 style="margin-bottom:14px;">سفارش‌های من</h3>
-                <?php if (!$orders): ?>
-                    <div class="empty-state">هنوز سفارشی ثبت نکرده‌اید. <a href="/">مشاهده محصولات</a></div>
+        <!-- 3. Sidebar: Active Cart & Quick Links -->
+        <aside class="account-side-col">
+            <div class="customer-card">
+                <div class="customer-card-header">
+                    <h3>سبد خرید فعلی</h3>
+                </div>
+                <?php if (empty($cart['items'])): ?>
+                    <p style="color:var(--color-muted); font-size:.88rem; margin: 0;">سبد خرید شما در حال حاضر خالی است.</p>
                 <?php else: ?>
-                    <table class="admin-table">
-                        <thead><tr><th>کد سفارش</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead>
-                        <tbody>
-                        <?php foreach ($orders as $o): ?>
-                        <tr>
-                            <td dir="ltr"><?= e($o['order_code']) ?></td>
-                            <td><?= formatPrice($o['total']) ?></td>
-                            <td><span class="status-pill status-<?= e($o['status']) ?>"><?= e($statusLabels[$o['status']] ?? $o['status']) ?></span></td>
-                            <td><?= toPersianDigits(date('Y/m/d', strtotime($o['created_at']))) ?></td>
-                            <td><a href="/account/order/<?= e($o['order_code']) ?>" class="btn btn-sm btn-outline">جزئیات</a></td>
-                        </tr>
+                    <div class="account-cart-items">
+                        <?php foreach ($cart['items'] as $item): ?>
+                            <div class="account-cart-row">
+                                <span class="account-cart-name"><?= e($item['product']['name']) ?> <small>× <?= toPersianDigits((string)$item['qty']) ?></small></span>
+                                <strong class="account-cart-price"><?= formatPrice($item['line_total']) ?></strong>
+                            </div>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    </div>
+                    <div class="account-cart-total">
+                        <span>جمع کل کالاها:</span>
+                        <strong><?= formatPrice($cart['subtotal']) ?></strong>
+                    </div>
+                    <a href="/cart" class="btn btn-primary btn-block" style="margin-top:14px;">تکمیل و نهایی کردن خرید</a>
                 <?php endif; ?>
             </div>
-        </div>
-
-        <!-- ---------- سبد خرید فعلی ---------- -->
-        <div class="cart-summary">
-            <h3 style="margin-bottom:14px;">سبد خرید فعلی</h3>
-            <?php if (empty($cart['items'])): ?>
-                <p style="color:var(--color-muted); font-size:.9rem;">سبد خرید شما خالی است.</p>
-            <?php else: ?>
-                <?php foreach ($cart['items'] as $item): ?>
-                    <div class="row" style="font-size:.85rem;">
-                        <span><?= e($item['product']['name']) ?> × <?= toPersianDigits((string)$item['qty']) ?></span>
-                        <span><?= formatPrice($item['line_total']) ?></span>
-                    </div>
-                <?php endforeach; ?>
-                <div class="row total-row"><span>جمع کل</span><span><?= formatPrice($cart['subtotal']) ?></span></div>
-                <a href="/cart" class="btn btn-primary btn-block" style="margin-top:14px;">مشاهده سبد خرید</a>
-            <?php endif; ?>
-        </div>
+        </aside>
     </div>
 </div>
 

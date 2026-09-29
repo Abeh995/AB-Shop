@@ -151,6 +151,18 @@ function getCategoryAndChildIds(int $categoryId): array
 }
 
 /**
+ * Top-level active categories for site navigation header.
+ */
+function getNavCategories(): array
+{
+    static $cats = null;
+    if ($cats === null) {
+        $cats = db()->query("SELECT id, name, slug FROM categories WHERE is_active = 1 AND parent_id IS NULL ORDER BY sort_order ASC LIMIT 8")->fetchAll();
+    }
+    return $cats;
+}
+
+/**
  * SQL fragment that computes a product's "effective stock" for listing
  * queries (product cards): the sum of its variants' stock when it has
  * variants, otherwise its own stock column.

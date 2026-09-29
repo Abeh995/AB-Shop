@@ -811,5 +811,29 @@ class OrderService
 
         return $items;
     }
+
+    /**
+     * Store online payment authority token on order.
+     */
+    public static function setPaymentAuthority(int $orderId, string $authority): bool
+    {
+        return db()->prepare("UPDATE orders SET payment_authority = ? WHERE id = ?")
+            ->execute([$authority, $orderId]);
+    }
+
+    /**
+     * Standard order status labels in Persian.
+     */
+    public static function statusLabels(): array
+    {
+        return [
+            'pending' => 'در انتظار بررسی',
+            'confirmed' => 'تأیید شده',
+            'processing' => 'در حال پردازش',
+            'shipped' => 'ارسال شده',
+            'delivered' => 'تحویل داده شده',
+            'cancelled' => 'لغو شده',
+        ];
+    }
 }
 

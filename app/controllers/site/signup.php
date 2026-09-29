@@ -15,21 +15,27 @@ if (!is_string($next) || strpos($next, '/') !== 0 || strpos($next, '//') === 0) 
     $next = '/account';
 }
 
+$formData = [
+    'phone' => '',
+    'full_name' => '',
+    'email' => '',
+];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
-    $phone = trim($_POST['phone'] ?? '');
+    $formData['phone'] = trim($_POST['phone'] ?? '');
+    $formData['full_name'] = trim($_POST['full_name'] ?? '');
+    $formData['email'] = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $passwordConfirm = $_POST['password_confirm'] ?? '';
-    $fullName = trim($_POST['full_name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
     $_SESSION['pending_auth_next'] = $next;
 
     if ($password !== $passwordConfirm) {
         $errors[] = 'تکرار رمز عبور مطابقت ندارد.';
     } else {
-        $result = customerSignup($phone, $password, $fullName ?: null, $email ?: null);
+        $result = customerSignup($formData['phone'], $password, $formData['full_name'] ?: null, $formData['email'] ?: null);
         if ($result['ok']) {
-            VerificationService::sendCode($result['customer_id'], 'phone', $phone);
+            VerificationService::sendCode($result['customer_id'], 'phone', $formData['phone']);
             redirect('/verify-phone');
         } else {
             $errors[] = $result['error'];
@@ -37,4 +43,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderView('site/signup', compact('pageTitle', 'errors', 'next'));
+renderView('site/signup', compact('pageTitle', 'errors', 'next', 'formData'));

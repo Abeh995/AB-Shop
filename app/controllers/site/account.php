@@ -12,37 +12,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullName = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
 
-    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'ایمیل وارد شده معتبر نیست.';
+    $res = CustomerService::updateProfile((int) $customer['id'], $fullName, $email);
+    if (!$res['ok']) {
+        $errors[] = $res['error'];
     } else {
-        $emailChanged = $email !== ($customer['email'] ?? '');
-        if ($emailChanged) {
-            // Changing the email resets its verified state, so it needs re-verifying
-            db()->prepare("UPDATE customers SET full_name = ?, email = ?, email_verified_at = NULL WHERE id = ?")
-                ->execute([$fullName ?: null, $email ?: null, $customer['id']]);
-        } else {
-            db()->prepare("UPDATE customers SET full_name = ? WHERE id = ?")->execute([$fullName ?: null, $customer['id']]);
-        }
-        setFlash('success', 'اطلاعات پروفایل به‌روزرسانی شد.' . ($emailChanged && $email !== '' ? ' برای فعال‌سازی، ایمیل جدید را تایید کنید.' : ''));
+        setFlash('success', 'اطلاعات پروفایل به‌روزرسانی شد.' . ($res['email_changed'] && $email !== '' ? ' برای فعال‌سازی، ایمیل جدید را تایید کنید.' : ''));
         redirect('/account');
     }
 }
 
-$customer = currentCustomer(); // Re-fetch after a possible update (currentCustomer caches, so read from the DB again)
-$freshStmt = db()->prepare("SELECT * FROM customers WHERE id = ?");
-$freshStmt->execute([$customer['id']]);
-$customer = $freshStmt->fetch();
-
+$customer = CustomerService::getById((int) $customer['id']) ?? $customer;
 $cart = cartDetails();
-
-$stmt = db()->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC");
-$stmt->execute([$customer['id']]);
-$orders = $stmt->fetchAll();
-
-$statusLabels = [
-    'pending' => 'در انتظار بررسی', 'confirmed' => 'تأیید شده', 'processing' => 'در حال پردازش',
-    'shipped' => 'ارسال شده', 'delivered' => 'تحویل داده شده', 'cancelled' => 'لغو شده',
-];
+$orders = CustomerService::getOrders((int) $customer['id']);
+$statusLabels = OrderService::statusLabels();
 
 $pageTitle = 'حساب کاربری';
 renderView('site/account', compact('pageTitle', 'customer', 'cart', 'orders', 'statusLabels', 'errors'));

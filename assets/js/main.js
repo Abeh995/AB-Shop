@@ -50,6 +50,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var dockSearchBtn = document.getElementById('dockSearchBtn');
+    if (dockSearchBtn && searchBarPanel) {
+        dockSearchBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var isOpen = searchBarPanel.classList.toggle('open');
+            if (searchToggle) searchToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen && searchInput) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                searchInput.focus();
+            } else if (!isOpen && searchSuggestions) {
+                searchSuggestions.style.display = 'none';
+                if (searchInput) searchInput.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     if (searchForm && searchInput && searchSuggestions) {
         var liveEnabled = searchForm.getAttribute('data-live-enabled') !== '0';
         var minChars = parseInt(searchForm.getAttribute('data-min-chars') || '2', 10);
@@ -357,6 +373,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.ok) {
                     var counter = document.getElementById('cartCount');
                     if (counter) counter.textContent = data.cartCount;
+                    var dockBadge = document.getElementById('dockCartBadge');
+                    if (dockBadge) {
+                        dockBadge.textContent = toPersianDigits(data.cartCount);
+                        if (parseInt(data.cartCount, 10) > 0) {
+                            dockBadge.classList.add('has-items');
+                        } else {
+                            dockBadge.classList.remove('has-items');
+                        }
+                    }
                     btn.textContent = 'به سبد اضافه شد ✓';
                     setTimeout(function () {
                         btn.textContent = originalText;

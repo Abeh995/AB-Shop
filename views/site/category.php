@@ -35,14 +35,11 @@
                 <?php foreach ($products as $p): require APP_ROOT . '/views/site/partials/product_card.php'; endforeach; ?>
             </div>
 
-            <?php if ($totalPages > 1): ?>
-            <div class="pagination">
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <a href="?sort=<?= e($sort) ?><?= $onlyAvailable ? '&available=1' : '' ?>&page=<?= $i ?>"
-                       class="<?= $i === $page ? 'active' : '' ?>"><?= toPersianDigits((string)$i) ?></a>
-                <?php endfor; ?>
-            </div>
-            <?php endif; ?>
+            <?php
+            $paginationParams = ['sort' => $sort];
+            if ($onlyAvailable) $paginationParams['available'] = '1';
+            require APP_ROOT . '/views/site/partials/pagination.php';
+            ?>
         <?php else: ?>
             <div class="empty-state">در حال حاضر محصولی در این دسته‌بندی موجود نیست.</div>
         <?php endif; ?>

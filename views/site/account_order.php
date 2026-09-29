@@ -40,7 +40,7 @@
         <div class="row total-row"><span>مبلغ نهایی</span><span><?= formatPrice($order['total']) ?></span></div>
     </div>
 
-    <div class="admin-card" style="max-width:600px; margin-top:20px;">
+    <div class="customer-card" style="max-width:600px; margin-top:20px;">
         <h3 style="margin-bottom:10px;">اطلاعات ارسال</h3>
         <p><?= e($order['customer_name']) ?> — <span dir="ltr"><?= e($order['phone']) ?></span></p>
         <p><?= e($order['province']) ?>، <?= e($order['city']) ?>، <?= e($order['address']) ?></p>

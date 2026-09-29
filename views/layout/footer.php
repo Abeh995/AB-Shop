@@ -107,6 +107,8 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
     </div>
 </footer>
 
+<?php require APP_ROOT . '/views/site/partials/bottom_dock.php'; ?>
+
 <script src="/assets/js/main.js"></script>
 </body>
 </html>

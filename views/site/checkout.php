@@ -15,28 +15,28 @@
 
             <div class="form-group">
                 <label>نام و نام‌خانوادگی</label>
-                <input class="form-control" type="text" name="customer_name" value="<?= e($_POST['customer_name'] ?? ($prefillCustomer['full_name'] ?? '')) ?>" required>
+                <input class="form-control" type="text" name="customer_name" value="<?= e($formData['customer_name'] ?? '') ?>" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>شماره موبایل</label>
-                    <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($_POST['phone'] ?? ($prefillCustomer['phone'] ?? '')) ?>" required>
+                    <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($formData['phone'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label>ایمیل (اختیاری)</label>
-                    <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($_POST['email'] ?? '') ?>">
+                    <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($formData['email'] ?? '') ?>">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>استان</label>
-                    <input class="form-control" type="text" name="province" id="provinceInput" value="<?= e($_POST['province'] ?? '') ?>" required>
+                    <input class="form-control" type="text" name="province" id="provinceInput" value="<?= e($formData['province'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label>شهر</label>
-                    <input class="form-control" type="text" name="city" value="<?= e($_POST['city'] ?? '') ?>" required>
+                    <input class="form-control" type="text" name="city" value="<?= e($formData['city'] ?? '') ?>" required>
                 </div>
             </div>
             <p id="shippingEstimateNote" style="font-size:.85rem; color:var(--color-muted); margin-top:-10px; margin-bottom:16px;">
@@ -49,17 +49,17 @@
 
             <div class="form-group">
                 <label>آدرس کامل</label>
-                <textarea class="form-control" name="address" required><?= e($_POST['address'] ?? '') ?></textarea>
+                <textarea class="form-control" name="address" required><?= e($formData['address'] ?? '') ?></textarea>
             </div>
 
             <div class="form-group">
                 <label>کد پستی (اختیاری)</label>
-                <input class="form-control" type="text" dir="ltr" name="postal_code" value="<?= e($_POST['postal_code'] ?? '') ?>">
+                <input class="form-control" type="text" dir="ltr" name="postal_code" value="<?= e($formData['postal_code'] ?? '') ?>">
             </div>
 
             <div class="form-group">
                 <label>توضیحات سفارش (اختیاری)</label>
-                <textarea class="form-control" name="notes"><?= e($_POST['notes'] ?? '') ?></textarea>
+                <textarea class="form-control" name="notes"><?= e($formData['notes'] ?? '') ?></textarea>
             </div>
 
             <div class="form-group">
