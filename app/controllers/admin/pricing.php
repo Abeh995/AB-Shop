@@ -1,13 +1,11 @@
 <?php
 /**
  * Bulk Price Operations Controller
- * Thin controller managing two-phase bulk price previews and executions.
+ * Manages desktop bulk pricing workstation, instant previews, and safe executions.
  */
 
 $pageTitle = 'تغییر قیمت گروهی';
 $adminId = (int) ($_SESSION['admin_id'] ?? 0);
-
-$preview = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
@@ -17,37 +15,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = in_array($_POST['method'] ?? '', ['fixed_amount', 'percentage', 'direct_value'], true)
         ? $_POST['method'] : 'fixed_amount';
     $value = (float) str_replace(',', '', $_POST['value'] ?? '0');
+    $roundingStep = max(0, (int) str_replace(',', '', $_POST['rounding_step'] ?? '0'));
+    $applyToVariants = !empty($_POST['apply_to_variants']);
+    $allowNegativeMargin = !empty($_POST['allow_negative_margin']);
     $reason = trim($_POST['reason'] ?? '') ?: null;
 
-    if ($action === 'preview' && !empty($productIds)) {
-        $previewRows = getPricingPreviewRows($productIds, $field, $method, $value);
-        $preview = [
-            'product_ids' => $productIds,
-            'field' => $field,
-            'method' => $method,
-            'value' => $value,
-            'reason' => $reason,
-            'rows' => $previewRows,
-        ];
-    } elseif ($action === 'apply' && !empty($productIds)) {
-        $result = applyBulkPriceChange($productIds, $field, $method, $value, $adminId, $reason);
-        $msg = toPersianDigits((string) $result['succeeded']) . ' محصول با موفقیت به‌روزرسانی شد.';
-        if (!empty($result['skipped'])) {
-            $msg .= ' ' . toPersianDigits((string) count($result['skipped'])) . ' محصول رد شد.';
+    if ($action === 'apply' && !empty($productIds)) {
+        $result = applyBulkPriceChange(
+            $productIds,
+            $field,
+            $method,
+            $value,
+            $adminId,
+            $reason,
+            $roundingStep,
+            $applyToVariants,
+            $allowNegativeMargin
+        );
+
+        if (!$result['ok']) {
+            setFlash('error', $result['error'] ?? 'خطا در ثبت تغییرات قیمت.');
+        } else {
+            $msg = toPersianDigits((string) $result['succeeded']) . ' محصول با موفقیت به‌روزرسانی شد.';
+            if (!empty($result['skipped'])) {
+                $msg .= ' ' . toPersianDigits((string) count($result['skipped'])) . ' محصول رد شد.';
+            }
+            setFlash('success', $msg);
         }
-        setFlash('success', $msg);
-        redirect('pricing.php');
     }
+    redirect('pricing.php');
 }
 
-$search = trim($_GET['q'] ?? '');
-$products = getBulkPricingCandidates($search);
+$filters = [
+    'search' => trim($_GET['q'] ?? ''),
+    'category_id' => !empty($_GET['category_id']) ? (int) $_GET['category_id'] : null,
+    'cost_status' => trim($_GET['cost_status'] ?? ''),
+];
+
+$products = getBulkPricingCandidates($filters);
+$categories = getAllCategoriesWithHierarchy();
+$metrics = getCatalogPricingMetrics();
 $recentOps = getRecentBulkPriceOperations(10);
 
 renderView('admin/pricing', compact(
     'pageTitle',
-    'search',
+    'filters',
     'products',
-    'preview',
+    'categories',
+    'metrics',
     'recentOps'
 ));
+

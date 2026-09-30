@@ -27,7 +27,7 @@
  * @param float $inputValue The admin's input: a Toman amount, a percentage, or the new absolute price
  * @return array{new_value:int, change_amount:int, change_percentage:?float}
  */
-function computeNewPrice(string $method, ?int $previousValue, float $inputValue): array
+function computeNewPrice(string $method, ?int $previousValue, float $inputValue, int $roundingStep = 0): array
 {
     $base = $previousValue ?? 0;
 
@@ -44,6 +44,11 @@ function computeNewPrice(string $method, ?int $previousValue, float $inputValue)
             break;
     }
     $newValue = max(0, $newValue);
+
+    if ($roundingStep > 0 && $newValue > 0) {
+        $newValue = (int) round($newValue / $roundingStep) * $roundingStep;
+        $newValue = max(0, $newValue);
+    }
 
     $changeAmount = $newValue - $base;
     $changePercentage = $base > 0 ? round(($changeAmount / $base) * 100, 4) : null;
@@ -68,7 +73,8 @@ function recordPriceChange(
     float $inputValue,
     int $adminId,
     ?string $reason = null,
-    ?int $bulkOperationId = null
+    ?int $bulkOperationId = null,
+    int $roundingStep = 0
 ): array {
     $column = $field === 'cost_price' ? 'cost_price' : 'price';
     $pdo = db();
@@ -96,7 +102,7 @@ function recordPriceChange(
         }
 
         $previousValue = $row[$column] !== null ? (int) $row[$column] : null;
-        $result = computeNewPrice($method, $previousValue, $inputValue);
+        $result = computeNewPrice($method, $previousValue, $inputValue, $roundingStep);
 
         if ($variantId) {
             $pdo->prepare("UPDATE product_variants SET $column = ? WHERE id = ?")->execute([$result['new_value'], $variantId]);
@@ -126,14 +132,11 @@ function recordPriceChange(
 }
 
 /**
- * Apply the same price change to an arbitrary set of products (product-level
- * only — bulk operations don't reach into individual variants). Always
- * creates a bulk_price_operations record first so every affected product's
- * price_history row can be traced back to the request that caused it, even
- * for products that ended up being skipped.
+ * Apply the same price change to an arbitrary set of products with optional
+ * variant synchronization and negative margin guards.
  *
  * @param int[] $productIds
- * @return array{bulk_operation_id:int, succeeded:int, skipped:array<int,string>}
+ * @return array{bulk_operation_id:int, succeeded:int, skipped:array<int,string>, ok:bool, error?:string}
  */
 function applyBulkPriceChange(
     array $productIds,
@@ -141,13 +144,60 @@ function applyBulkPriceChange(
     string $method,
     float $inputValue,
     int $adminId,
-    ?string $reason = null
+    ?string $reason = null,
+    int $roundingStep = 0,
+    bool $applyToVariants = false,
+    bool $allowNegativeMargin = false
 ): array {
-    $requestedChange = match ($method) {
-        'percentage'    => ($inputValue >= 0 ? '+' : '') . rtrim(rtrim(number_format($inputValue, 4, '.', ''), '0'), '.') . '%',
+    if (empty($productIds)) {
+        return ['ok' => false, 'error' => 'هیچ محصولی انتخاب نشده است.', 'bulk_operation_id' => 0, 'succeeded' => 0, 'skipped' => []];
+    }
+
+    // Safety guard: prevent selling below cost price unless explicitly allowed
+    if ($field === 'sale_price' && !$allowNegativeMargin) {
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $checkStmt = db()->prepare("SELECT id, name, price, cost_price FROM products WHERE id IN ($placeholders)");
+        $checkStmt->execute($productIds);
+        $checkRows = $checkStmt->fetchAll();
+
+        $negativeCount = 0;
+        foreach ($checkRows as $r) {
+            $cost = $r['cost_price'] !== null ? (int) $r['cost_price'] : 0;
+            if ($cost > 0) {
+                $computed = computeNewPrice($method, (int) $r['price'], $inputValue, $roundingStep);
+                if ($computed['new_value'] < $cost) {
+                    $negativeCount++;
+                }
+            }
+        }
+
+        if ($negativeCount > 0) {
+            return [
+                'ok' => false,
+                'error' => 'خطای ایمنی مالی: تعداد ' . toPersianDigits((string) $negativeCount) . ' محصول با حاشیه سود منفی (قیمت فروش کمتر از بهای تمام‌شده) مواجه خواهند شد و تایید صریح ارسال نشده است.',
+                'bulk_operation_id' => 0,
+                'succeeded' => 0,
+                'skipped' => [],
+            ];
+        }
+    }
+
+    // Construct human-readable formula representation for audit log
+    $baseChange = match ($method) {
+        'percentage'    => ($inputValue >= 0 ? '+' : '') . rtrim(rtrim(number_format($inputValue, 2, '.', ''), '0'), '.') . '%',
         'direct_value'  => '=' . number_format($inputValue, 0, '.', ''),
         default         => ($inputValue >= 0 ? '+' : '') . number_format($inputValue, 0, '.', ''),
     };
+
+    $suffix = '';
+    if ($roundingStep > 0) {
+        $suffix .= ' (رند:' . number_format($roundingStep) . ')';
+    }
+    if ($applyToVariants) {
+        $suffix .= ' +تنوع‌ها';
+    }
+
+    $requestedChange = mb_substr($baseChange . $suffix, 0, 40);
 
     $opStmt = db()->prepare("
         INSERT INTO bulk_price_operations (admin_id, field_changed, method, requested_change, reason, product_count)
@@ -159,9 +209,19 @@ function applyBulkPriceChange(
     $succeeded = 0;
     $skipped = [];
     foreach ($productIds as $productId) {
-        $result = recordPriceChange((int) $productId, null, $field, $method, $inputValue, $adminId, $reason, $bulkId);
+        $result = recordPriceChange((int) $productId, null, $field, $method, $inputValue, $adminId, $reason, $bulkId, $roundingStep);
         if ($result['ok']) {
             $succeeded++;
+
+            // Synchronize variants if requested
+            if ($applyToVariants) {
+                $varStmt = db()->prepare("SELECT id FROM product_variants WHERE product_id = ?");
+                $varStmt->execute([$productId]);
+                $variantIds = $varStmt->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($variantIds as $vId) {
+                    recordPriceChange((int) $productId, (int) $vId, $field, $method, $inputValue, $adminId, $reason, $bulkId, $roundingStep);
+                }
+            }
         } else {
             $skipped[(int) $productId] = $result['error'];
         }
@@ -169,7 +229,7 @@ function applyBulkPriceChange(
 
     db()->prepare("UPDATE bulk_price_operations SET product_count = ? WHERE id = ?")->execute([$succeeded, $bulkId]);
 
-    return ['bulk_operation_id' => $bulkId, 'succeeded' => $succeeded, 'skipped' => $skipped];
+    return ['ok' => true, 'bulk_operation_id' => $bulkId, 'succeeded' => $succeeded, 'skipped' => $skipped];
 }
 
 /**
@@ -190,26 +250,92 @@ function getProductPriceHistory(int $productId): array
 }
 
 /**
- * Fetch products list for bulk pricing selection.
+ * Fetch products list for bulk pricing selection with advanced filtering.
+ *
+ * @param array|string $filters Array of [search, category_id, cost_status] or search string
  */
-function getBulkPricingCandidates(string $search = ''): array
+function getBulkPricingCandidates(array|string $filters = []): array
 {
-    $where = '1=1';
+    if (is_string($filters)) {
+        $filters = ['search' => $filters];
+    }
+
+    $search = trim($filters['search'] ?? '');
+    $categoryId = !empty($filters['category_id']) ? (int) $filters['category_id'] : null;
+    $costStatus = trim($filters['cost_status'] ?? '');
+
+    $where = 'p.is_active = 1';
     $params = [];
+
     if ($search !== '') {
         $where .= ' AND (p.name LIKE ? OR p.sku LIKE ?)';
         $params[] = '%' . $search . '%';
         $params[] = '%' . $search . '%';
     }
+
+    if ($categoryId !== null && $categoryId > 0) {
+        $childIds = getCategoryAndChildIds($categoryId);
+        if (!empty($childIds)) {
+            $inClause = implode(',', array_fill(0, count($childIds), '?'));
+            $where .= " AND p.category_id IN ($inClause)";
+            foreach ($childIds as $cid) {
+                $params[] = (int) $cid;
+            }
+        }
+    }
+
+    if ($costStatus === 'missing') {
+        $where .= ' AND (p.cost_price IS NULL OR p.cost_price = 0)';
+    } elseif ($costStatus === 'has_cost') {
+        $where .= ' AND p.cost_price IS NOT NULL AND p.cost_price > 0';
+    }
+
     $stmt = db()->prepare("
-        SELECT p.id, p.name, p.sku, p.price, p.cost_price, c.name AS category_name
+        SELECT p.id, p.name, p.sku, p.price, p.cost_price, p.image, c.name AS category_name, c.id AS category_id
         FROM products p 
-        JOIN categories c ON c.id = p.category_id
+        LEFT JOIN categories c ON c.id = p.category_id
         WHERE $where 
         ORDER BY p.name ASC
     ");
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+/**
+ * Fetch high-level pricing KPI metrics for store catalog.
+ *
+ * @return array{total_products:int, avg_sale_price:int, avg_cost_price:int, missing_cost_count:int, avg_margin_percentage:float}
+ */
+function getCatalogPricingMetrics(): array
+{
+    $stmt = db()->query("
+        SELECT 
+            COUNT(*) AS total_products,
+            AVG(price) AS avg_sale_price,
+            AVG(CASE WHEN cost_price > 0 THEN cost_price ELSE NULL END) AS avg_cost_price,
+            COUNT(CASE WHEN cost_price IS NULL OR cost_price = 0 THEN 1 ELSE NULL END) AS missing_cost_count
+        FROM products
+        WHERE is_active = 1
+    ");
+    $row = $stmt->fetch() ?: [];
+
+    $total = (int) ($row['total_products'] ?? 0);
+    $avgSale = (float) ($row['avg_sale_price'] ?? 0);
+    $avgCost = (float) ($row['avg_cost_price'] ?? 0);
+    $missingCost = (int) ($row['missing_cost_count'] ?? 0);
+
+    $avgMargin = 0.0;
+    if ($avgSale > 0 && $avgCost > 0) {
+        $avgMargin = round((($avgSale - $avgCost) / $avgSale) * 100, 1);
+    }
+
+    return [
+        'total_products' => $total,
+        'avg_sale_price' => (int) round($avgSale),
+        'avg_cost_price' => (int) round($avgCost),
+        'missing_cost_count' => $missingCost,
+        'avg_margin_percentage' => $avgMargin,
+    ];
 }
 
 /**
@@ -231,7 +357,7 @@ function getRecentBulkPriceOperations(int $limit = 10): array
 /**
  * Calculate preview rows for a proposed bulk price change without committing to DB.
  */
-function getPricingPreviewRows(array $productIds, string $field, string $method, float $value): array
+function getPricingPreviewRows(array $productIds, string $field, string $method, float $value, int $roundingStep = 0): array
 {
     if (empty($productIds)) {
         return [];
@@ -240,7 +366,7 @@ function getPricingPreviewRows(array $productIds, string $field, string $method,
     $column = $field === 'cost_price' ? 'cost_price' : 'price';
     $placeholders = implode(',', array_fill(0, count($productIds), '?'));
     $stmt = db()->prepare("
-        SELECT id, name, sku, $column AS current_value 
+        SELECT id, name, sku, image, price, cost_price, $column AS current_value 
         FROM products 
         WHERE id IN ($placeholders) 
         ORDER BY name ASC
@@ -251,15 +377,26 @@ function getPricingPreviewRows(array $productIds, string $field, string $method,
     $previewRows = [];
     foreach ($rows as $row) {
         $current = $row['current_value'] !== null ? (int) $row['current_value'] : null;
-        $computed = computeNewPrice($method, $current, $value);
+        $computed = computeNewPrice($method, $current, $value, $roundingStep);
+        $cost = $row['cost_price'] !== null ? (int) $row['cost_price'] : 0;
+
+        $isNegative = false;
+        if ($field === 'sale_price' && $cost > 0 && $computed['new_value'] < $cost) {
+            $isNegative = true;
+        }
+
         $previewRows[] = [
             'id' => $row['id'],
             'name' => $row['name'],
             'sku' => $row['sku'],
+            'image' => $row['image'],
+            'price' => (int) $row['price'],
+            'cost_price' => $cost,
             'current_value' => $current,
             'new_value' => $computed['new_value'],
             'change_amount' => $computed['change_amount'],
             'change_percentage' => $computed['change_percentage'],
+            'is_negative_margin' => $isNegative,
         ];
     }
 

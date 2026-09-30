@@ -28,6 +28,7 @@ $adminCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin.css
 $adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-orders.css') ?: 1);
 $adminProductsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-products.css') ?: 1);
 $adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-categories.css') ?: 1);
+$adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-pricing.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -39,6 +40,9 @@ $adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css
 <?php endif; ?>
 <?php if ($currentPage === 'categories.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-categories.css?v=<?= $adminCategoriesCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'pricing.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-pricing.css?v=<?= $adminPricingCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

@@ -1,0 +1,807 @@
+/**
+ * Admin Bulk Pricing Workstation Stylesheet
+ * Desktop Dual-Pane Workbench, Live Margin Calculators, and KPI Deck
+ */
+
+/* ---------- 1. Top KPI Metrics Deck ---------- */
+.pricing-kpi-deck {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.pricing-kpi-card {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-lg, 14px);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.pricing-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+    border-color: var(--color-primary-light, #e0e7ff);
+}
+
+.pricing-kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pricing-kpi-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--color-muted, #6b7280);
+}
+
+.pricing-kpi-val {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--color-text, #111827);
+    line-height: 1.2;
+}
+
+.pricing-kpi-sub {
+    font-size: 0.78rem;
+    color: var(--color-muted, #9ca3af);
+}
+
+.pricing-kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pricing-kpi-icon.primary {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+.pricing-kpi-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+.pricing-kpi-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+.pricing-kpi-icon.purple {
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+}
+
+/* ---------- 2. Dual-Pane Workbench Grid ---------- */
+.pricing-workstation {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 32px;
+}
+
+/* ---------- 3. Right Sticky Formula & Control Rail ---------- */
+.pricing-sidebar-card {
+    position: sticky;
+    top: 20px;
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.06);
+    overflow: hidden;
+    z-index: 10;
+}
+
+.pricing-sidebar-header {
+    background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(79,70,229,0.08));
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pricing-sidebar-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-primary-dark, #1e3a8a);
+}
+
+.pricing-sidebar-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Target Segmented Control */
+.pricing-segmented-control {
+    display: flex;
+    background: var(--color-bg-subtle, #f3f4f6);
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+}
+
+.pricing-seg-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-muted, #4b5563);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.pricing-seg-btn.active {
+    background: #ffffff;
+    color: var(--color-primary, #2563eb);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-weight: 700;
+}
+
+/* Method Selector Chips */
+.pricing-method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.pricing-method-btn {
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: var(--color-surface, #ffffff);
+    padding: 8px 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text, #374151);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.pricing-method-btn:hover {
+    border-color: var(--color-primary, #2563eb);
+}
+
+.pricing-method-btn.active {
+    border-color: var(--color-primary, #2563eb);
+    background: rgba(37,99,235,0.08);
+    color: var(--color-primary, #2563eb);
+    font-weight: 700;
+}
+
+/* Formula Value Input & Quick Chips */
+.pricing-field-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text, #1f2937);
+    margin-bottom: 6px;
+}
+
+.pricing-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pricing-input-wrap input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 8px;
+    text-align: left;
+    direction: ltr;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pricing-input-wrap input:focus {
+    outline: none;
+    border-color: var(--color-primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+.pricing-input-unit {
+    position: absolute;
+    left: 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-muted, #9ca3af);
+    pointer-events: none;
+}
+
+/* Quick Chips */
+.pricing-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.pricing-chip {
+    border: 1px dashed var(--color-border, #d1d5db);
+    background: var(--color-bg-subtle, #f9fafb);
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary, #4b5563);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.pricing-chip:hover {
+    background: var(--color-primary-light, #e0e7ff);
+    color: var(--color-primary, #2563eb);
+    border-style: solid;
+}
+
+/* Rounding Row */
+.pricing-rounding-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pricing-rounding-row select {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #d1d5db);
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #ffffff;
+}
+
+.pricing-custom-rounding-wrap {
+    width: 130px;
+    display: none;
+}
+
+.pricing-custom-rounding-wrap.active {
+    display: block;
+}
+
+.pricing-custom-rounding-wrap input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #d1d5db);
+    font-size: 0.85rem;
+    direction: ltr;
+    text-align: center;
+}
+
+/* Checkbox Toggle */
+.pricing-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--color-text, #374151);
+    cursor: pointer;
+    user-select: none;
+}
+
+.pricing-checkbox-row input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}
+
+/* Live Financial Impact Box */
+.pricing-impact-box {
+    background: var(--color-bg-subtle, #f8fafc);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pricing-impact-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.83rem;
+}
+
+.pricing-impact-row .impact-lbl {
+    color: var(--color-muted, #64748b);
+    font-weight: 500;
+}
+
+.pricing-impact-row .impact-val {
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+}
+
+.pricing-impact-alert {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    align-items: center;
+    gap: 6px;
+}
+
+.pricing-impact-alert.active {
+    display: flex;
+}
+
+/* Execute Button */
+.pricing-apply-btn {
+    width: 100%;
+    padding: 12px 18px;
+    background: var(--color-primary, #2563eb);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+
+.pricing-apply-btn:hover:not(:disabled) {
+    background: var(--color-primary-dark, #1d4ed8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+}
+
+.pricing-apply-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ---------- 4. Main Left Products Table & Matrix ---------- */
+.pricing-matrix-card {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+    overflow: hidden;
+}
+
+/* Filter Toolbar */
+.pricing-toolbar {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--color-bg-subtle, #fbfcfd);
+}
+
+.pricing-filters-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pricing-filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #ffffff;
+    max-width: 220px;
+}
+
+.pricing-search-input {
+    padding: 8px 14px;
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    width: 220px;
+}
+
+/* Selection Presets Bar */
+.pricing-presets-deck {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--color-border, #f1f5f9);
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pricing-preset-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pricing-preset-btn {
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-surface, #ffffff);
+    color: var(--color-text-secondary, #475569);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.pricing-preset-btn:hover {
+    background: var(--color-bg-subtle, #f1f5f9);
+    color: var(--color-text, #0f172a);
+    border-color: #cbd5e1;
+}
+
+.pricing-counter-badge {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary, #2563eb);
+    background: rgba(37,99,235,0.08);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+/* Matrix Table */
+.pricing-table-container {
+    max-height: 640px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+.pricing-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.pricing-table tbody tr {
+    border-bottom: 1px solid var(--color-border, #f1f5f9);
+    transition: background 0.15s ease;
+}
+
+.pricing-table tbody tr:hover {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+.pricing-table tbody tr.row-selected {
+    background: rgba(37, 99, 235, 0.03);
+}
+
+.pricing-table tbody tr.row-negative-margin {
+    background: rgba(254, 242, 242, 0.5);
+}
+
+.pricing-table tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+}
+
+/* Product Meta in Row */
+.pricing-prod-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pricing-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 1px solid var(--color-border, #e2e8f0);
+    flex-shrink: 0;
+}
+
+.pricing-thumb-fallback {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.pricing-prod-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pricing-prod-name {
+    font-weight: 600;
+    color: var(--color-text, #1e293b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+
+.pricing-prod-sku {
+    font-family: monospace;
+    font-size: 0.76rem;
+    color: var(--color-muted, #94a3b8);
+    direction: ltr;
+    display: inline-block;
+}
+
+/* Price Cells */
+.pricing-cur-num {
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.pricing-prop-num {
+    font-weight: 800;
+    color: var(--color-primary-dark, #1e3a8a);
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.pricing-delta-tag {
+    font-size: 0.76rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.pricing-delta-tag.up {
+    color: #059669;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.pricing-delta-tag.down {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.pricing-delta-tag.neutral {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.pricing-negative-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-top: 3px;
+}
+
+/* ---------- 5. Final Confirmation Modal ---------- */
+.pricing-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.pricing-modal-backdrop.open {
+    display: flex;
+}
+
+.pricing-modal {
+    background: #ffffff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    animation: pricingModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pricingModalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pricing-modal-head {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pricing-modal-head h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.pricing-modal-close {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.pricing-modal-close:hover {
+    color: #ffffff;
+}
+
+.pricing-modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pricing-modal-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.pricing-modal-stat {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pricing-modal-stat .m-lbl {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.pricing-modal-stat .m-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.pricing-modal-danger-box {
+    display: none;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 10px;
+    padding: 14px;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pricing-modal-danger-box.active {
+    display: flex;
+}
+
+.pricing-modal-danger-title {
+    color: #9f1239;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pricing-modal-danger-text {
+    color: #4c0519;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.pricing-modal-danger-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #881337;
+    margin-top: 4px;
+    cursor: pointer;
+}
+
+.pricing-modal-foot {
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ---------- 6. Audit Log Styles ---------- */
+.pricing-audit-card {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+    padding: 20px 24px;
+    margin-top: 24px;
+}
+
+.pricing-audit-title {
+    margin: 0 0 16px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text, #1e293b);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
