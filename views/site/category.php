@@ -2,8 +2,15 @@
 
 <div class="container">
     <section class="section">
-        <div class="section-title">
-            <h2><?= e($category['name']) ?></h2>
+        <div class="section-title category-header-wrap">
+            <?php if (!empty($category['image'])): ?>
+                <div class="category-header-icon">
+                    <img src="<?= UPLOAD_URL . e($category['image']) ?>" alt="<?= e($category['name']) ?>" class="category-header-img">
+                </div>
+            <?php endif; ?>
+            <div>
+                <h2><?= e($category['name']) ?></h2>
+            </div>
         </div>
 
         <?php if ($category['description']): ?>
@@ -11,9 +18,16 @@
         <?php endif; ?>
 
         <?php if ($subCategories): ?>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+        <div class="category-sub-pills" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
             <?php foreach ($subCategories as $sc): ?>
-                <a href="/category/<?= e($sc['slug']) ?>" class="category-card" style="padding:8px 16px; font-size:.88rem;"><?= e($sc['name']) ?></a>
+                <a href="/category/<?= e($sc['slug']) ?>" class="category-card" style="padding:8px 16px; font-size:.88rem; display:inline-flex; align-items:center; gap:8px;">
+                    <?php if (!empty($sc['image'])): ?>
+                        <span class="cat-icon" style="width:24px; height:24px; margin:0; overflow:hidden; border-radius:50%; flex-shrink:0;">
+                            <img src="<?= UPLOAD_URL . e($sc['image']) ?>" alt="<?= e($sc['name']) ?>" class="cat-icon-img">
+                        </span>
+                    <?php endif; ?>
+                    <?= e($sc['name']) ?>
+                </a>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>

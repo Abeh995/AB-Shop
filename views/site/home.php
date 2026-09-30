@@ -24,7 +24,13 @@ $catIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="
         <div class="category-grid">
             <?php foreach ($categories as $cat): ?>
                 <a href="/category/<?= e($cat['slug']) ?>" class="category-card">
-                    <span class="cat-icon"><?= $catIcon ?></span>
+                    <span class="cat-icon">
+                        <?php if (!empty($cat['image'])): ?>
+                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" class="cat-icon-img" loading="lazy">
+                        <?php else: ?>
+                            <?= $catIcon ?>
+                        <?php endif; ?>
+                    </span>
                     <?= e($cat['name']) ?>
                 </a>
             <?php endforeach; ?>
@@ -78,7 +84,13 @@ $catIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="
         <div class="category-strip">
             <?php foreach ($categories as $cat): ?>
                 <a href="/category/<?= e($cat['slug']) ?>" class="category-pill">
-                    <span class="cat-icon"><?= $catIcon ?></span>
+                    <span class="cat-icon">
+                        <?php if (!empty($cat['image'])): ?>
+                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" class="cat-icon-img" loading="lazy">
+                        <?php else: ?>
+                            <?= $catIcon ?>
+                        <?php endif; ?>
+                    </span>
                     <?= e($cat['name']) ?>
                 </a>
             <?php endforeach; ?>

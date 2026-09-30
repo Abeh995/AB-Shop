@@ -26,11 +26,19 @@ $pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardTo
 $styleCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/style.css') ?: 1);
 $adminCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin.css') ?: 1);
 $adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-orders.css') ?: 1);
+$adminProductsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-products.css') ?: 1);
+$adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-categories.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
 <?php if (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= $adminOrdersCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'products.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-products.css?v=<?= $adminProductsCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'categories.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-categories.css?v=<?= $adminCategoriesCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

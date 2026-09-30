@@ -18,7 +18,7 @@ if (!$category) {
 $pageTitle = $category['name'];
 
 // If this category has subcategories, their products are shown on this page too
-$subCategories = db()->prepare("SELECT id, name, slug FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
+$subCategories = db()->prepare("SELECT id, name, slug, image FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
 $subCategories->execute([$category['id']]);
 $subCategories = $subCategories->fetchAll();
 

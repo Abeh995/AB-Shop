@@ -167,6 +167,52 @@ function getProductsCatalog(array $filters = [], int $page = 1, int $perPage = 2
     $stmt->execute($params);
     $items = $stmt->fetchAll();
 
+    if (!empty($items)) {
+        $productIds = array_column($items, 'id');
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+
+        // 1. Fetch structured variants for each item on page
+        $vStmt = $pdo->prepare("
+            SELECT id, product_id, size, color, stock, price_override, cost_price, is_default
+            FROM product_variants
+            WHERE product_id IN ($placeholders)
+            ORDER BY id ASC
+        ");
+        $vStmt->execute($productIds);
+        $variantsByProd = [];
+        foreach ($vStmt->fetchAll() as $v) {
+            $variantsByProd[(int)$v['product_id']][] = [
+                'id' => (int)$v['id'],
+                'size' => $v['size'],
+                'color' => $v['color'],
+                'stock' => (int)$v['stock'],
+                'price_override' => $v['price_override'] !== null ? (int)$v['price_override'] : null,
+                'cost_price' => $v['cost_price'] !== null ? (int)$v['cost_price'] : null,
+                'is_default' => (bool)$v['is_default'],
+            ];
+        }
+
+        // 2. Fetch gallery images for quick preview
+        $imgStmt = $pdo->prepare("
+            SELECT product_id, image_path, sort_order
+            FROM product_images
+            WHERE product_id IN ($placeholders)
+            ORDER BY sort_order ASC, id ASC
+        ");
+        $imgStmt->execute($productIds);
+        $galleryByProd = [];
+        foreach ($imgStmt->fetchAll() as $img) {
+            $galleryByProd[(int)$img['product_id']][] = $img['image_path'];
+        }
+
+        foreach ($items as &$it) {
+            $pid = (int)$it['id'];
+            $it['variants'] = $variantsByProd[$pid] ?? [];
+            $it['gallery_images'] = $galleryByProd[$pid] ?? [];
+        }
+        unset($it);
+    }
+
     return [
         'items' => $items,
         'total_count' => $totalCount,
@@ -518,9 +564,147 @@ function quickToggleProductField(int $id, string $field): array
     }
 
     $newVal = $current ? 0 : 1;
-    $pdo->prepare("UPDATE products SET $field = ? WHERE id = ?")->execute([$newVal, $id]);
+    $pdo->prepare("UPDATE products SET $field = ?, updated_at = NOW() WHERE id = ?")->execute([$newVal, $id]);
 
     return ['ok' => true, 'new_value' => $newVal];
+}
+
+/**
+ * Fast transactional inventory adjustment for product and/or its variants.
+ * Respects Rule 3 (concurrency locking).
+ */
+function quickUpdateProductStock(int $productId, array $variantStocks = [], ?int $parentStock = null): array
+{
+    if ($productId <= 0) {
+        return ['ok' => false, 'error' => 'شناسه محصول نامعتبر است.'];
+    }
+
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("SELECT id, stock FROM products WHERE id = ? FOR UPDATE");
+        $stmt->execute([$productId]);
+        $prod = $stmt->fetch();
+        if (!$prod) {
+            $pdo->rollBack();
+            return ['ok' => false, 'error' => 'محصول یافت نشد.'];
+        }
+
+        $vStmt = $pdo->prepare("SELECT id, stock FROM product_variants WHERE product_id = ? FOR UPDATE");
+        $vStmt->execute([$productId]);
+        $existingVariants = $vStmt->fetchAll();
+
+        $totalEffectiveStock = 0;
+        if (!empty($existingVariants)) {
+            $updateVStmt = $pdo->prepare("UPDATE product_variants SET stock = ? WHERE id = ? AND product_id = ?");
+            foreach ($existingVariants as $ev) {
+                $vid = (int)$ev['id'];
+                if (isset($variantStocks[$vid])) {
+                    $newStock = max(0, (int)$variantStocks[$vid]);
+                    $updateVStmt->execute([$newStock, $vid, $productId]);
+                    $totalEffectiveStock += $newStock;
+                } else {
+                    $totalEffectiveStock += (int)$ev['stock'];
+                }
+            }
+            $pdo->prepare("UPDATE products SET stock = 0, updated_at = NOW() WHERE id = ?")->execute([$productId]);
+        } else {
+            $newStock = max(0, (int)($parentStock ?? 0));
+            $pdo->prepare("UPDATE products SET stock = ?, updated_at = NOW() WHERE id = ?")->execute([$newStock, $productId]);
+            $totalEffectiveStock = $newStock;
+        }
+
+        $pdo->commit();
+        return [
+            'ok' => true,
+            'effective_stock' => $totalEffectiveStock,
+        ];
+    } catch (\Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Quick stock update error: ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'خطا در به‌روزرسانی موجودی انبار.'];
+    }
+}
+
+/**
+ * Bulk toggle active or featured status for multiple products.
+ */
+function bulkUpdateProductsStatus(array $ids, string $field, int $value): array
+{
+    if (!in_array($field, ['is_active', 'is_featured'], true)) {
+        return ['ok' => false, 'error' => 'فیلد نامعتبر است.'];
+    }
+    $ids = array_values(array_filter(array_map('intval', $ids), fn($id) => $id > 0));
+    if (empty($ids)) {
+        return ['ok' => false, 'error' => 'هیچ محصولی انتخاب نشده است.'];
+    }
+
+    $val = $value ? 1 : 0;
+    $pdo = db();
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $params = array_merge([$val], $ids);
+    $stmt = $pdo->prepare("UPDATE products SET $field = ?, updated_at = NOW() WHERE id IN ($placeholders)");
+    $stmt->execute($params);
+
+    return ['ok' => true, 'affected' => count($ids)];
+}
+
+/**
+ * Bulk category reassignment for multiple products.
+ */
+function bulkUpdateProductsCategory(array $ids, int $categoryId): array
+{
+    $ids = array_values(array_filter(array_map('intval', $ids), fn($id) => $id > 0));
+    if (empty($ids)) {
+        return ['ok' => false, 'error' => 'هیچ محصولی انتخاب نشده است.'];
+    }
+    if ($categoryId <= 0) {
+        return ['ok' => false, 'error' => 'دسته‌بندی نامعتبر است.'];
+    }
+
+    $pdo = db();
+    $cStmt = $pdo->prepare("SELECT id FROM categories WHERE id = ?");
+    $cStmt->execute([$categoryId]);
+    if (!$cStmt->fetchColumn()) {
+        return ['ok' => false, 'error' => 'دسته‌بندی مورد نظر یافت نشد.'];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $params = array_merge([$categoryId], $ids);
+    $stmt = $pdo->prepare("UPDATE products SET category_id = ?, updated_at = NOW() WHERE id IN ($placeholders)");
+    $stmt->execute($params);
+
+    return ['ok' => true, 'affected' => count($ids)];
+}
+
+/**
+ * Bulk safe deletion of products.
+ */
+function bulkDeleteProducts(array $ids): array
+{
+    $ids = array_values(array_filter(array_map('intval', $ids), fn($id) => $id > 0));
+    if (empty($ids)) {
+        return ['ok' => false, 'error' => 'هیچ محصولی انتخاب نشده است.'];
+    }
+
+    $successCount = 0;
+    $errors = [];
+    foreach ($ids as $id) {
+        $res = deleteProduct($id);
+        if ($res['ok']) {
+            $successCount++;
+        } else {
+            $errors[] = "محصول #$id: " . ($res['error'] ?? 'خطا در حذف');
+        }
+    }
+
+    return [
+        'ok' => $successCount > 0,
+        'affected' => $successCount,
+        'errors' => $errors,
+    ];
 }
 
 // ==========================================
@@ -559,16 +743,18 @@ function getAllCategoriesWithHierarchy(): array
 /**
  * Create or update a category record.
  */
-function saveCategory(array $data): array
+function saveCategory(array $data, ?array $imageFile = null): array
 {
     $pdo = db();
     $id = (int) ($data['id'] ?? 0);
     $name = trim($data['name'] ?? '');
+    $slugRaw = trim($data['slug'] ?? '');
     $description = trim($data['description'] ?? '');
     $sortOrder = (int) ($data['sort_order'] ?? 0);
     $isActive = !empty($data['is_active']) ? 1 : 0;
     $parentId = (int) ($data['parent_id'] ?? 0);
     $parentId = $parentId > 0 ? $parentId : null;
+    $removeImage = !empty($data['remove_image']);
 
     if ($name === '') {
         return ['ok' => false, 'error' => 'نام دسته‌بندی الزامی است.'];
@@ -578,23 +764,71 @@ function saveCategory(array $data): array
         $parentId = null;
     }
 
-    $slug = slugify($name);
+    // Slug: use provided slug or derive from name
+    $slug = $slugRaw !== '' ? slugify($slugRaw) : slugify($name);
+    if ($slug === '') {
+        $slug = 'category-' . time();
+    }
     $check = $pdo->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
     $check->execute([$slug, $id]);
     if ($check->fetch()) {
         $slug .= '-' . substr(md5(uniqid('', true)), 0, 4);
     }
 
+    // Existing image lookup
+    $existingImage = null;
     if ($id > 0) {
-        $stmt = $pdo->prepare("UPDATE categories SET parent_id=?, name=?, slug=?, description=?, sort_order=?, is_active=? WHERE id=?");
-        $stmt->execute([$parentId, $name, $slug, $description, $sortOrder, $isActive, $id]);
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO categories (parent_id, name, slug, description, sort_order, is_active) VALUES (?,?,?,?,?,?)");
-        $stmt->execute([$parentId, $name, $slug, $description, $sortOrder, $isActive]);
-        $id = (int) $pdo->lastInsertId();
+        $imgStmt = $pdo->prepare("SELECT image FROM categories WHERE id = ?");
+        $imgStmt->execute([$id]);
+        $existingImage = $imgStmt->fetchColumn() ?: null;
     }
 
-    return ['ok' => true, 'id' => $id];
+    $image = $existingImage;
+
+    // Handle image removal if requested
+    if ($removeImage && $existingImage) {
+        if (file_exists(UPLOAD_DIR . $existingImage)) {
+            @unlink(UPLOAD_DIR . $existingImage);
+        }
+        $image = null;
+    }
+
+    // Handle new image upload
+    $newImageUploaded = false;
+    if ($imageFile && !empty($imageFile['name']) && $imageFile['error'] === UPLOAD_ERR_OK) {
+        $uploadRes = handleProductImageUpload($imageFile, 'category', $id > 0 ? $id : 0, 'icon');
+        if (!$uploadRes['ok']) {
+            return ['ok' => false, 'error' => $uploadRes['error']];
+        }
+
+        // Clean up previous image if exists
+        if ($existingImage && file_exists(UPLOAD_DIR . $existingImage)) {
+            @unlink(UPLOAD_DIR . $existingImage);
+        }
+
+        $image = $uploadRes['filename'];
+        $newImageUploaded = true;
+    }
+
+    if ($id > 0) {
+        $stmt = $pdo->prepare("UPDATE categories SET parent_id=?, name=?, slug=?, description=?, image=?, sort_order=?, is_active=? WHERE id=?");
+        $stmt->execute([$parentId, $name, $slug, $description, $image, $sortOrder, $isActive, $id]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO categories (parent_id, name, slug, description, image, sort_order, is_active) VALUES (?,?,?,?,?,?,?)");
+        $stmt->execute([$parentId, $name, $slug, $description, $image, $sortOrder, $isActive]);
+        $id = (int) $pdo->lastInsertId();
+
+        // If new category with temporary upload, rename to standard name
+        if ($newImageUploaded && $image) {
+            $renamed = renameUploadedImage($image, 'category', $id, 'icon');
+            if ($renamed) {
+                $image = $renamed;
+                $pdo->prepare("UPDATE categories SET image = ? WHERE id = ?")->execute([$image, $id]);
+            }
+        }
+    }
+
+    return ['ok' => true, 'id' => $id, 'image' => $image];
 }
 
 /**
@@ -616,8 +850,100 @@ function deleteCategory(int $id): array
         return ['ok' => false, 'error' => 'این دسته‌بندی دارای زیردسته است و قابل حذف نیست. ابتدا زیردسته‌ها را حذف یا جابه‌جا کنید.'];
     }
 
+    // Clean up category image file if exists
+    $imgStmt = $pdo->prepare("SELECT image FROM categories WHERE id = ?");
+    $imgStmt->execute([$id]);
+    $catImg = $imgStmt->fetchColumn();
+    if ($catImg && file_exists(UPLOAD_DIR . $catImg)) {
+        @unlink(UPLOAD_DIR . $catImg);
+    }
+
     $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$id]);
     return ['ok' => true];
+}
+
+/**
+ * Compute high-level Bento KPIs for categories catalog.
+ */
+function getCategoryCatalogStats(): array
+{
+    $pdo = db();
+    $rows = $pdo->query("
+        SELECT 
+            c.id,
+            c.name,
+            c.parent_id,
+            c.is_active,
+            (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS product_count
+        FROM categories c
+    ")->fetchAll();
+
+    $total = count($rows);
+    $rootCount = 0;
+    $subCount = 0;
+    $activeCount = 0;
+    $emptyCount = 0;
+    $totalAssignedProducts = 0;
+    $topCategory = null;
+    $maxProducts = -1;
+
+    foreach ($rows as $r) {
+        $pCount = (int)$r['product_count'];
+        $totalAssignedProducts += $pCount;
+
+        if ($r['parent_id'] === null) {
+            $rootCount++;
+        } else {
+            $subCount++;
+        }
+
+        if (!empty($r['is_active'])) {
+            $activeCount++;
+        }
+
+        if ($pCount === 0) {
+            $emptyCount++;
+        }
+
+        if ($pCount > $maxProducts && $pCount > 0) {
+            $maxProducts = $pCount;
+            $topCategory = [
+                'name' => $r['name'],
+                'count' => $pCount,
+            ];
+        }
+    }
+
+    return [
+        'total' => $total,
+        'root_count' => $rootCount,
+        'sub_count' => $subCount,
+        'active_count' => $activeCount,
+        'empty_count' => $emptyCount,
+        'total_products' => $totalAssignedProducts,
+        'top_category' => $topCategory ?? ['name' => '—', 'count' => 0],
+    ];
+}
+
+/**
+ * Fast boolean toggle for category is_active status.
+ */
+function quickToggleCategoryActive(int $id): array
+{
+    if ($id <= 0) {
+        return ['ok' => false, 'error' => 'شناسه دسته‌بندی نامعتبر است.'];
+    }
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT is_active FROM categories WHERE id = ?");
+    $stmt->execute([$id]);
+    $current = $stmt->fetchColumn();
+    if ($current === false) {
+        return ['ok' => false, 'error' => 'دسته‌بندی یافت نشد.'];
+    }
+
+    $newVal = $current ? 0 : 1;
+    $pdo->prepare("UPDATE categories SET is_active = ? WHERE id = ?")->execute([$newVal, $id]);
+    return ['ok' => true, 'new_value' => $newVal];
 }
 
 /**
