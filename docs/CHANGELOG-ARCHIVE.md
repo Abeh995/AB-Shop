@@ -1,9 +1,39 @@
-# Changelog Archive (v1.0.0 — v1.17.2)
+# Changelog Archive (v1.0.0 — v1.17.3)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.17.2.
+Historical release notes for AB-Socks versions 1.0.0 through 1.17.3.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.17.3 — 2026-09-30
+
+### Products Hub & Card-to-Card Verification Workstation Architecture Overhaul
+
+- **Products Hub Architecture & Dedicated Service Layer (`app/services/ProductService.php`, `app/bootstrap.php`)**:
+  - Introduced `ProductService.php` as single source of truth for products catalog, pagination, inventory valuation, variant upserts, category trees, and safe image/entity deletions.
+  - Eliminated 100% of raw SQL mutations and database queries from all 6 Products Hub controllers (`products.php`, `product_edit.php`, `categories.php`, `pricing.php`, `gift_items.php`, `gift_item_edit.php`), reducing them to clean, thin controllers strictly below 80 lines (Rule 7 compliant).
+  - Decomposed `app/controllers/admin/product_edit.php` from 247 lines down to 74 lines, fully delegating complex transactional logic (slugs, SKUs, uploads, variants, tags, gallery) to `ProductService::saveProduct()`.
+- **Card-to-Card Verification Workstation Overhaul (`views/admin/card_to_card_payments.php`, `app/controllers/admin/card_to_card_payments.php`, `app/services/OrderService.php`)**:
+  - Re-engineered `card_to_card_payments.php` into a desktop verification workstation with Split-View inspection modal, sticky decision footer, 1-click preset rejection reasons, zoom/rotate image viewport, and admin receipt upload.
+  - Optimized order item listing with high-density presentation and full viewport height scrolling.
+  - Controller refactored to 54 lines with zero SQL queries, delegating to `OrderService` and `CardToCardReceiptService`.
+- **Global Underline Tab Strip Sub-Navigation (`views/admin/layout/sub_nav.php`, `views/admin/layout/header.php`, `views/admin/layout/nav_config.php`, `assets/css/admin.css`)**:
+  - Implemented the sleek Global Underline Tab Strip across all admin tabs as the unified sub-navigation standard.
+  - Replaced ad-hoc dock pills with symmetric, accessible underline tabs with live numeric notification badges.
+  - Streamlined Products Hub sub-navigation into 4 distinct functional workstations: All Products (`products.php`), Categories (`categories.php`), Bulk Pricing (`pricing.php`), and Gifts & Add-ons (`gift_items.php`).
+  - Relocated "Featured" filter from sub-navigation tabs to an interactive status chip within `products.php`.
+- **Products Catalog Visual Redesign & Bento Metrics (`views/admin/products.php`)**:
+  - 4 Key Bento KPI metric cards Above the Fold: Total Catalog Products, Low Stock Warning ($\le 3$), Out-of-Stock Items (0), and Total Inventory Capital Valuation (Toman).
+  - Segmented status filter chips: All, Active, Featured, Low Stock, Out of Stock, Discounted.
+  - Live search input, category dropdown filter, multi-criteria sorting, quick boolean toggles for active and featured states, and modern numeric pagination.
+- **Product Edit Workstation & Live Profit Margin Calculator (`views/admin/product_edit.php`)**:
+  - Professional Two-Column Desktop Workstation: 65% Core & Pricing column and 35% Sticky Media & Publishing sidebar.
+  - Dynamic JavaScript Live Profit Margin Calculator: real-time gross profit and margin percentage calculation upon editing sale price and cost price.
+  - Interactive multi-variant matrix (size, color, stock, variant-specific cost price) and enhanced image gallery manager.
+- **Categories & Pricing & Gifts Refinements (`views/admin/categories.php`, `views/admin/pricing.php`, `views/admin/gift_items.php`, `views/admin/gift_item_edit.php`)**:
+  - Modern Split-View workstation for Categories with fast-add panel and visual depth tree.
+  - Two-phase bulk price simulation wizard with variance highlights and audit history log.
+  - Enhanced catalog presentation for post-order items and order gift box catalog.
 
 ## 1.17.2 — 2026-09-28
 

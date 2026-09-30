@@ -192,19 +192,184 @@ function getOrderGiftItems(int $orderId): array
 }
 
 /**
- * Administrative list of gift/post-order catalog items.
+ * Aggregate summary KPIs for gift & post-order catalog health and usage.
+ *
+ * @return array{
+ *   total_items: int,
+ *   active_items: int,
+ *   inactive_items: int,
+ *   giftable_count: int,
+ *   post_orderable_count: int,
+ *   hybrid_count: int,
+ *   total_stock: int,
+ *   total_inventory_valuation: int,
+ *   low_stock_count: int,
+ *   lifetime_gifted_units: int,
+ *   lifetime_sold_units: int,
+ *   lifetime_post_order_revenue: int
+ * }
  */
-function getAdminGiftItemsList(string $search = ''): array
+function getAdminGiftItemsMetrics(): array
 {
-    $where = '1=1';
+    $pdo = db();
+
+    // 1. Catalog inventory aggregations
+    $catalogStats = $pdo->query("
+        SELECT
+            COUNT(*) AS total_items,
+            SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active_items,
+            SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) AS inactive_items,
+            SUM(CASE WHEN is_giftable = 1 THEN 1 ELSE 0 END) AS giftable_count,
+            SUM(CASE WHEN is_post_orderable = 1 THEN 1 ELSE 0 END) AS post_orderable_count,
+            SUM(CASE WHEN is_giftable = 1 AND is_post_orderable = 1 THEN 1 ELSE 0 END) AS hybrid_count,
+            COALESCE(SUM(stock), 0) AS total_stock,
+            COALESCE(SUM(stock * cost_price), 0) AS total_inventory_valuation,
+            SUM(CASE WHEN stock <= 5 THEN 1 ELSE 0 END) AS low_stock_count
+        FROM gift_items
+    ")->fetch() ?: [];
+
+    // 2. Order usage aggregations from order_gift_items
+    $orderStats = $pdo->query("
+        SELECT
+            COALESCE(SUM(CASE WHEN role = 'gift' THEN quantity ELSE 0 END), 0) AS lifetime_gifted_units,
+            COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity ELSE 0 END), 0) AS lifetime_sold_units,
+            COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity * unit_selling_price ELSE 0 END), 0) AS lifetime_post_order_revenue
+        FROM order_gift_items
+    ")->fetch() ?: [];
+
+    return [
+        'total_items'                 => (int) ($catalogStats['total_items'] ?? 0),
+        'active_items'                => (int) ($catalogStats['active_items'] ?? 0),
+        'inactive_items'              => (int) ($catalogStats['inactive_items'] ?? 0),
+        'giftable_count'              => (int) ($catalogStats['giftable_count'] ?? 0),
+        'post_orderable_count'        => (int) ($catalogStats['post_orderable_count'] ?? 0),
+        'hybrid_count'                => (int) ($catalogStats['hybrid_count'] ?? 0),
+        'total_stock'                 => (int) ($catalogStats['total_stock'] ?? 0),
+        'total_inventory_valuation'   => (int) ($catalogStats['total_inventory_valuation'] ?? 0),
+        'low_stock_count'             => (int) ($catalogStats['low_stock_count'] ?? 0),
+        'lifetime_gifted_units'       => (int) ($orderStats['lifetime_gifted_units'] ?? 0),
+        'lifetime_sold_units'         => (int) ($orderStats['lifetime_sold_units'] ?? 0),
+        'lifetime_post_order_revenue' => (int) ($orderStats['lifetime_post_order_revenue'] ?? 0),
+    ];
+}
+
+/**
+ * Administrative list of gift/post-order catalog items with attached lifetime performance.
+ *
+ * @param string $search
+ * @param string $roleFilter 'all'|'giftable'|'post_orderable'|'hybrid'|'low_stock'|'inactive'
+ * @return array
+ */
+function getAdminGiftItemsList(string $search = '', string $roleFilter = 'all'): array
+{
+    $where = ['1=1'];
     $params = [];
+
     if ($search !== '') {
-        $where .= ' AND name LIKE ?';
+        $where[] = 'g.name LIKE ?';
         $params[] = '%' . $search . '%';
     }
-    $stmt = db()->prepare("SELECT * FROM gift_items WHERE $where ORDER BY created_at DESC");
+
+    switch ($roleFilter) {
+        case 'giftable':
+            $where[] = 'g.is_giftable = 1';
+            break;
+        case 'post_orderable':
+            $where[] = 'g.is_post_orderable = 1';
+            break;
+        case 'hybrid':
+            $where[] = 'g.is_giftable = 1 AND g.is_post_orderable = 1';
+            break;
+        case 'low_stock':
+            $where[] = 'g.stock <= 5';
+            break;
+        case 'inactive':
+            $where[] = 'g.is_active = 0';
+            break;
+    }
+
+    $whereSql = implode(' AND ', $where);
+
+    $sql = "
+        SELECT
+            g.*,
+            COALESCE(SUM(CASE WHEN ogi.role = 'gift' THEN ogi.quantity ELSE 0 END), 0) AS gifted_units,
+            COALESCE(SUM(CASE WHEN ogi.role = 'post_order' THEN ogi.quantity ELSE 0 END), 0) AS sold_units,
+            COALESCE(SUM(CASE WHEN ogi.role = 'post_order' THEN ogi.quantity * ogi.unit_selling_price ELSE 0 END), 0) AS gross_revenue
+        FROM gift_items g
+        LEFT JOIN order_gift_items ogi ON ogi.gift_item_id = g.id
+        WHERE {$whereSql}
+        GROUP BY g.id
+        ORDER BY g.created_at DESC
+    ";
+
+    $stmt = db()->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetchAll();
+    $rows = $stmt->fetchAll();
+
+    foreach ($rows as &$item) {
+        $cost = (int) $item['cost_price'];
+        $sale = $item['post_order_price'] !== null ? (int) $item['post_order_price'] : null;
+        $item['profit_per_unit'] = ($sale !== null) ? ($sale - $cost) : null;
+        $item['margin_percent'] = ($sale !== null && $sale > 0) ? (int) round((($sale - $cost) / $sale) * 100) : null;
+        $item['gifted_units'] = (int) $item['gifted_units'];
+        $item['sold_units'] = (int) $item['sold_units'];
+        $item['gross_revenue'] = (int) $item['gross_revenue'];
+    }
+    unset($item);
+
+    return $rows;
+}
+
+/**
+ * Toggle active status of a gift item.
+ *
+ * @param int $id
+ * @return array{ok: bool, is_active?: int, error?: string}
+ */
+function toggleGiftItemActive(int $id): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT is_active FROM gift_items WHERE id = ?");
+    $stmt->execute([$id]);
+    $current = $stmt->fetchColumn();
+    if ($current === false) {
+        return ['ok' => false, 'error' => 'آیتم مورد نظر یافت نشد.'];
+    }
+
+    $newVal = ((int) $current === 1) ? 0 : 1;
+    $up = $pdo->prepare("UPDATE gift_items SET is_active = ? WHERE id = ?");
+    $up->execute([$newVal, $id]);
+
+    return ['ok' => true, 'is_active' => $newVal];
+}
+
+/**
+ * Fast administrative adjustment of a gift item's stock.
+ *
+ * @param int $id
+ * @param int $stock
+ * @return array{ok: bool, stock?: int, error?: string}
+ */
+function updateGiftItemStock(int $id, int $stock): array
+{
+    if ($stock < 0) {
+        return ['ok' => false, 'error' => 'موجودی نمی‌تواند منفی باشد.'];
+    }
+
+    $pdo = db();
+    $stmt = $pdo->prepare("UPDATE gift_items SET stock = ? WHERE id = ?");
+    $stmt->execute([$stock, $id]);
+
+    if ($stmt->rowCount() === 0) {
+        $check = $pdo->prepare("SELECT id FROM gift_items WHERE id = ?");
+        $check->execute([$id]);
+        if (!$check->fetch()) {
+            return ['ok' => false, 'error' => 'آیتم مورد نظر یافت نشد.'];
+        }
+    }
+
+    return ['ok' => true, 'stock' => $stock];
 }
 
 /**

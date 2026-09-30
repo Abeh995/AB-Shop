@@ -29,6 +29,7 @@ $adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/adm
 $adminProductsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-products.css') ?: 1);
 $adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-categories.css') ?: 1);
 $adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-pricing.css') ?: 1);
+$adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-gift-items.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -43,6 +44,9 @@ $adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 <?php endif; ?>
 <?php if ($currentPage === 'pricing.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-pricing.css?v=<?= $adminPricingCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-gift-items.css?v=<?= $adminGiftItemsCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

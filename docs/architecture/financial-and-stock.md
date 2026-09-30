@@ -56,6 +56,9 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
   - `is_giftable`: Free gift allocated to an order by an admin from `order_detail.php`.
   - `is_post_orderable`: Paid upsell add-on presented to the customer during cart/checkout.
 - Snapshots cost and selling prices into `order_gift_items`.
+- Provides catalog workstation metrics (`getAdminGiftItemsMetrics()`) for inventory capital valuation, utilization rates, and lifetime upsell revenue.
+- Connects historical order attachments (`order_gift_items`) into vectorized catalog performance stats (`gifted_units`, `sold_units`, `gross_revenue`, `margin_percent`).
+- Enforces row-locking (`SELECT ... FOR UPDATE` and conditional `WHERE stock >= ?`) for concurrency safety across all stock mutations.
 
 ### AccountingService (`app/services/AccountingService.php`)
 - **Read-Only Reporting**: Never mutates the database.
