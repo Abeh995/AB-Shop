@@ -279,7 +279,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
 
                 <hr style="margin:16px 0; border:0; border-top:1px solid var(--color-border);">
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
                     <form method="post">
                         <?= csrfField() ?>
                         <input type="hidden" name="section" value="tags">
@@ -300,6 +300,25 @@ require APP_ROOT . '/views/admin/layout/header.php';
                         <button type="submit" class="btn btn-outline btn-sm" style="width:100%;">ذخیره ضمانت</button>
                     </form>
                 </div>
+
+                <form method="post" style="background:var(--color-bg-subtle, rgba(0,0,0,0.02)); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:12px 14px;">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="section" value="variant_strategy">
+                    <label style="display:block; font-size:.82rem; font-weight:700; margin-bottom:6px;">
+                        استراتژی سراسری انتخاب واریانت پیش‌فرض:
+                    </label>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <select class="form-control" name="default_variant_strategy" style="flex:1; min-width:200px; font-size:.85rem;">
+                            <option value="highest_stock" <?= ($defaultVariantStrategy ?? 'highest_stock') === 'highest_stock' ? 'selected' : '' ?>>بیشترین موجودی انبار (پیش‌فرض)</option>
+                            <option value="lowest_stock" <?= ($defaultVariantStrategy ?? '') === 'lowest_stock' ? 'selected' : '' ?>>کمترین موجودی انبار (تخلیه انبار)</option>
+                            <option value="first_created" <?= ($defaultVariantStrategy ?? '') === 'first_created' ? 'selected' : '' ?>>اولین واریانت تعریف‌شده</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm">ذخیره استراتژی</button>
+                    </div>
+                    <p style="font-size:.74rem; color:var(--color-muted); margin:6px 0 0;">
+                        روی تمام محصولاتی که گزینه «پیروی از استراتژی سراسری» در آنها فعال باشد اعمال می‌شود.
+                    </p>
+                </form>
             </div>
 
             <!-- 4. Social Media, Enamad & Trust Badges -->

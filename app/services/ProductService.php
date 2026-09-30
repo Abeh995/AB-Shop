@@ -299,15 +299,16 @@ function saveProduct(array $data, array $files, int $adminId): array
     }
 
     $productId = $id;
+    $useGlobalVariantStrategy = isset($data['use_global_variant_strategy']) ? 1 : 0;
 
     if ($existingProduct) {
         // Update product metadata (price & cost are recorded via PricingService below)
         $stmt = $pdo->prepare("
             UPDATE products 
-            SET category_id=?, name=?, slug=?, description=?, discount_price=?, sku=?, stock=?, image=?, is_active=?, is_featured=? 
+            SET category_id=?, name=?, slug=?, description=?, discount_price=?, sku=?, stock=?, use_global_variant_strategy=?, image=?, is_active=?, is_featured=? 
             WHERE id=?
         ");
-        $stmt->execute([$categoryId, $name, $slug, $description, $discountPrice, $sku, $stock, $newImageName, $isActive, $isFeatured, $id]);
+        $stmt->execute([$categoryId, $name, $slug, $description, $discountPrice, $sku, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured, $id]);
 
         // Audit price changes if changed
         $oldPrice = (int) $existingProduct['price'];
@@ -326,10 +327,10 @@ function saveProduct(array $data, array $files, int $adminId): array
     } else {
         // Insert new product
         $stmt = $pdo->prepare("
-            INSERT INTO products (category_id, name, slug, description, price, discount_price, cost_price, sku, stock, image, is_active, is_featured) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO products (category_id, name, slug, description, price, discount_price, cost_price, sku, stock, use_global_variant_strategy, image, is_active, is_featured) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
         ");
-        $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $costPrice, $sku, $stock, $newImageName, $isActive, $isFeatured]);
+        $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $costPrice, $sku, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured]);
         $productId = (int) $pdo->lastInsertId();
 
         // Rename temporary uploaded image if it was a new creation
@@ -365,6 +366,7 @@ function saveProduct(array $data, array $files, int $adminId): array
         $colors = $data['variant_color'] ?? [];
         $vstocks = $data['variant_stock'] ?? [];
         $vcostPrices = $data['variant_cost_price'] ?? [];
+        $defaultVariantIdx = isset($data['default_variant_index']) ? (int) $data['default_variant_index'] : 0;
 
         for ($i = 0; $i < count($sizes); $i++) {
             $sz = trim($sizes[$i] ?? '');
@@ -373,12 +375,13 @@ function saveProduct(array $data, array $files, int $adminId): array
             $vcpRaw = trim($vcostPrices[$i] ?? '');
             $vcp = $vcpRaw === '' ? null : (int) preg_replace('/\D/', '', $vcpRaw);
             $existingId = (int) ($variantIdsIn[$i] ?? 0);
+            $isDefault = ($defaultVariantIdx === $i) ? 1 : 0;
 
             if ($sz === '' && $cl === '') continue;
 
             if ($existingId && isset($oldVariantsById[$existingId])) {
-                $pdo->prepare("UPDATE product_variants SET size=?, color=?, stock=? WHERE id=? AND product_id=?")
-                    ->execute([$sz ?: null, $cl ?: null, $st, $existingId, $productId]);
+                $pdo->prepare("UPDATE product_variants SET size=?, color=?, stock=?, is_default=? WHERE id=? AND product_id=?")
+                    ->execute([$sz ?: null, $cl ?: null, $st, $isDefault, $existingId, $productId]);
 
                 $oldVariant = $oldVariantsById[$existingId];
                 $oldVcp = $oldVariant['cost_price'] !== null ? (int) $oldVariant['cost_price'] : null;
@@ -391,8 +394,8 @@ function saveProduct(array $data, array $files, int $adminId): array
                 }
                 $submittedVariantIds[] = $existingId;
             } else {
-                $vstmt = $pdo->prepare("INSERT INTO product_variants (product_id, size, color, stock, cost_price) VALUES (?,?,?,?,?)");
-                $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st, $vcp]);
+                $vstmt = $pdo->prepare("INSERT INTO product_variants (product_id, size, color, stock, cost_price, is_default) VALUES (?,?,?,?,?,?)");
+                $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st, $vcp, $isDefault]);
                 $newVId = (int) $pdo->lastInsertId();
                 if ($vcp !== null) {
                     recordPriceChange($productId, $newVId, 'cost_price', 'direct_value', (float) $vcp, $adminId, 'ثبت اولیه قیمت تمام‌شده واریانت');
@@ -615,4 +618,66 @@ function deleteCategory(int $id): array
 
     $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$id]);
     return ['ok' => true];
+}
+
+/**
+ * Resolve the default product variant to display based on product and global store strategy.
+ *
+ * Invariants:
+ * - If product follows global strategy, pick variant based on store strategy setting (default: 'highest_stock').
+ * - If product uses manual override, pick the variant with is_default = 1.
+ * - Always prioritize variants in-stock (stock > 0). If the preferred variant is out of stock,
+ *   fall back gracefully to an in-stock variant.
+ * - If all variants are out of stock, fall back to the preferred or first variant.
+ */
+function resolveDefaultProductVariant(array $variants, bool $useGlobalStrategy = true, ?string $strategy = null): ?array
+{
+    if (empty($variants)) {
+        return null;
+    }
+
+    $inStock = array_values(array_filter($variants, fn($v) => (int)($v['stock'] ?? 0) > 0));
+
+    if (!$useGlobalStrategy) {
+        // Manual override per product
+        $defaultCandidates = array_values(array_filter($variants, fn($v) => !empty($v['is_default'])));
+        $manualDefault = $defaultCandidates[0] ?? null;
+
+        if ($manualDefault && (int)($manualDefault['stock'] ?? 0) > 0) {
+            return $manualDefault;
+        }
+
+        // If manual choice is out of stock, fall back to highest in-stock variant
+        if (!empty($inStock)) {
+            usort($inStock, fn($a, $b) => ((int)$b['stock'] <=> (int)$a['stock']) ?: ((int)$a['id'] <=> (int)$b['id']));
+            return $inStock[0];
+        }
+
+        return $manualDefault ?: $variants[0];
+    }
+
+    // Global Store Strategy
+    if ($strategy === null) {
+        try {
+            $strategy = getSetting('default_variant_strategy', 'highest_stock');
+        } catch (Throwable $e) {
+            $strategy = 'highest_stock';
+        }
+    }
+
+    if (!empty($inStock)) {
+        if ($strategy === 'highest_stock') {
+            usort($inStock, fn($a, $b) => ((int)$b['stock'] <=> (int)$a['stock']) ?: ((int)$a['id'] <=> (int)$b['id']));
+            return $inStock[0];
+        }
+        if ($strategy === 'lowest_stock') {
+            usort($inStock, fn($a, $b) => ((int)$a['stock'] <=> (int)$b['stock']) ?: ((int)$a['id'] <=> (int)$b['id']));
+            return $inStock[0];
+        }
+        // 'first_created' or default
+        return $inStock[0];
+    }
+
+    // All out of stock
+    return $variants[0];
 }

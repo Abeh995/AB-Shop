@@ -29,21 +29,9 @@ $totalStock = $hasVariants ? array_sum(array_column($variants, 'stock')) : (int)
 $discount = discountPercent($product);
 $finalPrice = effectivePrice($product);
 
-$defaultVariantId = null;
-$selectedVariant = null;
-if ($hasVariants) {
-    foreach ($variants as $v) {
-        if ((int)$v['stock'] > 0) {
-            $selectedVariant = $v;
-            $defaultVariantId = (int)$v['id'];
-            break;
-        }
-    }
-    if (!$selectedVariant && !empty($variants)) {
-        $selectedVariant = $variants[0];
-        $defaultVariantId = (int)$variants[0]['id'];
-    }
-}
+$useGlobalStrategy = (int) ($product['use_global_variant_strategy'] ?? 1) === 1;
+$selectedVariant = $hasVariants ? resolveDefaultProductVariant($variants, $useGlobalStrategy) : null;
+$defaultVariantId = $selectedVariant ? (int) $selectedVariant['id'] : null;
 $selectedVariantLabel = $selectedVariant ? (trim(($selectedVariant['size'] ?? '') . ' ' . ($selectedVariant['color'] ?? '')) ?: 'استاندارد') : '';
 $initialVariantStock = $selectedVariant ? (int)$selectedVariant['stock'] : $totalStock;
 $initialMaxQty = min(max(1, $initialVariantStock), 20);

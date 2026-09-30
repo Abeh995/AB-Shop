@@ -119,21 +119,35 @@
 
                 <!-- Multi-Variant Table Section -->
                 <div id="variantSection">
+                    <div style="background: var(--color-bg-subtle, rgba(0,0,0,0.02)); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; user-select: none; margin: 0; font-size: 0.86rem;">
+                            <input type="checkbox" id="useGlobalVariantStrategy" name="use_global_variant_strategy" value="1" <?= (!isset($product['use_global_variant_strategy']) || (int)$product['use_global_variant_strategy'] === 1) ? 'checked' : '' ?> style="width: 16px; height: 16px;">
+                            <span>پیروی از استراتژی سراسری فروشگاه (انتخاب خودکار بر اساس بیشترین موجودی)</span>
+                        </label>
+                        <span style="font-size: 0.78rem; color: var(--color-muted);">
+                            (با غیرفعال‌کردن این گزینه، می‌توانید یکی از گزینه‌ها را در جدول زیر به‌صورت دستی پیش‌فرض کنید)
+                        </span>
+                    </div>
+
                     <div style="border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 12px;">
                         <table class="admin-table" style="margin: 0; width: 100%;">
                             <thead>
                                 <tr style="background: var(--color-bg-subtle, rgba(0,0,0,0.03)); border-bottom: 1px solid var(--color-border);">
-                                    <th style="width: 30%;">سایز (مثلاً ۳۶ تا ۴۰)</th>
-                                    <th style="width: 25%;">رنگ (اختیاری)</th>
-                                    <th style="width: 20%;">موجودی</th>
-                                    <th style="width: 25%;">قیمت تمام‌شده (تومان)</th>
+                                    <th style="width: 26%;">سایز (مثلاً ۳۶ تا ۴۰)</th>
+                                    <th style="width: 22%;">رنگ (اختیاری)</th>
+                                    <th style="width: 16%;">موجودی</th>
+                                    <th style="width: 22%;">قیمت تمام‌شده (تومان)</th>
+                                    <th style="width: 14%; text-align: center;">پیش‌فرض</th>
                                     <th style="width: 40px; text-align: center;">حذف</th>
                                 </tr>
                             </thead>
                             <tbody id="variantRows">
                                 <?php
-                                $variantRows = $variants ?: [['id' => '', 'size' => '', 'color' => '', 'stock' => '', 'cost_price' => '']];
-                                foreach ($variantRows as $v): ?>
+                                $variantRows = $variants ?: [['id' => '', 'size' => '', 'color' => '', 'stock' => '', 'cost_price' => '', 'is_default' => 1]];
+                                $hasAnyExplicitDefault = !empty(array_filter($variantRows, fn($x) => !empty($x['is_default'])));
+                                foreach ($variantRows as $idx => $v): 
+                                    $isDefaultChecked = !empty($v['is_default']) || (!$hasAnyExplicitDefault && $idx === 0);
+                                ?>
                                 <tr class="variant-item-row" style="border-bottom: 1px solid var(--color-border);">
                                     <input type="hidden" name="variant_id[]" value="<?= e((string)($v['id'] ?? '')) ?>">
                                     <td style="padding: 8px;">
@@ -147,6 +161,11 @@
                                     </td>
                                     <td style="padding: 8px;">
                                         <input class="form-control variant-input" type="text" inputmode="numeric" name="variant_cost_price[]" placeholder="پیش‌فرض محصول" value="<?= e((string)($v['cost_price'] ?? '')) ?>">
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <label style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; margin: 0;" title="انتخاب به عنوان واریانت پیش‌فرض دستی">
+                                            <input type="radio" class="variant-default-radio" name="default_variant_index" value="<?= $idx ?>" <?= $isDefaultChecked ? 'checked' : '' ?>>
+                                        </label>
                                     </td>
                                     <td style="padding: 8px; text-align: center;">
                                         <button type="button" class="btn btn-sm btn-outline" onclick="this.closest('tr').remove()" style="color: var(--color-danger); padding: 4px 8px;" title="حذف این واریانت">✕</button>
@@ -309,6 +328,9 @@
 // Variant row addition
 document.getElementById('addVariantRow').addEventListener('click', function () {
     var tbody = document.getElementById('variantRows');
+    var nextIdx = tbody.querySelectorAll('.variant-item-row').length;
+    var useGlobalEl = document.getElementById('useGlobalVariantStrategy');
+    var useGlobal = useGlobalEl ? useGlobalEl.checked : true;
     var tr = document.createElement('tr');
     tr.className = 'variant-item-row';
     tr.style.cssText = 'border-bottom: 1px solid var(--color-border);';
@@ -317,9 +339,27 @@ document.getElementById('addVariantRow').addEventListener('click', function () {
         '<td style="padding: 8px;"><input class="form-control variant-input" type="text" name="variant_color[]" placeholder="رنگ"></td>' +
         '<td style="padding: 8px;"><input class="form-control variant-input" type="number" name="variant_stock[]" placeholder="۰"></td>' +
         '<td style="padding: 8px;"><input class="form-control variant-input" type="text" inputmode="numeric" name="variant_cost_price[]" placeholder="پیش‌فرض"></td>' +
+        '<td style="padding: 8px; text-align: center;"><label style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; margin: 0;"><input type="radio" class="variant-default-radio" name="default_variant_index" value="' + nextIdx + '" ' + (useGlobal ? 'disabled' : '') + '></label></td>' +
         '<td style="padding: 8px; text-align: center;"><button type="button" class="btn btn-sm btn-outline" onclick="this.closest(\'tr\').remove()" style="color: var(--color-danger); padding: 4px 8px;">✕</button></td>';
     tbody.appendChild(tr);
+    syncGlobalVariantStrategy();
 });
+
+// Sync global variant strategy toggle
+function syncGlobalVariantStrategy() {
+    var useGlobalEl = document.getElementById('useGlobalVariantStrategy');
+    if (!useGlobalEl) return;
+    var useGlobal = useGlobalEl.checked;
+    var hasVariants = document.getElementById('hasVariantsToggle').checked;
+    useGlobalEl.disabled = !hasVariants;
+    document.querySelectorAll('.variant-default-radio').forEach(function (radio) {
+        radio.disabled = useGlobal || !hasVariants;
+        if (radio.closest('td')) {
+            radio.closest('td').style.opacity = (useGlobal || !hasVariants) ? '0.35' : '1';
+        }
+    });
+}
+document.getElementById('useGlobalVariantStrategy').addEventListener('change', syncGlobalVariantStrategy);
 
 // Sync variant toggle
 function syncVariantToggle() {
@@ -333,6 +373,7 @@ function syncVariantToggle() {
     variantSection.style.opacity = hasVariants ? '1' : '0.5';
     variantSection.style.pointerEvents = hasVariants ? 'auto' : 'none';
     document.querySelectorAll('.variant-input').forEach(function (el) { el.disabled = !hasVariants; });
+    syncGlobalVariantStrategy();
 }
 document.getElementById('hasVariantsToggle').addEventListener('change', syncVariantToggle);
 syncVariantToggle();

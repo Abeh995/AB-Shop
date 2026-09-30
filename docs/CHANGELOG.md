@@ -3,9 +3,33 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.17.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.17.2 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.19.0 — 2026-09-30
+
+### Smart Default Product Variant Strategy Architecture (FEAT-A006 & Database Migration 018)
+
+- **Configurable Default Variant Selection Engine (`app/services/ProductService.php`, `app/controllers/site/product.php`)**:
+  - Implemented `resolveDefaultProductVariant(array $variants, bool $useGlobalStrategy, ?string $strategy)`:
+    - **Global Strategy**: Evaluates store-wide setting (`highest_stock`, `lowest_stock`, `first_created`). Defaults to `highest_stock` for optimized sock apparel inventory turnover and conversion.
+    - **Manual Per-Product Override**: Honors explicit admin selection (`is_default = 1`).
+    - **Inventory Fallback Invariant**: If the selected variant is out of stock (`stock <= 0`), the client page automatically falls back to an in-stock variant so customers never encounter a disabled add-to-cart button.
+    - If all variants are out of stock, gracefully returns the target variant with accurate out-of-stock badge.
+  - Refactored `app/controllers/site/product.php` down to 58 lines (< 80 lines ceiling) with zero business calculations in controller or view.
+- **Store-wide Variant Strategy Setting (`app/services/SettingService.php`, `views/admin/settings.php`)**:
+  - Added `default_variant_strategy` configuration to Store Settings (`highest_stock`, `lowest_stock`, `first_created`).
+  - Integrated dedicated strategy select box in Settings Hub under "تنظیمات ویترین و محصولات".
+- **Admin Product Workstation Enhancements (`views/admin/product_edit.php`, `app/services/ProductService.php`)**:
+  - Added global strategy toggle checkbox (`#useGlobalVariantStrategy`) at the top of the variants section (checked by default for seamless high-volume product creation).
+  - Added "پیش‌فرض" radio button column in the variants table with real-time JavaScript synchronization (radios are disabled when global strategy is active; enabled when manual override is selected).
+  - Preserved transactional variant upsert-in-place integrity without breaking existing variant IDs.
+- **Database Migration 018 (`database/migrations/018_v1.19.0_product_default_variant_strategy.sql`, `database/schema.sql`)**:
+  - Added `use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1` to `products` table.
+  - Added `is_default TINYINT(1) NOT NULL DEFAULT 0` to `product_variants` table.
+  - Seeded `default_variant_strategy = 'highest_stock'` in `settings` table.
+  - Synchronized baseline `database/schema.sql`.
 
 ## 1.18.1 — 2026-09-30
 
@@ -148,22 +172,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Added click event handler to store logo badge: clicking the badge in collapsed rail mode expands the sidebar.
   - Added hover zoom and floating tooltip `باز کردن منو ( [ )` to store logo badge.
   - Completely hid text labels (`.logo-text`, `.nav-item-label`, `.nav-chevron`, `.footer-link-text`) in collapsed mode to eliminate label overflow in 68px rail.
-
-## 1.17.1 — 2026-09-28
-
-
-### Admin Navigation DRY Architecture, Mobile Floating Pill Dock & Layer Hardening
-
-- **Mobile Bottom Navigation Bar (BNB) DRY Architecture & Route Gatekeeper (`views/admin/layout/nav_config.php`, `views/admin/layout/footer.php`)**:
-  - Implemented `shouldShowAdminBottomNav()` centralized gatekeeper in `nav_config.php`: restricts BNB rendering exclusively to the 5 primary hubs (`index.php`, `dashboard.php`, `orders.php`, `products.php`, `finance_dashboard.php`, `settings.php`).
-  - Completely omitted `<nav class="admin-bottom-nav">` from DOM on all detail/sub/editor pages, permanently eliminating visual overlap and blocking of sticky action docks (e.g. `#mobileQuickDock` on `order_detail.php`).
-- **Unified Floating Pill Dock Styling (`assets/css/admin.css`, `assets/css/admin-orders.css`)**:
-  - Consolidated floating pill dock styles into `assets/css/admin.css` as single source of truth across all admin tabs (Dashboard, Orders, Products, Finance, Settings).
-  - Stripped all redundant, conflicting `.admin-bottom-nav` CSS rules and media queries from `admin-orders.css`.
-  - Converted floating dock positioning to standard `left: 0; right: 0; margin-inline: auto; width: fit-content;` preventing sub-pixel transform jitter and RTL coordinate inversion across mobile browsers.
-- **Dynamic Asset Cache-Busting (`views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
-  - Attached dynamic `filemtime` timestamps (`?v=APP_VERSION.timestamp`) to all admin stylesheets (`style.css`, `admin.css`, `admin-orders.css`) and scripts (`main.js`, `admin-image-optimizer.js`, `admin.js`), guaranteeing immediate client cache invalidation on deployment without requiring manual `Ctrl+F5`.
-- **Defensive Styling & Fallback Hardening**:
-  - Added strict user-agent button resets (`appearance: none; background: transparent; border: none;`) to all `.admin-sidebar button` elements to prevent unstyled white box defaults.
-  - Added inline `style="display:none;"` to `.nav-flyout-header`, ensuring it remains hidden in standard layout flow while cleanly appearing in collapsed flyouts via `!important`.
 

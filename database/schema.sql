@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS products (
     cost_price DECIMAL(12,0) DEFAULT NULL,      -- قیمت تمام‌شده؛ مستقل از قیمت فروش
     sku VARCHAR(60) DEFAULT NULL UNIQUE,
     stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
+    use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1,
     image VARCHAR(255) DEFAULT NULL,            -- تصویر اصلی
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     is_featured TINYINT(1) NOT NULL DEFAULT 0,
@@ -133,6 +134,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
     stock INT NOT NULL DEFAULT 0,
     price_override DECIMAL(12,0) DEFAULT NULL,
     cost_price DECIMAL(12,0) DEFAULT NULL,      -- مستقل از cost_price سطح محصول؛ در صورت NULL، از محصول ارث می‌برد
+    is_default TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -397,6 +399,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('price_guarantee_enabled', '1'),
     ('price_guarantee_days', '7'),
     ('show_product_tags', '1'),
+    ('default_variant_strategy', 'highest_stock'),
     ('seo_indexing_enabled', '0'),
     ('site_logo', ''),
     ('announcement_bar_enabled', '0'),

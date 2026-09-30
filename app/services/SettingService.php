@@ -45,6 +45,7 @@ function getStoreSettingsData(): array
         'priceGuaranteeEnabled'  => getSetting('price_guarantee_enabled', '1') === '1',
         'priceGuaranteeDays'     => (int) getSetting('price_guarantee_days', '7'),
         'showProductTags'        => getSetting('show_product_tags', '1') === '1',
+        'defaultVariantStrategy' => getSetting('default_variant_strategy', 'highest_stock'),
         'seoIndexingEnabled'     => getSetting('seo_indexing_enabled', '0') === '1',
 
         // Live Search
@@ -172,6 +173,14 @@ function saveStoreSection(string $section, array $post, array $files = []): arra
             setSetting('price_guarantee_enabled', isset($post['price_guarantee_enabled']) ? '1' : '0');
             setSetting('price_guarantee_days', (string) max(1, (int) ($post['price_guarantee_days'] ?? 7)));
             return ['ok' => true, 'error' => null, 'message' => 'تنظیمات ضمانت قیمت ذخیره شد.'];
+
+        case 'variant_strategy':
+            $strategy = trim($post['default_variant_strategy'] ?? 'highest_stock');
+            if (!in_array($strategy, ['highest_stock', 'lowest_stock', 'first_created'], true)) {
+                $strategy = 'highest_stock';
+            }
+            setSetting('default_variant_strategy', $strategy);
+            return ['ok' => true, 'error' => null, 'message' => 'استراتژی انتخاب واریانت پیش‌فرض ذخیره شد.'];
 
         case 'home_sections':
             setSetting('home_intro_enabled', isset($post['home_intro_enabled']) ? '1' : '0');
