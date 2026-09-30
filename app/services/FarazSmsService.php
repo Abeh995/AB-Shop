@@ -146,6 +146,11 @@ class FarazSmsService
      */
     public static function sendPatternByEvent(string $eventKey, string $phone, array $attributes, string $logLabel = ''): array
     {
+        if (function_exists('dispatchSmsEvent')) {
+            $res = dispatchSmsEvent($eventKey, $attributes, $phone);
+            return ['ok' => $res['ok'], 'error' => $res['error']];
+        }
+
         try {
             $stmt = db()->prepare("SELECT * FROM sms_patterns WHERE event_key = ? AND is_active = 1 LIMIT 1");
             $stmt->execute([$eventKey]);

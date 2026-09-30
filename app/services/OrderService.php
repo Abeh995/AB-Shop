@@ -150,6 +150,31 @@ class OrderService
             cartClear();
             unset($_SESSION['coupon'], $_SESSION['post_order_selection']);
 
+            // Dispatch event-based SMS notifications (non-blocking)
+            $orderContext = [
+                'order_code'     => $orderCode,
+                'customer_name'  => $data['customer_name'],
+                'customer_phone' => $data['phone'],
+                'total_price'    => number_format((int) $total),
+                'payment_method' => ($paymentMethod === 'card_to_card' ? 'کارت‌به‌کارت' : 'زرین‌پال'),
+                'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+            ];
+
+            // 1. Notify customer of order creation
+            dispatchSmsEvent('order_created', $orderContext, $data['phone']);
+
+            // 2. If card-to-card, send C2C payment instructions to customer
+            if ($paymentMethod === 'card_to_card') {
+                $c2cContext = array_merge($orderContext, [
+                    'card_number' => getSetting('card_to_card_number', ''),
+                    'card_holder' => getSetting('card_to_card_holder', ''),
+                ]);
+                dispatchSmsEvent('c2c_instructions', $c2cContext, $data['phone']);
+            }
+
+            // 3. Alert store admin of new incoming order
+            dispatchSmsEvent('admin_new_order', $orderContext);
+
             return ['ok' => true, 'error' => null, 'order_id' => $orderId, 'order_code' => $orderCode, 'total' => $total];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -398,6 +423,23 @@ class OrderService
 
             if ($newStatus !== $order['status']) {
                 SmsService::notifyOrderStatusChanged($order['phone'], $order['order_code'], $statusLabels[$newStatus] ?? $newStatus);
+
+                $orderContext = [
+                    'order_code'     => $order['order_code'],
+                    'customer_name'  => $order['customer_name'] ?? '',
+                    'customer_phone' => $order['phone'] ?? '',
+                    'total_price'    => number_format((int) ($order['total'] ?? 0)),
+                    'tracking_code'  => $trackingCode ?: ($order['tracking_code'] ?? ''),
+                    'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+                ];
+
+                if ($newStatus === 'shipped') {
+                    dispatchSmsEvent('order_shipped', $orderContext, $order['phone']);
+                } elseif ($newStatus === 'delivered') {
+                    dispatchSmsEvent('order_delivered', $orderContext, $order['phone']);
+                } elseif ($newStatus === 'cancelled') {
+                    dispatchSmsEvent('order_cancelled', $orderContext, $order['phone']);
+                }
             }
 
             return ['ok' => true, 'error' => null];
@@ -448,6 +490,18 @@ class OrderService
 
             if (!empty($order['phone'])) {
                 SmsService::notifyPaymentStatusChanged($order['phone'], $order['order_code'], $newPaymentStatus);
+                if ($approved) {
+                    $c2cContext = [
+                        'order_code'     => $order['order_code'],
+                        'customer_name'  => $order['customer_name'] ?? '',
+                        'customer_phone' => $order['phone'] ?? '',
+                        'total_price'    => number_format((int) ($order['total'] ?? 0)),
+                        'ref_id'         => 'کارت‌به‌کارت',
+                        'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+                    ];
+                    dispatchSmsEvent('card_to_card_approved', $c2cContext, $order['phone']);
+                    dispatchSmsEvent('order_paid', $c2cContext, $order['phone']);
+                }
             }
 
             return ['ok' => true, 'error' => null];
@@ -476,6 +530,14 @@ class OrderService
 
             if (!empty($order['phone'])) {
                 SmsService::notifyPaymentRejectedWithReason($order['phone'], $order['order_code'], $reason);
+                dispatchSmsEvent('card_to_card_rejected', [
+                    'order_code'       => $order['order_code'],
+                    'customer_name'    => $order['customer_name'] ?? '',
+                    'customer_phone'   => $order['phone'] ?? '',
+                    'total_price'      => number_format((int) ($order['total'] ?? 0)),
+                    'rejection_reason' => trim($reason),
+                    'site_title'       => defined('SITE_NAME') ? SITE_NAME : '',
+                ], $order['phone']);
             }
 
             return ['ok' => true, 'error' => null];
@@ -673,6 +735,16 @@ class OrderService
             if ($newPaymentStatus !== $order['payment_status'] && in_array($newPaymentStatus, ['paid', 'failed'], true)) {
                 if (!empty($order['phone'])) {
                     SmsService::notifyPaymentStatusChanged($order['phone'], $order['order_code'], $newPaymentStatus);
+                    if ($newPaymentStatus === 'paid') {
+                        dispatchSmsEvent('order_paid', [
+                            'order_code'     => $order['order_code'],
+                            'customer_name'  => $order['customer_name'] ?? '',
+                            'customer_phone' => $order['phone'] ?? '',
+                            'total_price'    => number_format((int) ($order['total'] ?? 0)),
+                            'ref_id'         => $order['payment_ref_id'] ?? '',
+                            'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+                        ], $order['phone']);
+                    }
                 }
             }
             return ['ok' => true, 'error' => null];

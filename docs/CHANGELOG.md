@@ -3,9 +3,44 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.17.2 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.17.3 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.20.0 — 2026-09-30
+
+### SMS Events Catalog & Dynamic Variable Data-Binding Architecture (FEAT-A007 & Database Migration 019)
+
+- **Comprehensive 11-Event SMS System Catalog (`app/services/SmsPatternService.php`, `database/migrations/019_v1.20.0_sms_events_catalog.sql`, `database/schema.sql`)**:
+  - Expanded system events to 11 standardized lifecycle triggers across customer and admin workflows:
+    - Customer Authentication: `otp` (login and registration verification).
+    - Customer Orders & Logistics: `order_created`, `order_paid`, `order_shipped` (with postal tracking code), `order_delivered`, `order_cancelled`.
+    - Customer Card-to-Card: `c2c_instructions`, `card_to_card_approved`, `card_to_card_rejected` (with administrative rejection reason).
+    - Store Admin Alerts: `admin_new_order`, `admin_c2c_receipt`.
+  - Migration 019 pre-seeds all inactive event patterns with default data-binding configurations, allowing store administrators to activate any event with a single click and enter their Faraz pattern code.
+  - Mirrored catalog baseline into `database/schema.sql`.
+- **Dynamic Variable Data-Binding Engine (`app/services/SmsPatternService.php`)**:
+  - Introduced `getSmsEventTokens(?string $eventKey)` and `getSmsGlobalTokens()` cataloging contextual system tokens (`order_code`, `customer_name`, `customer_phone`, `total_price`, `tracking_code`, `ref_id`, `rejection_reason`, `card_number`, `card_holder`, `code`, `payment_method`, `site_title`).
+  - Added `source_token` attribute to `variables_config` in `sms_patterns`, allowing any arbitrary variable name registered in Faraz SMS to cleanly map to contextual system tokens without hardcoded attribute assumptions.
+  - Implemented `dispatchSmsEvent(string $eventKey, array $contextData, ?string $recipientPhone)`:
+    - Queries active pattern for the target event key.
+    - Zero-failure invariant: safely returns `{ok: true, skipped: true}` if unconfigured or inactive, guaranteeing SMS issues never break customer checkouts or status transitions.
+    - Resolves tokens with data type guards (strips non-digits for numeric variables; trims to `max_len`).
+    - Resolves store admin mobile automatically from `store_mobile` setting for administrative notification events.
+- **Transactional Event Hook Wiring (`app/services/OrderService.php`, `app/controllers/site/card_to_card.php`, `payment/zarinpal_callback.php`, `app/services/FarazSmsService.php`)**:
+  - `OrderService::createOrder()`: dispatches `order_created`, `c2c_instructions` (conditional on card-to-card), and `admin_new_order` immediately following successful transaction commit.
+  - `OrderService::updateOrderStatus()`: dispatches `order_shipped` (including tracking code), `order_delivered`, and `order_cancelled`.
+  - `OrderService::verifyCardToCardReceipt()`: dispatches `card_to_card_approved` and `order_paid`.
+  - `OrderService::rejectCardToCardReceiptWithReason()`: dispatches `card_to_card_rejected` with custom rejection reason.
+  - `OrderService::updatePaymentStatus()`: dispatches `order_paid` on transition to `paid`.
+  - `app/controllers/site/card_to_card.php`: dispatches `admin_c2c_receipt` upon customer receipt submission.
+  - `payment/zarinpal_callback.php`: dispatches `order_paid` with Zarinpal ref_id upon bank verification.
+  - `FarazSmsService::sendPatternByEvent()`: delegates directly to `dispatchSmsEvent()` for unified execution.
+- **Admin SMS Pattern Workstation Polish (`views/admin/sms_pattern_edit.php`, `app/controllers/admin/sms_pattern_edit.php`, `views/admin/sms_patterns.php`)**:
+  - Integrated dynamic "داده متصل سیستمی (Token)" select input per variable row with optgroups for recommended event tokens and global tokens.
+  - Real-time JavaScript event listener updating token dropdowns dynamically when the event select input changes.
+  - Enhanced pattern index table with "تنظیم‌نشده" badges for unconfigured patterns and token link indicators (`🔗`) on variable tags.
+  - Kept `app/controllers/admin/sms_pattern_edit.php` at 78 lines (< 80 lines ceiling).
 
 ## 1.19.0 — 2026-09-30
 
@@ -150,26 +185,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Modern Split-View workstation for Categories with fast-add panel and visual depth tree.
   - Two-phase bulk price simulation wizard with variance highlights and audit history log.
   - Enhanced catalog presentation for post-order items and order gift box catalog.
-
-## 1.17.2 — 2026-09-28
-
-### Admin Header DRY Architecture, Mobile Datetime Widget & Collapsed Sidebar Refinements
-
-- **Admin Header DRY Consolidation (`views/admin/layout/header.php`, `assets/css/admin.css`, `assets/css/admin-orders.css`)**:
-  - Unified admin topbar styling into `assets/css/admin.css` as single source of truth across all admin tabs (Dashboard, Orders, Products, Finance, Settings).
-  - Purged redundant `.dash-topbar*`, `.admin-search-box`, `.btn-dash-store-compact`, and `.dash-live-datetime*` overrides from `admin-orders.css`, guaranteeing 100% pixel-identical header presentation across all tabs.
-  - Corrected mobile `.admin-main` padding (`0 0 92px 0`) and removed legacy width overrides on `.admin-search-box` to eliminate horizontal scroll overflow.
-- **Mobile Header Datetime Widget Redesign (`views/admin/layout/header.php`, `assets/css/admin.css`, `assets/js/admin.js`)**:
-  - Replaced redundant ticking seconds clock in mobile view ($\le 768$px) with a compact 2-line widget: Persian weekday on top line in bold brand color (`دوشنبه`), and numeric dates on bottom line (`۱۴۰۵/۰۷/۰۶ · 2026/09/28`).
-  - Preserved full live ticking clock + weekday + Shamsi/Gregorian dates for desktop viewports ($> 768$px).
-  - Optimized JavaScript timer (`tick()`) in `admin.js` to skip clock calculations on mobile viewports.
-- **Mobile Bottom Navigation Bar (BNB) Layout Shift Elimination (`assets/css/admin.css`, `assets/js/admin.js`)**:
-  - Replaced `transition: all 0.18s ease;` with explicit property transitions (`color`, `background`, `box-shadow`, `transform`), permanently eliminating text jumping and layout shift when switching tabs.
-  - Standardized font weight to `700` across all states (`.nav-label`).
-  - Guarded `applySidebarState` in `admin.js` against applying `sidebar-collapsed` classes on viewports $\le 900$px, preventing desktop localStorage states from polluting mobile layout on page load.
-- **Desktop Collapsed Sidebar Rail Polish (`assets/css/admin.css`, `assets/js/admin.js`, `views/admin/layout/header.php`)**:
-  - In collapsed 68px rail mode, hid separate toggle button (`>`) via `display: none !important;` and centered store logo mark (`AB`).
-  - Added click event handler to store logo badge: clicking the badge in collapsed rail mode expands the sidebar.
-  - Added hover zoom and floating tooltip `باز کردن منو ( [ )` to store logo badge.
-  - Completely hid text labels (`.logo-text`, `.nav-item-label`, `.nav-chevron`, `.footer-link-text`) in collapsed mode to eliminate label overflow in 68px rail.
 

@@ -1,9 +1,31 @@
-# Changelog Archive (v1.0.0 — v1.17.1)
+# Changelog Archive (v1.0.0 — v1.17.2)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.17.1.
+Historical release notes for AB-Socks versions 1.0.0 through 1.17.2.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.17.2 — 2026-09-28
+
+### Admin Header DRY Architecture, Mobile Datetime Widget & Collapsed Sidebar Refinements
+
+- **Admin Header DRY Consolidation (`views/admin/layout/header.php`, `assets/css/admin.css`, `assets/css/admin-orders.css`)**:
+  - Unified admin topbar styling into `assets/css/admin.css` as single source of truth across all admin tabs (Dashboard, Orders, Products, Finance, Settings).
+  - Purged redundant `.dash-topbar*`, `.admin-search-box`, `.btn-dash-store-compact`, and `.dash-live-datetime*` overrides from `admin-orders.css`, guaranteeing 100% pixel-identical header presentation across all tabs.
+  - Corrected mobile `.admin-main` padding (`0 0 92px 0`) and removed legacy width overrides on `.admin-search-box` to eliminate horizontal scroll overflow.
+- **Mobile Header Datetime Widget Redesign (`views/admin/layout/header.php`, `assets/css/admin.css`, `assets/js/admin.js`)**:
+  - Replaced redundant ticking seconds clock in mobile view ($\le 768$px) with a compact 2-line widget: Persian weekday on top line in bold brand color (`دوشنبه`), and numeric dates on bottom line (`۱۴۰۵/۰۷/۰۶ · 2026/09/28`).
+  - Preserved full live ticking clock + weekday + Shamsi/Gregorian dates for desktop viewports ($> 768$px).
+  - Optimized JavaScript timer (`tick()`) in `admin.js` to skip clock calculations on mobile viewports.
+- **Mobile Bottom Navigation Bar (BNB) Layout Shift Elimination (`assets/css/admin.css`, `assets/js/admin.js`)**:
+  - Replaced `transition: all 0.18s ease;` with explicit property transitions (`color`, `background`, `box-shadow`, `transform`), permanently eliminating text jumping and layout shift when switching tabs.
+  - Standardized font weight to `700` across all states (`.nav-label`).
+  - Guarded `applySidebarState` in `admin.js` against applying `sidebar-collapsed` classes on viewports $\le 900$px, preventing desktop localStorage states from polluting mobile layout on page load.
+- **Desktop Collapsed Sidebar Rail Polish (`assets/css/admin.css`, `assets/js/admin.js`, `views/admin/layout/header.php`)**:
+  - In collapsed 68px rail mode, hid separate toggle button (`>`) via `display: none !important;` and centered store logo mark (`AB`).
+  - Added click event handler to store logo badge: clicking the badge in collapsed rail mode expands the sidebar.
+  - Added hover zoom and floating tooltip `باز کردن منو ( [ )` to store logo badge.
+  - Completely hid text labels (`.logo-text`, `.nav-item-label`, `.nav-chevron`, `.footer-link-text`) in collapsed mode to eliminate label overflow in 68px rail.
 
 ## 1.17.1 — 2026-09-28
 

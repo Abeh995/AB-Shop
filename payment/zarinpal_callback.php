@@ -41,6 +41,15 @@ if ($verify['ok']) {
 
     SmsService::notifyOrderConfirmed($order['phone'], $order['order_code']);
 
+    dispatchSmsEvent('order_paid', [
+        'order_code'     => $order['order_code'],
+        'customer_name'  => $order['customer_name'] ?? '',
+        'customer_phone' => $order['phone'] ?? '',
+        'total_price'    => number_format((int) ($order['total'] ?? 0)),
+        'ref_id'         => (string) $verify['ref_id'],
+        'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+    ], $order['phone']);
+
     redirect('/order/success/' . $order['order_code']);
 } else {
     db()->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?")->execute([$order['id']]);

@@ -19,9 +19,11 @@ Customer identity is built around a verified Iranian mobile phone number (`custo
    - Applies a 60-second cooldown period between successive dispatch requests to mitigate abuse and avoid SMS API costs.
 
 ### Pattern-Based SMS & WebOTP Integration
-- **FarazSMS Integration (`FarazSmsService.php`)**:
+- **FarazSMS Integration & Event Dispatcher (`FarazSmsService.php`, `SmsPatternService.php`)**:
    - Sends pattern-based transactional SMS via API (Iran Payamak / FarazSMS).
-   - Supports database-backed dynamic pattern definitions (`sms_patterns` table) with dynamic JSON variable configurations, falling back seamlessly to `config.php` constants.
+   - Standardized 11-event catalog (`otp`, `order_created`, `order_paid`, `order_shipped`, `order_delivered`, `order_cancelled`, `c2c_instructions`, `card_to_card_approved`, `card_to_card_rejected`, `admin_new_order`, `admin_c2c_receipt`).
+   - Dynamic Variable Data-Binding: Maps arbitrary Faraz variable names to system contextual tokens (`source_token`) stored in `sms_patterns.variables_config`.
+   - Dispatched safely via `dispatchSmsEvent()` with zero-failure guarantee (never aborts checkouts or status changes).
 - **WebOTP Browser API**:
    - View `views/site/verify_phone.php` uses `autocomplete="one-time-code"`, `inputmode="numeric"`, and `maxlength="6"` for cross-browser autocomplete.
    - In supporting browsers (Chrome/Android), executes `navigator.credentials.get({ otp: { transport: ["sms"] } })` to automatically read the incoming SMS and submit the verification form without manual user entry.

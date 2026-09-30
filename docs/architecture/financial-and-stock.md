@@ -46,7 +46,7 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 - **Admin Order Lifecycle & Logistics (v1.17.0)**:
   - Encapsulates administrative order retrieval (`getAdminOrders()`) with paginated querying, batch loading of `order_items` and `order_gift_items`, and multi-field search.
   - Aggregates real-time Bento KPI metrics (`getAdminOrderStats()`) and status breakdown counts (`getAdminStatusCounts()`).
-  - Transactional status transitions (`updateOrderStatus()`, `bulkUpdateStatus()`) triggering automatic customer SMS notifications via `SmsService::notifyOrderStatusChanged()`.
+  - Transactional status transitions (`updateOrderStatus()`, `bulkUpdateStatus()`) triggering automatic customer SMS notifications via `dispatchSmsEvent()` (`order_shipped`, `order_delivered`, `order_cancelled`).
   - Postal shipment tracking (`updateTrackingCode()`) persisting courier barcodes into `orders.tracking_code` (Migration 017).
   - Defensive migration feature detection (`hasTrackingCodeColumn()`) guaranteeing compatibility across DirectAdmin shared hosting before manual phpMyAdmin execution.
   - Responsive order detail hydration (`getOrder()`, `getOrderItemsWithGallery()`) resolving batch multi-image product galleries and decoupling database queries from presentation controllers.

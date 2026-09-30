@@ -37,9 +37,13 @@ require APP_ROOT . '/views/admin/layout/header.php';
                     <tr>
                         <td><code>#<?= (int) $p['id'] ?></code></td>
                         <td>
-                            <strong style="font-family:monospace; direction:ltr; display:inline-block; font-size:1rem; color:var(--color-primary);">
-                                <?= e($p['pattern_code']) ?>
-                            </strong>
+                            <?php if ($p['pattern_code'] === 'unset'): ?>
+                                <span class="status-pill status-pending" style="color:var(--color-muted); font-size:.78rem;">تنظیم‌نشده</span>
+                            <?php else: ?>
+                                <strong style="font-family:monospace; direction:ltr; display:inline-block; font-size:1rem; color:var(--color-primary);">
+                                    <?= e($p['pattern_code']) ?>
+                                </strong>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <strong><?= e($p['title']) ?></strong>
@@ -63,7 +67,9 @@ require APP_ROOT . '/views/admin/layout/header.php';
                             <?php if (!empty($cfg)): ?>
                                 <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
                                     <?php foreach ($cfg as $v): ?>
-                                        <code style="background:#ECE8E1; padding:2px 6px; border-radius:4px; font-size:.75rem;">%<?= e($v['name']) ?>%</code>
+                                        <code style="background:#ECE8E1; padding:2px 6px; border-radius:4px; font-size:.75rem;" title="<?= !empty($v['source_token']) ? 'متصل به: ' . e($v['source_token']) : 'بدون اتصال خودکار' ?>">
+                                            %<?= e($v['name']) ?>%<?= !empty($v['source_token']) ? ' 🔗' : '' ?>
+                                        </code>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>

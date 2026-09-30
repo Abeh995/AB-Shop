@@ -9,6 +9,8 @@ $id = (int) ($_GET['id'] ?? 0);
 $isNew = ($id === 0);
 $pageTitle = $isNew ? 'تعریف الگوی پیامک جدید' : 'ویرایش الگوی پیامک';
 $availableEvents = getAvailableSmsEvents();
+$eventTokens = getSmsEventTokens();
+$globalTokens = getSmsGlobalTokens();
 
 $pattern = [
     'id'               => 0,
@@ -72,4 +74,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderView('admin/sms_pattern_edit', compact('pageTitle', 'pattern', 'isNew', 'availableEvents', 'variables'));
+renderView('admin/sms_pattern_edit', compact('pageTitle', 'pattern', 'isNew', 'availableEvents', 'variables', 'eventTokens', 'globalTokens'));

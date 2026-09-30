@@ -54,6 +54,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = OrderService::createFromCheckout($pending, 'card_to_card');
         if ($result['ok']) {
             unset($_SESSION['pending_card_to_card_checkout']);
+            dispatchSmsEvent('admin_c2c_receipt', [
+                'order_code'     => $result['order_code'],
+                'customer_name'  => $pending['customer_name'] ?? '',
+                'customer_phone' => $pending['phone'] ?? '',
+                'total_price'    => number_format((int) ($result['total'] ?? 0)),
+                'site_title'     => defined('SITE_NAME') ? SITE_NAME : '',
+            ]);
             redirect('/order/success/' . $result['order_code']);
         }
         $errors[] = $result['error'];
