@@ -90,6 +90,92 @@ function getOrderProfitability(int $orderId): array
 }
 
 /**
+ * Resolves a date preset key into valid [startDate, endDate, normalizedRange] strings ('Y-m-d').
+ * Supports precise Shamsi calendar boundaries for this_month, last_month, and this_year.
+ *
+ * @param string $range
+ * @param string|null $customStart
+ * @param string|null $customEnd
+ * @return array{0: string, 1: string, 2: string}
+ */
+function resolveFinancialDateRange(string $range, ?string $customStart = null, ?string $customEnd = null): array
+{
+    $today = date('Y-m-d');
+    $nowInfo = function_exists('appDateTime') ? appDateTime(null, 'array') : null;
+    $jy = $nowInfo ? (int)$nowInfo['jalali']['year'] : 1405;
+    $jm = $nowInfo ? (int)$nowInfo['jalali']['month'] : 1;
+
+    switch ($range) {
+        case 'today':
+            $startDate = $endDate = $today;
+            break;
+        case 'yesterday':
+            $startDate = $endDate = date('Y-m-d', strtotime('-1 day'));
+            break;
+        case '7days':
+            $startDate = date('Y-m-d', strtotime('-6 days'));
+            $endDate = $today;
+            break;
+        case '30days':
+            $startDate = date('Y-m-d', strtotime('-29 days'));
+            $endDate = $today;
+            break;
+        case 'last_month':
+            // Previous Shamsi month
+            $prevM = ($jm === 1) ? 12 : ($jm - 1);
+            $prevY = ($jm === 1) ? ($jy - 1) : $jy;
+            $prevMaxDays = ($prevM <= 6) ? 31 : (($prevM <= 11) ? 30 : 29);
+            if (function_exists('jalaliToGregorian')) {
+                [$gy1, $gm1, $gd1] = jalaliToGregorian($prevY, $prevM, 1);
+                [$gy2, $gm2, $gd2] = jalaliToGregorian($prevY, $prevM, $prevMaxDays);
+                $startDate = sprintf('%04d-%02d-%02d', $gy1, $gm1, $gd1);
+                $endDate = sprintf('%04d-%02d-%02d', $gy2, $gm2, $gd2);
+            } else {
+                $startDate = date('Y-m-01', strtotime('first day of last month'));
+                $endDate = date('Y-m-t', strtotime('last day of last month'));
+            }
+            break;
+        case 'this_year':
+            // 1st Farvardin of current Jalali year
+            if (function_exists('jalaliToGregorian')) {
+                [$gy, $gm, $gd] = jalaliToGregorian($jy, 1, 1);
+                $startDate = sprintf('%04d-%02d-%02d', $gy, $gm, $gd);
+            } else {
+                $startDate = date('Y-01-01');
+            }
+            $endDate = $today;
+            break;
+        case 'this_month':
+        default:
+            if (!empty($customStart) && !empty($customEnd)) {
+                $startDate = trim($customStart);
+                $endDate = trim($customEnd);
+            } elseif (function_exists('jalaliToGregorian')) {
+                // 1st of current Shamsi month
+                [$gy, $gm, $gd] = jalaliToGregorian($jy, $jm, 1);
+                $startDate = sprintf('%04d-%02d-%02d', $gy, $gm, $gd);
+                $endDate = $today;
+            } else {
+                $startDate = date('Y-m-01');
+                $endDate = $today;
+            }
+            break;
+    }
+
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !strtotime($startDate)) {
+        $startDate = date('Y-m-01');
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate) || !strtotime($endDate)) {
+        $endDate = $today;
+    }
+    if ($startDate > $endDate) {
+        [$startDate, $endDate] = [$endDate, $startDate];
+    }
+
+    return [$startDate, $endDate, $range];
+}
+
+/**
  * High-performance store-wide financial summary for a date range.
  * Uses batch aggregation queries instead of N+1 individual queries.
  *
@@ -224,6 +310,26 @@ function getFinancialSummary(string $startDate, string $endDate): array
     $netProfit = $grossProfit - $totalExpenses;
     $netMarginPercent = ($totalRevenue > 0) ? round(($netProfit / $totalRevenue) * 100, 1) : 0.0;
 
+    // Unit economics & balance indicators
+    $aov = ($orderCount > 0) ? (int) round($totalRevenue / $orderCount) : 0;
+    $netProfitPerOrder = ($orderCount > 0) ? (int) round($netProfit / $orderCount) : 0;
+    $shippingBalance = $totalShippingRevenue - $totalShippingCost;
+    $shippingSubsidy = max(0, -$shippingBalance);
+
+    $effectiveGross = $totalRevenue + $totalDiscount;
+    $discountRate = ($effectiveGross > 0) ? round(($totalDiscount / $effectiveGross) * 100, 1) : 0.0;
+
+    // Break-even threshold calculations
+    $grossMarginRatio = ($totalRevenue > 0) ? ($grossProfit / $totalRevenue) : 0.0;
+    $breakevenRevenue = ($grossMarginRatio > 0) ? (int) round($totalExpenses / $grossMarginRatio) : 0;
+    $breakevenOrders = ($aov > 0 && $breakevenRevenue > 0) ? (int) ceil($breakevenRevenue / $aov) : 0;
+    $breakevenProgressPercent = ($breakevenRevenue > 0) ? round(($totalRevenue / $breakevenRevenue) * 100, 1) : 0.0;
+    $isBreakevenReached = ($totalRevenue >= $breakevenRevenue && $breakevenRevenue > 0);
+
+    $costHealthPercent = ($orderCount > 0)
+        ? round((($orderCount - $ordersWithIncompleteCostData) / $orderCount) * 100, 1)
+        : 100.0;
+
     return [
         'order_count' => $orderCount,
         'total_revenue' => $totalRevenue,
@@ -241,8 +347,534 @@ function getFinancialSummary(string $startDate, string $endDate): array
         'net_profit' => $netProfit,
         'net_margin_percent' => $netMarginPercent,
         'orders_with_incomplete_cost_data' => $ordersWithIncompleteCostData,
+        'cost_health_percent' => $costHealthPercent,
+        'aov' => $aov,
+        'net_profit_per_order' => $netProfitPerOrder,
+        'shipping_balance' => $shippingBalance,
+        'shipping_subsidy' => $shippingSubsidy,
+        'discount_rate' => $discountRate,
+        'breakeven_revenue' => $breakevenRevenue,
+        'breakeven_orders' => $breakevenOrders,
+        'breakeven_progress_percent' => $breakevenProgressPercent,
+        'is_breakeven_reached' => $isBreakevenReached,
         'expenses_by_category' => $expensesByCategory,
     ];
+}
+
+/**
+ * Time-series daily financial performance trends (Revenue, COGS, Expenses, Net Profit).
+ * Optimized with batch grouping queries over indexed dates.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @return array<int, array{
+ *   date: string,
+ *   date_shamsi: string,
+ *   label_shamsi: string,
+ *   order_count: int,
+ *   revenue: int,
+ *   cogs: int,
+ *   gross_profit: int,
+ *   expenses: int,
+ *   net_profit: int
+ * }>
+ */
+function getFinancialDailyTrends(string $startDate, string $endDate): array
+{
+    $pdo = db();
+
+    // 1. Generate date interval (capped at 366 days)
+    $periodDates = [];
+    $currentTs = strtotime($startDate);
+    $endTs = strtotime($endDate);
+    if ($currentTs <= $endTs) {
+        while ($currentTs <= $endTs && count($periodDates) < 366) {
+            $periodDates[] = date('Y-m-d', $currentTs);
+            $currentTs = strtotime('+1 day', $currentTs);
+        }
+    }
+
+    if (empty($periodDates)) {
+        return [];
+    }
+
+    // 2. Query orders daily summary
+    $ordersStmt = $pdo->prepare("
+        SELECT 
+            DATE(created_at) AS date_str,
+            COUNT(id) AS order_count,
+            COALESCE(SUM(discount_total), 0) AS discount_total,
+            COALESCE(SUM(shipping_cost), 0) AS shipping_revenue,
+            COALESCE(SUM(CASE WHEN shipping_actual_cost IS NOT NULL THEN shipping_actual_cost ELSE shipping_cost END), 0) AS shipping_cost
+        FROM orders
+        WHERE DATE(created_at) BETWEEN ? AND ? AND status != 'cancelled'
+        GROUP BY DATE(created_at)
+    ");
+    $ordersStmt->execute([$startDate, $endDate]);
+    $ordersByDate = [];
+    foreach ($ordersStmt->fetchAll() as $row) {
+        $ordersByDate[$row['date_str']] = $row;
+    }
+
+    // 3. Query order items daily summary
+    $itemsStmt = $pdo->prepare("
+        SELECT 
+            DATE(o.created_at) AS date_str,
+            COALESCE(SUM(oi.line_total), 0) AS product_revenue,
+            COALESCE(SUM(CASE WHEN oi.unit_cost_price IS NOT NULL THEN oi.unit_cost_price * oi.quantity ELSE 0 END) , 0) AS product_cost
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        WHERE DATE(o.created_at) BETWEEN ? AND ? AND o.status != 'cancelled'
+        GROUP BY DATE(o.created_at)
+    ");
+    $itemsStmt->execute([$startDate, $endDate]);
+    $itemsByDate = [];
+    foreach ($itemsStmt->fetchAll() as $row) {
+        $itemsByDate[$row['date_str']] = $row;
+    }
+
+    // 4. Query gift items daily summary
+    $giftsStmt = $pdo->prepare("
+        SELECT 
+            DATE(o.created_at) AS date_str,
+            COALESCE(SUM(ogi.unit_selling_price * ogi.quantity), 0) AS gift_revenue,
+            COALESCE(SUM(ogi.unit_cost_price * ogi.quantity), 0) AS gift_cost
+        FROM order_gift_items ogi
+        JOIN orders o ON o.id = ogi.order_id
+        WHERE DATE(o.created_at) BETWEEN ? AND ? AND o.status != 'cancelled'
+        GROUP BY DATE(o.created_at)
+    ");
+    $giftsStmt->execute([$startDate, $endDate]);
+    $giftsByDate = [];
+    foreach ($giftsStmt->fetchAll() as $row) {
+        $giftsByDate[$row['date_str']] = $row;
+    }
+
+    // 5. Query expenses daily summary
+    $expensesStmt = $pdo->prepare("
+        SELECT 
+            expense_date AS date_str,
+            COALESCE(SUM(amount), 0) AS expense_total
+        FROM expenses
+        WHERE status = 'active' AND expense_date BETWEEN ? AND ?
+        GROUP BY expense_date
+    ");
+    $expensesStmt->execute([$startDate, $endDate]);
+    $expensesByDate = [];
+    foreach ($expensesStmt->fetchAll() as $row) {
+        $expensesByDate[$row['date_str']] = (int) $row['expense_total'];
+    }
+
+    // 6. Merge across timeline
+    $trends = [];
+    foreach ($periodDates as $d) {
+        $ord = $ordersByDate[$d] ?? ['order_count' => 0, 'discount_total' => 0, 'shipping_revenue' => 0, 'shipping_cost' => 0];
+        $it = $itemsByDate[$d] ?? ['product_revenue' => 0, 'product_cost' => 0];
+        $gf = $giftsByDate[$d] ?? ['gift_revenue' => 0, 'gift_cost' => 0];
+        $exp = $expensesByDate[$d] ?? 0;
+
+        $rev = ((int)$it['product_revenue'] - (int)$ord['discount_total']) + (int)$gf['gift_revenue'] + (int)$ord['shipping_revenue'];
+        $cogs = (int)$it['product_cost'] + (int)$gf['gift_cost'] + (int)$ord['shipping_cost'];
+        $gross = $rev - $cogs;
+        $net = $gross - $exp;
+
+        $dateInfo = function_exists('appDateTime') ? appDateTime($d, 'array') : null;
+        $labelShamsi = $dateInfo ? ($dateInfo['jalali']['day'] . ' ' . $dateInfo['jalali']['month_name']) : $d;
+        $dateShamsi = $dateInfo ? $dateInfo['jalali']['formatted'] : $d;
+
+        $trends[] = [
+            'date' => $d,
+            'date_shamsi' => $dateShamsi,
+            'label_shamsi' => $labelShamsi,
+            'order_count' => (int) $ord['order_count'],
+            'revenue' => max(0, $rev),
+            'cogs' => max(0, $cogs),
+            'gross_profit' => $gross,
+            'expenses' => $exp,
+            'net_profit' => $net,
+        ];
+    }
+
+    return $trends;
+}
+
+/**
+ * Fetch top profit-driving products within the given date range.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @param int $limit
+ * @return array
+ */
+function getTopProfitProducts(string $startDate, string $endDate, int $limit = 5): array
+{
+    $pdo = db();
+    $limit = max(1, min(50, $limit));
+
+    $sql = "
+        SELECT 
+            oi.product_id,
+            oi.product_name,
+            SUM(oi.quantity) AS total_sold_qty,
+            SUM(oi.line_total) AS total_revenue,
+            SUM(CASE WHEN oi.unit_cost_price IS NOT NULL THEN oi.unit_cost_price * oi.quantity ELSE 0 END) AS total_cost,
+            SUM(CASE WHEN oi.unit_cost_price IS NOT NULL THEN (oi.unit_price - oi.unit_cost_price) * oi.quantity ELSE 0 END) AS total_profit,
+            SUM(CASE WHEN oi.unit_cost_price IS NULL THEN oi.quantity ELSE 0 END) AS missing_cost_qty,
+            p.image AS product_image,
+            p.price AS current_price,
+            p.cost_price AS current_cost_price
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        LEFT JOIN products p ON p.id = oi.product_id
+        WHERE DATE(o.created_at) BETWEEN ? AND ? AND o.status != 'cancelled'
+        GROUP BY oi.product_id, oi.product_name, p.image, p.price, p.cost_price
+        ORDER BY total_profit DESC
+        LIMIT " . (int)$limit;
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$startDate, $endDate]);
+    $rows = $stmt->fetchAll();
+
+    $results = [];
+    foreach ($rows as $r) {
+        $rev = (int) $r['total_revenue'];
+        $profit = (int) $r['total_profit'];
+        $margin = ($rev > 0) ? round(($profit / $rev) * 100, 1) : 0.0;
+        $imageUrl = !empty($r['product_image']) ? UPLOAD_URL . $r['product_image'] : '/assets/img/placeholder-sock.svg';
+
+        $results[] = [
+            'product_id' => (int) $r['product_id'],
+            'product_name' => $r['product_name'],
+            'total_sold_qty' => (int) $r['total_sold_qty'],
+            'total_revenue' => $rev,
+            'total_cost' => (int) $r['total_cost'],
+            'total_profit' => $profit,
+            'margin_percent' => $margin,
+            'missing_cost_qty' => (int) $r['missing_cost_qty'],
+            'image_url' => $imageUrl,
+            'current_price' => (int) ($r['current_price'] ?? 0),
+            'current_cost_price' => ($r['current_cost_price'] !== null) ? (int) $r['current_cost_price'] : null,
+        ];
+    }
+
+    return $results;
+}
+
+/**
+ * Breakdown of financial performance by payment gateway & offline channels.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @return array
+ */
+function getPaymentMethodBreakdown(string $startDate, string $endDate): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("
+        SELECT 
+            payment_method,
+            COUNT(id) AS order_count,
+            COALESCE(SUM(total), 0) AS total_amount,
+            SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) AS paid_count,
+            COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END), 0) AS paid_amount
+        FROM orders
+        WHERE DATE(created_at) BETWEEN ? AND ? AND status != 'cancelled'
+        GROUP BY payment_method
+        ORDER BY total_amount DESC
+    ");
+    $stmt->execute([$startDate, $endDate]);
+    $rows = $stmt->fetchAll();
+
+    $grandTotal = 0;
+    foreach ($rows as $r) {
+        $grandTotal += (int) $r['total_amount'];
+    }
+
+    $breakdown = [];
+    foreach ($rows as $r) {
+        $method = $r['payment_method'];
+        $title = ($method === 'card_to_card') ? 'کارت‌به‌کارت' : (($method === 'zarinpal') ? 'درگاه زرین‌پال' : $method);
+        $amount = (int) $r['total_amount'];
+        $share = ($grandTotal > 0) ? round(($amount / $grandTotal) * 100, 1) : 0.0;
+
+        $breakdown[] = [
+            'method' => $method,
+            'title' => $title,
+            'order_count' => (int) $r['order_count'],
+            'total_amount' => $amount,
+            'paid_count' => (int) $r['paid_count'],
+            'paid_amount' => (int) $r['paid_amount'],
+            'share_percent' => $share,
+        ];
+    }
+
+    return $breakdown;
+}
+
+/**
+ * Breakdown of shipping collected from customers vs actual courier expenses.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @return array
+ */
+function getShippingMethodFinancialBreakdown(string $startDate, string $endDate): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("
+        SELECT 
+            COALESCE(NULLIF(TRIM(shipping_method_name), ''), 'روش پیش‌فرض') AS method_name,
+            COUNT(id) AS order_count,
+            COALESCE(SUM(shipping_cost), 0) AS shipping_revenue,
+            COALESCE(SUM(CASE WHEN shipping_actual_cost IS NOT NULL THEN shipping_actual_cost ELSE shipping_cost END), 0) AS shipping_cost
+        FROM orders
+        WHERE DATE(created_at) BETWEEN ? AND ? AND status != 'cancelled'
+        GROUP BY COALESCE(NULLIF(TRIM(shipping_method_name), ''), 'روش پیش‌فرض')
+        ORDER BY shipping_revenue DESC
+    ");
+    $stmt->execute([$startDate, $endDate]);
+    $rows = $stmt->fetchAll();
+
+    $results = [];
+    foreach ($rows as $r) {
+        $rev = (int) $r['shipping_revenue'];
+        $cost = (int) $r['shipping_cost'];
+        $balance = $rev - $cost;
+        $subsidy = max(0, -$balance);
+
+        $results[] = [
+            'method_name' => $r['method_name'],
+            'order_count' => (int) $r['order_count'],
+            'shipping_revenue' => $rev,
+            'shipping_cost' => $cost,
+            'balance' => $balance,
+            'subsidy' => $subsidy,
+            'subsidy_rate' => ($cost > 0) ? round(($subsidy / $cost) * 100, 1) : 0.0,
+        ];
+    }
+
+    return $results;
+}
+
+/**
+ * Products with missing cost data in orders during the date window.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @param int $limit
+ * @return array
+ */
+function getIncompleteCostProducts(string $startDate, string $endDate, int $limit = 10): array
+{
+    $pdo = db();
+    $limit = max(1, min(50, $limit));
+
+    $sql = "
+        SELECT 
+            oi.product_id,
+            oi.product_name,
+            COUNT(DISTINCT oi.order_id) AS impacted_orders,
+            SUM(oi.quantity) AS sold_qty,
+            p.price AS current_price,
+            p.cost_price AS current_cost_price,
+            p.image AS product_image
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        LEFT JOIN products p ON p.id = oi.product_id
+        WHERE DATE(o.created_at) BETWEEN ? AND ? 
+          AND o.status != 'cancelled' 
+          AND oi.unit_cost_price IS NULL
+        GROUP BY oi.product_id, oi.product_name, p.price, p.cost_price, p.image
+        ORDER BY impacted_orders DESC
+        LIMIT " . (int)$limit;
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$startDate, $endDate]);
+    $rows = $stmt->fetchAll();
+
+    $results = [];
+    foreach ($rows as $r) {
+        $imageUrl = !empty($r['product_image']) ? UPLOAD_URL . $r['product_image'] : '/assets/img/placeholder-sock.svg';
+        $results[] = [
+            'product_id' => (int) $r['product_id'],
+            'product_name' => $r['product_name'],
+            'impacted_orders' => (int) $r['impacted_orders'],
+            'sold_qty' => (int) $r['sold_qty'],
+            'current_price' => (int) ($r['current_price'] ?? 0),
+            'current_cost_price' => ($r['current_cost_price'] !== null) ? (int) $r['current_cost_price'] : null,
+            'image_url' => $imageUrl,
+        ];
+    }
+
+    return $results;
+}
+
+/**
+ * Fetch detailed order-level rows for CSV / Excel financial exports.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ * @return array
+ */
+function getFinancialExportRows(string $startDate, string $endDate): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("
+        SELECT 
+            o.id,
+            o.order_code,
+            o.customer_name,
+            o.phone,
+            o.subtotal,
+            o.discount_total,
+            o.shipping_cost,
+            o.shipping_actual_cost,
+            o.gift_items_total,
+            o.total,
+            o.payment_method,
+            o.payment_status,
+            o.status,
+            o.created_at
+        FROM orders o
+        WHERE DATE(o.created_at) BETWEEN ? AND ? AND o.status != 'cancelled'
+        ORDER BY o.created_at DESC
+    ");
+    $stmt->execute([$startDate, $endDate]);
+    $orders = $stmt->fetchAll();
+
+    if (empty($orders)) {
+        return [];
+    }
+
+    $orderIds = array_column($orders, 'id');
+    $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+    // Batch items cost
+    $itemsStmt = $pdo->prepare("
+        SELECT 
+            order_id,
+            SUM(CASE WHEN unit_cost_price IS NOT NULL THEN unit_cost_price * quantity ELSE 0 END) AS prod_cost
+        FROM order_items
+        WHERE order_id IN ($placeholders)
+        GROUP BY order_id
+    ");
+    $itemsStmt->execute($orderIds);
+    $itemsCostMap = [];
+    foreach ($itemsStmt->fetchAll() as $row) {
+        $itemsCostMap[(int)$row['order_id']] = (int) $row['prod_cost'];
+    }
+
+    // Batch gifts cost
+    $giftsStmt = $pdo->prepare("
+        SELECT 
+            order_id,
+            SUM(unit_cost_price * quantity) AS gift_cost
+        FROM order_gift_items
+        WHERE order_id IN ($placeholders)
+        GROUP BY order_id
+    ");
+    $giftsStmt->execute($orderIds);
+    $giftsCostMap = [];
+    foreach ($giftsStmt->fetchAll() as $row) {
+        $giftsCostMap[(int)$row['order_id']] = (int) $row['gift_cost'];
+    }
+
+    $exportRows = [];
+    foreach ($orders as $ord) {
+        $oid = (int) $ord['id'];
+        $prodCost = $itemsCostMap[$oid] ?? 0;
+        $giftCost = $giftsCostMap[$oid] ?? 0;
+        $shippingRev = (int) $ord['shipping_cost'];
+        $shippingCost = ($ord['shipping_actual_cost'] !== null) ? (int) $ord['shipping_actual_cost'] : $shippingRev;
+        $totalCogs = $prodCost + $giftCost + $shippingCost;
+        $totalRev = (int) $ord['total'];
+        $grossProfit = $totalRev - $totalCogs;
+
+        $dateInfo = function_exists('appDateTime') ? appDateTime($ord['created_at'], 'array') : null;
+        $dateShamsi = $dateInfo ? $dateInfo['jalali']['formatted'] : date('Y/m/d', strtotime($ord['created_at']));
+
+        $exportRows[] = [
+            'order_code' => $ord['order_code'],
+            'created_at' => $ord['created_at'],
+            'created_at_shamsi' => $dateShamsi,
+            'customer_name' => $ord['customer_name'],
+            'phone' => $ord['phone'],
+            'subtotal' => (int) $ord['subtotal'],
+            'discount' => (int) $ord['discount_total'],
+            'shipping_revenue' => $shippingRev,
+            'shipping_cost' => $shippingCost,
+            'total_revenue' => $totalRev,
+            'total_cogs' => $totalCogs,
+            'gross_profit' => $grossProfit,
+            'payment_method' => $ord['payment_method'],
+            'payment_status' => $ord['payment_status'],
+            'order_status' => $ord['status'],
+        ];
+    }
+
+    return $exportRows;
+}
+
+/**
+ * Stream download a clean UTF-8 CSV financial report for spreadsheet programs.
+ *
+ * @param string $startDate 'Y-m-d'
+ * @param string $endDate 'Y-m-d'
+ */
+function exportFinancialCsv(string $startDate, string $endDate): void
+{
+    $rows = getFinancialExportRows($startDate, $endDate);
+    $filename = 'financial_report_' . $startDate . '_to_' . $endDate . '.csv';
+
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    $out = fopen('php://output', 'w');
+    // Prepend UTF-8 BOM so Excel opens Persian text without encoding issues
+    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+    fputcsv($out, [
+        'شماره سفارش',
+        'تاریخ میلادی',
+        'تاریخ شمسی',
+        'نام مشتری',
+        'تلفن',
+        'جمع اقلام (تومان)',
+        'تخفیف (تومان)',
+        'کرایه دریافتی (تومان)',
+        'کرایه واقعی پست (تومان)',
+        'مجموع فاکتور (تومان)',
+        'بهای تمام‌شده کل (تومان)',
+        'سود ناخالص (تومان)',
+        'روش پرداخت',
+        'وضعیت پرداخت',
+        'وضعیت سفارش',
+    ]);
+
+    foreach ($rows as $r) {
+        fputcsv($out, [
+            $r['order_code'],
+            $r['created_at'],
+            $r['created_at_shamsi'],
+            $r['customer_name'],
+            $r['phone'],
+            $r['subtotal'],
+            $r['discount'],
+            $r['shipping_revenue'],
+            $r['shipping_cost'],
+            $r['total_revenue'],
+            $r['total_cogs'],
+            $r['gross_profit'],
+            $r['payment_method'],
+            $r['payment_status'],
+            $r['order_status'],
+        ]);
+    }
+
+    fclose($out);
+    exit;
 }
 
 // ==========================================

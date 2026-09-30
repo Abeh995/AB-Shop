@@ -61,10 +61,23 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 - Enforces row-locking (`SELECT ... FOR UPDATE` and conditional `WHERE stock >= ?`) for concurrency safety across all stock mutations.
 
 ### AccountingService (`app/services/AccountingService.php`)
-- **Read-Only Reporting**: Never mutates the database.
+- **Read-Only Reporting**: Strictly read-only; never mutates the database.
 - Calculates order-level gross profitability (`getOrderProfitability($orderId)`):
   $$\text{Gross Profit} = (\text{Order Items Total} - \text{Discount}) + \text{Post-Order Upsells} + \text{Shipping Collected} - \text{Total Cost of Goods Sold} - \text{Actual Shipping Cost}$$
-- Aggregates financial performance (`getFinancialSummary($startDate, $endDate)`) incorporating operational expenses from the `expenses` ledger.
+- Aggregates comprehensive period performance (`getFinancialSummary($startDate, $endDate)`) incorporating operational expenses from the `expenses` ledger and computing key unit economics:
+  - Average Order Value (AOV) and Net Profit per Order.
+  - Shipping balance & logistics subsidy metrics.
+  - Customer discount penetration rate.
+  - Break-Even Analysis: calculates required break-even revenue and order targets based on gross margin and fixed operational expenses.
+  - Product Cost Health: monitors snapshot cost completeness across historical order items.
+- **Time-Series & Deep Analytics Engine (v1.21.0)**:
+  - `getFinancialDailyTrends($startDate, $endDate)`: Vectorized batch query aggregating daily revenue, COGS, expenses, and net margins for inline pure SVG charting.
+  - `getTopProfitProducts($startDate, $endDate, $limit = 5)`: Top profit-generating catalog items by net contribution.
+  - `getPaymentMethodBreakdown($startDate, $endDate)`: Financial distribution between online gateway (Zarinpal) and Card-to-Card.
+  - `getShippingMethodFinancialBreakdown($startDate, $endDate)`: Logistics profitability comparing customer-paid shipping vs actual courier expenses.
+  - `getIncompleteCostProducts($startDate, $endDate, $limit = 20)`: Cost audit ledger finding zero-cost line items for financial auditing.
+  - `exportFinancialCsv($startDate, $endDate)`: Streams UTF-8 BOM CSV export for Excel compatibility.
+  - `resolveFinancialDateRange($preset, $customStart, $customEnd)`: Solar calendar boundary resolver (Shamsi months/year via `jalaliToGregorian()`).
 
 ### ShippingService (`app/services/ShippingService.php`)
 - Evaluates rules in `shipping_methods` ordered by `sort_order`.

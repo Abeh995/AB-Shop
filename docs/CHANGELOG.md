@@ -3,9 +3,42 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.17.4 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.17.5 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.21.0 — 2026-10-01
+
+### Financial Dashboard Workstation & Unit Economics Overhaul
+
+- **Financial Analytics & Aggregation Engine (`app/services/AccountingService.php`, `app/core/functions.php`)**:
+  - Implemented `jalaliToGregorian()` in `functions.php` to enable precise boundary conversions for Jalali calendar cycles (Farvardin through Esfand, accounting for 31-day and 30-day Iranian solar months).
+  - Added `resolveFinancialDateRange()` providing true Shamsi month and year filters (`today`, `yesterday`, `7days`, `30days`, `this_month`, `last_month`, `this_year`, `all`, and custom dates).
+  - Extended `getFinancialSummary()` with advanced unit economics: Average Order Value (AOV), Net Profit per Order, Shipping P&L balance, Shipping Subsidy, Discount Penetration Rate, Break-Even Revenue and Order Targets, and Product Cost Health score.
+  - Implemented `getFinancialDailyTrends()`: batch time-series timeline aggregation generating daily gross revenue, COGS, operating expenses, and net profit with zero N+1 database queries.
+  - Added `getTopProfitProducts()`: identifies top 5 profit-driving catalog products ranked by net contribution margin.
+  - Added `getPaymentMethodBreakdown()`: calculates sales volume, order counts, and share percentages across Zarinpal and Card-to-Card gateways.
+  - Added `getShippingMethodFinancialBreakdown()`: compares customer-paid shipping fees against actual courier costs to monitor logistical subsidies.
+  - Added `getIncompleteCostProducts()`: audits orders with zero-cost snapshots to ensure financial precision.
+  - Added `exportFinancialCsv()` and `getFinancialExportRows()`: direct UTF-8 BOM CSV streaming for Iranian Excel compatibility.
+- **Dedicated Financial Design System (`assets/css/admin-finance.css`, `views/admin/layout/header.php`)**:
+  - Introduced modular stylesheet `assets/css/admin-finance.css` linked dynamically in `header.php` with cache-busted versioning.
+  - Comprehensive design tokens for financial status indicators (emerald for profit, rose for expense/loss, indigo for break-even, amber for subsidies and audit warnings).
+  - High-density Bento workstation grid with interactive hover depth, responsive flex-wrap controls, and custom SVG charting primitives.
+  - Dedicated `@media print` print-sheet styling rendering an official corporate Profit & Loss (P&L) A4 statement with hide-on-print controls for interactive UI elements.
+- **Pure SVG Interactive Dual-Layer Timeline (`views/admin/finance_dashboard.php`)**:
+  - Zero-external-dependency charting engine built entirely with inline SVG vectors, cubic bezier smooth paths, and dual-layer gradient fills (gross revenue vs net profit).
+  - Interactive tooltip badge with crosshair tracking indicator and dynamic Jalali date labels.
+- **Ultra-Lean Controller Architecture (`app/controllers/admin/finance_dashboard.php`)**:
+  - Reduced controller footprint to 34 lines (under Rule 7 soft ceiling of 80 lines).
+  - Pure presentation delegation: handles CSV export requests, resolves date ranges, and fetches analytical datasets in single service calls.
+- **Desktop Bento Workstation & Deep Analytics Matrix (`views/admin/finance_dashboard.php`)**:
+  - 4 Hero KPI Cards (Gross Revenue, Product Cost COGS, Operating Expenses, Net Settled Profit) with dynamic margin badges.
+  - 4 Micro-Metric Indicators (Average Order Value, Net Profit/Order, Shipping P&L Balance, Customer Discounts).
+  - Break-Even Progress Gauge displaying real-time fixed cost coverage percentage and required sales volume.
+  - Cash Flow Allocation Waterfall bar visualizing capital distribution across inventory, operations, and retained earnings.
+  - Dual-column analytical deck: Top Profit Generators, Gateway Distribution, Shipping Subsidies, and Expense Categorization.
+  - Missing Cost Audit Drawer with 1-click navigation to Product Pricing Hub (`pricing.php`).
 
 ## 1.20.1 — 2026-10-01
 
@@ -159,28 +192,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Purged duplicate branding, announcement, and footer fields from `settings.php`, consolidating them exclusively in `appearance.php`.
   - Implemented client-side tabbed switching for legal and static CMS pages (About Us, Terms & Conditions, Privacy Policy), eliminating giant vertical scroll overflow.
   - Reordered sub-navigation tabs in `views/admin/layout/nav_config.php` for optimal desktop and mobile reach.
-
-## 1.17.4 — 2026-09-30
-
-### Finance Hub Architecture Overhaul, Batch Aggregation Optimization & Modern Bento Workstation
-
-- **Finance Hub Service Layer Optimization & Ledger Engine (`app/services/AccountingService.php`)**:
-  - Eliminated high-overhead N+1 query loop in `getFinancialSummary()`: replaced order-by-order item iteration (which executed 3+ queries per order row) with 3 vectorized batch aggregations across `orders`, `order_items`, and `order_gift_items`, cutting dashboard execution time down to milliseconds.
-  - Implemented complete CRUD ledger service methods in `AccountingService.php`: `getExpensesList()`, `getExpenseById()`, `saveExpense()`, `archiveExpense()`, and `getExpenseCategories()`.
-- **Finance Hub Controller Modernization & Rule 7 Compliance (`app/controllers/admin/finance_dashboard.php`, `app/controllers/admin/expenses.php`, `app/controllers/admin/expense_edit.php`)**:
-  - Refactored `finance_dashboard.php` to 53 lines (zero raw SQL, preset date calculations: `today`, `7days`, `30days`, `this_month`, `this_year`).
-  - Refactored `expenses.php` to 45 lines (zero raw SQL, paginated expense ledger and archive handler).
-  - Refactored `expense_edit.php` to 63 lines (zero raw SQL, transactional save/edit delegation to `AccountingService::saveExpense()`).
-- **Finance Dashboard Bento Matrix & Visual Analytics (`views/admin/finance_dashboard.php`)**:
-  - 4 Key Bento KPI metric cards Above the Fold: Gross Settled Revenue, Cost of Goods Sold (COGS), Operating Expenses, and Net Profit (with dynamic emerald/crimson profit/loss badge and Net Margin percentage).
-  - Financial Waterfall Breakdown progress bar visualizing distribution of gross revenue across COGS, operational expenses, and retained net profit.
-  - Category-wise expense allocation bars showing expense concentrations.
-  - Missing cost price alert card alerting admin when orders contain legacy items with zero cost valuation.
-  - Quick filter chips for date ranges with Shamsi label presentation.
-- **Expenses Ledger Workstation & Live Currency Formatter (`views/admin/expenses.php`, `views/admin/expense_edit.php`)**:
-  - Bento metric overview on expenses page: Period Total, Expense Count, Top Expense Category, and Average per Expense.
-  - High-density table with Persian formatted amounts, expense date chips, category badges, and safe archive/delete modals.
-  - Expense creation/editing workstation with live Persian currency formatter displaying spelled-out Tomans in real time.
-  - 1-click quick category chips for instant category population.
-
-

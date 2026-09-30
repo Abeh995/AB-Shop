@@ -1,9 +1,32 @@
-# Changelog Archive (v1.0.0 — v1.17.3)
+# Changelog Archive (v1.0.0 — v1.17.4)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.17.3.
+Historical release notes for AB-Socks versions 1.0.0 through 1.17.4.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.17.4 — 2026-09-30
+
+### Finance Hub Architecture Overhaul, Batch Aggregation Optimization & Modern Bento Workstation
+
+- **Finance Hub Service Layer Optimization & Ledger Engine (`app/services/AccountingService.php`)**:
+  - Eliminated high-overhead N+1 query loop in `getFinancialSummary()`: replaced order-by-order item iteration (which executed 3+ queries per order row) with 3 vectorized batch aggregations across `orders`, `order_items`, and `order_gift_items`, cutting dashboard execution time down to milliseconds.
+  - Implemented complete CRUD ledger service methods in `AccountingService.php`: `getExpensesList()`, `getExpenseById()`, `saveExpense()`, `archiveExpense()`, and `getExpenseCategories()`.
+- **Finance Hub Controller Modernization & Rule 7 Compliance (`app/controllers/admin/finance_dashboard.php`, `app/controllers/admin/expenses.php`, `app/controllers/admin/expense_edit.php`)**:
+  - Refactored `finance_dashboard.php` to 53 lines (zero raw SQL, preset date calculations: `today`, `7days`, `30days`, `this_month`, `this_year`).
+  - Refactored `expenses.php` to 45 lines (zero raw SQL, paginated expense ledger and archive handler).
+  - Refactored `expense_edit.php` to 63 lines (zero raw SQL, transactional save/edit delegation to `AccountingService::saveExpense()`).
+- **Finance Dashboard Bento Matrix & Visual Analytics (`views/admin/finance_dashboard.php`)**:
+  - 4 Key Bento KPI metric cards Above the Fold: Gross Settled Revenue, Cost of Goods Sold (COGS), Operating Expenses, and Net Profit (with dynamic emerald/crimson profit/loss badge and Net Margin percentage).
+  - Financial Waterfall Breakdown progress bar visualizing distribution of gross revenue across COGS, operational expenses, and retained net profit.
+  - Category-wise expense allocation bars showing expense concentrations.
+  - Missing cost price alert card alerting admin when orders contain legacy items with zero cost valuation.
+  - Quick filter chips for date ranges with Shamsi label presentation.
+- **Expenses Ledger Workstation & Live Currency Formatter (`views/admin/expenses.php`, `views/admin/expense_edit.php`)**:
+  - Bento metric overview on expenses page: Period Total, Expense Count, Top Expense Category, and Average per Expense.
+  - High-density table with Persian formatted amounts, expense date chips, category badges, and safe archive/delete modals.
+  - Expense creation/editing workstation with live Persian currency formatter displaying spelled-out Tomans in real time.
+  - 1-click quick category chips for instant category population.
 
 ## 1.17.3 — 2026-09-30
 

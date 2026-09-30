@@ -30,6 +30,7 @@ $adminProductsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/a
 $adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-categories.css') ?: 1);
 $adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-pricing.css') ?: 1);
 $adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-gift-items.css') ?: 1);
+$adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-finance.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -47,6 +48,9 @@ $adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/
 <?php endif; ?>
 <?php if (in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-gift-items.css?v=<?= $adminGiftItemsCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-finance.css?v=<?= $adminFinanceCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){
