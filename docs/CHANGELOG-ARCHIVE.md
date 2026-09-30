@@ -1,9 +1,37 @@
-# Changelog Archive (v1.0.0 — v1.16.0)
+# Changelog Archive (v1.0.0 — v1.17.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.16.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.17.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.17.0 — 2026-09-28
+
+### Modern Visual Redesign of Admin Orders Hub & Order Detail Experience
+
+- **Complete Visual Redesign of Orders Tab (`views/admin/orders.php`, `assets/css/admin-orders.css`)**:
+  - Full-width modern Bento workspace strictly scoped via `.admin-page-orders` body class, aligned with modern dashboard aesthetics.
+  - 4 Key Bento KPI metric cards Above the Fold: Urgent Pending / Receipt Inspection, Net Settled Sales, Total Store Orders, and Packaging & Dispatch Stream.
+  - Interactive status tabs with real-time counters and multi-parameter filter hub (search, payment method, payment status, date ranges).
+  - Adaptive Mobile Cards Stack & Native Bottom Sheet Dossier (< 860px) with touch swipe-to-dismiss gesture support, 1-tap dialer/SMS, and direct tracking code input.
+- **Modern Responsive Redesign of Order Detail Page (`views/admin/order_detail.php`, `app/controllers/admin/order_detail.php`)**:
+  - Two-column responsive workspace with sticky mobile quick dock (`#mobileQuickDock` for $\le 768$px) enabling fast-dial and smooth-scroll pulse focus to status card.
+  - Multi-image product gallery modal (`#productGalleryModal`) with thumbnail badges, keyboard navigation (`ESC`, arrows), and touch-swipe gestures.
+  - Dual presentation: clean high-density desktop items table and adaptive mobile item cards stack ($\le 680$px) with variant chips and zoom previews.
+  - Card-to-Card receipt lightbox modal with DirectAdmin Apache/PHP-FPM MIME-safe authenticated streaming via `/admin/order_receipt.php?id=...`.
+  - 1-click postal label clipboard copy engine (`copyPostalLabel()`) targeting structured customer delivery credentials.
+  - Architecture refinement: zero SQL in `order_detail.php` controller (74 lines), full encapsulation in `OrderService::getOrderItemsWithGallery()` and `OrderService::getOrder()`.
+- **Global Header Polish & Topbar Enhancements (`views/admin/layout/header.php`, `assets/css/admin.css`)**:
+  - Compact pill search bar and storefront button.
+  - Stacked 2-line real-time live clock and Shamsi date widget.
+  - Conditioned `admin-orders.css` stylesheet injection in `<head>`.
+- **Postal Parcel Tracking Integration & Database Migration**:
+  - Added official `tracking_code VARCHAR(100) DEFAULT NULL` column to `orders` table via migration `database/migrations/017_v1.17.0_order_tracking_code.sql` with safe idempotent procedure.
+  - Updated baseline `database/schema.sql`.
+  - Defensive feature-detection (`OrderService::hasTrackingCodeColumn()`) ensuring shared hosting deployments never throw SQL errors if uploaded prior to manual migration execution via phpMyAdmin.
+- **Controller Refactoring & Anti-Bloat Architecture**:
+  - Refactored `app/controllers/admin/orders.php` into 55 lines and `app/controllers/admin/order_detail.php` into 74 lines of clean service delegation, adhering strictly to Rule 7 (< 80 lines ceiling) with 0 raw SQL mutations.
+  - Added robust transactional administrative methods to `app/services/OrderService.php`: `getAdminOrders()`, `getAdminOrderStats()`, `getAdminStatusCounts()`, `updateOrderStatus()`, `updateTrackingCode()`, `bulkUpdateStatus()`, `deleteOrder()`, `getOrder()`, and `getOrderItemsWithGallery()`.
 
 ## 1.16.0 — 2026-09-25
 

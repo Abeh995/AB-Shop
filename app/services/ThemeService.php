@@ -42,15 +42,6 @@ function getThemeById(int $id): ?array
 }
 
 /**
- * Fetch the currently active storefront theme.
- */
-function getActiveTheme(): ?array
-{
-    $theme = db()->query("SELECT * FROM themes WHERE is_active = 1 LIMIT 1")->fetch();
-    return $theme ?: null;
-}
-
-/**
  * Duplicate an existing theme and all its color tokens.
  *
  * @return array{ok: bool, error: ?string, id: ?int}

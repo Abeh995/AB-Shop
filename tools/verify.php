@@ -123,6 +123,36 @@ if (empty($syntaxFailures)) {
     }
 }
 
+// 1.1 Global Function Collision Guard (prevents PHP Fatal error: Cannot redeclare ...)
+$appCoreAndServiceDirs = [
+    $root . '/app/core',
+    $root . '/app/services',
+];
+$declaredFunctions = [];
+foreach ($appCoreAndServiceDirs as $dir) {
+    if (!is_dir($dir)) continue;
+    $pFiles = glob($dir . '/*.php');
+    foreach ($pFiles as $pf) {
+        $content = file_get_contents($pf);
+        if (preg_match_all('/^\s*function\s+([a-zA-Z0-9_]+)\s*\(/m', $content, $matches)) {
+            $rel = normalizeRelPath($pf, $root);
+            foreach ($matches[1] as $fname) {
+                $declaredFunctions[$fname][] = $rel;
+            }
+        }
+    }
+}
+$dupFunctions = array_filter($declaredFunctions, fn($locs) => count($locs) > 1);
+if (!empty($dupFunctions)) {
+    foreach ($dupFunctions as $fname => $locs) {
+        fail("Duplicate global function '{$fname}' declared in: " . implode(', ', $locs));
+        $errors++;
+    }
+} else {
+    pass("Global function collision guard passed (0 duplicate declarations across app/core and app/services).");
+}
+
+
 // -------------------------------------------------------------
 // 2. Controller Architecture & Anti-Bloat
 // -------------------------------------------------------------
