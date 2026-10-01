@@ -169,12 +169,10 @@ foreach ($categories as $c) {
                         <div class="cat-image-preview-box">
                             <img src="/assets/img/placeholder-sock.svg" id="catImagePreview" class="cat-image-preview-img" alt="">
                         </div>
-                        <div class="cat-image-upload-text">
-                            <span class="cat-image-upload-title">آیکون شاخص دسته</span>
-                            <span class="cat-image-upload-hint">فرمت‌های مجاز: JPG, PNG, WEBP (حداکثر ۲MB)</span>
-                            <input type="file" name="image" id="catImageInput" accept="image/jpeg,image/png,image/webp" style="font-size: 0.72rem; margin-top: 4px;">
+                        <div class="cat-image-upload-text" style="flex: 1;">
+                            <input type="file" name="image" id="catImageInput" accept="image/*,.heic,.heif" data-optimize-image="category" data-layout="compact" data-max-dimension="1200" data-default-quality="0.85">
                             <input type="hidden" name="remove_image" id="catInputRemoveImage" value="0">
-                            <button type="button" id="catBtnRemoveImage" class="cat-btn-remove-img" style="display:none;">✕ حذف تصویر فعلی</button>
+                            <button type="button" id="catBtnRemoveImage" class="cat-btn-remove-img" style="display:none; margin-top: 6px;">✕ حذف تصویر فعلی</button>
                         </div>
                     </div>
                 </div>

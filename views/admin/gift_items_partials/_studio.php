@@ -30,18 +30,17 @@
         <div class="gift-form-group">
             <label class="gift-form-label">
                 <span>تصویر قلم کالا</span>
-                <span class="label-hint">فرمت WebP خودکار</span>
+                <span class="label-hint">بهینه‌سازی خودکار</span>
             </label>
-            <div class="gift-dropzone" onclick="document.getElementById('studioImageInput').click()">
-                <div class="gift-preview-container">
-                    <img src="<?= !empty($activeEditItem['image']) ? UPLOAD_URL . e($activeEditItem['image']) : '/assets/img/placeholder-sock.svg' ?>" id="studioPreviewImg" class="gift-preview-img" alt="پیش‌نمایش تصویر">
-                    <div class="gift-dropzone-info">
-                        <div class="dropzone-text-primary">کلیک جهت انتخاب تصویر</div>
-                        <div class="dropzone-text-sub">JPG، PNG، WEBP (حداکثر ۲ مگابایت)</div>
-                    </div>
+            <?php if (!empty($activeEditItem['image'])): ?>
+                <div class="gift-current-preview" style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:8px 12px; background:#FAF8F5; border:1px solid #E8DFD5; border-radius:8px;">
+                    <img src="<?= UPLOAD_URL . e($activeEditItem['image']) ?>" id="studioPreviewImg" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #D5C7B7;" alt="تصویر فعلی">
+                    <span style="font-size:0.75rem; color:#7A5C43; font-weight:600;">تصویر فعال (برای تغییر، فایل جدید انتخاب کنید)</span>
                 </div>
-                <input type="file" name="image" id="studioImageInput" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-max-dimension="1600" data-default-quality="0.30" style="display: none;" onchange="handleStudioImagePreview(this)">
-            </div>
+            <?php else: ?>
+                <img src="/assets/img/placeholder-sock.svg" id="studioPreviewImg" style="display:none;" alt="">
+            <?php endif; ?>
+            <input type="file" name="image" id="studioImageInput" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-layout="compact" data-max-dimension="1600" data-default-quality="0.85" onchange="handleStudioImagePreview(this)">
         </div>
 
         <!-- Name / Title Input -->

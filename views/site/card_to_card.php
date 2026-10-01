@@ -104,10 +104,7 @@ $cardFormatted = implode(' - ', array_map('toPersianDigits', $cardBlocks));
                                     <strong>تصویر فیش را اینجا بکشید</strong> یا برای انتخاب کلیک کنید
                                 </div>
                                 <div class="c2c-dropzone-sub">
-                                    پشتیبانی از انواع تصاویر (JPG, PNG, WebP) و عکس دوربین آیفون
-                                </div>
-                                <div class="c2c-dropzone-badges">
-                                    ⚡ بهینه‌سازی خودکار در مرورگر • حجم کمتر از ۳۰۰ کیلوبایت
+                                    فرمت‌های مجاز: JPG، PNG، WebP (حداکثر ۵ مگابایت)
                                 </div>
                             </div>
 

@@ -103,13 +103,13 @@
         var isHeic = file.name.match(/\.(heic|heif)$/i) || file.type.includes('heic');
 
         if (isHeic) {
-            if (loadingText) loadingText.textContent = 'در حال تبدیل فرمت تصویر آیفون (HEIC)...';
+            if (loadingText) loadingText.textContent = 'در حال آماده‌سازی تصویر فیش...';
             await loadHeicLibrary();
             var converted = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.90 });
             sourceBlob = Array.isArray(converted) ? converted[0] : converted;
         }
 
-        if (loadingText) loadingText.textContent = 'در حال بهینه‌سازی و فشرده‌سازی تصویر رسید...';
+        if (loadingText) loadingText.textContent = 'در حال بهینه‌سازی تصویر رسید...';
 
         var img = await new Promise(function (resolve, reject) {
             var url = URL.createObjectURL(sourceBlob);

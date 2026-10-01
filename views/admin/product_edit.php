@@ -268,8 +268,7 @@
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label style="font-size: 0.85rem; font-weight: 600;">بارگذاری یا جایگزینی تصویر</label>
-                    <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="product" data-max-dimension="1600" data-default-quality="0.30">
-                    <p style="font-size: 0.75rem; color: var(--color-muted); margin-top: 4px;">فرمت‌های مجاز: JPG, PNG, WEBP (حداکثر ۲ مگابایت)</p>
+                    <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="product" data-max-dimension="1600" data-default-quality="0.85">
                 </div>
             </div>
 
@@ -292,7 +291,7 @@
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label style="font-size: 0.85rem; font-weight: 600;">افزودن عکس‌های جدید به گالری</label>
-                    <input class="form-control" type="file" name="gallery_images[]" accept="image/*,.heic,.heif" multiple data-optimize-image="gallery" data-max-dimension="1600" data-default-quality="0.30">
+                    <input class="form-control" type="file" name="gallery_images[]" accept="image/*,.heic,.heif" multiple data-optimize-image="gallery" data-max-dimension="1600" data-default-quality="0.85">
                     <p style="font-size: 0.75rem; color: var(--color-muted); margin-top: 4px;">می‌توانید چند عکس را هم‌زمان انتخاب کنید.</p>
                 </div>
             </div>

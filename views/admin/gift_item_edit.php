@@ -30,8 +30,7 @@
                     <img src="<?= e(UPLOAD_URL . $item['image']) ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
             <?php endif; ?>
-            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-max-dimension="1600" data-default-quality="0.30">
-            <p style="font-size: 0.75rem; color: var(--color-muted); margin-top: 4px;">فرمت‌های مجاز: JPG, PNG, WEBP (حداکثر ۲ مگابایت)</p>
+            <input class="form-control" type="file" name="image" accept="image/*,.heic,.heif" data-optimize-image="giftitem" data-max-dimension="1600" data-default-quality="0.85">
         </div>
 
         <div class="form-row">

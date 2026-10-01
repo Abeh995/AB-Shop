@@ -3,9 +3,27 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.18.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.19.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.22.1 — 2026-10-02
+
+### Image Optimizer Engine DRY Architecture, 40MB Upload Limit & High-Fidelity Quality Preset
+
+- **Centralized Dynamic Image Optimizer (`assets/js/admin-image-optimizer.js`, `assets/css/admin.css`)**:
+  - Eliminated hardcoded marketing and technical verbose text ("پشتیبانی از انواع فرمت‌ها دوربین آیفون و حذف متادیتا") across the codebase in compliance with DRY principles.
+  - Formulated single-source dynamic template generation for dropzone hints: `فرمت‌های مجاز: {formats} (حداکثر {max_size})`.
+  - Upgraded administrative upload threshold to 40 MB default (`data-max-size="۴۰ مگابایت"`).
+  - Shifted default WebP quality baseline from aggressive 30% (`0.30`) to visually lossless 85% (`0.85`), maximizing graphic fidelity with minimal compression artifacts.
+  - Added native compact layout mode (`data-layout="compact"` / `.aio-dropzone-compact`) for space-constrained sidebars, drawers, and modal workstations.
+  - Added programmatic `change` event dispatching on DataTransfer sync to trigger reactive UI updates in consuming listeners.
+- **Admin Views Image Upload Standardization**:
+  - Decomposed and standardized image dropzones in `views/admin/gift_items_partials/_studio.php` and `views/admin/categories.php`, eliminating redundant custom markup and unifying under `data-optimize-image`.
+  - Harmonized `views/admin/product_edit.php` (main and gallery), `views/admin/appearance.php` (branding logo with SVG detection), `views/admin/gift_item_edit.php`, and `views/admin/card_to_card_payments.php` modal dropzone.
+- **Storefront Checkout Upload Polish (`views/site/card_to_card.php`, `assets/js/card-to-card.js`)**:
+  - Cleaned customer-facing payment receipt dropzone copy: removed device-specific jargon and verbose badge labels, presenting concise format and size parameters (`فرمت‌های مجاز: JPG، PNG، WebP (حداکثر ۵ مگابایت)`).
+  - Cleaned conversion loading status messages.
 
 ## 1.22.0 — 2026-10-02
 
@@ -167,35 +185,5 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Resolved production HTTP 500 fatal crash on direct server bootstrap.
 - **Architectural Guard: Global Function Collision Scanner (`tools/verify.php`)**:
   - Added automated pre-flight collision scanner in `tools/verify.php` inspecting all function declarations across `app/core` and `app/services`.
-  - Guarantees zero duplicate global function declarations in future releases, catching collisions invisible to isolated `php -l` file lints.
-
-## 1.18.0 — 2026-09-30
-
-### 5-Hub Storefront Architecture, Liquid Glass Bottom Dock, Customer Service Domain & DRY Refactoring
-
-- **Storefront 5-Hub Information Architecture (`index.php`, `views/layout/header.php`, `views/layout/footer.php`, `views/site/partials/bottom_dock.php`)**:
-  - Unified the entire client experience into 5 primary hubs:
-    1. **Home Hub** (`/`): mobile product carousel showing ~3 cards per viewport with unconstrained horizontal swiping (`[FEAT-C003]`).
-    2. **Categories Hub** (`/categories`): dedicated hierarchy tree with live product counts and subcategory chips.
-    3. **Cart & Checkout Hub** (`/cart`, `/checkout`): modular card-to-card workflow and mobile responsive table-card conversion.
-    4. **Search Hub** (`/search`): interactive trigger connected to live autocomplete search panel.
-    5. **Account Hub** (`/account`): customer order history, active cart sidebar, and profile management (`[BUG-C005]`).
-  - Implemented the **Floating Liquid Glass Bottom Dock** (`[FEAT-C004]`) for mobile & tablet viewports ($\le 992$px) featuring `backdrop-filter: blur(20px)`, dynamic cart badge counter (`#dockCartBadge`), active hub detection, and zero content overlap via safe area padding.
-- **Dedicated Customer Service Layer & Controller Anti-Bloat (`app/services/CustomerService.php`, `app/controllers/site/account.php`, `app/bootstrap.php`)**:
-  - Introduced `CustomerService.php`: encapsulated customer profile retrieval (`getById`), profile updating with duplicate email guards (`updateProfile`), and order history retrieval (`getOrders`).
-  - Refactored `app/controllers/site/account.php` from direct SQL updates down to 35 lines of service delegation, adhering strictly to Rule 7.
-- **Complete Customer Account Hub Visual Overhaul (`views/site/account.php`, `views/site/account_order.php`, `[BUG-C005]`)**:
-  - Purged all admin styling leakages (`.admin-card`, `.admin-table`) from customer account views.
-  - Implemented client-tailored components: `.customer-card`, `.customer-order-card`, `.account-user-meta`, Shamsi date pills, and active cart sidebar.
-- **Card-to-Card Script Modularization (`views/site/card_to_card.php`, `assets/js/card-to-card.js`)**:
-  - Extracted 274 lines of inline JavaScript (client-side WebP canvas compression, image validation, card-number auto-spacing) into cacheable asset `assets/js/card-to-card.js`.
-  - Reduced `views/site/card_to_card.php` down to 207 presentation lines.
-- **Order Service Payment Authority & Checkout Refactoring (`app/services/OrderService.php`, `app/controllers/site/checkout.php`)**:
-  - Added `setPaymentAuthority(int $orderId, string $authority)` and `statusLabels()` helper methods to `OrderService.php`.
-  - Refactored `app/controllers/site/checkout.php` down to 77 lines (< 80 lines ceiling), eliminating direct database updates.
-  - Initialized `$formData` to eliminate raw `$_POST` reads in `views/site/checkout.php` and `views/site/signup.php`.
-- **Reusable Pagination Partial & View Purity Guard (`views/site/partials/pagination.php`, `app/core/functions.php`, `views/layout/header.php`)**:
-  - Introduced shared partial `views/site/partials/pagination.php` and integrated it across `views/site/category.php` and `views/site/search.php`.
-  - Created `getNavCategories()` in `app/core/functions.php`, eliminating raw SQL query from `views/layout/header.php`.
   - Reduced `app/controllers/site/product.php` to 71 lines and eliminated variant calculation logic from `views/site/product.php`.
 

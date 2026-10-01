@@ -97,8 +97,8 @@
                         
                         <div class="aio-inspector-actions">
                             <div class="aio-inspector-slider-wrap">
-                                <span>کیفیت: <strong class="aio-inspector-qval">۳۰٪</strong></span>
-                                <input type="range" class="aio-inspector-slider" min="10" max="90" step="5" value="30">
+                                <span>کیفیت: <strong class="aio-inspector-qval">۸۵٪</strong></span>
+                                <input type="range" class="aio-inspector-slider" min="10" max="95" step="5" value="85">
                             </div>
 
                             <button type="button" class="aio-inspector-btn aio-inspector-compare-btn" title="نگه دارید تا عکس خام نمایش یابد">
@@ -370,9 +370,12 @@
             this.form = inputEl.closest('form');
             this.isMultiple = inputEl.hasAttribute('multiple');
             this.maxDimension = parseInt(inputEl.dataset.maxDimension || '1600', 10);
-            this.defaultQuality = parseFloat(inputEl.dataset.defaultQuality || '0.30');
+            this.defaultQuality = parseFloat(inputEl.dataset.defaultQuality || '0.85');
             this.allowSvg = inputEl.dataset.allowSvg === 'true';
             this.role = inputEl.dataset.optimizeImage || 'image';
+            this.isCompact = inputEl.dataset.layout === 'compact';
+            this.maxSizeText = inputEl.dataset.maxSize || '۴۰ مگابایت';
+            this.formatsText = inputEl.dataset.formats || (this.allowSvg ? 'JPG، PNG، WebP، SVG' : 'JPG، PNG، WebP');
 
             this.items = [];
             this.isProcessing = false;
@@ -389,17 +392,19 @@
             this.input.style.pointerEvents = 'none';
 
             this.wrapper = document.createElement('div');
-            this.wrapper.className = 'aio-widget';
+            this.wrapper.className = this.isCompact ? 'aio-widget aio-widget-compact' : 'aio-widget';
 
             this.dropzone = document.createElement('div');
-            this.dropzone.className = 'aio-dropzone';
+            this.dropzone.className = this.isCompact ? 'aio-dropzone aio-dropzone-compact' : 'aio-dropzone';
             this.dropzone.innerHTML = `
                 <div class="aio-dropzone-icon">📷</div>
-                <div class="aio-dropzone-text">
-                    <strong>برای انتخاب ${this.isMultiple ? 'تصاویر' : 'تصویر'} کلیک کنید</strong> یا فایل را اینجا بکشید
-                </div>
-                <div class="aio-dropzone-hint">
-                    پشتیبانی از انواع فرمت‌ها (JPG, PNG, WebP, HEIC دوربین آیفون تا ۴۰ مگابایت) • فشرده‌سازی خودکار و حذف متادیتا
+                <div class="aio-dropzone-content">
+                    <div class="aio-dropzone-text">
+                        <strong>برای انتخاب ${this.isMultiple ? 'تصاویر' : 'تصویر'} کلیک کنید</strong> یا فایل را اینجا بکشید
+                    </div>
+                    <div class="aio-dropzone-hint">
+                        فرمت‌های مجاز: ${this.formatsText} (حداکثر ${this.maxSizeText})
+                    </div>
                 </div>
             `;
 
@@ -408,7 +413,7 @@
             this.progressBox.style.display = 'none';
             this.progressBox.innerHTML = `
                 <div class="aio-spinner"></div>
-                <div class="aio-progress-text">در حال بهینه‌سازی و کاهش حجم تصویر...</div>
+                <div class="aio-progress-text">در حال بهینه‌سازی تصویر...</div>
             `;
 
             this.previewContainer = document.createElement('div');
@@ -540,7 +545,7 @@
             let sourceBlob = file;
 
             if (isHeic) {
-                this.progressBox.querySelector('.aio-progress-text').textContent = 'در حال تبدیل فرمت HEIC آیفون...';
+                this.progressBox.querySelector('.aio-progress-text').textContent = 'در حال تبدیل فرمت تصویر...';
                 await loadHeicLibrary();
                 const conversionResult = await window.heic2any({
                     blob: file,
@@ -550,7 +555,7 @@
                 sourceBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
             }
 
-            this.progressBox.querySelector('.aio-progress-text').textContent = 'در حال بهینه‌سازی و فشرده‌سازی در مرورگر...';
+            this.progressBox.querySelector('.aio-progress-text').textContent = 'در حال بهینه‌سازی تصویر...';
 
             const img = await this.loadImageFromBlob(sourceBlob);
             const origW = img.naturalWidth;
@@ -711,15 +716,12 @@
                                     <strong class="aio-stat-new">${toPersianDigits(item.targetW)}×${toPersianDigits(item.targetH)}</strong>
                                 </span>
                             </div>
-                            <div class="aio-security-badge">
-                                🛡️ متادیتا و موقعیت مکانی (GPS/EXIF) با موفقیت حذف شدند
-                            </div>
                             <div class="aio-slider-wrap">
                                 <div class="aio-slider-header">
                                     <span>کیفیت تصویر: <strong class="aio-quality-val">${toPersianDigits(qualityPercent)}٪</strong></span>
                                     <button type="button" class="aio-btn-link aio-open-inspector-btn">🔍 باز کردن در اندازه بزرگ</button>
                                 </div>
-                                <input type="range" class="aio-quality-slider" min="10" max="90" step="5" value="${qualityPercent}">
+                                <input type="range" class="aio-quality-slider" min="10" max="95" step="5" value="${qualityPercent}">
                             </div>
                         </div>
                         <button type="button" class="aio-btn-remove" title="حذف این تصویر">✕</button>
@@ -774,6 +776,7 @@
                     dt.items.add(item.compressedFile);
                 });
                 this.input.files = dt.files;
+                this.input.dispatchEvent(new Event('change', { bubbles: true }));
             } catch (err) {
                 console.warn('DataTransfer could not be set directly:', err);
             }
