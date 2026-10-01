@@ -214,18 +214,23 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE TABLE IF NOT EXISTS gift_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
+    tagline VARCHAR(190) DEFAULT NULL,
+    badge_text VARCHAR(50) DEFAULT NULL,
     image VARCHAR(255) DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     is_giftable TINYINT(1) NOT NULL DEFAULT 1,
     is_post_orderable TINYINT(1) NOT NULL DEFAULT 0,
     cost_price DECIMAL(12,0) NOT NULL,
     post_order_price DECIMAL(12,0) DEFAULT NULL,  -- required (enforced in the app) when is_post_orderable = 1
+    min_cart_total DECIMAL(12,0) NOT NULL DEFAULT 0,
     stock INT NOT NULL DEFAULT 0,
+    sort_order INT NOT NULL DEFAULT 0,
     created_by INT UNSIGNED DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES admins(id) ON DELETE SET NULL,
-    INDEX idx_active (is_active)
+    INDEX idx_active (is_active),
+    INDEX idx_gift_sort (sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

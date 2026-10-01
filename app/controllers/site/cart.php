@@ -23,8 +23,9 @@ if ($appliedCoupon) {
 // against the live catalog) plus what else is currently offerable
 $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
 $selectedPostOrderIds = array_column($postOrderResult['lines'], 'gift_item_id');
+$cartSubtotal = (int) ($cart['subtotal'] ?? 0);
 $availablePostOrderItems = array_filter(
-    getAvailablePostOrderItems(),
+    getAvailablePostOrderItems($cartSubtotal),
     fn($item) => !in_array((int) $item['id'], $selectedPostOrderIds, true)
 );
 

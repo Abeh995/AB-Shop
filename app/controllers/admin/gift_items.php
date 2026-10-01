@@ -40,6 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('gift_items.php');
     }
 
+    if ($action === 'reorder') {
+        $orderedIds = array_map('intval', (array) ($_POST['order'] ?? []));
+        $res = reorderGiftItems($orderedIds);
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode($res);
+            exit;
+        }
+        redirect('gift_items.php');
+    }
+
     if ($action === 'save') {
         $adminId = (int) ($_SESSION['admin_id'] ?? 0);
         $res = saveGiftItem($_POST, $_FILES['image'] ?? null, $adminId);

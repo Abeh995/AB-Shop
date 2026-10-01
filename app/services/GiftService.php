@@ -19,12 +19,22 @@
  * Active, post-orderable items with stock — what the customer is offered
  * on the cart page.
  */
-function getAvailablePostOrderItems(): array
+function getAvailablePostOrderItems(?int $cartSubtotal = null): array
 {
+    if ($cartSubtotal !== null) {
+        $stmt = db()->prepare("
+            SELECT * FROM gift_items
+            WHERE is_active = 1 AND is_post_orderable = 1 AND stock > 0 AND min_cart_total <= ?
+            ORDER BY sort_order ASC, id DESC
+        ");
+        $stmt->execute([$cartSubtotal]);
+        return $stmt->fetchAll();
+    }
+
     return db()->query("
         SELECT * FROM gift_items
         WHERE is_active = 1 AND is_post_orderable = 1 AND stock > 0
-        ORDER BY name ASC
+        ORDER BY sort_order ASC, id DESC
     ")->fetchAll();
 }
 
@@ -39,7 +49,7 @@ function getGiftableItems(): array
     return db()->query("
         SELECT * FROM gift_items
         WHERE is_active = 1 AND is_giftable = 1
-        ORDER BY name ASC
+        ORDER BY sort_order ASC, name ASC
     ")->fetchAll();
 }
 
@@ -233,23 +243,62 @@ function getAdminGiftItemsMetrics(): array
         SELECT
             COALESCE(SUM(CASE WHEN role = 'gift' THEN quantity ELSE 0 END), 0) AS lifetime_gifted_units,
             COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity ELSE 0 END), 0) AS lifetime_sold_units,
-            COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity * unit_selling_price ELSE 0 END), 0) AS lifetime_post_order_revenue
+            COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity * unit_selling_price ELSE 0 END), 0) AS lifetime_post_order_revenue,
+            COALESCE(SUM(CASE WHEN role = 'post_order' THEN quantity * (unit_selling_price - unit_cost_price) ELSE 0 END), 0) AS lifetime_post_order_net_profit
         FROM order_gift_items
     ")->fetch() ?: [];
 
+    // 3. Attach rate: % of paid/active orders that attached at least one post-order add-on
+    $attachQuery = $pdo->query("
+        SELECT
+            COUNT(DISTINCT ogi.order_id) AS post_order_orders,
+            (SELECT COUNT(*) FROM orders WHERE payment_status = 'paid' OR status NOT IN ('cancelled', 'pending')) AS total_qualifying_orders
+        FROM order_gift_items ogi
+        WHERE ogi.role = 'post_order'
+    ")->fetch() ?: [];
+
+    $postOrdersCount = (int) ($attachQuery['post_order_orders'] ?? 0);
+    $totalOrdersCount = (int) ($attachQuery['total_qualifying_orders'] ?? 0);
+    $attachRate = ($totalOrdersCount > 0) ? round(($postOrdersCount / $totalOrdersCount) * 100, 1) : 0.0;
+
+    // 4. Top performer item among cart add-ons
+    $topPerformer = $pdo->query("
+        SELECT g.id, g.name, g.image,
+               SUM(ogi.quantity) AS sold_qty,
+               SUM(ogi.quantity * ogi.unit_selling_price) AS gross_rev,
+               SUM(ogi.quantity * (ogi.unit_selling_price - ogi.unit_cost_price)) AS net_profit
+        FROM order_gift_items ogi
+        JOIN gift_items g ON g.id = ogi.gift_item_id
+        WHERE ogi.role = 'post_order'
+        GROUP BY g.id, g.name, g.image
+        ORDER BY sold_qty DESC, gross_rev DESC
+        LIMIT 1
+    ")->fetch() ?: null;
+
     return [
-        'total_items'                 => (int) ($catalogStats['total_items'] ?? 0),
-        'active_items'                => (int) ($catalogStats['active_items'] ?? 0),
-        'inactive_items'              => (int) ($catalogStats['inactive_items'] ?? 0),
-        'giftable_count'              => (int) ($catalogStats['giftable_count'] ?? 0),
-        'post_orderable_count'        => (int) ($catalogStats['post_orderable_count'] ?? 0),
-        'hybrid_count'                => (int) ($catalogStats['hybrid_count'] ?? 0),
-        'total_stock'                 => (int) ($catalogStats['total_stock'] ?? 0),
-        'total_inventory_valuation'   => (int) ($catalogStats['total_inventory_valuation'] ?? 0),
-        'low_stock_count'             => (int) ($catalogStats['low_stock_count'] ?? 0),
-        'lifetime_gifted_units'       => (int) ($orderStats['lifetime_gifted_units'] ?? 0),
-        'lifetime_sold_units'         => (int) ($orderStats['lifetime_sold_units'] ?? 0),
-        'lifetime_post_order_revenue' => (int) ($orderStats['lifetime_post_order_revenue'] ?? 0),
+        'total_items'                    => (int) ($catalogStats['total_items'] ?? 0),
+        'active_items'                   => (int) ($catalogStats['active_items'] ?? 0),
+        'inactive_items'                 => (int) ($catalogStats['inactive_items'] ?? 0),
+        'giftable_count'                 => (int) ($catalogStats['giftable_count'] ?? 0),
+        'post_orderable_count'           => (int) ($catalogStats['post_orderable_count'] ?? 0),
+        'hybrid_count'                   => (int) ($catalogStats['hybrid_count'] ?? 0),
+        'total_stock'                    => (int) ($catalogStats['total_stock'] ?? 0),
+        'total_inventory_valuation'      => (int) ($catalogStats['total_inventory_valuation'] ?? 0),
+        'low_stock_count'                => (int) ($catalogStats['low_stock_count'] ?? 0),
+        'lifetime_gifted_units'          => (int) ($orderStats['lifetime_gifted_units'] ?? 0),
+        'lifetime_sold_units'            => (int) ($orderStats['lifetime_sold_units'] ?? 0),
+        'lifetime_post_order_revenue'    => (int) ($orderStats['lifetime_post_order_revenue'] ?? 0),
+        'lifetime_post_order_net_profit' => (int) ($orderStats['lifetime_post_order_net_profit'] ?? 0),
+        'attach_rate_percent'            => $attachRate,
+        'post_order_orders_count'        => $postOrdersCount,
+        'top_performer'                  => $topPerformer ? [
+            'id'         => (int) $topPerformer['id'],
+            'name'       => $topPerformer['name'],
+            'image'      => $topPerformer['image'],
+            'sold_qty'   => (int) $topPerformer['sold_qty'],
+            'gross_rev'  => (int) $topPerformer['gross_rev'],
+            'net_profit' => (int) $topPerformer['net_profit'],
+        ] : null,
     ];
 }
 
@@ -266,7 +315,9 @@ function getAdminGiftItemsList(string $search = '', string $roleFilter = 'all'):
     $params = [];
 
     if ($search !== '') {
-        $where[] = 'g.name LIKE ?';
+        $where[] = '(g.name LIKE ? OR g.tagline LIKE ? OR g.badge_text LIKE ?)';
+        $params[] = '%' . $search . '%';
+        $params[] = '%' . $search . '%';
         $params[] = '%' . $search . '%';
     }
 
@@ -300,7 +351,7 @@ function getAdminGiftItemsList(string $search = '', string $roleFilter = 'all'):
         LEFT JOIN order_gift_items ogi ON ogi.gift_item_id = g.id
         WHERE {$whereSql}
         GROUP BY g.id
-        ORDER BY g.created_at DESC
+        ORDER BY g.sort_order ASC, g.id DESC
     ";
 
     $stmt = db()->prepare($sql);
@@ -310,11 +361,15 @@ function getAdminGiftItemsList(string $search = '', string $roleFilter = 'all'):
     foreach ($rows as &$item) {
         $cost = (int) $item['cost_price'];
         $sale = $item['post_order_price'] !== null ? (int) $item['post_order_price'] : null;
-        $item['profit_per_unit'] = ($sale !== null) ? ($sale - $cost) : null;
+        $profitPerUnit = ($sale !== null) ? ($sale - $cost) : null;
+        $item['profit_per_unit'] = $profitPerUnit;
         $item['margin_percent'] = ($sale !== null && $sale > 0) ? (int) round((($sale - $cost) / $sale) * 100) : null;
         $item['gifted_units'] = (int) $item['gifted_units'];
         $item['sold_units'] = (int) $item['sold_units'];
         $item['gross_revenue'] = (int) $item['gross_revenue'];
+        $item['gross_profit'] = ($profitPerUnit !== null) ? ($item['sold_units'] * $profitPerUnit) : 0;
+        $item['sort_order'] = (int) ($item['sort_order'] ?? 0);
+        $item['min_cart_total'] = (int) ($item['min_cart_total'] ?? 0);
     }
     unset($item);
 
@@ -395,13 +450,17 @@ function saveGiftItem(array $data, ?array $file, int $adminId): array
 {
     $id = (int) ($data['id'] ?? 0);
     $name = trim($data['name'] ?? '');
+    $tagline = trim($data['tagline'] ?? '') ?: null;
+    $badgeText = trim($data['badge_text'] ?? '') ?: null;
     $isActive = isset($data['is_active']) ? 1 : 0;
     $isGiftable = isset($data['is_giftable']) ? 1 : 0;
     $isPostOrderable = isset($data['is_post_orderable']) ? 1 : 0;
     $costPrice = (int) preg_replace('/\D/', '', $data['cost_price'] ?? '0');
     $postOrderPriceRaw = trim($data['post_order_price'] ?? '');
     $postOrderPrice = $postOrderPriceRaw === '' ? null : (int) preg_replace('/\D/', '', $postOrderPriceRaw);
+    $minCartTotal = (int) preg_replace('/\D/', '', $data['min_cart_total'] ?? '0');
     $stock = (int) ($data['stock'] ?? 0);
+    $sortOrder = (int) ($data['sort_order'] ?? 0);
 
     $errors = [];
     if ($name === '') $errors[] = 'نام آیتم الزامی است.';
@@ -433,12 +492,12 @@ function saveGiftItem(array $data, ?array $file, int $adminId): array
 
     $pdo = db();
     if ($existingItem) {
-        $stmt = $pdo->prepare("UPDATE gift_items SET name=?, image=?, is_active=?, is_giftable=?, is_post_orderable=?, cost_price=?, post_order_price=?, stock=? WHERE id=?");
-        $stmt->execute([$name, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $stock, $id]);
+        $stmt = $pdo->prepare("UPDATE gift_items SET name=?, tagline=?, badge_text=?, image=?, is_active=?, is_giftable=?, is_post_orderable=?, cost_price=?, post_order_price=?, min_cart_total=?, stock=?, sort_order=? WHERE id=?");
+        $stmt->execute([$name, $tagline, $badgeText, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $minCartTotal, $stock, $sortOrder, $id]);
         $itemId = $id;
     } else {
-        $stmt = $pdo->prepare("INSERT INTO gift_items (name, image, is_active, is_giftable, is_post_orderable, cost_price, post_order_price, stock, created_by) VALUES (?,?,?,?,?,?,?,?,?)");
-        $stmt->execute([$name, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $stock, $adminId]);
+        $stmt = $pdo->prepare("INSERT INTO gift_items (name, tagline, badge_text, image, is_active, is_giftable, is_post_orderable, cost_price, post_order_price, min_cart_total, stock, sort_order, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->execute([$name, $tagline, $badgeText, $newImageName, $isActive, $isGiftable, $isPostOrderable, $costPrice, $postOrderPrice, $minCartTotal, $stock, $sortOrder, $adminId]);
         $itemId = (int) $pdo->lastInsertId();
 
         if ($newImageName) {
@@ -450,6 +509,33 @@ function saveGiftItem(array $data, ?array $file, int $adminId): array
     }
 
     return ['ok' => true, 'id' => $itemId];
+}
+
+/**
+ * Persist manual drag-and-drop sort order for gift catalog items.
+ *
+ * @param int[] $orderedIds
+ * @return array{ok: bool, error?: string}
+ */
+function reorderGiftItems(array $orderedIds): array
+{
+    if (empty($orderedIds)) {
+        return ['ok' => true];
+    }
+
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("UPDATE gift_items SET sort_order = ? WHERE id = ?");
+        foreach ($orderedIds as $index => $id) {
+            $stmt->execute([(int) $index + 1, (int) $id]);
+        }
+        $pdo->commit();
+        return ['ok' => true];
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        return ['ok' => false, 'error' => 'خطا در ثبت ترتیب اقلام: ' . $e->getMessage()];
+    }
 }
 
 /**

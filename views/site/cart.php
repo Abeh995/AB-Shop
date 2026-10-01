@@ -97,11 +97,21 @@
                         <?php foreach ($availablePostOrderItems as $gi):
                             $giftImg = $gi['image'] ? UPLOAD_URL . e($gi['image']) : '/assets/img/placeholder-sock.svg';
                         ?>
-                        <div class="product-card">
-                            <div class="thumb"><img src="<?= $giftImg ?>" alt=""></div>
+                        <div class="product-card" style="position: relative;">
+                            <?php if (!empty($gi['badge_text'])): ?>
+                                <span style="position: absolute; top: 6px; right: 6px; z-index: 2; background: var(--color-primary, #C46C46); color: #fff; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);">
+                                    <?= e($gi['badge_text']) ?>
+                                </span>
+                            <?php endif; ?>
+                            <div class="thumb"><img src="<?= $giftImg ?>" alt="<?= e($gi['name']) ?>" loading="lazy"></div>
                             <div class="body">
-                                <div class="name"><?= e($gi['name']) ?></div>
-                                <div class="price-row"><span class="price-current"><?= formatPrice((int)$gi['post_order_price']) ?></span></div>
+                                <div class="name" style="font-weight: 700; line-height: 1.3;"><?= e($gi['name']) ?></div>
+                                <?php if (!empty($gi['tagline'])): ?>
+                                    <div style="font-size: 0.72rem; color: var(--color-text-muted, #8F857B); margin-top: 2px; line-height: 1.25;">
+                                        <?= e($gi['tagline']) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="price-row" style="margin-top: 6px;"><span class="price-current"><?= formatPrice((int)$gi['post_order_price']) ?></span></div>
                                 <form method="post" action="/ajax/post_order_add.php" style="margin-top:8px;">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="gift_item_id" value="<?= (int)$gi['id'] ?>">

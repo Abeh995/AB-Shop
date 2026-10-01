@@ -55,9 +55,13 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 - Manages a unified catalog (`gift_items`) that supports two distinct capabilities on the same physical entity:
   - `is_giftable`: Free gift allocated to an order by an admin from `order_detail.php`.
   - `is_post_orderable`: Paid upsell add-on presented to the customer during cart/checkout.
+- **Merchandising & Cart Targeting (v1.22.0 / Migration 020)**:
+  - Supports customer-facing taglines (`tagline`), promotional badges (`badge_text`), smart cart thresholds (`min_cart_total`), and manual sequence prioritization (`sort_order`).
+  - Transactional sequence persistence (`reorderGiftItems()`) executing atomic batch updates inside a PDO transaction.
+  - Smart cart filtering (`getAvailablePostOrderItems(?int $cartSubtotal)`) matching subtotal thresholds against `min_cart_total`.
 - Snapshots cost and selling prices into `order_gift_items`.
-- Provides catalog workstation metrics (`getAdminGiftItemsMetrics()`) for inventory capital valuation, utilization rates, and lifetime upsell revenue.
-- Connects historical order attachments (`order_gift_items`) into vectorized catalog performance stats (`gifted_units`, `sold_units`, `gross_revenue`, `margin_percent`).
+- Provides catalog workstation metrics (`getAdminGiftItemsMetrics()`) for inventory capital valuation, utilization rates, lifetime upsell gross revenue, net profit, cart attach rate (Take Rate %), and top-performer detection.
+- Connects historical order attachments (`order_gift_items`) into vectorized catalog performance stats (`gifted_units`, `sold_units`, `gross_revenue`, `gross_profit`, `margin_percent`).
 - Enforces row-locking (`SELECT ... FOR UPDATE` and conditional `WHERE stock >= ?`) for concurrency safety across all stock mutations.
 
 ### AccountingService (`app/services/AccountingService.php`)
