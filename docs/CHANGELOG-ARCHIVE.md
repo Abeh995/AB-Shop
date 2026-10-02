@@ -1,9 +1,44 @@
-# Changelog Archive (v1.0.0 — v1.19.0)
+# Changelog Archive (v1.0.0 — v1.20.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.19.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.20.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.20.0 — 2026-09-30
+
+### SMS Events Catalog & Dynamic Variable Data-Binding Architecture (FEAT-A007 & Database Migration 019)
+
+- **Comprehensive 11-Event SMS System Catalog (`app/services/SmsPatternService.php`, `database/migrations/019_v1.20.0_sms_events_catalog.sql`, `database/schema.sql`)**:
+  - Expanded system events to 11 standardized lifecycle triggers across customer and admin workflows:
+    - Customer Authentication: `otp` (login and registration verification).
+    - Customer Orders & Logistics: `order_created`, `order_paid`, `order_shipped` (with postal tracking code), `order_delivered`, `order_cancelled`.
+    - Customer Card-to-Card: `c2c_instructions`, `card_to_card_approved`, `card_to_card_rejected` (with administrative rejection reason).
+    - Store Admin Alerts: `admin_new_order`, `admin_c2c_receipt`.
+  - Migration 019 pre-seeds all inactive event patterns with default data-binding configurations, allowing store administrators to activate any event with a single click and enter their Faraz pattern code.
+  - Mirrored catalog baseline into `database/schema.sql`.
+- **Dynamic Variable Data-Binding Engine (`app/services/SmsPatternService.php`)**:
+  - Introduced `getSmsEventTokens(?string $eventKey)` and `getSmsGlobalTokens()` cataloging contextual system tokens (`order_code`, `customer_name`, `customer_phone`, `total_price`, `tracking_code`, `ref_id`, `rejection_reason`, `card_number`, `card_holder`, `code`, `payment_method`, `site_title`).
+  - Added `source_token` attribute to `variables_config` in `sms_patterns`, allowing any arbitrary variable name registered in Faraz SMS to cleanly map to contextual system tokens without hardcoded attribute assumptions.
+  - Implemented `dispatchSmsEvent(string $eventKey, array $contextData, ?string $recipientPhone)`:
+    - Queries active pattern for the target event key.
+    - Zero-failure invariant: safely returns `{ok: true, skipped: true}` if unconfigured or inactive, guaranteeing SMS issues never break customer checkouts or status transitions.
+    - Resolves tokens with data type guards (strips non-digits for numeric variables; trims to `max_len`).
+    - Resolves store admin mobile automatically from `store_mobile` setting for administrative notification events.
+- **Transactional Event Hook Wiring (`app/services/OrderService.php`, `app/controllers/site/card_to_card.php`, `payment/zarinpal_callback.php`, `app/services/FarazSmsService.php`)**:
+  - `OrderService::createOrder()`: dispatches `order_created`, `c2c_instructions` (conditional on card-to-card), and `admin_new_order` immediately following successful transaction commit.
+  - `OrderService::updateOrderStatus()`: dispatches `order_shipped` (including tracking code), `order_delivered`, and `order_cancelled`.
+  - `OrderService::verifyCardToCardReceipt()`: dispatches `card_to_card_approved` and `order_paid`.
+  - `OrderService::rejectCardToCardReceiptWithReason()`: dispatches `card_to_card_rejected` with custom rejection reason.
+  - `OrderService::updatePaymentStatus()`: dispatches `order_paid` on transition to `paid`.
+  - `app/controllers/site/card_to_card.php`: dispatches `admin_c2c_receipt` upon customer receipt submission.
+  - `payment/zarinpal_callback.php`: dispatches `order_paid` with Zarinpal ref_id upon bank verification.
+  - `FarazSmsService::sendPatternByEvent()`: delegates directly to `dispatchSmsEvent()` for unified execution.
+- **Admin SMS Pattern Workstation Polish (`views/admin/sms_pattern_edit.php`, `app/controllers/admin/sms_pattern_edit.php`, `views/admin/sms_patterns.php`)**:
+  - Integrated dynamic "داده متصل سیستمی (Token)" select input per variable row with optgroups for recommended event tokens and global tokens.
+  - Real-time JavaScript event listener updating token dropdowns dynamically when the event select input changes.
+  - Enhanced pattern index table with "تنظیم‌نشده" badges for unconfigured patterns and token link indicators (`🔗`) on variable tags.
+  - Kept `app/controllers/admin/sms_pattern_edit.php` at 78 lines (< 80 lines ceiling).
 
 ## 1.19.0 — 2026-09-30
 

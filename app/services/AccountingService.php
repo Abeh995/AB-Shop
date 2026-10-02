@@ -913,22 +913,23 @@ function getInventoryValuationReport(): array
     // 1. Fetch all products and active variants
     $productsStmt = $pdo->query("
         SELECT 
-            p.id, p.name, p.category_id, p.price, p.cost_price, p.stock, p.has_variants, p.status,
+            p.id, p.name, p.category_id, p.price, p.cost_price, p.stock, p.image,
             c.name AS category_name,
-            (SELECT pi.image_path FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.sort_order ASC, pi.id ASC LIMIT 1) AS image_path
+            (SELECT COUNT(*) FROM product_variants pv WHERE pv.product_id = p.id) AS variant_count
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
-        WHERE p.status != 'deleted'
+        WHERE p.is_active = 1
         ORDER BY p.id ASC
     ");
     $products = $productsStmt->fetchAll();
 
     $variantsStmt = $pdo->query("
         SELECT 
-            pv.id, pv.product_id, pv.label, pv.stock, pv.cost_price, pv.price_override
+            pv.id, pv.product_id, pv.size, pv.color, pv.stock, pv.cost_price, pv.price_override,
+            TRIM(CONCAT_WS(' - ', pv.size, pv.color)) AS label
         FROM product_variants pv
         INNER JOIN products p ON p.id = pv.product_id
-        WHERE p.status != 'deleted'
+        WHERE p.is_active = 1
         ORDER BY pv.id ASC
     ");
     $variantsByProduct = [];
@@ -967,7 +968,9 @@ function getInventoryValuationReport(): array
         $prodRetailVal = 0;
         $hasMissingCost = false;
 
-        if (!empty($p['has_variants']) && isset($variantsByProduct[$pId])) {
+        $hasVariants = !empty($variantsByProduct[$pId]);
+
+        if ($hasVariants) {
             foreach ($variantsByProduct[$pId] as $var) {
                 $vStock = max(0, (int) $var['stock']);
                 $vCost = ($var['cost_price'] !== null && (int)$var['cost_price'] > 0)
@@ -1025,7 +1028,7 @@ function getInventoryValuationReport(): array
         if ($prodUnits > 0) {
             $itemProfit = $prodRetailVal - $prodCostVal;
             $itemMargin = ($prodRetailVal > 0) ? round(($itemProfit / $prodRetailVal) * 100, 1) : 0.0;
-            $imgUrl = !empty($p['image_path']) ? (UPLOAD_URL . $p['image_path']) : '/assets/img/placeholder-sock.svg';
+            $imgUrl = !empty($p['image']) ? (UPLOAD_URL . $p['image']) : '/assets/img/placeholder-sock.svg';
 
             $productSummary = [
                 'id' => $pId,

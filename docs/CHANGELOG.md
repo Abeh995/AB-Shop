@@ -3,9 +3,20 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.19.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.21.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.23.2 — 2026-10-03
+
+### Inventory Valuation Fatal 500 Column Mismatch Elimination
+
+- **Inventory Valuation Schema & Query Alignment (`app/services/AccountingService.php`)**:
+  - Eliminated fatal uncaught `PDOException` in `getInventoryValuationReport()` caused by invalid database columns (`p.has_variants`, `p.status`, `pv.label`).
+  - Replaced `p.has_variants` with dynamic variant detection and subquery `variant_count` on `product_variants`.
+  - Replaced non-existent `p.status != 'deleted'` with standard active filter `p.is_active = 1`.
+  - Replaced non-existent `pv.label` with `TRIM(CONCAT_WS(' - ', pv.size, pv.color)) AS label`.
+  - Optimized product image resolution by directly utilizing `p.image` rather than subquerying `product_images`.
 
 ## 1.23.1 — 2026-10-02
 
@@ -169,40 +180,5 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Enhanced `getAdminGiftItemsList($search, $roleFilter)` attaching lifetime `gifted_units`, `sold_units`, `gross_revenue`, and calculated margin percentages via single `LEFT JOIN` on `order_gift_items`.
   - Added `toggleGiftItemActive(int $id)` and `updateGiftItemStock(int $id, int $stock)` with optimistic AJAX UI toggles.
 - **Controller Modernization & Seamless Routing (`app/controllers/admin/gift_items.php`, `app/controllers/admin/gift_item_edit.php`)**:
-  - Streamlined `gift_items.php` controller to 69 lines (strictly under Rule 7 80-line ceiling), handling AJAX toggles, stock adjustments, and studio saves.
+  - Kept `app/controllers/admin/gift_items.php` at 69 lines (strictly under Rule 7 80-line ceiling), handling AJAX toggles, stock adjustments, and studio saves.
   - Refactored `gift_item_edit.php` to a 13-line seamless redirect proxying legacy links directly to the workstation studio (`gift_items.php?edit=ID`).
-
-## 1.20.0 — 2026-09-30
-
-### SMS Events Catalog & Dynamic Variable Data-Binding Architecture (FEAT-A007 & Database Migration 019)
-
-- **Comprehensive 11-Event SMS System Catalog (`app/services/SmsPatternService.php`, `database/migrations/019_v1.20.0_sms_events_catalog.sql`, `database/schema.sql`)**:
-  - Expanded system events to 11 standardized lifecycle triggers across customer and admin workflows:
-    - Customer Authentication: `otp` (login and registration verification).
-    - Customer Orders & Logistics: `order_created`, `order_paid`, `order_shipped` (with postal tracking code), `order_delivered`, `order_cancelled`.
-    - Customer Card-to-Card: `c2c_instructions`, `card_to_card_approved`, `card_to_card_rejected` (with administrative rejection reason).
-    - Store Admin Alerts: `admin_new_order`, `admin_c2c_receipt`.
-  - Migration 019 pre-seeds all inactive event patterns with default data-binding configurations, allowing store administrators to activate any event with a single click and enter their Faraz pattern code.
-  - Mirrored catalog baseline into `database/schema.sql`.
-- **Dynamic Variable Data-Binding Engine (`app/services/SmsPatternService.php`)**:
-  - Introduced `getSmsEventTokens(?string $eventKey)` and `getSmsGlobalTokens()` cataloging contextual system tokens (`order_code`, `customer_name`, `customer_phone`, `total_price`, `tracking_code`, `ref_id`, `rejection_reason`, `card_number`, `card_holder`, `code`, `payment_method`, `site_title`).
-  - Added `source_token` attribute to `variables_config` in `sms_patterns`, allowing any arbitrary variable name registered in Faraz SMS to cleanly map to contextual system tokens without hardcoded attribute assumptions.
-  - Implemented `dispatchSmsEvent(string $eventKey, array $contextData, ?string $recipientPhone)`:
-    - Queries active pattern for the target event key.
-    - Zero-failure invariant: safely returns `{ok: true, skipped: true}` if unconfigured or inactive, guaranteeing SMS issues never break customer checkouts or status transitions.
-    - Resolves tokens with data type guards (strips non-digits for numeric variables; trims to `max_len`).
-    - Resolves store admin mobile automatically from `store_mobile` setting for administrative notification events.
-- **Transactional Event Hook Wiring (`app/services/OrderService.php`, `app/controllers/site/card_to_card.php`, `payment/zarinpal_callback.php`, `app/services/FarazSmsService.php`)**:
-  - `OrderService::createOrder()`: dispatches `order_created`, `c2c_instructions` (conditional on card-to-card), and `admin_new_order` immediately following successful transaction commit.
-  - `OrderService::updateOrderStatus()`: dispatches `order_shipped` (including tracking code), `order_delivered`, and `order_cancelled`.
-  - `OrderService::verifyCardToCardReceipt()`: dispatches `card_to_card_approved` and `order_paid`.
-  - `OrderService::rejectCardToCardReceiptWithReason()`: dispatches `card_to_card_rejected` with custom rejection reason.
-  - `OrderService::updatePaymentStatus()`: dispatches `order_paid` on transition to `paid`.
-  - `app/controllers/site/card_to_card.php`: dispatches `admin_c2c_receipt` upon customer receipt submission.
-  - `payment/zarinpal_callback.php`: dispatches `order_paid` with Zarinpal ref_id upon bank verification.
-  - `FarazSmsService::sendPatternByEvent()`: delegates directly to `dispatchSmsEvent()` for unified execution.
-- **Admin SMS Pattern Workstation Polish (`views/admin/sms_pattern_edit.php`, `app/controllers/admin/sms_pattern_edit.php`, `views/admin/sms_patterns.php`)**:
-  - Integrated dynamic "داده متصل سیستمی (Token)" select input per variable row with optgroups for recommended event tokens and global tokens.
-  - Real-time JavaScript event listener updating token dropdowns dynamically when the event select input changes.
-  - Enhanced pattern index table with "تنظیم‌نشده" badges for unconfigured patterns and token link indicators (`🔗`) on variable tags.
-  - Kept `app/controllers/admin/sms_pattern_edit.php` at 78 lines (< 80 lines ceiling).
