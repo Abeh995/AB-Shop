@@ -79,9 +79,19 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
   - `getTopProfitProducts($startDate, $endDate, $limit = 5)`: Top profit-generating catalog items by net contribution.
   - `getPaymentMethodBreakdown($startDate, $endDate)`: Financial distribution between online gateway (Zarinpal) and Card-to-Card.
   - `getShippingMethodFinancialBreakdown($startDate, $endDate)`: Logistics profitability comparing customer-paid shipping vs actual courier expenses.
+  - `getInventoryValuationReport()` (v1.23.0): Evaluates store-wide physical inventory capital valuation ($\sum \text{stock} \times \text{cost\_price}$), expected retail turnover, potential unrealized gross profit, category capital distribution, and identifies dead stock (products with high stock but 0 sales over the last 60 days).
   - `getIncompleteCostProducts($startDate, $endDate, $limit = 20)`: Cost audit ledger finding zero-cost line items for financial auditing.
   - `exportFinancialCsv($startDate, $endDate)`: Streams UTF-8 BOM CSV export for Excel compatibility.
   - `resolveFinancialDateRange($preset, $customStart, $customEnd)`: Solar calendar boundary resolver (Shamsi months/year via `jalaliToGregorian()`).
+
+### ExpenseService (`app/services/ExpenseService.php`)
+- Encapsulates operational expense tracking and ledger mutations (v1.23.0 / Migration 021):
+  - Extracted from `AccountingService.php` to preserve strict layer boundaries and anti-bloat ceilings (Rule 7).
+  - Manages attributes: `payment_source` (bank card, gateway, petty cash), `payee` (vendor, workshop, contractor), `expense_nature` (`fixed`, `variable`, `capital`), and `receipt_image`.
+  - Supports soft-archiving (`archiveExpense()`) and unarchiving/restoration (`restoreExpense()`).
+  - Computes period metrics & category distribution (`getExpenseSummaryMetrics()`).
+  - Converts and optimizes receipt uploads to WebP under `uploads/expenses/` (`uploadExpenseReceipt()`).
+  - Streams full UTF-8 BOM CSV exports for spreadsheet analysis (`exportExpensesCsv()`).
 
 ### ShippingService (`app/services/ShippingService.php`)
 - Evaluates rules in `shipping_methods` ordered by `sort_order`.

@@ -362,7 +362,11 @@ CREATE TABLE IF NOT EXISTS expenses (
     amount DECIMAL(12,0) NOT NULL,
     expense_date DATE NOT NULL,
     category VARCHAR(60) NOT NULL,
+    payment_source VARCHAR(60) NOT NULL DEFAULT 'کارت اصلی فروشگاه',
+    payee VARCHAR(120) DEFAULT NULL,
+    expense_nature ENUM('fixed', 'variable', 'capital') NOT NULL DEFAULT 'variable',
     description TEXT DEFAULT NULL,
+    receipt_image VARCHAR(255) DEFAULT NULL,
     status ENUM('active','archived') NOT NULL DEFAULT 'active',
     reference_type VARCHAR(40) DEFAULT NULL,
     reference_id INT UNSIGNED DEFAULT NULL,
@@ -371,7 +375,10 @@ CREATE TABLE IF NOT EXISTS expenses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES admins(id) ON DELETE SET NULL,
     INDEX idx_status_date (status, expense_date),
-    INDEX idx_category (category)
+    INDEX idx_category (category),
+    INDEX idx_payment_source (payment_source),
+    INDEX idx_payee (payee),
+    INDEX idx_expense_nature (expense_nature)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

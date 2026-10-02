@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.22.1');
+define('APP_VERSION', '1.23.0');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------
@@ -45,6 +45,14 @@ if (!defined('CARD_TO_CARD_TMP_DIR')) {
     define('CARD_TO_CARD_TMP_DIR', CARD_TO_CARD_UPLOAD_DIR . 'tmp/');
 }
 
+// Storage for expense receipt attachments and invoices.
+if (!defined('EXPENSE_UPLOAD_DIR')) {
+    define('EXPENSE_UPLOAD_DIR', dirname(rtrim(UPLOAD_DIR, '/')) . '/expenses/');
+}
+if (!defined('EXPENSE_UPLOAD_URL')) {
+    define('EXPENSE_UPLOAD_URL', dirname(rtrim(UPLOAD_URL, '/')) . '/expenses/');
+}
+
 // ---------- Core ----------
 require_once __DIR__ . '/core/db.php';
 require_once __DIR__ . '/core/functions.php';
@@ -66,6 +74,7 @@ require_once __DIR__ . '/services/PricingService.php';
 require_once __DIR__ . '/services/GiftService.php';
 require_once __DIR__ . '/services/ShippingService.php';
 require_once __DIR__ . '/services/AccountingService.php';
+require_once __DIR__ . '/services/ExpenseService.php';
 require_once __DIR__ . '/services/OrderService.php';
 require_once __DIR__ . '/services/CardToCardReceiptService.php';
 require_once __DIR__ . '/services/MailboxService.php';

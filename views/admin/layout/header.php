@@ -49,7 +49,7 @@ $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 <?php if (in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-gift-items.css?v=<?= $adminGiftItemsCssVer ?>">
 <?php endif; ?>
-<?php if (in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php'], true)): ?>
+<?php if (in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php', 'inventory_valuation.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-finance.css?v=<?= $adminFinanceCssVer ?>">
 <?php endif; ?>
 <script>

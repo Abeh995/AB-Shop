@@ -7,6 +7,37 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.23.0 — 2026-10-02
+
+### Operating Expenses Workstation 2.0, Dedicated Expense Service, Inventory Valuation Hub & Migration 021
+
+- **Dedicated Expense Service Layer & Architectural Decomposition (`app/services/ExpenseService.php`, `app/services/AccountingService.php`)**:
+  - Extracted expense management methods out of `AccountingService.php` to a dedicated `ExpenseService.php` (~400 lines) adhering to Rule 7 (Separation of Concerns and Boy Scout Rule).
+  - Implemented comprehensive operational expense methods: `getExpensesList()`, `getExpenseSummaryMetrics()`, `getExpenseById()`, `saveExpense()`, `archiveExpense()`, `restoreExpense()`, `getExpenseCategories()`, `getExpensePaymentSources()`, `getExpensePayees()`, and `exportExpensesCsv()`.
+  - Added WebP image conversion with GD compression (`uploadExpenseReceipt()`) preserving invoices and receipts under `uploads/expenses/`.
+- **Database Migration 021 (`database/migrations/021_v1.23.0_expenses_enhancement.sql`, `database/schema.sql`)**:
+  - Extended `expenses` table schema:
+    - `payment_source VARCHAR(60) NOT NULL DEFAULT 'کارت اصلی فروشگاه'`: tracks bank card, online gateway settlement, or petty cash.
+    - `payee VARCHAR(120) NULL DEFAULT NULL`: tracks vendors, workshops, suppliers, or postal contractors.
+    - `expense_nature ENUM('fixed', 'variable', 'capital') NOT NULL DEFAULT 'variable'`: categorizes operational nature to refine break-even modeling.
+    - `receipt_image VARCHAR(255) NULL DEFAULT NULL`: image attachment for invoices and pos slips.
+  - Added indexes: `idx_payment_source`, `idx_payee`, `idx_expense_nature`.
+  - Mirrored changes into baseline `database/schema.sql`.
+- **Operating Expenses High-Density Workstation (`views/admin/expenses.php`, `views/admin/expense_edit.php`, `assets/css/admin-finance.css`)**:
+  - Replaced legacy card-to-card styling in `expenses.php` with unified `--fin-*` Bento design tokens.
+  - 4 Hero Bento KPI Cards: Filtered Period Total (with fixed vs variable breakdown), Expense Count, Average per Expense, and Top Cost Center with percentage share.
+  - Visual Category Distribution Strip: stacked multi-segment progress bar illustrating real-time cost center distribution.
+  - Quick Shamsi Date Presets Toolbar: `امروز | ۷ روز | ۳۰ روز | ماه جاری | ماه قبل | امسال | همه تاریخ‌ها`.
+  - Active vs. Archived Status Tabs with soft-archive restoration support (`restoreExpense()`).
+  - Modal Lightbox: client-side invoice and receipt preview modal without page navigation.
+  - One-click UTF-8 BOM CSV / Excel export of filtered expenses.
+  - Form enhancements in `expense_edit.php`: live Persian currency words formatter ("حروف"), payee datalist auto-completion, nature card selector, and receipt image uploader with preview and deletion support.
+- **Inventory Valuation & Capital Health Hub (`views/admin/inventory_valuation.php`, `app/controllers/admin/inventory_valuation.php`, `app/services/AccountingService.php`)**:
+  - Implemented `getInventoryValuationReport()` in `AccountingService.php`: computes physical inventory capital valuation ($\sum \text{stock} \times \text{cost\_price}$), expected retail turnover, potential unrealized gross profit, and category-level capital distribution.
+  - Dead & Slow-Moving Stock Detection: automated alert card flagging products with high stock but 0 sales over the last 60 days to help liquidate trapped capital.
+  - Top Capital-Concentrated Catalog Table: reveals which items tie up the most physical working capital.
+  - Integrated into administrative sidebar navigation under Finance Hub (`views/admin/layout/nav_config.php`, `views/admin/layout/header.php`).
+
 ## 1.22.1 — 2026-10-02
 
 ### Image Optimizer Engine DRY Architecture, 40MB Upload Limit & High-Fidelity Quality Preset
@@ -175,15 +206,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Added `is_default TINYINT(1) NOT NULL DEFAULT 0` to `product_variants` table.
   - Seeded `default_variant_strategy = 'highest_stock'` in `settings` table.
   - Synchronized baseline `database/schema.sql`.
-
-## 1.18.1 — 2026-09-30
-
-### Hotfix: Fatal Error getActiveTheme Collision Elimination & Quality Gate Hardening
-
-- **Hotfix: Fatal Function Redeclaration Fix (`app/services/ThemeService.php`)**:
-  - Eliminated duplicate `getActiveTheme()` function declaration from `app/services/ThemeService.php` which was previously declared in `app/core/functions.php`.
-  - Resolved production HTTP 500 fatal crash on direct server bootstrap.
-- **Architectural Guard: Global Function Collision Scanner (`tools/verify.php`)**:
-  - Added automated pre-flight collision scanner in `tools/verify.php` inspecting all function declarations across `app/core` and `app/services`.
-  - Reduced `app/controllers/site/product.php` to 71 lines and eliminated variant calculation logic from `views/site/product.php`.
 

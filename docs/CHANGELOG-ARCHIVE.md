@@ -1,9 +1,20 @@
-# Changelog Archive (v1.0.0 — v1.18.0)
+# Changelog Archive (v1.0.0 — v1.18.1)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.18.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.18.1.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.18.1 — 2026-09-30
+
+### Hotfix: Fatal Error getActiveTheme Collision Elimination & Quality Gate Hardening
+
+- **Hotfix: Fatal Function Redeclaration Fix (`app/services/ThemeService.php`)**:
+  - Eliminated duplicate `getActiveTheme()` function declaration from `app/services/ThemeService.php` which was previously declared in `app/core/functions.php`.
+  - Resolved production HTTP 500 fatal crash on direct server bootstrap.
+- **Architectural Guard: Global Function Collision Scanner (`tools/verify.php`)**:
+  - Added automated pre-flight collision scanner in `tools/verify.php` inspecting all function declarations across `app/core` and `app/services`.
+  - Reduced `app/controllers/site/product.php` to 71 lines and eliminated variant calculation logic from `views/site/product.php`.
 
 ## 1.18.0 — 2026-09-30
 

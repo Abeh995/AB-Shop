@@ -275,14 +275,22 @@ function getFinancialSummary(string $startDate, string $endDate): array
     $grossProfit = $totalRevenue - $totalCogs;
     $grossMarginPercent = ($totalRevenue > 0) ? round(($grossProfit / $totalRevenue) * 100, 1) : 0.0;
 
-    // Operational expenses query
+    // Operational expenses query with fixed/variable/capital breakdown
     $expenseStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(amount), 0) 
+        SELECT 
+            COALESCE(SUM(amount), 0) AS total_expenses,
+            COALESCE(SUM(CASE WHEN expense_nature = 'fixed' THEN amount ELSE 0 END), 0) AS fixed_expenses,
+            COALESCE(SUM(CASE WHEN expense_nature = 'variable' THEN amount ELSE 0 END), 0) AS variable_expenses,
+            COALESCE(SUM(CASE WHEN expense_nature = 'capital' THEN amount ELSE 0 END), 0) AS capital_expenses
         FROM expenses 
         WHERE status = 'active' AND expense_date BETWEEN ? AND ?
     ");
     $expenseStmt->execute([$startDate, $endDate]);
-    $totalExpenses = (int) $expenseStmt->fetchColumn();
+    $expRow = $expenseStmt->fetch();
+    $totalExpenses = (int) ($expRow['total_expenses'] ?? 0);
+    $fixedExpenses = (int) ($expRow['fixed_expenses'] ?? 0);
+    $variableExpenses = (int) ($expRow['variable_expenses'] ?? 0);
+    $capitalExpenses = (int) ($expRow['capital_expenses'] ?? 0);
 
     // Expenses breakdown by category with percentage share
     $expenseByCategoryStmt = $pdo->prepare("
@@ -319,9 +327,10 @@ function getFinancialSummary(string $startDate, string $endDate): array
     $effectiveGross = $totalRevenue + $totalDiscount;
     $discountRate = ($effectiveGross > 0) ? round(($totalDiscount / $effectiveGross) * 100, 1) : 0.0;
 
-    // Break-even threshold calculations
+    // Break-even threshold calculations (utilizing fixed overhead if specified)
+    $overheadBase = ($fixedExpenses > 0) ? $fixedExpenses : $totalExpenses;
     $grossMarginRatio = ($totalRevenue > 0) ? ($grossProfit / $totalRevenue) : 0.0;
-    $breakevenRevenue = ($grossMarginRatio > 0) ? (int) round($totalExpenses / $grossMarginRatio) : 0;
+    $breakevenRevenue = ($grossMarginRatio > 0) ? (int) round($overheadBase / $grossMarginRatio) : 0;
     $breakevenOrders = ($aov > 0 && $breakevenRevenue > 0) ? (int) ceil($breakevenRevenue / $aov) : 0;
     $breakevenProgressPercent = ($breakevenRevenue > 0) ? round(($totalRevenue / $breakevenRevenue) * 100, 1) : 0.0;
     $isBreakevenReached = ($totalRevenue >= $breakevenRevenue && $breakevenRevenue > 0);
@@ -344,6 +353,9 @@ function getFinancialSummary(string $startDate, string $endDate): array
         'gross_profit' => $grossProfit,
         'gross_margin_percent' => $grossMarginPercent,
         'total_expenses' => $totalExpenses,
+        'fixed_expenses' => $fixedExpenses,
+        'variable_expenses' => $variableExpenses,
+        'capital_expenses' => $capitalExpenses,
         'net_profit' => $netProfit,
         'net_margin_percent' => $netMarginPercent,
         'orders_with_incomplete_cost_data' => $ordersWithIncompleteCostData,
@@ -878,168 +890,197 @@ function exportFinancialCsv(string $startDate, string $endDate): void
 }
 
 // ==========================================
-// 2. Operational Expenses Ledger (CRUD)
+// 2. Inventory Valuation & Capital Health Report
 // ==========================================
 
 /**
- * Fetch paginated and filtered list of operational expenses.
+ * Comprehensive Inventory Valuation & Capital Health Report.
  *
- * @param array $filters ['q' => string, 'category' => string, 'start_date' => string, 'end_date' => string]
- * @param int $page
- * @param int $perPage
- * @return array{items: array, total_count: int, total_pages: int, current_page: int, per_page: int, total_amount: int}
+ * Vectorized analysis over products and variants to calculate:
+ * - Total inventory cost valuation (capital locked in stock)
+ * - Total retail valuation & potential unrealized gross profit
+ * - Category-level capital distribution
+ * - Top capital-concentrated products
+ * - Dead / Slow-moving stock (high inventory with zero sales in last 60 days)
+ * - Items with incomplete/missing cost data
+ *
+ * @return array
  */
-function getExpensesList(array $filters = [], int $page = 1, int $perPage = 25): array
+function getInventoryValuationReport(): array
 {
     $pdo = db();
-    $page = max(1, $page);
-    $perPage = max(1, min(100, $perPage));
-    $offset = ($page - 1) * $perPage;
 
-    $where = ["e.status = 'active'"];
-    $params = [];
-
-    $category = trim($filters['category'] ?? '');
-    if ($category !== '') {
-        $where[] = 'e.category = ?';
-        $params[] = $category;
-    }
-
-    $startDate = trim($filters['start_date'] ?? '');
-    if ($startDate !== '') {
-        $where[] = 'e.expense_date >= ?';
-        $params[] = $startDate;
-    }
-
-    $endDate = trim($filters['end_date'] ?? '');
-    if ($endDate !== '') {
-        $where[] = 'e.expense_date <= ?';
-        $params[] = $endDate;
-    }
-
-    $search = trim($filters['q'] ?? '');
-    if ($search !== '') {
-        $where[] = '(e.title LIKE ? OR e.description LIKE ?)';
-        $params[] = '%' . $search . '%';
-        $params[] = '%' . $search . '%';
-    }
-
-    $whereSql = implode(' AND ', $where);
-
-    // Total filtered sum & count
-    $statStmt = $pdo->prepare("
-        SELECT COUNT(*) AS total_count, COALESCE(SUM(e.amount), 0) AS total_amount
-        FROM expenses e
-        WHERE $whereSql
+    // 1. Fetch all products and active variants
+    $productsStmt = $pdo->query("
+        SELECT 
+            p.id, p.name, p.category_id, p.price, p.cost_price, p.stock, p.has_variants, p.status,
+            c.name AS category_name,
+            (SELECT pi.image_path FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.sort_order ASC, pi.id ASC LIMIT 1) AS image_path
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.status != 'deleted'
+        ORDER BY p.id ASC
     ");
-    $statStmt->execute($params);
-    $statRow = $statStmt->fetch();
+    $products = $productsStmt->fetchAll();
 
-    $totalCount = (int) ($statRow['total_count'] ?? 0);
-    $totalAmount = (int) ($statRow['total_amount'] ?? 0);
-    $totalPages = (int) ceil($totalCount / $perPage);
-
-    // Listing query
-    $stmt = $pdo->prepare("
-        SELECT e.*, a.username AS admin_username
-        FROM expenses e 
-        LEFT JOIN admins a ON a.id = e.created_by
-        WHERE $whereSql 
-        ORDER BY e.expense_date DESC, e.id DESC
-        LIMIT $perPage OFFSET $offset
+    $variantsStmt = $pdo->query("
+        SELECT 
+            pv.id, pv.product_id, pv.label, pv.stock, pv.cost_price, pv.price_override
+        FROM product_variants pv
+        INNER JOIN products p ON p.id = pv.product_id
+        WHERE p.status != 'deleted'
+        ORDER BY pv.id ASC
     ");
-    $stmt->execute($params);
-    $items = $stmt->fetchAll();
+    $variantsByProduct = [];
+    foreach ($variantsStmt->fetchAll() as $v) {
+        $variantsByProduct[$v['product_id']][] = $v;
+    }
+
+    // 2. Sales in last 60 days for dead stock detection
+    $cutoffDate = date('Y-m-d', strtotime('-60 days'));
+    $salesStmt = $pdo->prepare("
+        SELECT oi.product_id, SUM(oi.quantity) AS sold_qty_60d
+        FROM order_items oi
+        INNER JOIN orders o ON o.id = oi.order_id
+        WHERE o.status NOT IN ('cancelled') AND o.created_at >= ?
+        GROUP BY oi.product_id
+    ");
+    $salesStmt->execute([$cutoffDate . ' 00:00:00']);
+    $sales60d = $salesStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $totalUnits = 0;
+    $totalCostValue = 0;
+    $totalRetailValue = 0;
+    $missingCostCount = 0;
+
+    $categoryStats = [];
+    $productCapitalList = [];
+    $deadStockList = [];
+
+    foreach ($products as $p) {
+        $pId = (int) $p['id'];
+        $catName = $p['category_name'] ?: 'دسته‌بندی‌نشده';
+        $sold60d = (int) ($sales60d[$pId] ?? 0);
+
+        $prodUnits = 0;
+        $prodCostVal = 0;
+        $prodRetailVal = 0;
+        $hasMissingCost = false;
+
+        if (!empty($p['has_variants']) && isset($variantsByProduct[$pId])) {
+            foreach ($variantsByProduct[$pId] as $var) {
+                $vStock = max(0, (int) $var['stock']);
+                $vCost = ($var['cost_price'] !== null && (int)$var['cost_price'] > 0)
+                    ? (int) $var['cost_price']
+                    : (int) ($p['cost_price'] ?? 0);
+                $vPrice = ($var['price_override'] !== null && (int)$var['price_override'] > 0)
+                    ? (int) $var['price_override']
+                    : (int) $p['price'];
+
+                if ($vStock > 0 && $vCost <= 0) {
+                    $hasMissingCost = true;
+                }
+
+                $prodUnits += $vStock;
+                $prodCostVal += ($vStock * $vCost);
+                $prodRetailVal += ($vStock * $vPrice);
+            }
+        } else {
+            $pStock = max(0, (int) $p['stock']);
+            $pCost = (int) ($p['cost_price'] ?? 0);
+            $pPrice = (int) $p['price'];
+
+            if ($pStock > 0 && $pCost <= 0) {
+                $hasMissingCost = true;
+            }
+
+            $prodUnits = $pStock;
+            $prodCostVal = ($pStock * $pCost);
+            $prodRetailVal = ($pStock * $pPrice);
+        }
+
+        if ($hasMissingCost) {
+            $missingCostCount++;
+        }
+
+        $totalUnits += $prodUnits;
+        $totalCostValue += $prodCostVal;
+        $totalRetailValue += $prodRetailVal;
+
+        // Group by category
+        if (!isset($categoryStats[$catName])) {
+            $categoryStats[$catName] = [
+                'name' => $catName,
+                'product_count' => 0,
+                'total_units' => 0,
+                'cost_value' => 0,
+                'retail_value' => 0,
+            ];
+        }
+        $categoryStats[$catName]['product_count']++;
+        $categoryStats[$catName]['total_units'] += $prodUnits;
+        $categoryStats[$catName]['cost_value'] += $prodCostVal;
+        $categoryStats[$catName]['retail_value'] += $prodRetailVal;
+
+        if ($prodUnits > 0) {
+            $itemProfit = $prodRetailVal - $prodCostVal;
+            $itemMargin = ($prodRetailVal > 0) ? round(($itemProfit / $prodRetailVal) * 100, 1) : 0.0;
+            $imgUrl = !empty($p['image_path']) ? imageUrl($p['image_path']) : '/assets/images/no-image.svg';
+
+            $productSummary = [
+                'id' => $pId,
+                'name' => $p['name'],
+                'category_name' => $catName,
+                'units' => $prodUnits,
+                'cost_value' => $prodCostVal,
+                'retail_value' => $prodRetailVal,
+                'potential_profit' => $itemProfit,
+                'margin_percent' => $itemMargin,
+                'has_missing_cost' => $hasMissingCost,
+                'image_url' => $imgUrl,
+                'sold_60d' => $sold60d,
+            ];
+
+            $productCapitalList[] = $productSummary;
+
+            // Dead stock candidate: stock >= 3 and 0 sold in last 60 days
+            if ($prodUnits >= 3 && $sold60d === 0) {
+                $deadStockList[] = $productSummary;
+            }
+        }
+    }
+
+    // Sort categories by cost value DESC
+    usort($categoryStats, fn($a, $b) => $b['cost_value'] <=> $a['cost_value']);
+    foreach ($categoryStats as &$cat) {
+        $cat['share_percent'] = ($totalCostValue > 0) ? round(($cat['cost_value'] / $totalCostValue) * 100, 1) : 0.0;
+        $profit = $cat['retail_value'] - $cat['cost_value'];
+        $cat['potential_profit'] = $profit;
+        $cat['margin_percent'] = ($cat['retail_value'] > 0) ? round(($profit / $cat['retail_value']) * 100, 1) : 0.0;
+    }
+    unset($cat);
+
+    // Top capital invested products
+    usort($productCapitalList, fn($a, $b) => $b['cost_value'] <=> $a['cost_value']);
+    $topInvested = array_slice($productCapitalList, 0, 8);
+
+    // Dead stock sorted by locked capital DESC
+    usort($deadStockList, fn($a, $b) => $b['cost_value'] <=> $a['cost_value']);
+
+    $potentialProfit = $totalRetailValue - $totalCostValue;
+    $potentialMarginPercent = ($totalRetailValue > 0) ? round(($potentialProfit / $totalRetailValue) * 100, 1) : 0.0;
+    $deadStockCapital = array_sum(array_column($deadStockList, 'cost_value'));
 
     return [
-        'items' => $items,
-        'total_count' => $totalCount,
-        'total_pages' => $totalPages,
-        'current_page' => $page,
-        'per_page' => $perPage,
-        'total_amount' => $totalAmount,
+        'total_units' => $totalUnits,
+        'total_cost_value' => $totalCostValue,
+        'total_retail_value' => $totalRetailValue,
+        'potential_profit' => $potentialProfit,
+        'potential_margin_percent' => $potentialMarginPercent,
+        'category_stats' => $categoryStats,
+        'top_invested' => $topInvested,
+        'dead_stock_items' => $deadStockList,
+        'dead_stock_capital' => $deadStockCapital,
+        'missing_cost_count' => $missingCostCount,
     ];
-}
-
-/**
- * Fetch a single expense record by ID.
- */
-function getExpenseById(int $id): ?array
-{
-    $stmt = db()->prepare("SELECT * FROM expenses WHERE id = ?");
-    $stmt->execute([$id]);
-    $row = $stmt->fetch();
-    return $row ?: null;
-}
-
-/**
- * Create or update an operational expense entry.
- *
- * @param array $data Form payload
- * @param int $adminId Current admin ID
- * @return array{ok: bool, id?: int, errors?: array}
- */
-function saveExpense(array $data, int $adminId): array
-{
-    $pdo = db();
-    $id = (int) ($data['id'] ?? 0);
-    $title = trim($data['title'] ?? '');
-    $amount = (int) preg_replace('/\D/', '', $data['amount'] ?? '0');
-    $expenseDate = trim($data['expense_date'] ?? '');
-    $category = trim($data['category'] ?? '');
-    $description = trim($data['description'] ?? '');
-
-    $errors = [];
-    if ($title === '') $errors[] = 'عنوان هزینه الزامی است.';
-    if ($amount < 1) $errors[] = 'مبلغ معتبر به تومان وارد کنید.';
-    if ($category === '') $errors[] = 'دسته‌بندی هزینه الزامی است.';
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $expenseDate) || !strtotime($expenseDate)) {
-        $errors[] = 'تاریخ معتبر انتخاب کنید.';
-    }
-
-    if (!empty($errors)) {
-        return ['ok' => false, 'errors' => $errors];
-    }
-
-    if ($id > 0) {
-        $stmt = $pdo->prepare("
-            UPDATE expenses 
-            SET title = ?, amount = ?, expense_date = ?, category = ?, description = ? 
-            WHERE id = ?
-        ");
-        $stmt->execute([$title, $amount, $expenseDate, $category, $description ?: null, $id]);
-    } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO expenses (title, amount, expense_date, category, description, created_by, status) 
-            VALUES (?, ?, ?, ?, ?, ?, 'active')
-        ");
-        $stmt->execute([$title, $amount, $expenseDate, $category, $description ?: null, $adminId]);
-        $id = (int) $pdo->lastInsertId();
-    }
-
-    return ['ok' => true, 'id' => $id];
-}
-
-/**
- * Soft-delete / archive an expense entry.
- */
-function archiveExpense(int $id): array
-{
-    $pdo = db();
-    $stmt = $pdo->prepare("UPDATE expenses SET status = 'archived' WHERE id = ?");
-    $stmt->execute([$id]);
-    return ['ok' => true];
-}
-
-/**
- * Fetch distinct active expense categories list.
- */
-function getExpenseCategories(): array
-{
-    return db()->query("
-        SELECT DISTINCT category 
-        FROM expenses 
-        WHERE status = 'active' 
-        ORDER BY category ASC
-    ")->fetchAll(PDO::FETCH_COLUMN);
 }

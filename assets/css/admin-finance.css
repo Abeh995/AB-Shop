@@ -773,3 +773,182 @@
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   9. Expenses Workstation & Ledger Components
+   ========================================================================== */
+.fin-nature-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--fin-radius-pill);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+.fin-nature-tag.nature-variable {
+    background: rgba(59, 130, 246, 0.12);
+    color: #1D4ED8;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.fin-nature-tag.nature-fixed {
+    background: rgba(139, 92, 246, 0.12);
+    color: #6D28D9;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.fin-nature-tag.nature-capital {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.fin-source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.76rem;
+    color: var(--fin-text-secondary);
+    background: #F1F5F9;
+    border: 1px solid var(--fin-border);
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+/* Category Distribution Stacked Bar */
+.fin-dist-container {
+    background: var(--fin-card-bg);
+    border: 1px solid var(--fin-border);
+    border-radius: var(--fin-radius-md);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    box-shadow: var(--fin-shadow-sm);
+}
+.fin-dist-bar {
+    height: 12px;
+    background: #E2E8F0;
+    border-radius: var(--fin-radius-pill);
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 12px;
+}
+.fin-dist-segment {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+.fin-dist-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.78rem;
+}
+.fin-dist-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--fin-text-secondary);
+}
+.fin-dist-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Filter Nav Tabs */
+.fin-tab-nav {
+    display: inline-flex;
+    background: #F1F5F9;
+    padding: 3px;
+    border-radius: var(--fin-radius-sm);
+    gap: 2px;
+}
+.fin-tab-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fin-text-muted);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+.fin-tab-btn.active {
+    background: #FFFFFF;
+    color: var(--fin-text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Receipt Preview Thumbnail */
+.fin-receipt-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--fin-border);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fin-receipt-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal Lightbox for Receipt Preview */
+.fin-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.fin-modal-overlay.is-active {
+    display: flex;
+}
+.fin-modal-content {
+    background: #FFFFFF;
+    border-radius: var(--fin-radius-md);
+    max-width: 900px;
+    max-height: 90vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    animation: finModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes finModalPop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+.fin-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--fin-border);
+    background: #F8FAFC;
+}
+.fin-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    text-align: center;
+    background: #0F172A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+.fin-modal-body img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 4px;
+    object-fit: contain;
+}

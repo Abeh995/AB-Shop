@@ -82,7 +82,7 @@ if (!function_exists('getAdminNavConfig')) {
                 'label' => 'مالی',
                 'url' => 'finance_dashboard.php',
                 'icon' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-                'active' => in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php'], true),
+                'active' => in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php', 'inventory_valuation.php'], true),
                 'badge' => 0,
                 'sub_items' => [
                     [
@@ -94,6 +94,11 @@ if (!function_exists('getAdminNavConfig')) {
                         'label' => 'هزینه‌ها',
                         'url' => 'expenses.php',
                         'active' => in_array($currentPage, ['expenses.php', 'expense_edit.php'], true)
+                    ],
+                    [
+                        'label' => 'ارزش‌گذاری انبار',
+                        'url' => 'inventory_valuation.php',
+                        'active' => ($currentPage === 'inventory_valuation.php')
                     ],
                 ]
             ],
