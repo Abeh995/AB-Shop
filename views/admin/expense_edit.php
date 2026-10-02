@@ -179,10 +179,10 @@ $currentReceipt = $expense['receipt_image'] ?? null;
 
                 <?php if (!empty($currentReceipt)): ?>
                     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px; background: #FFF; padding: 10px 14px; border: 1px solid var(--fin-border); border-radius: 6px;">
-                        <img src="/uploads/expenses/<?= e($currentReceipt) ?>" alt="فاکتور فعلی" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #E2E8F0;">
+                        <img src="<?= EXPENSE_UPLOAD_URL . e($currentReceipt) ?>" alt="فاکتور فعلی" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #E2E8F0;">
                         <div style="flex: 1;">
                             <div style="font-size: 0.82rem; font-weight: 700; color: var(--fin-text-primary);">فاکتور فعلی ثبت‌شده در سیستم</div>
-                            <a href="/uploads/expenses/<?= e($currentReceipt) ?>" target="_blank" style="font-size: 0.76rem; color: var(--fin-primary); text-decoration: none;">مشاهده تصویر اصلی ↗</a>
+                            <a href="<?= EXPENSE_UPLOAD_URL . e($currentReceipt) ?>" target="_blank" style="font-size: 0.76rem; color: var(--fin-primary); text-decoration: none;">مشاهده تصویر اصلی ↗</a>
                         </div>
                         <label style="font-size: 0.78rem; color: var(--fin-rose); display: flex; align-items: center; gap: 4px; cursor: pointer;">
                             <input type="checkbox" name="delete_receipt" value="1">

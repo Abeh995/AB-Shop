@@ -753,7 +753,8 @@
 
 @media (max-width: 640px) {
     .fin-kpi-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
     .fin-micro-grid {
         grid-template-columns: 1fr;
@@ -952,3 +953,655 @@
     border-radius: 4px;
     object-fit: contain;
 }
+
+/* Filter Bar Form Controls (Anti-Clipping & Custom Select Styling) */
+.fin-filter-input,
+.fin-filter-select,
+.fin-filter-date {
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--fin-border);
+    border-radius: var(--fin-radius-sm);
+    background-color: #FFFFFF;
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: var(--fin-text-primary);
+    outline: none;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    line-height: normal;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+}
+
+.fin-filter-select {
+    cursor: pointer;
+    padding-left: 28px;
+    padding-right: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 10px center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.fin-filter-select option {
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 6px 10px;
+    color: var(--fin-text-primary);
+    background: #FFFFFF;
+}
+
+.fin-filter-input:focus,
+.fin-filter-select:focus,
+.fin-filter-date:focus {
+    border-color: var(--fin-primary);
+    box-shadow: 0 0 0 2px var(--fin-primary-light);
+}
+
+/* ==========================================================================
+   10. Expenses Ledger Desktop & Adaptive Mobile Architecture
+   ========================================================================== */
+
+/* Shared Desktop Toolbar & Form Layout */
+.fin-filters-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--fin-border);
+}
+
+.fin-filter-primary-row {
+    display: flex;
+    flex: 2;
+    min-width: 180px;
+}
+
+.fin-filter-search-box {
+    width: 100%;
+}
+
+.fin-filter-toggle-btn {
+    display: none;
+}
+
+.fin-filter-drawer {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    flex: 8;
+}
+
+.fin-filter-field-cat,
+.fin-filter-field-source {
+    flex: 1.2;
+    min-width: 140px;
+}
+
+.fin-filter-field-nature,
+.fin-filter-field-sort {
+    flex: 1;
+    min-width: 120px;
+}
+
+.fin-filter-date-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fin-filter-date-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fin-filter-date-label {
+    font-size: 0.78rem;
+    color: var(--fin-text-muted);
+}
+
+.fin-filter-date-item .fin-filter-date {
+    width: 130px;
+}
+
+.fin-filter-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.fin-presets-scroll {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Visibility Control: Desktop Table vs Mobile Cards */
+.fin-table-desktop {
+    display: block;
+}
+
+.fin-expense-cards-stack {
+    display: none;
+}
+
+/* Shared Pagination Bar */
+.fin-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border: 1px solid var(--fin-border);
+    border-radius: var(--fin-radius-md);
+    background: #F8FAFC;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    box-shadow: var(--fin-shadow-sm);
+}
+
+.fin-pagination-info {
+    font-size: 0.82rem;
+    color: var(--fin-text-muted);
+}
+
+.fin-pagination-pages {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Mobile Expense Card Component Styles */
+.fin-mobile-card {
+    background: #FFFFFF;
+    border: 1px solid var(--fin-border);
+    border-radius: var(--fin-radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--fin-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fin-mobile-card.is-archived {
+    background: #F8FAFC;
+    opacity: 0.88;
+    border-color: #E2E8F0;
+}
+
+.fin-mcard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--fin-border-subtle);
+    padding-bottom: 8px;
+}
+
+.fin-mcard-date-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--fin-text-muted);
+    font-weight: 500;
+}
+
+.fin-mcard-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fin-badge-archived {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    background: #F1F5F9;
+    color: #64748B;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.fin-mcard-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fin-mcard-title {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--fin-text-primary);
+    line-height: 1.45;
+}
+
+.fin-mcard-sub-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fin-cat-pill {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--fin-primary);
+    background: var(--fin-primary-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.fin-payee-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    color: var(--fin-text-secondary);
+    background: #F1F5F9;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.fin-mcard-desc {
+    font-size: 0.78rem;
+    color: var(--fin-text-muted);
+    line-height: 1.45;
+    background: #FAFAFA;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border-right: 2px solid #CBD5E1;
+    margin-top: 2px;
+}
+
+.fin-mcard-finance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #F8FAFC;
+    border-radius: var(--fin-radius-sm);
+    border: 1px solid var(--fin-border-subtle);
+}
+
+.fin-mcard-amount-num {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--fin-text-primary);
+}
+
+.fin-mcard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--fin-border-subtle);
+}
+
+.fin-mcard-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fin-receipt-btn-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFFFFF;
+    border: 1px solid var(--fin-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.74rem;
+    color: var(--fin-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.fin-receipt-btn-mobile:hover {
+    background: var(--fin-primary-light);
+}
+
+.fin-receipt-mini-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    object-fit: cover;
+}
+
+.fin-no-receipt-text {
+    font-size: 0.72rem;
+    color: #94A3B8;
+}
+
+.fin-creator-meta {
+    font-size: 0.72rem;
+    color: var(--fin-text-muted);
+}
+
+.fin-mcard-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fin-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid var(--fin-border);
+    background: #FFFFFF;
+    color: var(--fin-text-secondary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.fin-btn-icon:hover {
+    background: #F1F5F9;
+    color: var(--fin-text-primary);
+}
+
+.fin-btn-icon.text-rose {
+    color: #DC2626;
+}
+
+.fin-btn-icon.text-rose:hover {
+    background: #FEE2E2;
+}
+
+.fin-btn-icon.text-emerald {
+    color: #059669;
+}
+
+.fin-btn-icon.text-emerald:hover {
+    background: #D1FAE5;
+}
+
+.fin-mobile-empty {
+    padding: 36px 16px;
+    text-align: center;
+    background: #FFFFFF;
+    border-radius: var(--fin-radius-md);
+    border: 1px dashed var(--fin-border);
+}
+
+/* ==========================================================================
+   11. Dedicated Mobile Rules (@media (max-width: 768px))
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Page Header & Actions */
+    .fin-page-header-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .fin-header-title-group h2 {
+        font-size: 1.2rem !important;
+    }
+
+    .fin-header-subtitle {
+        font-size: 0.78rem !important;
+    }
+
+    .fin-header-actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .fin-tab-nav {
+        width: 100% !important;
+        display: flex !important;
+    }
+
+    .fin-tab-btn {
+        flex: 1 !important;
+        text-align: center !important;
+        justify-content: center !important;
+        font-size: 0.8rem !important;
+        padding: 8px 10px !important;
+    }
+
+    .fin-header-actions .fin-new-expense-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        height: 42px !important;
+        font-size: 0.92rem !important;
+    }
+
+    .fin-header-actions .fin-export-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        height: 36px !important;
+    }
+
+    /* 2x2 Bento KPI Grid */
+    .fin-kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .fin-kpi-card {
+        padding: 10px 12px !important;
+    }
+
+    .fin-kpi-title {
+        font-size: 0.72rem !important;
+    }
+
+    .fin-kpi-icon-box {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .fin-kpi-icon-box svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .fin-kpi-value {
+        font-size: 1.1rem !important;
+    }
+
+    .fin-kpi-footer {
+        font-size: 0.68rem !important;
+        gap: 4px !important;
+    }
+
+    /* Horizontal Swipeable Category Breakdown Legend */
+    .fin-dist-legend {
+        display: flex !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 8px !important;
+        padding-bottom: 4px !important;
+    }
+
+    .fin-dist-legend::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fin-dist-legend-item {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        font-size: 0.74rem !important;
+        padding: 4px 8px !important;
+        background: #F8FAFC !important;
+        border: 1px solid var(--fin-border) !important;
+        border-radius: 4px !important;
+    }
+
+    /* Horizontal Swipeable Date Range Presets */
+    .fin-presets-group {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+
+    .fin-presets-scroll {
+        display: flex !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 6px !important;
+        padding-bottom: 2px !important;
+    }
+
+    .fin-presets-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fin-presets-scroll .fin-chip {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        font-size: 0.74rem !important;
+        padding: 5px 10px !important;
+    }
+
+    /* Filter Form Drawer */
+    .fin-filters-form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .fin-filter-primary-row {
+        width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+    .fin-filter-search-box {
+        flex: 1 !important;
+    }
+
+    .fin-filter-toggle-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        height: 38px !important;
+        padding: 0 12px !important;
+        background: #FFFFFF !important;
+        border: 1px solid var(--fin-border) !important;
+        border-radius: var(--fin-radius-sm) !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        color: var(--fin-text-primary) !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+    }
+
+    .fin-filter-badge {
+        background: var(--fin-primary);
+        color: #FFFFFF;
+        border-radius: 10px;
+        font-size: 0.72rem;
+        padding: 1px 6px;
+        font-weight: 700;
+    }
+
+    .fin-filter-drawer {
+        display: none !important;
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        margin-top: 6px !important;
+        padding-top: 10px !important;
+        border-top: 1px dashed var(--fin-border) !important;
+    }
+
+    .fin-filter-drawer.is-open {
+        display: flex !important;
+    }
+
+    .fin-filter-field {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .fin-filter-date-group {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .fin-filter-date-item {
+        width: 100% !important;
+    }
+
+    .fin-filter-date-item .fin-filter-date {
+        width: 100% !important;
+    }
+
+    .fin-filter-actions {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .fin-filter-actions .fin-btn-primary {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Table / Card Switching */
+    .fin-table-desktop {
+        display: none !important;
+    }
+
+    .fin-expense-cards-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    /* Mobile Pagination */
+    .fin-pagination-container {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+
+    .fin-pagination-pages {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 4px !important;
+    }
+
+    /* Modal Touch Optimization */
+    .fin-modal-content {
+        width: 94% !important;
+        margin: 20px auto !important;
+    }
+
+    .fin-modal-body img {
+        max-height: 60vh !important;
+    }
+}
+

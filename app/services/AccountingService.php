@@ -1025,7 +1025,7 @@ function getInventoryValuationReport(): array
         if ($prodUnits > 0) {
             $itemProfit = $prodRetailVal - $prodCostVal;
             $itemMargin = ($prodRetailVal > 0) ? round(($itemProfit / $prodRetailVal) * 100, 1) : 0.0;
-            $imgUrl = !empty($p['image_path']) ? imageUrl($p['image_path']) : '/assets/images/no-image.svg';
+            $imgUrl = !empty($p['image_path']) ? (UPLOAD_URL . $p['image_path']) : '/assets/img/placeholder-sock.svg';
 
             $productSummary = [
                 'id' => $pId,

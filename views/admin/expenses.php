@@ -24,6 +24,25 @@ $baseQueryParams = [
     'end_date'       => $endDate,
     'range'          => $range,
 ];
+$returnUrl = 'expenses.php?' . http_build_query($_GET);
+$natureBadgeClasses = [
+    'variable' => 'nature-variable',
+    'fixed'    => 'nature-fixed',
+    'capital'  => 'nature-capital',
+];
+$natureLabels = [
+    'variable' => 'متغیر',
+    'fixed'    => 'ثابت',
+    'capital'  => 'سرمایه‌ای',
+];
+
+$activeFiltersCount = 0;
+if ($search !== '') $activeFiltersCount++;
+if ($category !== '') $activeFiltersCount++;
+if ($paymentSource !== '') $activeFiltersCount++;
+if ($expenseNature !== '') $activeFiltersCount++;
+if ($startDate !== '' || $endDate !== '') $activeFiltersCount++;
+if ($sort !== 'date_desc') $activeFiltersCount++;
 ?>
 
 <main class="fin-workspace">
@@ -31,18 +50,18 @@ $baseQueryParams = [
     <!-- =================================================================== -->
     <!-- 1. Top Header, Command Actions & Status Tabs                        -->
     <!-- =================================================================== -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
-        <div>
+    <div class="fin-page-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+        <div class="fin-header-title-group">
             <h2 style="margin: 0 0 6px 0; font-size: 1.35rem; font-weight: 800; color: var(--fin-text-primary); display: flex; align-items: center; gap: 8px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 دفتر هزینه‌های عملیاتی
             </h2>
-            <div style="font-size: 0.85rem; color: var(--fin-text-muted);">
+            <div class="fin-header-subtitle" style="font-size: 0.85rem; color: var(--fin-text-muted);">
                 ثبت دقیق مخارج، تفکیک سرفصل‌ها، مدیریت فاکتورها، و مغایرت‌گیری تراز مالی فروشگاه
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="fin-header-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <!-- Active / Archived Filter Tabs -->
             <div class="fin-tab-nav">
                 <?php 
@@ -58,13 +77,13 @@ $baseQueryParams = [
             </div>
 
             <!-- CSV Export Button -->
-            <a href="expenses.php?<?= http_build_query(array_merge($baseQueryParams, ['export' => 'csv'])) ?>" class="fin-action-btn fin-btn-outline" title="دریافت خروجی اکسل و CSV از هزینه‌های فیلترشده">
+            <a href="expenses.php?<?= http_build_query(array_merge($baseQueryParams, ['export' => 'csv'])) ?>" class="fin-action-btn fin-btn-outline fin-export-btn" title="دریافت خروجی اکسل و CSV از هزینه‌های فیلترشده">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>خروجی اکسل</span>
             </a>
 
             <!-- New Expense Button -->
-            <a href="expense_edit.php" class="fin-action-btn fin-btn-primary" style="font-weight: 700;">
+            <a href="expense_edit.php" class="fin-action-btn fin-btn-primary fin-new-expense-btn" style="font-weight: 700;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>ثبت سند جدید</span>
             </a>
@@ -189,100 +208,115 @@ $baseQueryParams = [
         <!-- Quick Preset Chips -->
         <div class="fin-presets-group">
             <span class="fin-preset-label">بازه سریع:</span>
-            <?php 
-            $presets = [
-                ''           => 'همه تاریخ‌ها',
-                'today'      => 'امروز',
-                '7days'      => '۷ روز',
-                '30days'     => '۳۰ روز',
-                'this_month' => 'ماه جاری',
-                'last_month' => 'ماه قبل',
-                'this_year'  => 'امسال',
-            ];
-            foreach ($presets as $pKey => $pLabel): 
-                $pParams = array_merge($baseQueryParams, ['range' => $pKey, 'start_date' => '', 'end_date' => '', 'page' => 1]);
-                $isActive = ($range === $pKey);
-            ?>
-                <a href="expenses.php?<?= http_build_query($pParams) ?>" class="fin-chip <?= $isActive ? 'active' : '' ?>">
-                    <?= $pLabel ?>
-                </a>
-            <?php endforeach; ?>
+            <div class="fin-presets-scroll">
+                <?php 
+                $presets = [
+                    ''           => 'همه تاریخ‌ها',
+                    'today'      => 'امروز',
+                    '7days'      => '۷ روز',
+                    '30days'     => '۳۰ روز',
+                    'this_month' => 'ماه جاری',
+                    'last_month' => 'ماه قبل',
+                    'this_year'  => 'امسال',
+                ];
+                foreach ($presets as $pKey => $pLabel): 
+                    $pParams = array_merge($baseQueryParams, ['range' => $pKey, 'start_date' => '', 'end_date' => '', 'page' => 1]);
+                    $isActive = ($range === $pKey);
+                ?>
+                    <a href="expenses.php?<?= http_build_query($pParams) ?>" class="fin-chip <?= $isActive ? 'active' : '' ?>">
+                        <?= $pLabel ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <!-- Custom Date Range & Dropdown Filters Form -->
-        <form method="get" action="expenses.php" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--fin-border);">
+        <form method="get" action="expenses.php" class="fin-filters-form" id="finFiltersForm">
             <input type="hidden" name="status" value="<?= e($status) ?>">
 
-            <!-- Search Field -->
-            <div style="flex: 2; min-width: 180px;">
-                <input class="form-control" type="text" name="q" value="<?= e($search) ?>" placeholder="جستجوی عنوان، طرف حساب یا یادداشت..." style="height: 36px; font-size: 0.84rem;">
+            <!-- Search Bar & Mobile Filter Drawer Toggle -->
+            <div class="fin-filter-primary-row">
+                <div class="fin-filter-search-box">
+                    <input class="fin-filter-input" type="text" name="q" value="<?= e($search) ?>" placeholder="جستجوی عنوان، طرف حساب یا یادداشت...">
+                </div>
+                <button type="button" class="fin-filter-toggle-btn" onclick="toggleMobileFilters()" title="فیلترهای پیشرفته">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span>فیلترها</span>
+                    <?php if ($activeFiltersCount > 0): ?>
+                        <span class="fin-filter-badge"><?= toPersianDigits((string)$activeFiltersCount) ?></span>
+                    <?php endif; ?>
+                </button>
             </div>
 
-            <!-- Category Filter -->
-            <div style="flex: 1.2; min-width: 140px;">
-                <select class="form-control" name="category" style="height: 36px; font-size: 0.82rem;">
-                    <option value="">همه سرفصل‌ها</option>
-                    <?php foreach ($categories as $c): ?>
-                        <option value="<?= e($c) ?>" <?= ($category === $c) ? 'selected' : '' ?>><?= e($c) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+            <!-- Filter Controls Group (Inline on Desktop, Collapsible Drawer on Mobile) -->
+            <div class="fin-filter-drawer <?= ($activeFiltersCount > 0) ? 'is-open' : '' ?>" id="finFilterDrawer">
+                <!-- Category Filter -->
+                <div class="fin-filter-field fin-filter-field-cat">
+                    <select class="fin-filter-select" name="category">
+                        <option value="">همه سرفصل‌ها</option>
+                        <?php foreach ($categories as $c): ?>
+                            <option value="<?= e($c) ?>" <?= ($category === $c) ? 'selected' : '' ?>><?= e($c) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-            <!-- Payment Source Filter -->
-            <div style="flex: 1.2; min-width: 140px;">
-                <select class="form-control" name="payment_source" style="height: 36px; font-size: 0.82rem;">
-                    <option value="">همه منابع پرداخت</option>
-                    <?php foreach ($paymentSources as $ps): ?>
-                        <option value="<?= e($ps) ?>" <?= ($paymentSource === $ps) ? 'selected' : '' ?>><?= e($ps) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                <!-- Payment Source Filter -->
+                <div class="fin-filter-field fin-filter-field-source">
+                    <select class="fin-filter-select" name="payment_source">
+                        <option value="">همه منابع پرداخت</option>
+                        <?php foreach ($paymentSources as $ps): ?>
+                            <option value="<?= e($ps) ?>" <?= ($paymentSource === $ps) ? 'selected' : '' ?>><?= e($ps) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-            <!-- Expense Nature Filter -->
-            <div style="flex: 1; min-width: 120px;">
-                <select class="form-control" name="expense_nature" style="height: 36px; font-size: 0.82rem;">
-                    <option value="">همه ماهیت‌ها</option>
-                    <option value="variable" <?= ($expenseNature === 'variable') ? 'selected' : '' ?>>متغیر عملیاتی</option>
-                    <option value="fixed" <?= ($expenseNature === 'fixed') ? 'selected' : '' ?>>ثابت بالاسری</option>
-                    <option value="capital" <?= ($expenseNature === 'capital') ? 'selected' : '' ?>>سرمایه‌ای / تجهیزات</option>
-                </select>
-            </div>
+                <!-- Expense Nature Filter -->
+                <div class="fin-filter-field fin-filter-field-nature">
+                    <select class="fin-filter-select" name="expense_nature">
+                        <option value="">همه ماهیت‌ها</option>
+                        <option value="variable" <?= ($expenseNature === 'variable') ? 'selected' : '' ?>>متغیر عملیاتی</option>
+                        <option value="fixed" <?= ($expenseNature === 'fixed') ? 'selected' : '' ?>>ثابت بالاسری</option>
+                        <option value="capital" <?= ($expenseNature === 'capital') ? 'selected' : '' ?>>سرمایه‌ای / تجهیزات</option>
+                    </select>
+                </div>
 
-            <!-- Sort By -->
-            <div style="flex: 1; min-width: 120px;">
-                <select class="form-control" name="sort" style="height: 36px; font-size: 0.82rem;">
-                    <option value="date_desc" <?= ($sort === 'date_desc') ? 'selected' : '' ?>>جدیدترین تاریخ</option>
-                    <option value="date_asc" <?= ($sort === 'date_asc') ? 'selected' : '' ?>>قدیمی‌ترین تاریخ</option>
-                    <option value="amount_desc" <?= ($sort === 'amount_desc') ? 'selected' : '' ?>>بیشترین مبلغ</option>
-                    <option value="amount_asc" <?= ($sort === 'amount_asc') ? 'selected' : '' ?>>کمترین مبلغ</option>
-                </select>
-            </div>
+                <!-- Sort By -->
+                <div class="fin-filter-field fin-filter-field-sort">
+                    <select class="fin-filter-select" name="sort">
+                        <option value="date_desc" <?= ($sort === 'date_desc') ? 'selected' : '' ?>>جدیدترین تاریخ</option>
+                        <option value="date_asc" <?= ($sort === 'date_asc') ? 'selected' : '' ?>>قدیمی‌ترین تاریخ</option>
+                        <option value="amount_desc" <?= ($sort === 'amount_desc') ? 'selected' : '' ?>>بیشترین مبلغ</option>
+                        <option value="amount_asc" <?= ($sort === 'amount_asc') ? 'selected' : '' ?>>کمترین مبلغ</option>
+                    </select>
+                </div>
 
-            <!-- Date Fields -->
-            <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="font-size: 0.78rem; color: var(--fin-text-muted);">از:</span>
-                <input class="form-control" type="date" name="start_date" value="<?= e($startDate) ?>" style="height: 36px; padding: 2px 6px; font-size: 0.82rem;">
-            </div>
+                <!-- Date Fields -->
+                <div class="fin-filter-date-group">
+                    <div class="fin-filter-date-item">
+                        <span class="fin-filter-date-label">از:</span>
+                        <input class="fin-filter-date" type="date" name="start_date" value="<?= e($startDate) ?>" style="width: 130px;">
+                    </div>
+                    <div class="fin-filter-date-item">
+                        <span class="fin-filter-date-label">تا:</span>
+                        <input class="fin-filter-date" type="date" name="end_date" value="<?= e($endDate) ?>" style="width: 130px;">
+                    </div>
+                </div>
 
-            <div style="display: flex; align-items: center; gap: 4px;">
-                <span style="font-size: 0.78rem; color: var(--fin-text-muted);">تا:</span>
-                <input class="form-control" type="date" name="end_date" value="<?= e($endDate) ?>" style="height: 36px; padding: 2px 6px; font-size: 0.82rem;">
-            </div>
-
-            <!-- Actions -->
-            <div style="display: flex; gap: 6px;">
-                <button type="submit" class="fin-action-btn fin-btn-primary" style="height: 36px; padding: 0 16px;">اعمال فیلتر</button>
-                <?php if ($search !== '' || $category !== '' || $paymentSource !== '' || $expenseNature !== '' || $startDate !== '' || $endDate !== '' || $range !== '' || $sort !== 'date_desc'): ?>
-                    <a href="expenses.php?status=<?= e($status) ?>" class="fin-action-btn fin-btn-outline" style="height: 36px;" title="حذف تمام فیلترها">✕</a>
-                <?php endif; ?>
+                <!-- Actions -->
+                <div class="fin-filter-actions">
+                    <button type="submit" class="fin-action-btn fin-btn-primary" style="height: 38px; padding: 0 16px;">اعمال فیلتر</button>
+                    <?php if ($activeFiltersCount > 0 || $range !== ''): ?>
+                        <a href="expenses.php?status=<?= e($status) ?>" class="fin-action-btn fin-btn-outline" style="height: 38px;" title="حذف تمام فیلترها">✕</a>
+                    <?php endif; ?>
+                </div>
             </div>
         </form>
     </section>
 
     <!-- =================================================================== -->
-    <!-- 5. High-Density Expenses Ledger Table Card                          -->
+    <!-- 5. High-Density Expenses Ledger Table Card (Desktop View)           -->
     <!-- =================================================================== -->
-    <div class="admin-card" style="padding: 0; overflow: hidden; border-radius: var(--fin-radius-md); box-shadow: var(--fin-shadow-sm); border: 1px solid var(--fin-border);">
+    <div class="admin-card fin-table-desktop" style="padding: 0; overflow: hidden; border-radius: var(--fin-radius-md); box-shadow: var(--fin-shadow-sm); border: 1px solid var(--fin-border);">
         <div style="overflow-x: auto;">
             <table class="admin-table" style="margin: 0; width: 100%; border-collapse: collapse;">
                 <thead>
@@ -299,23 +333,11 @@ $baseQueryParams = [
                 </thead>
                 <tbody>
                 <?php 
-                $returnUrl = 'expenses.php?' . http_build_query($_GET);
-                $natureBadgeClasses = [
-                    'variable' => 'nature-variable',
-                    'fixed'    => 'nature-fixed',
-                    'capital'  => 'nature-capital',
-                ];
-                $natureLabels = [
-                    'variable' => 'متغیر',
-                    'fixed'    => 'ثابت',
-                    'capital'  => 'سرمایه‌ای',
-                ];
-
                 foreach ($expensesData['items'] as $ex): 
                     $natClass = $natureBadgeClasses[$ex['expense_nature'] ?? 'variable'] ?? 'nature-variable';
                     $natText = $natureLabels[$ex['expense_nature'] ?? 'variable'] ?? 'متغیر';
                     $hasReceipt = !empty($ex['receipt_image']);
-                    $receiptUrl = $hasReceipt ? '/uploads/expenses/' . e($ex['receipt_image']) : '';
+                    $receiptUrl = $hasReceipt ? (EXPENSE_UPLOAD_URL . e($ex['receipt_image'])) : '';
                 ?>
                 <tr style="border-bottom: 1px solid var(--fin-border); vertical-align: middle; transition: background 0.15s ease;">
                     <!-- Date -->
@@ -376,7 +398,7 @@ $baseQueryParams = [
                     <!-- Receipt Thumbnail / Trigger -->
                     <td style="padding: 12px 8px; text-align: center;">
                         <?php if ($hasReceipt): ?>
-                            <img src="<?= $receiptUrl ?>" alt="رسید فاکتور" class="fin-receipt-thumb" onclick="openReceiptModal('<?= $receiptUrl ?>', '<?= e($ex['title']) ?>')" title="مشاهده تصویر فاکتور">
+                            <img src="<?= $receiptUrl ?>" alt="رسید فاکتور" class="fin-receipt-thumb" onclick="openReceiptModal('<?= $receiptUrl ?>', '<?= e(addslashes($ex['title'])) ?>')" title="مشاهده تصویر فاکتور">
                         <?php else: ?>
                             <span style="font-size: 0.72rem; color: #CBD5E1;">—</span>
                         <?php endif; ?>
@@ -432,43 +454,48 @@ $baseQueryParams = [
                 </tbody>
             </table>
         </div>
-
-        <!-- =============================================================== -->
-        <!-- 6. Pagination Controls                                          -->
-        <!-- =============================================================== -->
-        <?php if ($expensesData['total_pages'] > 1): 
-            $currPage = $expensesData['current_page'];
-            $totPages = $expensesData['total_pages'];
-            $paginationQuery = $_GET;
-        ?>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--fin-border); background: #F8FAFC; flex-wrap: wrap; gap: 12px;">
-            <div style="font-size: 0.82rem; color: var(--fin-text-muted);">
-                نمایش <?= toPersianDigits((string)((($currPage - 1) * $expensesData['per_page']) + 1)) ?> تا <?= toPersianDigits((string)min($currPage * $expensesData['per_page'], $expensesData['total_count'])) ?> از <?= toPersianDigits((string)$expensesData['total_count']) ?> سند هزینه
-            </div>
-            <div style="display: flex; gap: 4px; align-items: center;">
-                <?php if ($currPage > 1): 
-                    $paginationQuery['page'] = $currPage - 1;
-                ?>
-                    <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn fin-btn-outline" style="height: 32px; padding: 0 10px;">قبلی</a>
-                <?php endif; ?>
-
-                <?php for ($i = max(1, $currPage - 2); $i <= min($totPages, $currPage + 2); $i++): 
-                    $paginationQuery['page'] = $i;
-                ?>
-                    <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn <?= ($i === $currPage) ? 'fin-btn-primary' : 'fin-btn-outline' ?>" style="height: 32px; min-width: 32px; padding: 0; justify-content: center;">
-                        <?= toPersianDigits((string)$i) ?>
-                    </a>
-                <?php endfor; ?>
-
-                <?php if ($currPage < $totPages): 
-                    $paginationQuery['page'] = $currPage + 1;
-                ?>
-                    <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn fin-btn-outline" style="height: 32px; padding: 0 10px;">بعدی</a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- 6. Adaptive Mobile Expense Cards Stack (Mobile <= 768px)            -->
+    <!-- =================================================================== -->
+    <?php require APP_ROOT . '/views/admin/expenses_partials/_cards_stack.php'; ?>
+
+    <!-- =================================================================== -->
+    <!-- 7. Shared Pagination Controls                                       -->
+    <!-- =================================================================== -->
+    <?php if ($expensesData['total_pages'] > 1): 
+        $currPage = $expensesData['current_page'];
+        $totPages = $expensesData['total_pages'];
+        $paginationQuery = $_GET;
+    ?>
+    <div class="fin-pagination-container">
+        <div class="fin-pagination-info">
+            نمایش <?= toPersianDigits((string)((($currPage - 1) * $expensesData['per_page']) + 1)) ?> تا <?= toPersianDigits((string)min($currPage * $expensesData['per_page'], $expensesData['total_count'])) ?> از <?= toPersianDigits((string)$expensesData['total_count']) ?> سند هزینه
+        </div>
+        <div class="fin-pagination-pages">
+            <?php if ($currPage > 1): 
+                $paginationQuery['page'] = $currPage - 1;
+            ?>
+                <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn fin-btn-outline" style="height: 32px; padding: 0 10px;">قبلی</a>
+            <?php endif; ?>
+
+            <?php for ($i = max(1, $currPage - 2); $i <= min($totPages, $currPage + 2); $i++): 
+                $paginationQuery['page'] = $i;
+            ?>
+                <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn <?= ($i === $currPage) ? 'fin-btn-primary' : 'fin-btn-outline' ?>" style="height: 32px; min-width: 32px; padding: 0; justify-content: center;">
+                    <?= toPersianDigits((string)$i) ?>
+                </a>
+            <?php endfor; ?>
+
+            <?php if ($currPage < $totPages): 
+                $paginationQuery['page'] = $currPage + 1;
+            ?>
+                <a href="expenses.php?<?= http_build_query($paginationQuery) ?>" class="fin-action-btn fin-btn-outline" style="height: 32px; padding: 0 10px;">بعدی</a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
 </main>
 
@@ -488,6 +515,12 @@ $baseQueryParams = [
 </div>
 
 <script>
+function toggleMobileFilters() {
+    var drawer = document.getElementById('finFilterDrawer');
+    if (drawer) {
+        drawer.classList.toggle('is-open');
+    }
+}
 function openReceiptModal(url, title) {
     document.getElementById('receiptModalImg').src = url;
     document.getElementById('receiptModalTitle').innerText = 'فاکتور: ' + title;

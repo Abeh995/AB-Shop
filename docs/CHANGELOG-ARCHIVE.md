@@ -1,9 +1,33 @@
-# Changelog Archive (v1.0.0 — v1.18.1)
+# Changelog Archive (v1.0.0 — v1.19.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.18.1.
+Historical release notes for AB-Socks versions 1.0.0 through 1.19.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.19.0 — 2026-09-30
+
+### Smart Default Product Variant Strategy Architecture (FEAT-A006 & Database Migration 018)
+
+- **Configurable Default Variant Selection Engine (`app/services/ProductService.php`, `app/controllers/site/product.php`)**:
+  - Implemented `resolveDefaultProductVariant(array $variants, bool $useGlobalStrategy, ?string $strategy)`:
+    - **Global Strategy**: Evaluates store-wide setting (`highest_stock`, `lowest_stock`, `first_created`). Defaults to `highest_stock` for optimized sock apparel inventory turnover and conversion.
+    - **Manual Per-Product Override**: Honors explicit admin selection (`is_default = 1`).
+    - **Inventory Fallback Invariant**: If the selected variant is out of stock (`stock <= 0`), the client page automatically falls back to an in-stock variant so customers never encounter a disabled add-to-cart button.
+    - If all variants are out of stock, gracefully returns the target variant with accurate out-of-stock badge.
+  - Refactored `app/controllers/site/product.php` down to 58 lines (< 80 lines ceiling) with zero business calculations in controller or view.
+- **Store-wide Variant Strategy Setting (`app/services/SettingService.php`, `views/admin/settings.php`)**:
+  - Added `default_variant_strategy` configuration to Store Settings (`highest_stock`, `lowest_stock`, `first_created`).
+  - Integrated dedicated strategy select box in Settings Hub under "تنظیمات ویترین و محصولات".
+- **Admin Product Workstation Enhancements (`views/admin/product_edit.php`, `app/services/ProductService.php`)**:
+  - Added global strategy toggle checkbox (`#useGlobalVariantStrategy`) at the top of the variants section (checked by default for seamless high-volume product creation).
+  - Added "پیش‌فرض" radio button column in the variants table with real-time JavaScript synchronization (radios are disabled when global strategy is active; enabled when manual override is selected).
+  - Preserved transactional variant upsert-in-place integrity without breaking existing variant IDs.
+- **Database Migration 018 (`database/migrations/018_v1.19.0_product_default_variant_strategy.sql`, `database/schema.sql`)**:
+  - Added `use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1` to `products` table.
+  - Added `is_default TINYINT(1) NOT NULL DEFAULT 0` to `product_variants` table.
+  - Seeded `default_variant_strategy = 'highest_stock'` in `settings` table.
+  - Synchronized baseline `database/schema.sql`.
 
 ## 1.18.1 — 2026-09-30
 

@@ -3,9 +3,33 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.19.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.19.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.23.1 — 2026-10-02
+
+### Operating Expenses Mobile View Architecture, Inventory Valuation 404 Fix & Image Safety
+
+- **Operating Expenses Mobile View & Card Feed (`views/admin/expenses_partials/_cards_stack.php`, `views/admin/expenses.php`, `assets/css/admin-finance.css`)**:
+  - Implemented high-density adaptive financial card feed for mobile viewports ($\le 768$px) via dedicated partial `_cards_stack.php`:
+    - Top meta strip with Shamsi date badge, expense nature indicator, and archive status.
+    - Card body with bold title, category chip, payee tag, and notes.
+    - Financial row highlighting payment source pill alongside large, formatted Tomans price.
+    - Footer strip featuring single-tap invoice/receipt lightbox modal trigger, submitter meta, and touch-optimized action buttons ($\ge 36\times 36$px tap targets).
+  - Compact 2x2 Bento KPI Grid on mobile, compressing all 4 key operating expense metrics within 130px height without vertical scroll waste.
+  - Horizontal swipeable touch chips for category distribution breakdown and quick Shamsi date range presets.
+  - Collapsible filter drawer accordion with dynamic active filter counter badge (`فیلترها (N)`).
+  - Preserved 100% pixel-perfect desktop table view on $\ge 769$px.
+- **Inventory Valuation Physical Entrypoint Fix (`admin/inventory_valuation.php`)**:
+  - Added missing physical entrypoint `admin/inventory_valuation.php` delegating to `app/controllers/admin/inventory_valuation.php` with `requireAdmin()` guard, resolving DirectAdmin Apache 404 routing fall-through.
+  - Applied `.fin-dual-grid` class to `views/admin/inventory_valuation.php` for responsive breakdown tables on tablet and mobile.
+- **Admin Combobox Persian Text Anti-Clipping (`assets/css/admin-finance.css`, `views/admin/expenses.php`)**:
+  - Introduced dedicated `.fin-filter-select`, `.fin-filter-input`, and `.fin-filter-date` classes with 38px height, custom inner padding, `line-height: normal`, and custom SVG chevron.
+  - Resolved vertical clipping and bisected Persian characters in Chromium/Windows native select boxes.
+- **Pre-emptive Fatal Error Fixes & Image Constant Standardization (`app/services/AccountingService.php`, `ajax/admin_search.php`, `views/admin/expense_edit.php`, `views/admin/expenses.php`)**:
+  - Replaced undefined function call `imageUrl()` in `AccountingService.php` (`getInventoryValuationReport()`) and `productImageUrl()` in `ajax/admin_search.php` with standard `UPLOAD_URL` and `placeholder-sock.svg` fallback.
+  - Standardized expense receipt preview URLs across `expenses.php` and `expense_edit.php` to use `EXPENSE_UPLOAD_URL`.
 
 ## 1.23.0 — 2026-10-02
 
@@ -182,28 +206,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Real-time JavaScript event listener updating token dropdowns dynamically when the event select input changes.
   - Enhanced pattern index table with "تنظیم‌نشده" badges for unconfigured patterns and token link indicators (`🔗`) on variable tags.
   - Kept `app/controllers/admin/sms_pattern_edit.php` at 78 lines (< 80 lines ceiling).
-
-## 1.19.0 — 2026-09-30
-
-### Smart Default Product Variant Strategy Architecture (FEAT-A006 & Database Migration 018)
-
-- **Configurable Default Variant Selection Engine (`app/services/ProductService.php`, `app/controllers/site/product.php`)**:
-  - Implemented `resolveDefaultProductVariant(array $variants, bool $useGlobalStrategy, ?string $strategy)`:
-    - **Global Strategy**: Evaluates store-wide setting (`highest_stock`, `lowest_stock`, `first_created`). Defaults to `highest_stock` for optimized sock apparel inventory turnover and conversion.
-    - **Manual Per-Product Override**: Honors explicit admin selection (`is_default = 1`).
-    - **Inventory Fallback Invariant**: If the selected variant is out of stock (`stock <= 0`), the client page automatically falls back to an in-stock variant so customers never encounter a disabled add-to-cart button.
-    - If all variants are out of stock, gracefully returns the target variant with accurate out-of-stock badge.
-  - Refactored `app/controllers/site/product.php` down to 58 lines (< 80 lines ceiling) with zero business calculations in controller or view.
-- **Store-wide Variant Strategy Setting (`app/services/SettingService.php`, `views/admin/settings.php`)**:
-  - Added `default_variant_strategy` configuration to Store Settings (`highest_stock`, `lowest_stock`, `first_created`).
-  - Integrated dedicated strategy select box in Settings Hub under "تنظیمات ویترین و محصولات".
-- **Admin Product Workstation Enhancements (`views/admin/product_edit.php`, `app/services/ProductService.php`)**:
-  - Added global strategy toggle checkbox (`#useGlobalVariantStrategy`) at the top of the variants section (checked by default for seamless high-volume product creation).
-  - Added "پیش‌فرض" radio button column in the variants table with real-time JavaScript synchronization (radios are disabled when global strategy is active; enabled when manual override is selected).
-  - Preserved transactional variant upsert-in-place integrity without breaking existing variant IDs.
-- **Database Migration 018 (`database/migrations/018_v1.19.0_product_default_variant_strategy.sql`, `database/schema.sql`)**:
-  - Added `use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1` to `products` table.
-  - Added `is_default TINYINT(1) NOT NULL DEFAULT 0` to `product_variants` table.
-  - Seeded `default_variant_strategy = 'highest_stock'` in `settings` table.
-  - Synchronized baseline `database/schema.sql`.
-

@@ -227,7 +227,7 @@ try {
             'sku' => $pr['sku'] ?: '',
             'price_formatted' => formatPrice($pr['price']),
             'stock' => (int) $pr['effective_stock'],
-            'image_url' => productImageUrl($pr['image']),
+            'image_url' => !empty($pr['image']) ? (UPLOAD_URL . $pr['image']) : '/assets/img/placeholder-sock.svg',
             'url' => 'product_edit.php?id=' . (int) $pr['id'],
         ];
     }

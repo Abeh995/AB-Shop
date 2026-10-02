@@ -130,7 +130,7 @@ $deadStock = $report['dead_stock_items'] ?? [];
     <!-- =================================================================== -->
     <!-- 4. Category Capital Breakdown & Dead Stock Dual Grid                -->
     <!-- =================================================================== -->
-    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 24px;">
+    <div class="fin-dual-grid">
         
         <!-- Category Distribution Card -->
         <div class="admin-card" style="margin: 0; padding: 0; overflow: hidden; border-radius: var(--fin-radius-md); border: 1px solid var(--fin-border); box-shadow: var(--fin-shadow-sm);">
