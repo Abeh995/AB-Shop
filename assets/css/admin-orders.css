@@ -3081,8 +3081,20 @@ body.admin-page-orders {
         padding-bottom: 10px;
         border-bottom: 2px solid #000;
     }
+
+    .print-only-footer {
+        display: block !important;
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 12px;
+        border-top: 1px dashed #666;
+        font-size: 9pt;
+        color: #444;
+        line-height: 1.5;
+    }
 }
 
-.print-only-header {
+.print-only-header,
+.print-only-footer {
     display: none;
 }

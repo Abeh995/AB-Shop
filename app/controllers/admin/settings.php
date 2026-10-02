@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         setFlash('error', $res['error'] ?? 'خطا در ذخیره تنظیمات.');
     }
-    redirect('settings.php');
+    $tab = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) ($_POST['tab'] ?? ''));
+    redirect('settings.php' . ($tab !== '' ? '#' . $tab : ''));
 }
 
 $settings = getStoreSettingsData();

@@ -40,6 +40,18 @@ function getStoreSettingsData(): array
         'cardToCardNumber'       => getSetting('card_to_card_number', ''),
         'cardToCardHolder'       => getSetting('card_to_card_holder', ''),
         'cardToCardNote'         => getSetting('card_to_card_note', ''),
+        'storeShaba'             => getSetting('store_shaba', ''),
+        'storeBankName'          => getSetting('store_bank_name', ''),
+        'invoiceFooterNote'      => getSetting('invoice_footer_note', 'از خرید و اعتماد شما به جوراب AB سپاسگزاریم.'),
+        'taxEnabled'             => getSetting('tax_enabled', '0') === '1',
+        'taxPercentage'          => (float) getSetting('tax_percentage', '0'),
+
+        // Orders & Stock Policies
+        'minOrderAmount'         => (int) getSetting('min_order_amount', '0'),
+        'c2cTimeoutHours'        => (int) getSetting('c2c_timeout_hours', '24'),
+        'storeOrderStatus'       => getSetting('store_order_status', 'active'),
+        'storePausedMessage'     => getSetting('store_paused_message', 'ثبت سفارش موقتاً به دلیل انبارگردانی یا تعطیلات متوقف شده است.'),
+        'lowStockThreshold'      => (int) getSetting('low_stock_threshold', '3'),
 
         // Storefront features
         'priceGuaranteeEnabled'  => getSetting('price_guarantee_enabled', '1') === '1',
@@ -68,14 +80,17 @@ function getStoreSettingsData(): array
         'footerTagline'           => getSiteContent('footer_tagline'),
 
         // Business info
-        'storeEmail'        => getSiteContent('store_email'),
-        'storePhone'        => getSiteContent('store_phone'),
-        'storeMobile'       => getSiteContent('store_mobile'),
-        'storeAddress'      => getSiteContent('store_address'),
-        'storePostalCode'   => getSiteContent('store_postal_code'),
-        'storeSupportHours' => getSiteContent('store_support_hours'),
-        'storeStartDate'    => getSiteContent('store_start_date'),
-        'contactIntro'      => getSiteContent('contact_intro'),
+        'storeEmail'         => getSiteContent('store_email'),
+        'storePhone'         => getSiteContent('store_phone'),
+        'storeMobile'        => getSiteContent('store_mobile'),
+        'storeAddress'       => getSiteContent('store_address'),
+        'storePostalCode'    => getSiteContent('store_postal_code'),
+        'storeSupportHours'  => getSiteContent('store_support_hours'),
+        'storeStartDate'     => getSiteContent('store_start_date'),
+        'contactIntro'       => getSiteContent('contact_intro'),
+        'storeEconomicCode'  => getSetting('store_economic_code', ''),
+        'storeNationalId'    => getSetting('store_national_id', ''),
+        'adminAlertMobile'   => getSetting('admin_alert_mobile', ''),
 
         // Legal & CMS Content
         'aboutContent'      => getSiteContent('about_content'),
@@ -126,16 +141,62 @@ function saveStoreSection(string $section, array $post, array $files = []): arra
                 return ['ok' => false, 'error' => 'نام صاحب کارت معتبر نیست.', 'message' => null];
             }
 
+            // Shaba formatting: strip IR, spaces, non-digits
+            $rawShaba = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', trim($post['store_shaba'] ?? '')));
+            if (str_starts_with($rawShaba, 'IR')) {
+                $rawShaba = substr($rawShaba, 2);
+            }
+            if ($rawShaba !== '' && (strlen($rawShaba) !== 24 || !ctype_digit($rawShaba))) {
+                return ['ok' => false, 'error' => 'شماره شبا باید ۲۴ رقم عددی باشد (بدون IR).', 'message' => null];
+            }
+
             setSetting('card_to_card_number', $cardNumber);
             setSetting('card_to_card_holder', $cardHolder);
             setSetting('card_to_card_note', trim($post['card_to_card_note'] ?? ''));
-            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات پرداخت و حساب بانکی ذخیره شد.'];
+            setSetting('store_shaba', $rawShaba);
+            setSetting('store_bank_name', trim($post['store_bank_name'] ?? ''));
+            setSetting('invoice_footer_note', trim($post['invoice_footer_note'] ?? ''));
+            setSetting('tax_enabled', isset($post['tax_enabled']) ? '1' : '0');
+            setSetting('tax_percentage', (string) max(0, min(100, (float) ($post['tax_percentage'] ?? 0))));
+
+            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات پرداخت، بانکی و فاکتور با موفقیت ذخیره شد.'];
+
+        case 'orders_policy':
+            $minAmount = max(0, (int) preg_replace('/\D+/', '', $post['min_order_amount'] ?? '0'));
+            $timeoutHours = max(1, min(168, (int) ($post['c2c_timeout_hours'] ?? 24)));
+            $orderStatus = ($post['store_order_status'] ?? '') === 'paused' ? 'paused' : 'active';
+            $lowStock = max(0, min(50, (int) ($post['low_stock_threshold'] ?? 3)));
+
+            setSetting('min_order_amount', (string) $minAmount);
+            setSetting('c2c_timeout_hours', (string) $timeoutHours);
+            setSetting('store_order_status', $orderStatus);
+            setSetting('store_paused_message', trim($post['store_paused_message'] ?? ''));
+            setSetting('low_stock_threshold', (string) $lowStock);
+
+            return ['ok' => true, 'error' => null, 'message' => 'قوانین و فرآیند سفارش‌ها با موفقیت ذخیره شد.'];
 
         case 'business':
-            foreach (['store_email', 'store_phone', 'store_mobile', 'store_address', 'store_postal_code', 'store_support_hours', 'store_start_date', 'contact_intro'] as $key) {
+            foreach (['store_email', 'store_phone', 'store_mobile', 'store_address', 'store_postal_code', 'store_support_hours', 'store_start_date', 'contact_intro', 'store_economic_code', 'store_national_id', 'admin_alert_mobile'] as $key) {
                 setSetting($key, trim($post[$key] ?? ''));
             }
             return ['ok' => true, 'error' => null, 'message' => 'اطلاعات کسب‌وکار و تماس به‌روزرسانی شد.'];
+
+        case 'catalog_search':
+            setSetting('search_live_enabled', isset($post['search_live_enabled']) ? '1' : '0');
+            setSetting('search_suggest_limit', (string) max(2, min(20, (int) ($post['search_suggest_limit'] ?? 6))));
+            setSetting('search_min_chars', (string) max(1, min(5, (int) ($post['search_min_chars'] ?? 2))));
+            setSetting('search_scope_name', isset($post['search_scope_name']) ? '1' : '0');
+            setSetting('search_scope_description', isset($post['search_scope_description']) ? '1' : '0');
+            setSetting('search_include_categories', isset($post['search_include_categories']) ? '1' : '0');
+            setSetting('show_product_tags', isset($post['show_product_tags']) ? '1' : '0');
+            setSetting('price_guarantee_enabled', isset($post['price_guarantee_enabled']) ? '1' : '0');
+            setSetting('price_guarantee_days', (string) max(1, (int) ($post['price_guarantee_days'] ?? 7)));
+            $strategy = trim($post['default_variant_strategy'] ?? 'highest_stock');
+            if (!in_array($strategy, ['highest_stock', 'lowest_stock', 'first_created'], true)) {
+                $strategy = 'highest_stock';
+            }
+            setSetting('default_variant_strategy', $strategy);
+            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات کاتالوگ، جستجو و ضمانت با موفقیت ذخیره شد.'];
 
         case 'search':
             setSetting('search_live_enabled', isset($post['search_live_enabled']) ? '1' : '0');
@@ -353,5 +414,9 @@ function getSettingsDirectoryStats(): array
         'paymentSummary'      => implode(' · ', $paymentStatus),
         'seoIndexed'          => getSetting('seo_indexing_enabled', '0') === '1',
         'hasLogo'             => !empty(getSetting('site_logo')),
+        'storeOrderStatus'    => getSetting('store_order_status', 'active'),
+        'minOrderAmount'      => (int) getSetting('min_order_amount', '0'),
+        'lowStockThreshold'   => (int) getSetting('low_stock_threshold', '3'),
+        'c2cTimeoutHours'     => (int) getSetting('c2c_timeout_hours', '24'),
     ];
 }

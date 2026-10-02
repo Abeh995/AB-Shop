@@ -31,6 +31,7 @@ $adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css
 $adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-pricing.css') ?: 1);
 $adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-gift-items.css') ?: 1);
 $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-finance.css') ?: 1);
+$adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-settings.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -51,6 +52,9 @@ $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 <?php endif; ?>
 <?php if (in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php', 'inventory_valuation.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-finance.css?v=<?= $adminFinanceCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'settings.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-settings.css?v=<?= $adminSettingsCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

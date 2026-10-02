@@ -1,0 +1,522 @@
+/**
+ * AB-Socks Admin Settings Hub Styles (admin-settings.css)
+ * Modern Master-Tabbed Workspace, System Pulse KPIs & Ergonomic Form Controls.
+ */
+
+:root {
+    --set-primary: #3B82F6;
+    --set-primary-dark: #1D4ED8;
+    --set-primary-light: rgba(59, 130, 246, 0.08);
+    --set-success: #10B981;
+    --set-success-light: rgba(16, 185, 129, 0.1);
+    --set-warning: #F59E0B;
+    --set-warning-light: rgba(245, 158, 11, 0.1);
+    --set-danger: #EF4444;
+    --set-danger-light: rgba(239, 68, 68, 0.1);
+    --set-card-bg: #FFFFFF;
+    --set-bg-subtle: #F8FAFC;
+    --set-border: #E2E8F0;
+    --set-border-subtle: #F1F5F9;
+    --set-text-main: #0F172A;
+    --set-text-secondary: #475569;
+    --set-text-muted: #64748B;
+    --set-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --set-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --set-radius-sm: 8px;
+    --set-radius-md: 12px;
+    --set-radius-lg: 16px;
+    --set-radius-pill: 9999px;
+}
+
+/* ==========================================================================
+   1. Workspace Container
+   ========================================================================== */
+.settings-workspace {
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 12px 16px 80px;
+    box-sizing: border-box;
+    font-family: inherit;
+    color: var(--set-text-main);
+}
+
+/* ==========================================================================
+   2. System Pulse Bar (Status Bar)
+   ========================================================================== */
+.settings-pulse-card {
+    background: var(--set-card-bg);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-md);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--set-shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.settings-pulse-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-pulse-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--set-primary-light);
+    color: var(--set-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.settings-pulse-title {
+    margin: 0 0 2px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--set-text-main);
+}
+
+.settings-pulse-desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--set-text-muted);
+}
+
+.settings-pulse-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pulse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--set-radius-pill);
+    font-size: 0.76rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.pulse-badge.active {
+    background: var(--set-success-light);
+    color: #065F46;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.pulse-badge.paused {
+    background: var(--set-warning-light);
+    color: #92400E;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.pulse-badge.neutral {
+    background: var(--set-bg-subtle);
+    color: var(--set-text-secondary);
+    border-color: var(--set-border);
+}
+
+.pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+}
+
+/* ==========================================================================
+   3. Master Navigation Tabs
+   ========================================================================== */
+.settings-tabs-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    border-bottom: 2px solid var(--set-border-subtle);
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.settings-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--set-radius-md) var(--set-radius-md) 0 0;
+    background: transparent;
+    color: var(--set-text-secondary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    position: relative;
+    bottom: -2px;
+}
+
+.settings-tab-btn:hover {
+    color: var(--set-primary);
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.settings-tab-btn.active {
+    color: var(--set-primary);
+    background: var(--set-card-bg);
+    border-color: var(--set-border) var(--set-border) transparent;
+    border-bottom: 2px solid var(--set-card-bg);
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.settings-tab-btn svg {
+    flex-shrink: 0;
+}
+
+.settings-tab-pane {
+    display: none;
+    animation: fadeInTab 0.2s ease;
+}
+
+.settings-tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   4. Settings Cards & Fieldsets
+   ========================================================================== */
+.settings-card {
+    background: var(--set-card-bg);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-lg);
+    box-shadow: var(--set-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.settings-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--set-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #FCFDFE;
+}
+
+.settings-card-title {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--set-text-main);
+}
+
+.settings-card-subtitle {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--set-text-muted);
+}
+
+.settings-card-body {
+    padding: 24px;
+}
+
+.settings-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.settings-grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+/* Fieldset Section */
+.settings-fieldset {
+    background: #FAFBFD;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-md);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.settings-fieldset:last-child {
+    margin-bottom: 0;
+}
+
+.fieldset-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--set-text-main);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Helper Text */
+.form-helper {
+    font-size: 0.77rem;
+    color: var(--set-text-muted);
+    margin-top: 5px;
+    line-height: 1.45;
+}
+
+/* ==========================================================================
+   5. Modern Toggle Switch
+   ========================================================================== */
+.settings-toggle-wrap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--set-card-bg);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-md);
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    margin-bottom: 14px;
+}
+
+.settings-toggle-wrap:hover {
+    border-color: #CBD5E1;
+    background: #FAFAFA;
+}
+
+.toggle-info {
+    flex: 1;
+}
+
+.toggle-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--set-text-main);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.toggle-desc {
+    font-size: 0.78rem;
+    color: var(--set-text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #CBD5E1;
+    transition: 0.22s ease;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.22s ease;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--set-primary);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* ==========================================================================
+   6. Input Groups & Prefixes
+   ========================================================================== */
+.settings-input-group {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    background: #FFFFFF;
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+}
+
+.settings-input-group:focus-within {
+    border-color: var(--set-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.settings-input-addon {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    background: var(--set-bg-subtle);
+    color: var(--set-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-inline-end: 1px solid var(--set-border);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.settings-input-addon.addon-suffix {
+    border-inline-end: none;
+    border-inline-start: 1px solid var(--set-border);
+}
+
+.settings-input-group .form-control {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    flex: 1;
+}
+
+.mono-num {
+    font-family: monospace, inherit;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   7. Sticky / Bottom Action Bar
+   ========================================================================== */
+.settings-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding-top: 20px;
+    margin-top: 10px;
+    border-top: 1px solid var(--set-border-subtle);
+}
+
+.btn-set-save {
+    background: var(--set-primary);
+    color: #FFFFFF;
+    font-weight: 800;
+    font-size: 0.88rem;
+    padding: 10px 24px;
+    border-radius: var(--set-radius-md);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-set-save:hover {
+    background: var(--set-primary-dark);
+}
+
+.btn-set-save:active {
+    transform: scale(0.98);
+}
+
+/* ==========================================================================
+   8. Workstations Bento Grid
+   ========================================================================== */
+.settings-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+}
+
+.bento-station-card {
+    background: var(--set-card-bg);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-lg);
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    position: relative;
+}
+
+.bento-station-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--set-shadow-md);
+    border-color: #CBD5E1;
+}
+
+.station-lead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.station-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.station-title {
+    margin: 0 0 6px;
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--set-text-main);
+}
+
+.station-desc {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--set-text-muted);
+    line-height: 1.45;
+}
+
+.station-action-link {
+    margin-top: 18px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--set-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}

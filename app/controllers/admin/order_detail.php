@@ -65,6 +65,7 @@ $giftableItems = getGiftableItems();
 
 $pageTitle = 'سفارش ' . $order['order_code'];
 $profitability = getOrderProfitability($id);
+$invoiceFooterNote = getSetting('invoice_footer_note', 'از خرید و اعتماد شما به جوراب AB سپاسگزاریم.');
 
-renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'giftableItems', 'profitability'));
+renderView('admin/order_detail', compact('pageTitle', 'order', 'items', 'statusLabels', 'orderGiftItems', 'giftableItems', 'profitability', 'invoiceFooterNote'));
 

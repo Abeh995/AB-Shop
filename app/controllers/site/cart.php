@@ -29,4 +29,8 @@ $availablePostOrderItems = array_filter(
     fn($item) => !in_array((int) $item['id'], $selectedPostOrderIds, true)
 );
 
-renderView('site/cart', compact('pageTitle', 'cart', 'appliedCoupon', 'discount', 'postOrderResult', 'availablePostOrderItems'));
+$storeOrderStatus = getSetting('store_order_status', 'active');
+$storePausedMessage = getSetting('store_paused_message', 'ثبت سفارش موقتاً به دلیل انبارگردانی یا تعطیلات متوقف شده است.');
+$minOrderAmount = (int) getSetting('min_order_amount', '0');
+
+renderView('site/cart', compact('pageTitle', 'cart', 'appliedCoupon', 'discount', 'postOrderResult', 'availablePostOrderItems', 'storeOrderStatus', 'storePausedMessage', 'minOrderAmount'));

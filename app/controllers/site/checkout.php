@@ -14,6 +14,16 @@ $prefillCustomer = currentCustomer() ?: [];
 $cart = cartDetails();
 if (empty($cart['items'])) redirect('/cart');
 
+if (getSetting('store_order_status', 'active') === 'paused') {
+    setFlash('error', getSetting('store_paused_message', 'ثبت سفارش موقتاً به دلیل انبارگردانی یا تعطیلات متوقف شده است.'));
+    redirect('/cart');
+}
+$minOrderAmount = (int) getSetting('min_order_amount', '0');
+if ($minOrderAmount > 0 && $cart['subtotal'] < $minOrderAmount) {
+    setFlash('error', 'حداقل مبلغ سفارش برای ثبت نهایی ' . number_format($minOrderAmount) . ' تومان می‌باشد.');
+    redirect('/cart');
+}
+
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
 if ($appliedCoupon) {
@@ -28,8 +38,8 @@ $paymentMethodsAvailable = $zarinpalEnabled || $cardToCardConfigured;
 
 $formData = [
     'customer_name' => $prefillCustomer['full_name'] ?? '',
-    'phone'         => $prefillCustomer['phone'] ?? '',
-    'email'         => $prefillCustomer['email'] ?? '',
+    'phone' => $prefillCustomer['phone'] ?? '',
+    'email' => $prefillCustomer['email'] ?? '',
     'province' => '', 'city' => '', 'address' => '', 'postal_code' => '', 'notes' => '',
 ];
 
@@ -54,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         CardToCardReceiptService::discardPending();
         redirect('/payment/card-to-card');
     }
-
     if (!$errors && $paymentMethod === 'zarinpal') {
         $result = OrderService::createFromCheckout($formData, 'zarinpal');
         if ($result['ok']) {
@@ -69,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = $result['error'];
     }
 }
-
 $shippingPreview = calculateShippingCost($formData['province'], $cart['subtotal']);
 
 renderView('site/checkout', compact(

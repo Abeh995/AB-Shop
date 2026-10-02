@@ -461,7 +461,20 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('home_newest_enabled', '1'),
     ('home_newest_title', 'آخرین محصولات'),
     ('home_category_strip_enabled', '1'),
-    ('home_category_strip_title', 'دسته‌بندی‌ها را از همین‌جا هم می‌بینید');
+    ('home_category_strip_title', 'دسته‌بندی‌ها را از همین‌جا هم می‌بینید'),
+    ('min_order_amount', '0'),
+    ('c2c_timeout_hours', '24'),
+    ('store_order_status', 'active'),
+    ('store_paused_message', 'ثبت سفارش موقتاً به دلیل انبارگردانی یا تعطیلات متوقف شده است.'),
+    ('low_stock_threshold', '3'),
+    ('store_shaba', ''),
+    ('store_bank_name', ''),
+    ('store_economic_code', ''),
+    ('store_national_id', ''),
+    ('invoice_footer_note', 'از خرید و اعتماد شما به جوراب AB سپاسگزاریم.'),
+    ('admin_alert_mobile', ''),
+    ('tax_enabled', '0'),
+    ('tax_percentage', '0');
 
 -- ------------------------------------------------------------
 -- Faraz SMS registered patterns & event mappings

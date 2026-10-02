@@ -14,6 +14,8 @@ if (!is_array($pending)) {
 $cardNumber = trim((string) getSetting('card_to_card_number', ''));
 $cardHolder = trim((string) getSetting('card_to_card_holder', ''));
 $cardNote = trim((string) getSetting('card_to_card_note', ''));
+$storeBankName = trim((string) getSetting('store_bank_name', ''));
+$storeShaba = trim((string) getSetting('store_shaba', ''));
 if ($cardNumber === '' || $cardHolder === '') {
     unset($_SESSION['pending_card_to_card_checkout']);
     setFlash('error', 'اطلاعات پرداخت کارت‌به‌کارت هنوز توسط فروشگاه تکمیل نشده است.');
@@ -70,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 renderView('site/card_to_card', compact(
     'pageTitle', 'errors', 'pending', 'cardNumber', 'cardHolder', 'cardNote',
+    'storeBankName', 'storeShaba',
     'cart', 'discount', 'appliedCoupon', 'postOrderResult', 'shippingPreview',
     'grandTotal', 'receiptUploaded'
 ));

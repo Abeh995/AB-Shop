@@ -117,3 +117,14 @@ The shopping cart supports two operational modes through a unified API (`cartAdd
    - Stock is always checked live; only the unit price is guaranteed.
 4. **Cart Merging**:
    - When a guest signs in or creates an account, `mergeGuestCartIntoCustomerCart()` merges session items into `cart_items` without losing existing items.
+
+---
+
+## 5. Store Operational Policies & Banking Infrastructure (v1.24.0)
+
+Configurable operational parameters managed via the Settings Hub (`SettingService.php`, Migration 022):
+- **Store Vacation / Pause Mode**: `store_order_status` ('active' | 'paused') disables checkout while keeping the catalog browsable, rendering an alert banner across the cart.
+- **Minimum Order Value**: `min_order_amount` enforces an order subtotal floor prior to entering checkout.
+- **Card-to-Card Expiration Window**: `c2c_timeout_hours` specifies the grace period for receipt upload.
+- **Banking & IBAN**: `store_shaba` (24-digit IBAN) and `store_bank_name` are dynamically rendered on the customer payment card and invoice print sheets.
+- **Critical Low-Stock Threshold**: `low_stock_threshold` sets the system-wide threshold for stock shortage warnings.

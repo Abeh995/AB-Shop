@@ -7,6 +7,27 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.24.0 — 2026-10-03
+
+### Store Settings Hub Redesign, Order Policies, Banking/IBAN Integration & Migration 022
+
+- **Master-Tabbed Settings Workspace Architecture (`views/admin/settings.php`, `views/admin/settings_partials/`, `assets/css/admin-settings.css`)**:
+  - Decomposed the monolithic 466-line settings template into an 84-line master assembly view with 8 modular partials (`_header_stats.php`, `_nav_tabs.php`, `_tab_orders.php`, `_tab_payments.php`, `_tab_general.php`, `_tab_catalog_search.php`, `_tab_seo_social.php`, `_tab_legal_cms.php`, `_tab_workstations.php`) conforming to Rule 7.
+  - Introduced dedicated design system stylesheet `assets/css/admin-settings.css` replacing all inline styles with modern design tokens, interactive tabs, iOS-style toggle switches, input addons, and Bento station cards.
+  - Implemented client-side hash routing (`#orders`, `#payments`, `#general`, `#catalog`, `#seo_social`, `#legal`, `#workstations`) with automatic redirect state preservation in `app/controllers/admin/settings.php`.
+- **E-Commerce Order & Inventory Operational Policies (`app/controllers/site/checkout.php`, `app/controllers/site/cart.php`, `views/site/cart.php`, `app/services/SettingService.php`)**:
+  - *Store Vacation / Maintenance Mode (`store_order_status` & `store_paused_message`)*: Added administrative toggle to pause checkout with a customizable notification banner across cart and checkout flows.
+  - *Minimum Order Requirement (`min_order_amount`)*: Enforces subtotal threshold prior to checkout entry, preventing uneconomic microscopic shipments.
+  - *Card-to-Card Slip Upload Window (`c2c_timeout_hours`)*: Configurable expiration window for customer payment receipt uploads.
+  - *Critical Low-Stock Alert Threshold (`low_stock_threshold`)*: Global threshold for triggering inventory shortage badges across dashboard and catalog tables.
+- **Financial, Banking & Invoice Customization (`app/services/SettingService.php`, `app/controllers/site/card_to_card.php`, `views/site/card_to_card.php`, `views/admin/order_detail.php`, `assets/css/admin-orders.css`)**:
+  - *Store Bank Account & IBAN (`store_shaba`, `store_bank_name`)*: Extended payment configuration with 24-digit Shaba (IBAN) format validation and bank name, dynamically rendered on the customer digital payment card.
+  - *Printable Invoice Customization (`invoice_footer_note`)*: Custom invoice terms and return policies dynamically appended to print-sheet orders (`@media print`).
+  - *VAT / Tax Architecture (`tax_enabled`, `tax_percentage`)*: Configured foundation for tax calculation modeling.
+  - *Corporate Identification (`store_economic_code`, `store_national_id`, `admin_alert_mobile`)*: Added economic code, national ID, and dedicated administrative alert mobile number for event notifications.
+- **Database Migration 022 (`database/migrations/022_v1.24.0_store_settings_enhancement.sql`, `database/schema.sql`)**:
+  - Seeded all new configuration keys into `settings` table with safe fallbacks and mirrored into baseline `schema.sql`.
+
 ## 1.23.2 — 2026-10-03
 
 ### Inventory Valuation Fatal 500 Column Mismatch Elimination
@@ -155,30 +176,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Cash Flow Allocation Waterfall bar visualizing capital distribution across inventory, operations, and retained earnings.
   - Dual-column analytical deck: Top Profit Generators, Gateway Distribution, Shipping Subsidies, and Expense Categorization.
   - Missing Cost Audit Drawer with 1-click navigation to Product Pricing Hub (`pricing.php`).
-
-## 1.20.1 — 2026-10-01
-
-### Admin Gifts & Cart Add-ons Workstation Architecture Overhaul
-
-- **Master-Detail Dual-Pane Workstation Architecture (`views/admin/gift_items.php`, `assets/css/admin-gift-items.css`, `views/admin/layout/header.php`)**:
-  - Re-engineered the Gifts & Add-ons catalog page into a modern desktop Master-Detail workstation with a high-density Matrix Table (62% width) and a Sticky Smart Studio (38% width, `position: sticky; top: 18px`).
-  - Introduced dedicated CSS token engine `assets/css/admin-gift-items.css` linked dynamically in `header.php` with cache-busted versioning.
-  - Implemented client-side lightweight JSON catalog map enabling instant row selection, editing, live search filtering, and state synchronization without full page reloads.
-- **Top Bento KPI Metrics Deck (`views/admin/gift_items.php`, `app/services/GiftService.php`)**:
-  - 4 Key Bento KPI metric cards Above the Fold with clickable direct filter anchors:
-    1. *Catalog Health*: Total items, active vs inactive count.
-    2. *Admin Free Gifts*: Lifetime attachment count to orders (`role = 'gift'`).
-    3. *Cart Add-on Upsells*: Lifetime post-order revenue and units sold (`role = 'post_order'`).
-    4. *Inventory Valuation & Alerts*: Total catalog inventory valuation in Tomans (`SUM(stock * cost_price)`) and critical low-stock alert badge ($\le 5$).
-- **Sticky Smart Studio & Live Profit Margin Calculator (`views/admin/gift_items.php`)**:
-  - Integrated dynamic creation and editing studio supporting real-time mode switching between "Add New Item" and "Edit Item #ID".
-  - Dynamic JavaScript Live Profit Margin Calculator: calculates gross unit profit (`post_order_price - cost_price`) and gross profit margin percentage in real-time as prices are typed, color-coded by margin bracket.
-  - Instant WebP image dropzone with client-side FileReader preview integrated with `data-optimize-image="giftitem"`.
-  - Interactive role toggle cards for admin free gifting and checkout post-order add-ons.
-- **Service Layer Extensions & Zero N+1 Batch Aggregation (`app/services/GiftService.php`)**:
-  - Implemented `getAdminGiftItemsMetrics()` returning comprehensive catalog and lifetime order utilization metrics in 2 vectorized queries.
-  - Enhanced `getAdminGiftItemsList($search, $roleFilter)` attaching lifetime `gifted_units`, `sold_units`, `gross_revenue`, and calculated margin percentages via single `LEFT JOIN` on `order_gift_items`.
-  - Added `toggleGiftItemActive(int $id)` and `updateGiftItemStock(int $id, int $stock)` with optimistic AJAX UI toggles.
-- **Controller Modernization & Seamless Routing (`app/controllers/admin/gift_items.php`, `app/controllers/admin/gift_item_edit.php`)**:
-  - Kept `app/controllers/admin/gift_items.php` at 69 lines (strictly under Rule 7 80-line ceiling), handling AJAX toggles, stock adjustments, and studio saves.
-  - Refactored `gift_item_edit.php` to a 13-line seamless redirect proxying legacy links directly to the workstation studio (`gift_items.php?edit=ID`).

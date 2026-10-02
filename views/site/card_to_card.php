@@ -68,12 +68,18 @@ $cardFormatted = implode(' - ', array_map('toPersianDigits', $cardBlocks));
                     <div class="c2c-card-bottom">
                         <div class="c2c-card-holder-info">
                             <span class="c2c-card-holder-label">صاحب کارت:</span>
-                            <span class="c2c-card-holder-name">👤 <?= e($cardHolder) ?></span>
+                            <span class="c2c-card-holder-name">👤 <?= e($cardHolder) ?><?= !empty($storeBankName) ? ' (' . e($storeBankName) . ')' : '' ?></span>
                         </div>
                         <button type="button" class="c2c-btn-copy-card" id="btnCopyCard" data-copy="<?= e($rawCardDigits) ?>" title="کپی شماره کارت ۱۶ رقمی">
                             📋 <span class="copy-card-text">کپی شماره کارت</span>
                         </button>
                     </div>
+                    <?php if (!empty($storeShaba)): ?>
+                        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.25); font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="opacity:0.85;">شماره شبا:</span>
+                            <span dir="ltr" style="font-family:monospace; letter-spacing:1px; font-weight:700;">IR<?= e($storeShaba) ?></span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- 3. Store Note if any -->

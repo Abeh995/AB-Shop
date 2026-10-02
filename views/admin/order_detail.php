@@ -620,6 +620,16 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
         </div>
     </div>
 
+    <!-- Print Only Footer -->
+    <?php if (!empty($invoiceFooterNote)): ?>
+    <div class="print-only-footer">
+        <p style="margin:0 0 4px; font-weight:700;"><?= nl2br(e($invoiceFooterNote)) ?></p>
+        <div style="font-size:8pt; color:#666;">
+            فروشگاه اینترنتی <?= e(SITE_NAME) ?> • <?= e(SITE_URL) ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>
 
 <!-- Receipt Lightbox Modal -->

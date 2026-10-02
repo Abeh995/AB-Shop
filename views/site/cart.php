@@ -151,8 +151,20 @@
                 <?php endif; ?>
 
                 <div class="row total-row"><span>مبلغ قابل پرداخت</span><span><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total']) ?></span></div>
-                <p style="font-size:.78rem; color:var(--color-muted); margin-top:6px;">+ هزینه ارسال، که در مرحله بعد بر اساس آدرستان محاسبه می‌شود</p>
-                <a href="/checkout" class="btn btn-primary btn-block" style="margin-top:10px;">ادامه فرآیند خرید</a>
+                <?php if (($storeOrderStatus ?? 'active') === 'paused'): ?>
+                    <div style="margin-top:12px; padding:12px 14px; background:rgba(245, 158, 11, 0.12); border:1px solid #F59E0B; border-radius:8px; font-size:.84rem; color:#92400E; line-height:1.45; text-align:center;">
+                        <strong>⚠️ توقف موقت سفارش‌گیری:</strong><br>
+                        <?= e($storePausedMessage ?? 'ثبت سفارش موقتاً متوقف شده است.') ?>
+                    </div>
+                <?php elseif (!empty($minOrderAmount) && $cart['subtotal'] < $minOrderAmount): ?>
+                    <div style="margin-top:12px; padding:12px 14px; background:rgba(59, 130, 246, 0.08); border:1px solid #3B82F6; border-radius:8px; font-size:.82rem; color:#1E40AF; line-height:1.45;">
+                        حداقل ارزش سفارش برای ثبت نهایی <strong><?= formatPrice($minOrderAmount) ?></strong> است.
+                        (مبلغ باقیمانده: <?= formatPrice($minOrderAmount - $cart['subtotal']) ?>)
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" disabled style="margin-top:10px; opacity:0.6; cursor:not-allowed;">حداقل مبلغ تکمیل نشده است</button>
+                <?php else: ?>
+                    <a href="/checkout" class="btn btn-primary btn-block" style="margin-top:10px;">ادامه فرآیند خرید</a>
+                <?php endif; ?>
                 <?php if (!isCustomerLoggedIn()): ?><p style="font-size:.78rem; color:var(--color-muted); margin:8px 0 0; text-align:center;">برای نهایی کردن سفارش، ابتدا حساب کاربری بسازید یا وارد شوید.</p><?php endif; ?>
             </div>
         </div>
