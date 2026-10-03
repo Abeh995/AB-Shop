@@ -3,9 +3,18 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.28.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.29.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.31.2 — 2026-10-04
+
+### Product Tags Service Bootstrap Registration & Workstation Stylesheet Attachment
+
+- **TagService Autoloading Registration (`app/bootstrap.php`)**:
+  - Registered `TagService.php` in the core application bootstrap service registry (`app/bootstrap.php`), eliminating fatal `Class "TagService" not found` errors and resolving HTTP 500 crashes when accessing `/admin/tags.php`.
+- **Tags Workstation Stylesheet Enqueuing (`views/admin/layout/header.php`)**:
+  - Updated admin layout stylesheet loader to include `admin-coupons.css` on `tags.php` in addition to `coupons.php`, ensuring complete visual styling for Bento KPI cards, high-density matrix tables, search toolbars, and tag creation modals.
 
 ## 1.31.1 — 2026-10-04
 
@@ -131,32 +140,5 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `app/controllers/admin/users.php` strictly bounded at 53 lines (soft ceiling: 80 lines).
   - Exactly zero SQL queries or form mutations in view templates.
 
-## 1.28.0 — 2026-10-04
-
-### Email Studio & Webmail Workspace Overhaul, Coupon Management Architecture & Migration 025
-
-- **Unified Admin Email Studio & Webmail Architecture (`app/controllers/admin/emails.php`, `views/admin/emails.php`, `views/admin/emails_partials/`, `assets/css/admin-emails.css`)**:
-  - Replaced scattered legacy email scripts with a unified, high-aesthetic Master-Detail Email Studio conforming to Rule 7:
-    - `views/admin/emails_partials/_header_stats.php`: Bento KPIs featuring active mailbox account, total inbox messages, live IMAP extension status, and quick compose action.
-    - `views/admin/emails_partials/_inbox_pane.php`: split-pane master-detail inbox with account switcher, real-time subject search, unread status indicators, and clean reading pane with sanitized HTML preview and 1-click reply modal trigger.
-    - `views/admin/emails_partials/_compose_modal.php`: modal smart composer with account selector, recipient autocomplete, canned responses selector (postal tracking, payment approval, stock inquiries), and signature rendering.
-    - `views/admin/emails_partials/_accounts_pane.php`: dedicated domain mailbox accounts management hub with AES-256 encrypted credentials, IMAP/SMTP configurations, active toggles, and live connection test.
-- **Critical Mailbox Service Fixes & Live Diagnostics (`app/services/MailboxService.php`)**:
-  - Fixed fatal error bug on line 37 where `self::logSend()` was called on an undefined method; implemented robust `logSend()` logging both successful and failed dispatches into `email_log`.
-  - Implemented `testConnection()` executing live socket handshakes to both IMAP and SMTP ports with full debug trace capture.
-  - Implemented secure HTML body extraction, multipart MIME parsing, charset conversion, and XSS sanitization.
-  - Integrated official store signature generation (`buildHtmlEmailTemplate()`) into outgoing transactional and admin emails.
-- **Admin Coupons & Promotion Management System (`app/controllers/admin/coupons.php`, `views/admin/coupons.php`, `assets/css/admin-coupons.css`, `app/services/CouponService.php`)**:
-  - Introduced dedicated Coupons workstation allowing store owners to define, monitor, and manage discount codes without direct database access.
-  - Extended `CouponService`: implemented CRUD (`getAll`, `getById`, `save`, `toggle`, `delete`), added percentage and fixed discount calculations with minimum basket amounts, usage caps, and expiration validations.
-  - Fixed column discrepancies (`max_uses` vs `usage_limit`, `discount_type` vs `type`) with seamless backward-compatible fallbacks.
-  - Added Bento station card in `views/admin/settings_partials/_tab_workstations.php` and navigation link in `views/admin/layout/nav_config.php`.
-- **Database Schema Migration 025 (`database/migrations/025_v1.28.0_email_studio_and_coupons.sql`, `database/schema.sql`)**:
-  - Added `signature TEXT DEFAULT NULL` to `email_accounts` table.
-  - Added guarded `max_discount_amount DECIMAL(12,0) DEFAULT NULL` column and `idx_coupon_lookup` index to `coupons` table.
-- **Ultra-Lean Controller Footprint & Full Layer Boundaries**:
-  - `emails.php` controller strictly bounded at 68 lines (Rule 7 soft limit: 80 lines).
-  - `coupons.php` controller strictly bounded at 46 lines.
-  - Zero SQL queries across all view templates and partials.
 
 

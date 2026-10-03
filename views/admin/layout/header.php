@@ -81,7 +81,7 @@ $adminDiagnosticsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/cs
 <?php if (in_array($currentPage, ['emails.php', 'email_accounts.php', 'email_read.php', 'email_compose.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-emails.css?v=<?= $adminEmailsCssVer ?>">
 <?php endif; ?>
-<?php if ($currentPage === 'coupons.php'): ?>
+<?php if (in_array($currentPage, ['coupons.php', 'tags.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-coupons.css?v=<?= $adminCouponsCssVer ?>">
 <?php endif; ?>
 <?php if ($currentPage === 'users.php'): ?>
