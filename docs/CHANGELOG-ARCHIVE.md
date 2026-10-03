@@ -1,9 +1,28 @@
-# Changelog Archive (v1.0.0 — v1.25.0)
+# Changelog Archive (v1.0.0 — v1.26.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.25.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.26.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.26.0 — 2026-10-03
+
+### Shipping Methods Workstation Overhaul, Estimated Delivery Tracking, Live Checkout Simulation & Migration 024
+
+- **Dual-Pane Logistics & Shipping Workstation Architecture (`views/admin/shipping_methods.php`, `views/admin/shipping_methods_partials/`, `assets/css/admin-shipping.css`)**:
+  - Replaced legacy basic HTML table with a modern dual-pane Master-Detail Workstation matching AB-Socks design system standards:
+    - `views/admin/shipping_methods_partials/_kpis.php`: Bento KPI statistics header displaying active methods count, average customer fee, average courier/postal expense, net unit shipping subsidy indicator, and free shipping threshold status.
+    - `views/admin/shipping_methods_partials/_table.php`: high-density priority matrix table with coverage scope badges, customer fee vs postal actual cost, unit margin/subsidy tags, free shipping threshold indicator, and instant AJAX status toggle.
+    - `views/admin/shipping_methods_partials/_studio.php`: sticky interactive studio with instant mode switching (`جدید` / `ویرایش`), form controls with quick-chip delivery suggestions, and live simulation box.
+- **Live Customer Checkout Simulation Studio (`assets/js/admin-shipping.js`, `views/admin/shipping_methods_partials/_studio.php`)**:
+  - Embedded real-time visual simulator rendering exactly how the shipping method, delivery time expectation, and fee/free rules will appear to customers in checkout.
+- **Estimated Delivery Time Tracking & Storefront Checkout Integration (`database/migrations/024_v1.26.0_shipping_enhancement.sql`, `database/schema.sql`, `app/services/ShippingService.php`, `ajax/shipping_estimate.php`, `views/site/checkout.php`)**:
+  - Added `estimated_delivery VARCHAR(120)` column to `shipping_methods` table via guarded Migration 024 and synchronized baseline `database/schema.sql`.
+  - Extended `calculateShippingCost()` in `ShippingService.php` to include `estimated_delivery` in calculation results.
+- **Logistics Economics & Summary Analytics (`app/services/ShippingService.php`)**:
+  - Implemented `getShippingSummaryMetrics()`, `toggleShippingMethodActive()`, and `reorderShippingMethods()`.
+- **Ultra-Lean Controller Footprint (`app/controllers/admin/shipping_methods.php`, `app/controllers/admin/shipping_method_edit.php`)**:
+  - Maintained `shipping_methods.php` controller at 72 lines (well within Rule 7 soft ceiling of 80 lines).
 
 ## 1.25.0 — 2026-10-03
 

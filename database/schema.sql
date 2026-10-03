@@ -216,16 +216,21 @@ CREATE TABLE IF NOT EXISTS price_history (
 CREATE TABLE IF NOT EXISTS coupons (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(60) NOT NULL UNIQUE,
-    type ENUM('percent','fixed') NOT NULL DEFAULT 'percent',
+    title VARCHAR(150) DEFAULT NULL,
+    type ENUM('percent','fixed','free_shipping') NOT NULL DEFAULT 'percent',
     value DECIMAL(12,0) NOT NULL,
     min_order_amount DECIMAL(12,0) DEFAULT 0,
     max_discount_amount DECIMAL(12,0) DEFAULT NULL,
     max_uses INT DEFAULT NULL,
+    max_uses_per_customer INT NOT NULL DEFAULT 1,
+    category_id INT UNSIGNED DEFAULT NULL,
     used_count INT NOT NULL DEFAULT 0,
     expires_at DATE DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_coupon_lookup (code, is_active)
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_coupon_lookup (code, is_active),
+    INDEX idx_coupon_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

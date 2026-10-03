@@ -3,9 +3,32 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.26.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.27.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.31.0 — 2026-10-04
+
+### Promotions & Coupons Workstation Redesign, Financial ROI Tracking, Free Shipping Campaigns, Tags Taxonomy & Migration 027
+
+- **Modular Coupons Workstation Architecture (`views/admin/coupons.php`, `views/admin/coupons_partials/`, `assets/css/admin-coupons.css`)**:
+  - Replaced legacy monolithic 294-line template with a modern component-driven workstation adhering strictly to Rule 7:
+    - `views/admin/coupons_partials/_kpis.php`: Bento KPI statistics header displaying active coupons, lifetime redemption count, total discount disbursed (Toman), and total gross revenue generated with promotions.
+    - `views/admin/coupons_partials/_toolbar.php`: interactive status filter pills (`همه کدهای تخفیف`, `فعال`, `منقضی‌شده`, `تکمیل ظرفیت`, `غیرفعال دستی`), real-time search box, and fast action CTAs.
+    - `views/admin/coupons_partials/_table.php`: high-density data matrix featuring 1-click copyable monospace code badges, campaign title notes, discount type chips (`درصدی`, `مبلغ ثابت`, `ارسال رایگان`), minimum basket conditions, usage progress meters with customer caps, Shamsi expiry dates (`appDateTime`), and quick action buttons.
+    - `views/admin/coupons_partials/_modal.php`: creation and editing modal featuring 1-click random code generation (`btn-magic-generate`), dynamic field visibility (hiding value and caps for free-shipping promotions), category scoping, and customer limits.
+    - `views/admin/coupons_partials/_drawer_stats.php`: slide-over analytics drawer rendering real-time financial ROI metrics (order count, gross sales volume, total discount, average order value) and a table of the recent 12 orders that redeemed the coupon.
+- **Coupon Promotion Capabilities & Database Migration (`database/migrations/027_v1.31.0_coupons_and_tags_enhancement.sql`, `database/schema.sql`, `app/services/CouponService.php`, `app/services/OrderService.php`, `app/controllers/site/checkout.php`)**:
+  - Added `title VARCHAR(150)`, `max_uses_per_customer INT NOT NULL DEFAULT 1`, `category_id INT UNSIGNED DEFAULT NULL`, and updated `type` ENUM to include `free_shipping` via guarded Migration 027.
+  - Implemented per-customer usage validation preventing promotion abuse across repeated orders with identical phone numbers.
+  - Added category-scoped promotions verifying eligibility against cart item categories.
+  - Added native Free Shipping coupon support automatically discounting full courier/postal shipping costs during checkout and order persistence.
+- **Product Tags & Taxonomy Management Hub (`app/controllers/admin/tags.php`, `views/admin/tags.php`, `app/services/TagService.php`, `admin/tags.php`, `views/admin/layout/nav_config.php`)**:
+  - Introduced dedicated product tags management view and controller in the Products Hub (`tags.php`) enabling store owners to manage SEO keywords, inspect connected product counts, edit slugs, and prune unused orphan tags in one click.
+- **Ultra-Lean Controller Footprint (`app/controllers/admin/coupons.php`, `app/controllers/admin/tags.php`, `app/controllers/site/checkout.php`)**:
+  - `app/controllers/admin/coupons.php` maintained at 65 lines with AJAX performance stats and random code generation endpoints.
+  - `app/controllers/admin/tags.php` maintained at 35 lines.
+  - `app/controllers/site/checkout.php` refactored to 75 lines, resolving pre-existing anti-bloat warning.
 
 ## 1.30.2 — 2026-10-04
 
@@ -143,27 +166,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Ultra-Lean Controller Footprint (`app/controllers/admin/sms_patterns.php`, `app/controllers/admin/sms_pattern_edit.php`)**:
   - `sms_patterns.php` maintained at 49 lines with AJAX status toggle support.
   - `sms_pattern_edit.php` maintained at 78 lines (both well below Rule 7 soft ceiling of 80 lines).
-
-## 1.26.0 — 2026-10-03
-
-### Shipping Methods Workstation Overhaul, Estimated Delivery Tracking, Live Checkout Simulation & Migration 024
-
-- **Dual-Pane Logistics & Shipping Workstation Architecture (`views/admin/shipping_methods.php`, `views/admin/shipping_methods_partials/`, `assets/css/admin-shipping.css`)**:
-  - Replaced legacy basic HTML table with a modern dual-pane Master-Detail Workstation matching AB-Socks design system standards:
-    - `views/admin/shipping_methods_partials/_kpis.php`: Bento KPI statistics header displaying active methods count, average customer fee, average courier/postal expense, net unit shipping subsidy indicator (alerting when store subsidizes freight), and free shipping threshold status.
-    - `views/admin/shipping_methods_partials/_table.php`: high-density priority matrix table with coverage scope badges (🏢 Province specific vs 🌐 Nationwide default), customer fee vs postal actual cost, unit margin/subsidy tags, free shipping threshold indicator, instant AJAX status toggle, and priority ordering.
-    - `views/admin/shipping_methods_partials/_studio.php`: sticky interactive studio with instant mode switching (`جدید` / `ویرایش`), form controls with quick-chip delivery suggestions, and live simulation box.
-- **Live Customer Checkout Simulation Studio (`assets/js/admin-shipping.js`, `views/admin/shipping_methods_partials/_studio.php`)**:
-  - Embedded real-time visual simulator rendering exactly how the shipping method, delivery time expectation, and fee/free rules will appear to customers in the checkout summary and order invoice.
-  - 1-click studio population from any table row without full page reloads, accompanied by optimistic AJAX active toggles and smooth scrolling.
-- **Estimated Delivery Time Tracking & Storefront Checkout Integration (`database/migrations/024_v1.26.0_shipping_enhancement.sql`, `database/schema.sql`, `app/services/ShippingService.php`, `ajax/shipping_estimate.php`, `views/site/checkout.php`)**:
-  - Added `estimated_delivery VARCHAR(120)` column to `shipping_methods` table via guarded Migration 024 and synchronized baseline `database/schema.sql`.
-  - Extended `calculateShippingCost()` in `ShippingService.php` to include `estimated_delivery` in calculation results.
-  - Updated `ajax/shipping_estimate.php` and `views/site/checkout.php` dynamic estimator to display delivery estimates (e.g. `هزینه ارسال (پست پیشتاز • ۲ تا ۴ روز کاری): رایگان`) directly next to shipping charges in customer checkout.
-- **Logistics Economics & Summary Analytics (`app/services/ShippingService.php`)**:
-  - Implemented `getShippingSummaryMetrics()` calculating aggregate metrics: total and active methods, average customer shipping fee, average courier cost, net unit shipping subsidy, and lowest active free-shipping basket threshold.
-  - Implemented `toggleShippingMethodActive()` and `reorderShippingMethods()` supporting atomic database updates.
-- **Ultra-Lean Controller Footprint (`app/controllers/admin/shipping_methods.php`, `app/controllers/admin/shipping_method_edit.php`)**:
-  - Maintained `shipping_methods.php` controller at 72 lines (well within Rule 7 soft ceiling of 80 lines).
-  - Maintained `shipping_method_edit.php` at 34 lines for seamless backward compatibility.
 

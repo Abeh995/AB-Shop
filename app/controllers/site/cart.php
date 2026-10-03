@@ -10,7 +10,9 @@ $appliedCoupon = $_SESSION['coupon'] ?? null;
 // Re-validate an already-applied coupon in case it no longer matches the current cart (e.g. the total dropped)
 $discount = 0;
 if ($appliedCoupon) {
-    $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);
+    $cust = currentCustomer();
+    $phone = $cust['phone'] ?? null;
+    $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal'], $phone, null, $cart['items'] ?? []);
     if ($check['ok']) {
         $discount = $check['discount'];
     } else {

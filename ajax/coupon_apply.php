@@ -5,8 +5,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     $code = trim($_POST['coupon_code'] ?? '');
     $cart = cartDetails();
+    $cust = currentCustomer();
+    $phone = $cust['phone'] ?? null;
 
-    $result = CouponService::validate($code, $cart['subtotal']);
+    $result = CouponService::validate($code, $cart['subtotal'], $phone, null, $cart['items'] ?? []);
     if ($result['ok']) {
         $_SESSION['coupon'] = ['code' => $code, 'coupon_id' => $result['coupon']['id']];
         setFlash('success', $result['message']);

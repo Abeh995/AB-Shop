@@ -61,15 +61,11 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 
 ### CouponService (`app/services/CouponService.php`)
 - Encapsulates promotional discount code validation and calculation (`validate()`, `calculateDiscount()`).
-- Supports percentage discounts (`percent`) with maximum discount ceilings (`max_discount_amount`) and fixed monetary discounts (`fixed`).
-- Validates minimum order amounts (`min_order_amount`), usage limits (`max_uses`), active status, and date expiration windows.
+- Supports percentage discounts (`percent`) with maximum discount ceilings (`max_discount_amount`), fixed monetary discounts (`fixed`), and native free-shipping promotions (`free_shipping` — Migration 027).
+- Validates minimum order amounts (`min_order_amount`), total usage limits (`max_uses`), per-customer usage limits (`max_uses_per_customer`), category scoping (`category_id`), active status, and date expiration windows.
 - Atomic usage incrementation (`markUsed()`) invoked directly within `OrderService::createFromCheckout()` inside the order placement transaction.
-- Full administrative management via `admin/coupons.php` (`getAll()`, `save()`, `toggle()`, `delete()`).
-  - Smart cart filtering (`getAvailablePostOrderItems(?int $cartSubtotal)`) matching subtotal thresholds against `min_cart_total`.
-- Snapshots cost and selling prices into `order_gift_items`.
-- Provides catalog workstation metrics (`getAdminGiftItemsMetrics()`) for inventory capital valuation, utilization rates, lifetime upsell gross revenue, net profit, cart attach rate (Take Rate %), and top-performer detection.
-- Connects historical order attachments (`order_gift_items`) into vectorized catalog performance stats (`gifted_units`, `sold_units`, `gross_revenue`, `gross_profit`, `margin_percent`).
-- Enforces row-locking (`SELECT ... FOR UPDATE` and conditional `WHERE stock >= ?`) for concurrency safety across all stock mutations.
+- Calculates comprehensive financial ROI metrics and historical order attribution (`getCouponPerformance()`, `getOverviewStats()`) aggregating gross sales volume, total discounts given, and AOV.
+- Full administrative management via `admin/coupons.php` with modular component views in `views/admin/coupons_partials/` (`_kpis`, `_toolbar`, `_table`, `_modal`, `_drawer_stats`).
 
 ### AccountingService (`app/services/AccountingService.php`)
 - **Read-Only Reporting**: Strictly read-only; never mutates the database.

@@ -60,7 +60,8 @@ class OrderService
         $discount = 0;
         $appliedCoupon = $_SESSION['coupon'] ?? null;
         if ($appliedCoupon) {
-            $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);
+            $customerPhone = $data['phone'] ?? null;
+            $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal'], $customerPhone, null, $cart['items'] ?? []);
             if ($check['ok']) {
                 $discount = $check['discount'];
                 $couponRow = $check['coupon'];
@@ -73,6 +74,9 @@ class OrderService
         $giftItemsTotal = $postOrderResult['total'];
         $shipping = calculateShippingCost($data['province'], $cart['subtotal']);
         $shippingCost = $shipping['cost'];
+        if ($couponRow && ($couponRow['type'] ?? '') === 'free_shipping') {
+            $discount = (int) $shippingCost;
+        }
         $total = (int) max(0, $cart['subtotal'] - $discount + $shippingCost + $giftItemsTotal);
 
         if ($paymentMethod === 'card_to_card') {

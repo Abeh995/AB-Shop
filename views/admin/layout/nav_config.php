@@ -52,7 +52,7 @@ if (!function_exists('getAdminNavConfig')) {
                 'label' => 'محصولات',
                 'url' => 'products.php',
                 'icon' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-                'active' => in_array($currentPage, ['products.php', 'product_edit.php', 'categories.php', 'pricing.php', 'gift_items.php', 'gift_item_edit.php', 'coupons.php'], true),
+                'active' => in_array($currentPage, ['products.php', 'product_edit.php', 'categories.php', 'pricing.php', 'gift_items.php', 'gift_item_edit.php', 'coupons.php', 'tags.php'], true),
                 'badge' => 0,
                 'sub_items' => [
                     [
@@ -64,6 +64,11 @@ if (!function_exists('getAdminNavConfig')) {
                         'label' => 'دسته‌بندی‌ها',
                         'url' => 'categories.php',
                         'active' => ($currentPage === 'categories.php')
+                    ],
+                    [
+                        'label' => 'برچسب‌ها و مشخصات',
+                        'url' => 'tags.php',
+                        'active' => ($currentPage === 'tags.php')
                     ],
                     [
                         'label' => 'تغییر قیمت گروهی',
