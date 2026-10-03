@@ -1,9 +1,42 @@
-# Changelog Archive (v1.0.0 — v1.20.1)
+# Changelog Archive (v1.0.0 — v1.21.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.20.1.
+Historical release notes for AB-Socks versions 1.0.0 through 1.21.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.21.0 — 2026-10-01
+
+### Financial Dashboard Workstation & Unit Economics Overhaul
+
+- **Financial Analytics & Aggregation Engine (`app/services/AccountingService.php`, `app/core/functions.php`)**:
+  - Implemented `jalaliToGregorian()` in `functions.php` to enable precise boundary conversions for Jalali calendar cycles (Farvardin through Esfand, accounting for 31-day and 30-day Iranian solar months).
+  - Added `resolveFinancialDateRange()` providing true Shamsi month and year filters (`today`, `yesterday`, `7days`, `30days`, `this_month`, `last_month`, `this_year`, `all`, and custom dates).
+  - Extended `getFinancialSummary()` with advanced unit economics: Average Order Value (AOV), Net Profit per Order, Shipping P&L balance, Shipping Subsidy, Discount Penetration Rate, Break-Even Revenue and Order Targets, and Product Cost Health score.
+  - Implemented `getFinancialDailyTrends()`: batch time-series timeline aggregation generating daily gross revenue, COGS, operating expenses, and net profit with zero N+1 database queries.
+  - Added `getTopProfitProducts()`: identifies top 5 profit-driving catalog products ranked by net contribution margin.
+  - Added `getPaymentMethodBreakdown()`: calculates sales volume, order counts, and share percentages across Zarinpal and Card-to-Card gateways.
+  - Added `getShippingMethodFinancialBreakdown()`: compares customer-paid shipping fees against actual courier costs to monitor logistical subsidies.
+  - Added `getIncompleteCostProducts()`: audits orders with zero-cost snapshots to ensure financial precision.
+  - Added `exportFinancialCsv()` and `getFinancialExportRows()`: direct UTF-8 BOM CSV streaming for Iranian Excel compatibility.
+- **Dedicated Financial Design System (`assets/css/admin-finance.css`, `views/admin/layout/header.php`)**:
+  - Introduced modular stylesheet `assets/css/admin-finance.css` linked dynamically in `header.php` with cache-busted versioning.
+  - Comprehensive design tokens for financial status indicators (emerald for profit, rose for expense/loss, indigo for break-even, amber for subsidies and audit warnings).
+  - High-density Bento workstation grid with interactive hover depth, responsive flex-wrap controls, and custom SVG charting primitives.
+  - Dedicated `@media print` print-sheet styling rendering an official corporate Profit & Loss (P&L) A4 statement with hide-on-print controls for interactive UI elements.
+- **Pure SVG Interactive Dual-Layer Timeline (`views/admin/finance_dashboard.php`)**:
+  - Zero-external-dependency charting engine built entirely with inline SVG vectors, cubic bezier smooth paths, and dual-layer gradient fills (gross revenue vs net profit).
+  - Interactive tooltip badge with crosshair tracking indicator and dynamic Jalali date labels.
+- **Ultra-Lean Controller Architecture (`app/controllers/admin/finance_dashboard.php`)**:
+  - Reduced controller footprint to 34 lines (under Rule 7 soft ceiling of 80 lines).
+  - Pure presentation delegation: handles CSV export requests, resolves date ranges, and fetches analytical datasets in single service calls.
+- **Desktop Bento Workstation & Deep Analytics Matrix (`views/admin/finance_dashboard.php`)**:
+  - 4 Hero KPI Cards (Gross Revenue, Product Cost COGS, Operating Expenses, Net Settled Profit) with dynamic margin badges.
+  - 4 Micro-Metric Indicators (Average Order Value, Net Profit/Order, Shipping P&L Balance, Customer Discounts).
+  - Break-Even Progress Gauge displaying real-time fixed cost coverage percentage and required sales volume.
+  - Cash Flow Allocation Waterfall bar visualizing capital distribution across inventory, operations, and retained earnings.
+  - Dual-column analytical deck: Top Profit Generators, Gateway Distribution, Shipping Subsidies, and Expense Categorization.
+  - Missing Cost Audit Drawer with 1-click navigation to Product Pricing Hub (`pricing.php`).
 
 ## 1.20.1 — 2026-10-01
 

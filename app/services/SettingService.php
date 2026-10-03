@@ -70,6 +70,7 @@ function getStoreSettingsData(): array
 
         // Branding & Storefront visuals
         'siteLogo'                => getSetting('site_logo', ''),
+        'siteFavicon'             => getSetting('site_favicon', ''),
         'announcementBarEnabled'  => getSetting('announcement_bar_enabled', '0') === '1',
         'announcementBarText'     => getSetting('announcement_bar_text', ''),
         'announcementBarLink'     => getSetting('announcement_bar_link', ''),
@@ -109,10 +110,32 @@ function getStoreSettingsData(): array
         'homeCategoriesTitle'       => getSetting('home_categories_title', 'دسته‌بندی‌ها'),
         'homeFeaturedEnabled'       => getSetting('home_featured_enabled', '1') === '1',
         'homeFeaturedTitle'         => getSetting('home_featured_title', 'پیشنهاد ویژه'),
+        'homeFeaturedLimit'         => (int) getSetting('home_featured_limit', '6'),
         'homeNewestEnabled'         => getSetting('home_newest_enabled', '1') === '1',
         'homeNewestTitle'           => getSetting('home_newest_title', 'آخرین محصولات'),
+        'homeNewestLimit'           => (int) getSetting('home_newest_limit', '6'),
         'homeCategoryStripEnabled'  => getSetting('home_category_strip_enabled', '1') === '1',
         'homeCategoryStripTitle'    => getSetting('home_category_strip_title', 'دسته‌بندی‌ها را از همین‌جا هم می‌بینید'),
+
+        // Hero Promo Banner
+        'heroBannerEnabled'         => getSetting('hero_banner_enabled', '0') === '1',
+        'heroBannerImage'           => getSetting('hero_banner_image', ''),
+        'heroBannerBadge'           => getSetting('hero_banner_badge', 'پیشنهاد ویژه این فصل'),
+        'heroBannerTitle'           => getSetting('hero_banner_title', 'کالکشن جدید و خاص جوراب‌های AB'),
+        'heroBannerSubtitle'        => getSetting('hero_banner_subtitle', 'تنوع بی‌نظیر طرح‌ها و رنگ‌ها با الیاف ۱۰۰٪ نخ‌پنبه و بالاترین دوام'),
+        'heroBannerCtaText'         => getSetting('hero_banner_cta_text', 'مشاهده همه محصولات'),
+        'heroBannerCtaUrl'          => getSetting('hero_banner_cta_url', '/categories.php'),
+
+        // Trust Bar / Value Propositions
+        'trustBarEnabled'           => getSetting('trust_bar_enabled', '1') === '1',
+        'trustItem1Title'           => getSetting('trust_item_1_title', 'ارسال سریع و مطمئن'),
+        'trustItem1Desc'            => getSetting('trust_item_1_desc', 'ارسال پستی به سراسر کشور'),
+        'trustItem2Title'           => getSetting('trust_item_2_title', 'ضمانت ۷ روزه کیفیت'),
+        'trustItem2Desc'            => getSetting('trust_item_2_desc', 'تعویض بی‌قید و شرط در صورت عدم رضایت'),
+        'trustItem3Title'           => getSetting('trust_item_3_title', 'الیاف طبیعی نخ‌پنبه'),
+        'trustItem3Desc'            => getSetting('trust_item_3_desc', 'ضد حساسیت، لطیف و بسیار با دوام'),
+        'trustItem4Title'           => getSetting('trust_item_4_title', 'بسته‌بندی بهداشتی و شیک'),
+        'trustItem4Desc'            => getSetting('trust_item_4_desc', 'مناسب برای کادو با بسته‌بندی استاندارد'),
     ];
 }
 
@@ -253,26 +276,75 @@ function saveStoreSection(string $section, array $post, array $files = []): arra
 
             setSetting('home_featured_enabled', isset($post['home_featured_enabled']) ? '1' : '0');
             setSetting('home_featured_title', trim($post['home_featured_title'] ?? 'پیشنهاد ویژه'));
+            setSetting('home_featured_limit', (string) max(2, min(24, (int) ($post['home_featured_limit'] ?? 6))));
 
             setSetting('home_newest_enabled', isset($post['home_newest_enabled']) ? '1' : '0');
             setSetting('home_newest_title', trim($post['home_newest_title'] ?? 'آخرین محصولات'));
+            setSetting('home_newest_limit', (string) max(2, min(24, (int) ($post['home_newest_limit'] ?? 6))));
 
             setSetting('home_category_strip_enabled', isset($post['home_category_strip_enabled']) ? '1' : '0');
             setSetting('home_category_strip_title', trim($post['home_category_strip_title'] ?? 'دسته‌بندی‌ها را از همین‌جا هم می‌بینید'));
             return ['ok' => true, 'error' => null, 'message' => 'تنظیمات بخش‌های صفحه اصلی ذخیره شد.'];
 
+        case 'hero_banner':
+            setSetting('hero_banner_enabled', isset($post['hero_banner_enabled']) ? '1' : '0');
+            setSetting('hero_banner_badge', trim($post['hero_banner_badge'] ?? ''));
+            setSetting('hero_banner_title', trim($post['hero_banner_title'] ?? ''));
+            setSetting('hero_banner_subtitle', trim($post['hero_banner_subtitle'] ?? ''));
+            setSetting('hero_banner_cta_text', trim($post['hero_banner_cta_text'] ?? ''));
+            setSetting('hero_banner_cta_url', trim($post['hero_banner_cta_url'] ?? ''));
+
+            if (!empty($files['hero_banner_image']['name']) && $files['hero_banner_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadRes = saveHeroBannerImage($files['hero_banner_image']);
+                if (!$uploadRes['ok']) {
+                    return $uploadRes;
+                }
+            } elseif (isset($post['remove_hero_banner_image'])) {
+                removeHeroBannerImage();
+            }
+
+            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات بنر پروموشن صفحه اصلی با موفقیت ذخیره شد.'];
+
+        case 'trust_bar':
+            setSetting('trust_bar_enabled', isset($post['trust_bar_enabled']) ? '1' : '0');
+            setSetting('trust_item_1_title', trim($post['trust_item_1_title'] ?? ''));
+            setSetting('trust_item_1_desc', trim($post['trust_item_1_desc'] ?? ''));
+            setSetting('trust_item_2_title', trim($post['trust_item_2_title'] ?? ''));
+            setSetting('trust_item_2_desc', trim($post['trust_item_2_desc'] ?? ''));
+            setSetting('trust_item_3_title', trim($post['trust_item_3_title'] ?? ''));
+            setSetting('trust_item_3_desc', trim($post['trust_item_3_desc'] ?? ''));
+            setSetting('trust_item_4_title', trim($post['trust_item_4_title'] ?? ''));
+            setSetting('trust_item_4_desc', trim($post['trust_item_4_desc'] ?? ''));
+            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات نوار مزایای خرید با موفقیت ذخیره شد.'];
+
         case 'branding':
+            $msg = [];
+            // Logo handling
             if (!empty($files['site_logo']['name']) && $files['site_logo']['error'] === UPLOAD_ERR_OK) {
                 $uploadRes = saveBrandingLogo($files['site_logo']);
                 if (!$uploadRes['ok']) {
                     return $uploadRes;
                 }
-                return ['ok' => true, 'error' => null, 'message' => 'لوگوی فروشگاه با موفقیت بارگذاری شد.'];
+                $msg[] = 'لوگو با موفقیت بارگذاری شد';
             } elseif (isset($post['remove_logo'])) {
                 removeBrandingLogo();
-                return ['ok' => true, 'error' => null, 'message' => 'لوگو حذف شد؛ نام فروشگاه جای آن نمایش داده می‌شود.'];
+                $msg[] = 'لوگو حذف شد';
             }
-            return ['ok' => true, 'error' => null, 'message' => 'بدون تغییر در لوگو.'];
+
+            // Favicon handling
+            if (!empty($files['site_favicon']['name']) && $files['site_favicon']['error'] === UPLOAD_ERR_OK) {
+                $favRes = saveBrandingFavicon($files['site_favicon']);
+                if (!$favRes['ok']) {
+                    return $favRes;
+                }
+                $msg[] = 'فاویکون با موفقیت بارگذاری شد';
+            } elseif (isset($post['remove_favicon'])) {
+                removeBrandingFavicon();
+                $msg[] = 'فاویکون حذف شد';
+            }
+
+            $message = empty($msg) ? 'بدون تغییر در نشان‌های برند.' : implode(' و ', $msg) . '.';
+            return ['ok' => true, 'error' => null, 'message' => $message];
 
         case 'announcement':
             setSetting('announcement_bar_enabled', isset($post['announcement_bar_enabled']) ? '1' : '0');
@@ -372,6 +444,167 @@ function removeBrandingLogo(): bool
     }
     setSetting('site_logo', '');
     return true;
+}
+
+/**
+ * Handle favicon upload and save into BRANDING_UPLOAD_DIR.
+ */
+function saveBrandingFavicon(array $file): array
+{
+    if ($file['size'] > 1048576) { // 1 MB limit for favicon
+        return ['ok' => false, 'error' => 'حجم آیکون فاویکون نباید بیشتر از ۱ مگابایت باشد.', 'message' => null];
+    }
+
+    $allowedMimes = [
+        'image/x-icon'             => 'ico',
+        'image/vnd.microsoft.icon' => 'ico',
+        'image/png'                => 'png',
+        'image/svg+xml'            => 'svg',
+    ];
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!isset($allowedMimes[$mime])) {
+        return ['ok' => false, 'error' => 'فقط فایل‌های ICO، PNG یا SVG برای فاویکون مجاز هستند.', 'message' => null];
+    }
+
+    if ($mime === 'image/svg+xml') {
+        $content = file_get_contents($file['tmp_name']);
+        if (stripos($content, '<svg') === false || stripos($content, '<script') !== false) {
+            return ['ok' => false, 'error' => 'فایل SVG نامعتبر یا دارای اسکریپت غیرمجاز است.', 'message' => null];
+        }
+    }
+
+    if (!is_dir(BRANDING_UPLOAD_DIR)) {
+        mkdir(BRANDING_UPLOAD_DIR, 0755, true);
+    }
+
+    $filename = generateStandardFilename('favicon', 0, 'site', $allowedMimes[$mime]);
+    $destination = BRANDING_UPLOAD_DIR . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return ['ok' => false, 'error' => 'خطا در ذخیره فایل فاویکون روی سرور.', 'message' => null];
+    }
+    @chmod($destination, 0644);
+
+    $oldFavicon = getSetting('site_favicon');
+    if ($oldFavicon && file_exists(BRANDING_UPLOAD_DIR . $oldFavicon)) {
+        @unlink(BRANDING_UPLOAD_DIR . $oldFavicon);
+    }
+
+    setSetting('site_favicon', $filename);
+    return ['ok' => true, 'filename' => $filename, 'error' => null, 'message' => 'فاویکون با موفقیت ذخیره شد.'];
+}
+
+/**
+ * Remove active favicon file and clear database setting.
+ */
+function removeBrandingFavicon(): bool
+{
+    $oldFavicon = getSetting('site_favicon');
+    if ($oldFavicon && file_exists(BRANDING_UPLOAD_DIR . $oldFavicon)) {
+        @unlink(BRANDING_UPLOAD_DIR . $oldFavicon);
+    }
+    setSetting('site_favicon', '');
+    return true;
+}
+
+/**
+ * Handle Hero promo banner image upload and save into BRANDING_UPLOAD_DIR.
+ */
+function saveHeroBannerImage(array $file): array
+{
+    if ($file['size'] > 3145728) { // 3 MB limit for hero banner
+        return ['ok' => false, 'error' => 'حجم تصویر بنر نباید بیشتر از ۳ مگابایت باشد.', 'message' => null];
+    }
+
+    $allowedMimes = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+    ];
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!isset($allowedMimes[$mime])) {
+        return ['ok' => false, 'error' => 'فقط تصاویر JPG، PNG یا WEBP برای بنر مجاز هستند.', 'message' => null];
+    }
+
+    $imgSize = @getimagesize($file['tmp_name']);
+    if ($imgSize === false) {
+        return ['ok' => false, 'error' => 'فایل انتخابی یک تصویر معتبر نیست.', 'message' => null];
+    }
+
+    if (!is_dir(BRANDING_UPLOAD_DIR)) {
+        mkdir(BRANDING_UPLOAD_DIR, 0755, true);
+    }
+
+    $filename = generateStandardFilename('banner', 0, 'hero', $allowedMimes[$mime]);
+    $destination = BRANDING_UPLOAD_DIR . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return ['ok' => false, 'error' => 'خطا در ذخیره تصویر بنر روی سرور.', 'message' => null];
+    }
+    @chmod($destination, 0644);
+
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg')) {
+        $exif = @exif_read_data($destination);
+        if ($exif && (!empty($exif['GPS']) || !empty($exif['Make']) || !empty($exif['Model']))) {
+            $gd = @imagecreatefromjpeg($destination);
+            if ($gd) {
+                imagejpeg($gd, $destination, 90);
+                imagedestroy($gd);
+            }
+        }
+    }
+
+    $oldBanner = getSetting('hero_banner_image');
+    if ($oldBanner && file_exists(BRANDING_UPLOAD_DIR . $oldBanner)) {
+        @unlink(BRANDING_UPLOAD_DIR . $oldBanner);
+    }
+
+    setSetting('hero_banner_image', $filename);
+    return ['ok' => true, 'filename' => $filename, 'error' => null, 'message' => 'تصویر بنر با موفقیت ذخیره شد.'];
+}
+
+/**
+ * Remove active hero banner image file and clear database setting.
+ */
+function removeHeroBannerImage(): bool
+{
+    $oldBanner = getSetting('hero_banner_image');
+    if ($oldBanner && file_exists(BRANDING_UPLOAD_DIR . $oldBanner)) {
+        @unlink(BRANDING_UPLOAD_DIR . $oldBanner);
+    }
+    setSetting('hero_banner_image', '');
+    return true;
+}
+
+/**
+ * Fetch KPI statistics for Appearance dashboard view.
+ */
+function getAppearanceStats(): array
+{
+    $activeSections = 0;
+    if (getSetting('home_intro_enabled', '0') === '1') $activeSections++;
+    if (getSetting('home_categories_enabled', '0') === '1') $activeSections++;
+    if (getSetting('home_featured_enabled', '1') === '1') $activeSections++;
+    if (getSetting('home_newest_enabled', '1') === '1') $activeSections++;
+    if (getSetting('home_category_strip_enabled', '1') === '1') $activeSections++;
+
+    return [
+        'activeSectionsCount'   => $activeSections,
+        'heroBannerActive'      => getSetting('hero_banner_enabled', '0') === '1',
+        'hasHeroBannerImage'    => !empty(getSetting('hero_banner_image')),
+        'trustBarActive'        => getSetting('trust_bar_enabled', '1') === '1',
+        'hasLogo'               => !empty(getSetting('site_logo')),
+        'hasFavicon'            => !empty(getSetting('site_favicon')),
+        'announcementActive'    => getSetting('announcement_bar_enabled', '0') === '1',
+    ];
 }
 
 /**

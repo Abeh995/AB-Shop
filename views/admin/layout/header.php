@@ -18,9 +18,15 @@ $pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardTo
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= e($pageTitle) ?> | مدیریت <?= e(SITE_NAME) ?></title>
 <meta name="robots" content="noindex, nofollow">
+<?php $adminFavicon = siteFaviconUrl(); ?>
+<?php if ($adminFavicon): ?>
+<link rel="icon" href="<?= e($adminFavicon) ?>">
+<link rel="apple-touch-icon" href="<?= e($adminFavicon) ?>">
+<?php else: ?>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<?php endif; ?>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
 <?php
 $styleCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/style.css') ?: 1);
@@ -32,6 +38,7 @@ $adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 $adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-gift-items.css') ?: 1);
 $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-finance.css') ?: 1);
 $adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-settings.css') ?: 1);
+$adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-appearance.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -55,6 +62,9 @@ $adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/a
 <?php endif; ?>
 <?php if ($currentPage === 'settings.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-settings.css?v=<?= $adminSettingsCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'appearance.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-appearance.css?v=<?= $adminAppearanceCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

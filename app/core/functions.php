@@ -190,6 +190,31 @@ function siteLogoUrl(): ?string
 }
 
 /**
+ * URL of the uploaded site favicon, or null when no favicon has been uploaded yet
+ * (or the stored file is missing), so callers can fall back to the default favicon.
+ */
+function siteFaviconUrl(): ?string
+{
+    $filename = getSetting('site_favicon', '');
+    if (!$filename || !file_exists(BRANDING_UPLOAD_DIR . $filename)) {
+        return null;
+    }
+    return BRANDING_UPLOAD_URL . $filename;
+}
+
+/**
+ * URL of the uploaded hero promo banner image, or null when no image has been uploaded yet.
+ */
+function heroBannerImageUrl(): ?string
+{
+    $filename = getSetting('hero_banner_image', '');
+    if (!$filename || !file_exists(BRANDING_UPLOAD_DIR . $filename)) {
+        return null;
+    }
+    return BRANDING_UPLOAD_URL . $filename;
+}
+
+/**
  * Build a standardized filename for an uploaded asset.
  *
  * Pattern: {entityType}-{entityId}-{role}-{hash4}.{ext}

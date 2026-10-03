@@ -3,9 +3,30 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.21.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.22.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.25.0 — 2026-10-03
+
+### Appearance & Homepage Workspace Overhaul, Hero Promo Banner, Trust Badges, Favicon & Migration 023
+
+- **Master-Tabbed Appearance Workspace Architecture (`views/admin/appearance.php`, `views/admin/appearance_partials/`, `assets/css/admin-appearance.css`)**:
+  - Decomposed the legacy monolithic 221-line appearance template with hardcoded inline styles into an elegant 60-line master view with 5 specialized partials (`_header_stats.php`, `_nav_tabs.php`, `_tab_sections.php`, `_tab_hero.php`, `_tab_trust.php`, `_tab_branding.php`, `_tab_announcement.php`) conforming to Rule 7.
+  - Introduced dedicated design system stylesheet `assets/css/admin-appearance.css` with responsive layout cards, dropzone file uploaders, live theme token color swatches, browser tab preview mockups, and URL hash tab synchronization.
+- **Hero Promo Banner & Conversion Architecture (`app/controllers/site/home.php`, `views/site/home.php`, `assets/css/style.css`, `app/services/SettingService.php`)**:
+  - Added configurable Hero Promo Banner supporting background image upload, seasonal promotional badge, main headline (H1), subtitle, and call-to-action (CTA) button with custom destination URL.
+  - Implemented automatic responsive styling with high-contrast text overlay, graceful degradation to text Hero Intro when disabled, and live preview simulator in admin panel.
+- **Value Propositions & Trust Bar (`app/controllers/site/home.php`, `views/site/home.php`, `assets/css/style.css`, `app/services/SettingService.php`)**:
+  - Integrated 4 customizable trust cards (fast courier delivery, 7-day quality guarantee, 100% natural cotton fibers, hygienic gift-ready packaging) designed specifically to maximize checkout conversion for sock retail.
+- **Branding Assets & Browser Favicon Management (`app/core/functions.php`, `app/services/SettingService.php`, `views/layout/header.php`, `views/admin/layout/header.php`)**:
+  - Added full administrator management for site Favicon (ICO, PNG, SVG) with secure MIME validation, standardized naming (`favicon-0-site-{hash}.{ext}`), and instant browser tab mockup preview.
+  - Introduced `siteFaviconUrl()` and `heroBannerImageUrl()` helper functions in `app/core/functions.php`.
+- **Homepage Product Slider Limits & Streamlined Controller (`app/controllers/site/home.php`, `views/admin/appearance_partials/_tab_sections.php`)**:
+  - Configurable item counts (4, 6, 8, 12, 16) for Featured Products and Newest Products sliders.
+  - Streamlined `app/controllers/site/home.php` to 66 lines, strictly respecting Rule 7 soft ceiling (< 80 lines).
+- **Database Migration 023 (`database/migrations/023_v1.25.0_appearance_enhancement.sql`, `database/schema.sql`)**:
+  - Seeded all 18 new configuration keys into `settings` table with safe fallbacks and mirrored into baseline `schema.sql`.
 
 ## 1.24.0 — 2026-10-03
 
@@ -143,36 +164,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Enhanced customer cart add-on cards with promotional marketing badge pills and helper tagline descriptions.
 - **Lean Controller Maintenance (`app/controllers/admin/gift_items.php`)**:
   - Added `reorder` action handling AJAX sort requests while strictly maintaining controller size at 80 lines.
-
-## 1.21.0 — 2026-10-01
-
-### Financial Dashboard Workstation & Unit Economics Overhaul
-
-- **Financial Analytics & Aggregation Engine (`app/services/AccountingService.php`, `app/core/functions.php`)**:
-  - Implemented `jalaliToGregorian()` in `functions.php` to enable precise boundary conversions for Jalali calendar cycles (Farvardin through Esfand, accounting for 31-day and 30-day Iranian solar months).
-  - Added `resolveFinancialDateRange()` providing true Shamsi month and year filters (`today`, `yesterday`, `7days`, `30days`, `this_month`, `last_month`, `this_year`, `all`, and custom dates).
-  - Extended `getFinancialSummary()` with advanced unit economics: Average Order Value (AOV), Net Profit per Order, Shipping P&L balance, Shipping Subsidy, Discount Penetration Rate, Break-Even Revenue and Order Targets, and Product Cost Health score.
-  - Implemented `getFinancialDailyTrends()`: batch time-series timeline aggregation generating daily gross revenue, COGS, operating expenses, and net profit with zero N+1 database queries.
-  - Added `getTopProfitProducts()`: identifies top 5 profit-driving catalog products ranked by net contribution margin.
-  - Added `getPaymentMethodBreakdown()`: calculates sales volume, order counts, and share percentages across Zarinpal and Card-to-Card gateways.
-  - Added `getShippingMethodFinancialBreakdown()`: compares customer-paid shipping fees against actual courier costs to monitor logistical subsidies.
-  - Added `getIncompleteCostProducts()`: audits orders with zero-cost snapshots to ensure financial precision.
-  - Added `exportFinancialCsv()` and `getFinancialExportRows()`: direct UTF-8 BOM CSV streaming for Iranian Excel compatibility.
-- **Dedicated Financial Design System (`assets/css/admin-finance.css`, `views/admin/layout/header.php`)**:
-  - Introduced modular stylesheet `assets/css/admin-finance.css` linked dynamically in `header.php` with cache-busted versioning.
-  - Comprehensive design tokens for financial status indicators (emerald for profit, rose for expense/loss, indigo for break-even, amber for subsidies and audit warnings).
-  - High-density Bento workstation grid with interactive hover depth, responsive flex-wrap controls, and custom SVG charting primitives.
-  - Dedicated `@media print` print-sheet styling rendering an official corporate Profit & Loss (P&L) A4 statement with hide-on-print controls for interactive UI elements.
-- **Pure SVG Interactive Dual-Layer Timeline (`views/admin/finance_dashboard.php`)**:
-  - Zero-external-dependency charting engine built entirely with inline SVG vectors, cubic bezier smooth paths, and dual-layer gradient fills (gross revenue vs net profit).
-  - Interactive tooltip badge with crosshair tracking indicator and dynamic Jalali date labels.
-- **Ultra-Lean Controller Architecture (`app/controllers/admin/finance_dashboard.php`)**:
-  - Reduced controller footprint to 34 lines (under Rule 7 soft ceiling of 80 lines).
-  - Pure presentation delegation: handles CSV export requests, resolves date ranges, and fetches analytical datasets in single service calls.
-- **Desktop Bento Workstation & Deep Analytics Matrix (`views/admin/finance_dashboard.php`)**:
-  - 4 Hero KPI Cards (Gross Revenue, Product Cost COGS, Operating Expenses, Net Settled Profit) with dynamic margin badges.
-  - 4 Micro-Metric Indicators (Average Order Value, Net Profit/Order, Shipping P&L Balance, Customer Discounts).
-  - Break-Even Progress Gauge displaying real-time fixed cost coverage percentage and required sales volume.
-  - Cash Flow Allocation Waterfall bar visualizing capital distribution across inventory, operations, and retained earnings.
-  - Dual-column analytical deck: Top Profit Generators, Gateway Distribution, Shipping Subsidies, and Expense Categorization.
-  - Missing Cost Audit Drawer with 1-click navigation to Product Pricing Hub (`pricing.php`).

@@ -34,7 +34,9 @@ All uploaded files are assigned deterministic, human-readable, and collision-fre
 - **Product Main Image**: `product-{ID}-main-{hash}.webp`
 - **Product Gallery Image**: `product-{ID}-g{sort}-{hash}.webp`
 - **Gift Item Image**: `giftitem-{ID}-main-{hash}.webp`
-- **Branding Logo**: `logo-site-{hash}.{ext}`
+- **Branding Logo**: `logo-0-site-{hash}.{ext}`
+- **Branding Favicon**: `favicon-0-site-{hash}.{ext}`
+- **Hero Promo Banner**: `banner-0-hero-{hash}.{ext}`
 
 Helper functions `generateStandardFilename()` and `renameUploadedImage()` in `app/core/functions.php` manage standard naming upon database record insertion.
 

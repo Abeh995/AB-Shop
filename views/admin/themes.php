@@ -12,7 +12,7 @@
 <table class="admin-table">
     <thead><tr><th>نام</th><th>رنگ‌ها</th><th>وضعیت</th><th></th></tr></thead>
     <tbody>
-    <?php foreach ($themes as $t): $tokens = $tokensByTheme[$t['id']]; ?>
+    <?php foreach ($themes as $t): $tokens = $t['tokens'] ?? []; ?>
         <tr>
             <td><?= e($t['name']) ?></td>
             <td>

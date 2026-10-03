@@ -19,13 +19,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         setFlash('error', $res['error'] ?? 'خطا در ذخیره تنظیمات.');
     }
-    redirect('appearance.php');
+    $tab = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) ($_POST['tab'] ?? ''));
+    redirect('appearance.php' . ($tab !== '' ? '#' . $tab : ''));
 }
 
 $settings = getStoreSettingsData();
 $activeTheme = getActiveTheme();
+$stats = getAppearanceStats();
 
 renderView('admin/appearance', array_merge(
-    ['pageTitle' => $pageTitle, 'activeTheme' => $activeTheme],
+    ['pageTitle' => $pageTitle, 'activeTheme' => $activeTheme, 'stats' => $stats],
     $settings
 ));
