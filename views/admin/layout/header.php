@@ -51,7 +51,7 @@ $adminDiagnosticsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/cs
 <?php if (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= $adminOrdersCssVer ?>">
 <?php endif; ?>
-<?php if ($currentPage === 'products.php'): ?>
+<?php if (in_array($currentPage, ['products.php', 'product_edit.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-products.css?v=<?= $adminProductsCssVer ?>">
 <?php endif; ?>
 <?php if ($currentPage === 'categories.php'): ?>

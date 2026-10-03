@@ -3,9 +3,24 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.29.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.30.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.32.0 — 2026-10-04
+
+### Product Tags Catalog Integration, Smart Tag Search & Interactive Tag Tokenizer Autocomplete
+
+- **Catalog Tag Filtering & Smart Search (`app/services/ProductService.php`, `app/controllers/admin/products.php`, `views/admin/products.php`, `views/admin/tags.php`)**:
+  - Implemented direct `tag_id` filtering in `ProductService::getProductsCatalog()` via performant subquery (`EXISTS (SELECT 1 FROM product_tags ...)`).
+  - Upgraded general text search (`q`) to automatically match product tags (`tags.name` and `tags.slug`) in addition to titles and SKU codes, ensuring search queries like "نخی" or "پنبه" locate all tagged catalog items.
+  - Linked the "محصولات متصل" counter in `views/admin/tags.php` directly to `/admin/products.php?tag_id=...`, eliminating empty search results.
+  - Added dedicated Tag Filter dropdown in the products catalog filter toolbar and an active dismissible filter banner (`[ فیلتر برچسب فعال: «...» ✕ ]`).
+- **Interactive Tag Tokenizer & Live Autocomplete Workstation (`views/admin/product_edit.php`, `assets/css/admin-products.css`)**:
+  - Replaced legacy static checkboxes and plain comma-separated text input with a modern Tag Tokenizer component.
+  - Built zero-latency client-side autocomplete with real-time substring matching, keyboard arrow navigation (`ArrowDown`/`ArrowUp`), Enter/comma selection, and automatic new tag token creation.
+  - Integrated "پیشنهادات پرتکرار" (popular tags cloud) enabling 1-click tag assignment.
+  - Enqueued `admin-products.css` on `product_edit.php` in `views/admin/layout/header.php`.
 
 ## 1.31.2 — 2026-10-04
 
@@ -113,32 +128,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Re-architected `app/controllers/admin/diagnostics.php` to strictly remain under 65 lines (soft ceiling: 80 lines), delegating all business logic to `DiagnosticService`.
   - Guaranteed 100% view purity across all diagnostics partials (0 SQL queries, 0 direct form processing).
 
-## 1.29.0 — 2026-10-04
-
-### Site Admins Workspace Redesign, Security & Activity Audit Trail & Migration 026
-
-- **Modernized Site Admins Workspace Architecture (`views/admin/users.php`, `views/admin/users_partials/`, `assets/css/admin-users.css`)**:
-  - Replaced legacy table with modular Bento-inspired administrative workstation adhering strictly to Rule 7:
-    - `views/admin/users_partials/_kpis.php`: Bento KPIs featuring total admin count, active accounts, super admins ratio, and real-time last active session card with IP.
-    - `views/admin/users_partials/_toolbar.php`: interactive live search by name, username, email or mobile, role/status filter pills, and modal trigger CTA.
-    - `views/admin/users_partials/_table.php`: interactive admin table featuring dynamic gradient initials avatars, contact badges (phone, email), role pills (gold for super admin, blue for admin), active pulsing status indicators, and quick action buttons.
-    - `views/admin/users_partials/_modals.php`: accessible, animated dialog modals for creating new admins, editing existing profiles, and resetting passwords without page reloads.
-    - `views/admin/users_partials/_audit_trail.php`: real-time security timeline displaying recent administrative operations with actor metadata, event tags, descriptions, IP addresses, and Persian timestamps.
-- **Service Layer Expansion & Security Audit Trail (`app/services/AdminUserService.php`)**:
-  - Implemented `getAdminUsersMetrics()` aggregating total, active, super_admins, and latest login session.
-  - Implemented `updateAdminUserRecord()` enabling super admins to update username, full name, phone, email, and role, while strictly enforcing safety invariants (preventing demotion of the last super admin).
-  - Implemented `logAdminAction()` and `getRecentAdminAuditLogs()` recording administrative operations into `admin_audit_logs` with exception insulation.
-  - Enhanced `createAdminUserRecord()` with input format validations and backwards-compatible payload handling.
-  - Hardened `toggleAdminUserActiveStatus()` and `deleteAdminUserRecord()` to guarantee that at least one active super admin remains.
-- **Session Tracking & Login Audit Integration (`app/core/auth.php`)**:
-  - Enhanced `attemptAdminLogin()`: automatically updates `last_login_at` timestamp and `last_login_ip` address on verified logins.
-  - Emits immutable `login` audit event into `admin_audit_logs`.
-- **Database Schema Migration 026 (`database/migrations/026_v1.29.0_admin_users_and_audit.sql`, `database/schema.sql`)**:
-  - Added guarded columns `phone`, `email`, `last_login_at`, and `last_login_ip` to `admins` table.
-  - Created `admin_audit_logs` table with foreign key cascading and indexes on `(admin_id, action)` and `created_at`.
-- **Ultra-Lean Controller Footprint & View Purity**:
-  - `app/controllers/admin/users.php` strictly bounded at 53 lines (soft ceiling: 80 lines).
-  - Exactly zero SQL queries or form mutations in view templates.
 
 
 

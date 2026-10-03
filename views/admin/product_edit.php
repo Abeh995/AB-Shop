@@ -182,31 +182,50 @@
                 </div>
             </div>
 
-            <!-- 4. Tags & SEO Card -->
-            <div class="admin-card">
-                <h3 style="margin-top: 0; margin-bottom: 14px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                    برچسب‌ها و تگ‌های سئو
-                </h3>
+            <!-- 4. Tags & SEO Taxonomy Card -->
+            <div class="admin-card tag-tokenizer-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                        برچسب‌ها و تگ‌های سئو
+                    </h3>
+                    <a href="/admin/tags.php" target="_blank" style="font-size:0.8rem; color:var(--prod-brand-primary, #C46C46); text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                        مدیریت برچسب‌ها ↗
+                    </a>
+                </div>
 
-                <?php if ($allTags): ?>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
-                    <?php foreach ($allTags as $tag): 
-                        $isSelected = in_array($tag['id'], $productTagIds);
-                    ?>
-                    <label class="variant-chip <?= $isSelected ? 'selected' : '' ?>" style="cursor: pointer; user-select: none;">
-                        <input type="checkbox" name="tag_ids[]" value="<?= (int)$tag['id'] ?>" <?= $isSelected ? 'checked' : '' ?>
-                               onchange="this.closest('.variant-chip').classList.toggle('selected', this.checked)">
-                        <?= e($tag['name']) ?>
-                    </label>
-                    <?php endforeach; ?>
+                <div class="tag-tokenizer-container" id="tagTokenizer">
+                    <div class="tag-tokens-box" id="tagTokensBox">
+                        <div class="tag-tokens-list" id="tagTokensList"></div>
+                        <input type="text" class="tag-input-field" id="tagInputField" placeholder="تایپ یا جستجوی برچسب (Enter یا کاما)..." autocomplete="off">
+                    </div>
+
+                    <!-- Autocomplete Floating Dropdown -->
+                    <div class="tag-autocomplete-dropdown" id="tagDropdown" style="display: none;"></div>
+
+                    <!-- Hidden inputs container for form submission -->
+                    <div id="tagHiddenInputs"></div>
+                </div>
+
+                <!-- Popular Suggestions Cloud -->
+                <?php if (!empty($allTags)): ?>
+                <div class="tag-popular-wrap" style="margin-top: 12px;">
+                    <span class="tag-popular-title">پیشنهادات پرتکرار:</span>
+                    <div class="tag-popular-chips" id="tagPopularChips">
+                        <?php 
+                        $popularPreview = array_slice($allTags, 0, 10);
+                        foreach ($popularPreview as $ptag): ?>
+                            <button type="button" class="tag-quick-chip" data-id="<?= (int)$ptag['id'] ?>" data-name="<?= e($ptag['name']) ?>">
+                                + <?= e($ptag['name']) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php endif; ?>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-weight: 500; font-size: 0.85rem;">افزودن تگ‌های تازه (با کاما جدا کنید)</label>
-                    <input class="form-control" type="text" name="new_tags" placeholder="مثلاً: نخی, کالج, پنبه اعلا, بهاره">
-                </div>
+                <small style="display:block; color:var(--text-muted, #64748b); font-size:0.78rem; margin-top:8px;">
+                    💡 برای ایجاد برچسب تازه، عبارت دلخواه را تایپ کرده و کلید <strong>Enter</strong> یا <strong>کاما</strong> را بزنید.
+                </small>
             </div>
 
         </div>
@@ -412,6 +431,256 @@ document.getElementById('priceInput').addEventListener('input', calculateLiveMar
 document.getElementById('discountPriceInput').addEventListener('input', calculateLiveMargin);
 document.getElementById('costPriceInput').addEventListener('input', calculateLiveMargin);
 calculateLiveMargin();
+
+// =========================================================================
+// Tag Tokenizer & Autocomplete Engine
+// =========================================================================
+(function() {
+    var allCatalogTags = <?= json_encode($allTags, JSON_UNESCAPED_UNICODE) ?> || [];
+    var initialSelectedIds = <?= json_encode(array_values($productTagIds)) ?> || [];
+
+    var selectedExisting = [];
+    var selectedNew = [];
+
+    var tagMap = {};
+    allCatalogTags.forEach(function(t) { tagMap[t.id] = t.name; });
+    initialSelectedIds.forEach(function(id) {
+        if (tagMap[id]) {
+            selectedExisting.push({ id: id, name: tagMap[id] });
+        }
+    });
+
+    var boxEl = document.getElementById('tagTokensBox');
+    var listEl = document.getElementById('tagTokensList');
+    var inputEl = document.getElementById('tagInputField');
+    var dropdownEl = document.getElementById('tagDropdown');
+    var hiddenContainer = document.getElementById('tagHiddenInputs');
+    var popularWrap = document.getElementById('tagPopularChips');
+
+    if (!boxEl || !inputEl) return;
+
+    var activeHighlightIndex = -1;
+
+    function renderTokens() {
+        listEl.innerHTML = '';
+        hiddenContainer.innerHTML = '';
+
+        selectedExisting.forEach(function(t, idx) {
+            var token = document.createElement('span');
+            token.className = 'tag-pill';
+            token.innerHTML = '<span>' + escapeHtml(t.name) + '</span><button type="button" class="tag-pill-remove" data-type="existing" data-idx="' + idx + '" title="حذف برچسب">✕</button>';
+            listEl.appendChild(token);
+
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'tag_ids[]';
+            inp.value = t.id;
+            hiddenContainer.appendChild(inp);
+        });
+
+        selectedNew.forEach(function(name, idx) {
+            var token = document.createElement('span');
+            token.className = 'tag-pill tag-pill-new';
+            token.innerHTML = '<span>' + escapeHtml(name) + '</span><span class="tag-badge-new">جدید</span><button type="button" class="tag-pill-remove" data-type="new" data-idx="' + idx + '" title="حذف برچسب">✕</button>';
+            listEl.appendChild(token);
+        });
+
+        var newInp = document.createElement('input');
+        newInp.type = 'hidden';
+        newInp.name = 'new_tags';
+        newInp.value = selectedNew.join(', ');
+        hiddenContainer.appendChild(newInp);
+
+        if (popularWrap) {
+            var chips = popularWrap.querySelectorAll('.tag-quick-chip');
+            chips.forEach(function(chip) {
+                var cId = parseInt(chip.getAttribute('data-id'), 10);
+                var isSelected = selectedExisting.some(function(e) { return e.id === cId; });
+                chip.classList.toggle('selected', isSelected);
+            });
+        }
+    }
+
+    function addExistingTag(tagObj) {
+        if (!selectedExisting.some(function(t) { return t.id === tagObj.id; })) {
+            selectedExisting.push(tagObj);
+            renderTokens();
+        }
+        inputEl.value = '';
+        closeDropdown();
+        inputEl.focus();
+    }
+
+    function addNewTag(name) {
+        name = name.trim().replace(/,/g, '');
+        if (!name) return;
+        var found = allCatalogTags.find(function(t) { return t.name.toLowerCase() === name.toLowerCase(); });
+        if (found) {
+            addExistingTag(found);
+            return;
+        }
+        if (!selectedNew.some(function(n) { return n.toLowerCase() === name.toLowerCase(); })) {
+            selectedNew.push(name);
+            renderTokens();
+        }
+        inputEl.value = '';
+        closeDropdown();
+        inputEl.focus();
+    }
+
+    function removeToken(type, idx) {
+        if (type === 'existing') {
+            selectedExisting.splice(idx, 1);
+        } else {
+            selectedNew.splice(idx, 1);
+        }
+        renderTokens();
+    }
+
+    listEl.addEventListener('click', function(e) {
+        var btn = e.target.closest('.tag-pill-remove');
+        if (btn) {
+            e.stopPropagation();
+            removeToken(btn.getAttribute('data-type'), parseInt(btn.getAttribute('data-idx'), 10));
+        }
+    });
+
+    if (popularWrap) {
+        popularWrap.addEventListener('click', function(e) {
+            var chip = e.target.closest('.tag-quick-chip');
+            if (chip) {
+                var cId = parseInt(chip.getAttribute('data-id'), 10);
+                var cName = chip.getAttribute('data-name');
+                var exIdx = selectedExisting.findIndex(function(t) { return t.id === cId; });
+                if (exIdx >= 0) {
+                    selectedExisting.splice(exIdx, 1);
+                    renderTokens();
+                } else {
+                    addExistingTag({ id: cId, name: cName });
+                }
+            }
+        });
+    }
+
+    function closeDropdown() {
+        dropdownEl.style.display = 'none';
+        dropdownEl.innerHTML = '';
+        activeHighlightIndex = -1;
+    }
+
+    function updateDropdown() {
+        var val = inputEl.value.trim().toLowerCase();
+        if (!val) {
+            closeDropdown();
+            return;
+        }
+
+        var matches = allCatalogTags.filter(function(t) {
+            var already = selectedExisting.some(function(se) { return se.id === t.id; });
+            return !already && (t.name.toLowerCase().includes(val) || (t.slug && t.slug.toLowerCase().includes(val)));
+        });
+
+        var html = '';
+        matches.slice(0, 8).forEach(function(m) {
+            html += '<div class="tag-dropdown-item" data-id="' + m.id + '" data-name="' + escapeHtml(m.name) + '">' +
+                '<span class="tag-drop-name">' + escapeHtml(m.name) + '</span>' +
+                (m.slug ? '<span class="tag-drop-slug" dir="ltr">' + escapeHtml(m.slug) + '</span>' : '') +
+                '</div>';
+        });
+
+        var exactMatch = allCatalogTags.some(function(t) { return t.name.toLowerCase() === val; }) ||
+                         selectedNew.some(function(n) { return n.toLowerCase() === val; });
+        if (!exactMatch && val.length > 0) {
+            html += '<div class="tag-dropdown-item tag-dropdown-item-new" data-create="' + escapeHtml(inputEl.value.trim()) + '">' +
+                '<span class="tag-drop-plus">+</span>' +
+                '<span>ایجاد برچسب جدید: <strong>«' + escapeHtml(inputEl.value.trim()) + '»</strong> (اینتر بزنید)</span>' +
+                '</div>';
+        }
+
+        if (html) {
+            dropdownEl.innerHTML = html;
+            dropdownEl.style.display = 'block';
+            activeHighlightIndex = 0;
+            highlightItem(activeHighlightIndex);
+        } else {
+            closeDropdown();
+        }
+    }
+
+    function highlightItem(idx) {
+        var items = dropdownEl.querySelectorAll('.tag-dropdown-item');
+        items.forEach(function(el, i) {
+            el.classList.toggle('active', i === idx);
+        });
+    }
+
+    inputEl.addEventListener('input', updateDropdown);
+
+    inputEl.addEventListener('keydown', function(e) {
+        var items = dropdownEl.querySelectorAll('.tag-dropdown-item');
+        if (e.key === 'ArrowDown') {
+            if (dropdownEl.style.display !== 'none' && items.length) {
+                e.preventDefault();
+                activeHighlightIndex = (activeHighlightIndex + 1) % items.length;
+                highlightItem(activeHighlightIndex);
+            }
+        } else if (e.key === 'ArrowUp') {
+            if (dropdownEl.style.display !== 'none' && items.length) {
+                e.preventDefault();
+                activeHighlightIndex = (activeHighlightIndex - 1 + items.length) % items.length;
+                highlightItem(activeHighlightIndex);
+            }
+        } else if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            if (dropdownEl.style.display !== 'none' && items.length && activeHighlightIndex >= 0) {
+                items[activeHighlightIndex].click();
+            } else if (inputEl.value.trim()) {
+                addNewTag(inputEl.value.trim());
+            }
+        } else if (e.key === 'Backspace' && !inputEl.value) {
+            if (selectedNew.length > 0) {
+                selectedNew.pop();
+                renderTokens();
+            } else if (selectedExisting.length > 0) {
+                selectedExisting.pop();
+                renderTokens();
+            }
+        } else if (e.key === 'Escape') {
+            closeDropdown();
+        }
+    });
+
+    dropdownEl.addEventListener('click', function(e) {
+        var item = e.target.closest('.tag-dropdown-item');
+        if (item) {
+            if (item.hasAttribute('data-create')) {
+                addNewTag(item.getAttribute('data-create'));
+            } else {
+                var id = parseInt(item.getAttribute('data-id'), 10);
+                var name = item.getAttribute('data-name');
+                addExistingTag({ id: id, name: name });
+            }
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!boxEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    boxEl.addEventListener('click', function() {
+        inputEl.focus();
+    });
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    renderTokens();
+})();
 </script>
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

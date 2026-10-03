@@ -130,7 +130,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
                                 </td>
                                 <td>
                                     <?php if ((int)$t['products_count'] > 0): ?>
-                                        <a href="/admin/products.php?q=<?= urlencode($t['name']) ?>" 
+                                        <a href="/admin/products.php?tag_id=<?= (int)$t['id'] ?>" 
                                            style="display:inline-flex; align-items:center; gap:4px; font-weight:700; color:var(--cpn-primary); text-decoration:none; background:var(--cpn-primary-light); padding:2px 8px; border-radius:6px; font-size:.8rem;">
                                             <?= toPersianDigits((string)$t['products_count']) ?> کالا
                                         </a>

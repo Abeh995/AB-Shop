@@ -41,38 +41,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Map query parameters and filters
 $search = trim($_GET['q'] ?? '');
 $categoryId = (int) ($_GET['category_id'] ?? 0);
+$tagId = (int) ($_GET['tag_id'] ?? 0);
 $status = trim($_GET['status'] ?? '');
-if ($status === '' && isset($_GET['featured'])) {
-    $status = 'featured';
-}
+if ($status === '' && isset($_GET['featured'])) $status = 'featured';
 $status = $status === '' ? 'all' : $status;
 $sort = trim($_GET['sort'] ?? 'newest');
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$perPage = (int) ($_GET['per_page'] ?? 20);
-if (!in_array($perPage, [20, 50, 100], true)) {
-    $perPage = 20;
-}
+$perPage = in_array((int) ($_GET['per_page'] ?? 20), [20, 50, 100], true) ? (int)$_GET['per_page'] : 20;
 
-$filters = [
-    'q' => $search,
-    'category_id' => $categoryId,
-    'status' => $status,
-    'sort' => $sort,
-];
+$filters = ['q' => $search, 'category_id' => $categoryId, 'tag_id' => $tagId, 'status' => $status, 'sort' => $sort];
 
 // Delegate to service
 $catalog = getProductsCatalog($filters, $page, $perPage);
 $stats = getProductCatalogStats();
 $categories = getCategoriesForDropdown();
+$allTags = getAllTags();
+$activeTag = $tagId > 0 ? TagService::getById($tagId) : null;
 
 renderView('admin/products', compact(
-    'pageTitle',
-    'search',
-    'categoryId',
-    'status',
-    'sort',
-    'catalog',
-    'stats',
-    'categories',
-    'perPage'
+    'pageTitle', 'search', 'categoryId', 'tagId', 'activeTag', 'allTags',
+    'status', 'sort', 'catalog', 'stats', 'categories', 'perPage'
 ));

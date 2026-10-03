@@ -178,6 +178,16 @@ $returnUrl = 'products.php?' . http_build_query($_GET);
                 <?php endforeach; ?>
             </select>
 
+            <!-- Tag Filter -->
+            <select class="prod-select prod-select-tag" name="tag_id">
+                <option value="">همه برچسب‌ها</option>
+                <?php foreach ($allTags as $t): ?>
+                    <option value="<?= (int)$t['id'] ?>" <?= ($tagId === (int)$t['id']) ? 'selected' : '' ?>>
+                        <?= e($t['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
             <!-- Sort -->
             <select class="prod-select prod-select-sort" name="sort">
                 <option value="newest" <?= ($sort === 'newest') ? 'selected' : '' ?>>جدیدترین</option>
@@ -198,10 +208,25 @@ $returnUrl = 'products.php?' . http_build_query($_GET);
 
             <button class="prod-btn-filter" type="submit">اعمال فیلتر</button>
 
-            <?php if ($search !== '' || $categoryId > 0 || $sort !== 'newest' || $status !== 'all' || $perPage !== 20): ?>
+            <?php if ($search !== '' || $categoryId > 0 || $tagId > 0 || $sort !== 'newest' || $status !== 'all' || $perPage !== 20): ?>
                 <a href="products.php" class="prod-btn-clear" title="حذف تمام فیلترها">✕ پاک‌سازی</a>
             <?php endif; ?>
         </form>
+
+        <?php if ($tagId > 0 && !empty($activeTag)): ?>
+            <?php
+            $removeTagParams = $_GET;
+            unset($removeTagParams['tag_id'], $removeTagParams['page']);
+            $removeTagUrl = 'products.php' . (!empty($removeTagParams) ? '?' . http_build_query($removeTagParams) : '');
+            ?>
+            <div class="prod-active-tag-banner">
+                <span class="prod-active-tag-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+                    فیلتر برچسب فعال: <strong><?= e($activeTag['name']) ?></strong>
+                </span>
+                <a href="<?= e($removeTagUrl) ?>" class="prod-active-tag-remove" title="حذف فیلتر برچسب">✕ حذف فیلتر</a>
+            </div>
+        <?php endif; ?>
     </section>
 
     <!-- =================================================================== -->

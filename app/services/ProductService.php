@@ -87,12 +87,25 @@ function getProductsCatalog(array $filters = [], int $page = 1, int $perPage = 2
     $where = ['1=1'];
     $params = [];
 
-    // Search query: name or sku
+    // Search query: name, sku, or connected product tags
     $search = trim($filters['q'] ?? '');
     if ($search !== '') {
-        $where[] = '(p.name LIKE ? OR p.sku LIKE ?)';
+        $where[] = '(p.name LIKE ? OR p.sku LIKE ? OR EXISTS (
+            SELECT 1 FROM product_tags pt_s 
+            JOIN tags t_s ON t_s.id = pt_s.tag_id 
+            WHERE pt_s.product_id = p.id AND (t_s.name LIKE ? OR t_s.slug LIKE ?)
+        ))';
         $params[] = '%' . $search . '%';
         $params[] = '%' . $search . '%';
+        $params[] = '%' . $search . '%';
+        $params[] = '%' . $search . '%';
+    }
+
+    // Tag filter
+    $tagId = (int) ($filters['tag_id'] ?? 0);
+    if ($tagId > 0) {
+        $where[] = 'EXISTS (SELECT 1 FROM product_tags pt_f WHERE pt_f.product_id = p.id AND pt_f.tag_id = ?)';
+        $params[] = $tagId;
     }
 
     // Category filter
