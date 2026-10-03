@@ -39,6 +39,7 @@ $adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/
 $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-finance.css') ?: 1);
 $adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-settings.css') ?: 1);
 $adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-appearance.css') ?: 1);
+$adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-shipping.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -65,6 +66,9 @@ $adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css
 <?php endif; ?>
 <?php if ($currentPage === 'appearance.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-appearance.css?v=<?= $adminAppearanceCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-shipping.css?v=<?= $adminShippingCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

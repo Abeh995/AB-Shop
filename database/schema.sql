@@ -248,6 +248,7 @@ CREATE TABLE IF NOT EXISTS shipping_methods (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255) DEFAULT NULL,
+    estimated_delivery VARCHAR(120) DEFAULT NULL,
     match_type ENUM('province_contains','default') NOT NULL DEFAULT 'default',
     match_value VARCHAR(100) DEFAULT NULL,
     cost DECIMAL(12,0) NOT NULL DEFAULT 0,       -- charged to the customer

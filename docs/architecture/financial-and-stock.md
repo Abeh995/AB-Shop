@@ -97,6 +97,9 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 - Evaluates rules in `shipping_methods` ordered by `sort_order`.
 - Matches customer province (e.g. `province_contains: تهران`) with fallback to `default`.
 - Computes customer-facing shipping fee (with support for `free_above_amount` thresholds) while tracking the store's actual postal cost (`actual_cost`).
+- Tracks delivery expectations via `estimated_delivery` (e.g. "۲ الی ۴ روز کاری (پست پیشتاز)"), passed directly to checkout calculations and customer summaries.
+- Computes logistics KPIs (`getShippingSummaryMetrics()`) including active method counts, average customer fee, average courier cost, and net unit shipping subsidy.
+- Supports atomic reordering (`reorderShippingMethods()`) and instant status toggling (`toggleShippingMethodActive()`).
 
 ---
 

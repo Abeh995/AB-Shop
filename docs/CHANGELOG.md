@@ -3,9 +3,32 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.22.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.22.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.26.0 — 2026-10-03
+
+### Shipping Methods Workstation Overhaul, Estimated Delivery Tracking, Live Checkout Simulation & Migration 024
+
+- **Dual-Pane Logistics & Shipping Workstation Architecture (`views/admin/shipping_methods.php`, `views/admin/shipping_methods_partials/`, `assets/css/admin-shipping.css`)**:
+  - Replaced legacy basic HTML table with a modern dual-pane Master-Detail Workstation matching AB-Socks design system standards:
+    - `views/admin/shipping_methods_partials/_kpis.php`: Bento KPI statistics header displaying active methods count, average customer fee, average courier/postal expense, net unit shipping subsidy indicator (alerting when store subsidizes freight), and free shipping threshold status.
+    - `views/admin/shipping_methods_partials/_table.php`: high-density priority matrix table with coverage scope badges (🏢 Province specific vs 🌐 Nationwide default), customer fee vs postal actual cost, unit margin/subsidy tags, free shipping threshold indicator, instant AJAX status toggle, and priority ordering.
+    - `views/admin/shipping_methods_partials/_studio.php`: sticky interactive studio with instant mode switching (`جدید` / `ویرایش`), form controls with quick-chip delivery suggestions, and live simulation box.
+- **Live Customer Checkout Simulation Studio (`assets/js/admin-shipping.js`, `views/admin/shipping_methods_partials/_studio.php`)**:
+  - Embedded real-time visual simulator rendering exactly how the shipping method, delivery time expectation, and fee/free rules will appear to customers in the checkout summary and order invoice.
+  - 1-click studio population from any table row without full page reloads, accompanied by optimistic AJAX active toggles and smooth scrolling.
+- **Estimated Delivery Time Tracking & Storefront Checkout Integration (`database/migrations/024_v1.26.0_shipping_enhancement.sql`, `database/schema.sql`, `app/services/ShippingService.php`, `ajax/shipping_estimate.php`, `views/site/checkout.php`)**:
+  - Added `estimated_delivery VARCHAR(120)` column to `shipping_methods` table via guarded Migration 024 and synchronized baseline `database/schema.sql`.
+  - Extended `calculateShippingCost()` in `ShippingService.php` to include `estimated_delivery` in calculation results.
+  - Updated `ajax/shipping_estimate.php` and `views/site/checkout.php` dynamic estimator to display delivery estimates (e.g. `هزینه ارسال (پست پیشتاز • ۲ تا ۴ روز کاری): رایگان`) directly next to shipping charges in customer checkout.
+- **Logistics Economics & Summary Analytics (`app/services/ShippingService.php`)**:
+  - Implemented `getShippingSummaryMetrics()` calculating aggregate metrics: total and active methods, average customer shipping fee, average courier cost, net unit shipping subsidy, and lowest active free-shipping basket threshold.
+  - Implemented `toggleShippingMethodActive()` and `reorderShippingMethods()` supporting atomic database updates.
+- **Ultra-Lean Controller Footprint (`app/controllers/admin/shipping_methods.php`, `app/controllers/admin/shipping_method_edit.php`)**:
+  - Maintained `shipping_methods.php` controller at 72 lines (well within Rule 7 soft ceiling of 80 lines).
+  - Maintained `shipping_method_edit.php` at 34 lines for seamless backward compatibility.
 
 ## 1.25.0 — 2026-10-03
 
@@ -132,35 +155,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Storefront Checkout Upload Polish (`views/site/card_to_card.php`, `assets/js/card-to-card.js`)**:
   - Cleaned customer-facing payment receipt dropzone copy: removed device-specific jargon and verbose badge labels, presenting concise format and size parameters (`فرمت‌های مجاز: JPG، PNG، WebP (حداکثر ۵ مگابایت)`).
   - Cleaned conversion loading status messages.
-
-## 1.22.0 — 2026-10-02
-
-### Admin Gifts & Cart Add-ons Workstation 2.0 & Merchandising Engine (Migration 020)
-
-- **Merchandising Engine & Database Schema Additions (`database/migrations/020_v1.22.0_gift_merchandising.sql`, `database/schema.sql`)**:
-  - Migration 020 introduces strategic merchandising attributes on `gift_items`:
-    - `tagline VARCHAR(190)`: compelling short selling description rendered in customer-facing cart cards.
-    - `badge_text VARCHAR(50)`: promotional marketing pill tags (`محبوب‌ترین`, `پیشنهاد ویژه`, `بسته‌بندی کادو`, `ارزش خرید بالا`).
-    - `min_cart_total DECIMAL(12,0)`: smart targeting threshold (only offer add-on when cart subtotal meets or exceeds threshold; 0 = all carts).
-    - `sort_order INT`: manual sequence prioritization with `idx_gift_sort` index.
-  - Mirrored all table definitions and indices into `database/schema.sql`.
-- **Advanced Unit Economics & Attach Rate Analytics (`app/services/GiftService.php`)**:
-  - Implemented `lifetime_post_order_net_profit`: computes actual net profit generated by checkout add-on sales (`sold_units * (unit_selling_price - unit_cost_price)`).
-  - Implemented `attach_rate_percent`: tracks the exact percentage of completed/paid orders containing checkout add-ons (Take Rate %) along with qualifying order counts.
-  - Added automated `top_performer` hero detection: identifies top profit-driving add-on item with units sold and gross margin.
-  - Enhanced `getAvailablePostOrderItems(?int $cartSubtotal)`: filters offerings by `min_cart_total <= $cartSubtotal` and enforces strict sorting `sort_order ASC, id DESC`.
-  - Added transactional `reorderGiftItems(array $orderedIds)` for atomic sequence updates.
-  - Updated `saveGiftItem()` to sanitize and persist merchandising fields.
-- **Desktop Dual-Pane Workstation Architecture Overhaul (`views/admin/gift_items.php`, `views/admin/gift_items_partials/`)**:
-  - Modularized legacy 704-line monolithic view down to 61 lines by decomposing into clean presentation partials (Rule 7 and Boy Scout Rule compliant):
-    - `views/admin/gift_items_partials/_kpis.php`: Bento KPIs featuring Post-order Revenue & Gross Profit pill, Cart Attach Rate with micro progress gauge, Inventory Health alerts, and Top Performer Hero Card.
-    - `views/admin/gift_items_partials/_table.php`: high-density Matrix Table featuring drag handle (`⠿`) for instant reordering, image thumbnail with hover micro-zoom preview card, title/tagline/badge indicators, and inline stock stepper popover without page reloads.
-    - `views/admin/gift_items_partials/_studio.php`: sticky 420px studio featuring tagline input, quick-chip marketing badges, real-time live margin calculator with visual progress gauge bar, and authentic **Live Customer Cart Simulator** reflecting edits in real time.
-- **Client Workstation Engine & Dedicated Styles (`assets/js/admin-gift-items.js`, `assets/css/admin-gift-items.css`)**:
-  - Introduced cache-busted `assets/js/admin-gift-items.js` (412 lines) handling HTML5 drag-and-drop table sorting via AJAX, keyboard-accessible inline stepper popover (Enter to save, Esc to dismiss), optimistic status toggles, studio synchronization, and floating toast notifications.
-  - Refined `assets/css/admin-gift-items.css` for desktop dual-pane workstations with smooth transitions, hover zoom cards, and visual margin gauge bars.
-- **Storefront Cart Add-ons Polish (`views/site/cart.php`, `app/controllers/site/cart.php`)**:
-  - Updated cart controller to pass `$cart['subtotal']` for threshold filtering.
-  - Enhanced customer cart add-on cards with promotional marketing badge pills and helper tagline descriptions.
-- **Lean Controller Maintenance (`app/controllers/admin/gift_items.php`)**:
-  - Added `reorder` action handling AJAX sort requests while strictly maintaining controller size at 80 lines.

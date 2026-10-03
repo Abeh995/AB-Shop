@@ -53,7 +53,14 @@ function calculateShippingCost(string $province, int $subtotal): array
         $isFree = true;
     }
 
-    return ['method_id' => (int) $matched['id'], 'method_name' => $matched['name'], 'cost' => $cost, 'actual_cost' => $actualCost, 'is_free' => $isFree];
+    return [
+        'method_id' => (int) $matched['id'],
+        'method_name' => $matched['name'],
+        'estimated_delivery' => $matched['estimated_delivery'] ?? null,
+        'cost' => $cost,
+        'actual_cost' => $actualCost,
+        'is_free' => $isFree,
+    ];
 }
 
 /**
@@ -85,6 +92,7 @@ function saveShippingMethodRecord(?int $id, array $data): array
     $pdo = db();
     $name = trim($data['name'] ?? '');
     $description = trim($data['description'] ?? '');
+    $estimatedDelivery = trim($data['estimated_delivery'] ?? '');
     $matchType = ($data['match_type'] ?? '') === 'province_contains' ? 'province_contains' : 'default';
     $matchValue = trim($data['match_value'] ?? '');
     $cost = (int) preg_replace('/\D/', '', $data['cost'] ?? '0');
@@ -108,12 +116,13 @@ function saveShippingMethodRecord(?int $id, array $data): array
         if ($id && $id > 0) {
             $stmt = $pdo->prepare("
                 UPDATE shipping_methods 
-                SET name=?, description=?, match_type=?, match_value=?, cost=?, actual_cost=?, free_above_amount=?, is_active=? 
+                SET name=?, description=?, estimated_delivery=?, match_type=?, match_value=?, cost=?, actual_cost=?, free_above_amount=?, is_active=? 
                 WHERE id=?
             ");
             $stmt->execute([
                 $name,
                 $description ?: null,
+                $estimatedDelivery ?: null,
                 $matchType,
                 $matchType === 'province_contains' ? $matchValue : null,
                 $cost,
@@ -127,12 +136,13 @@ function saveShippingMethodRecord(?int $id, array $data): array
             $nextSort = ((int) $maxSortStmt->fetchColumn()) + 1;
             $stmt = $pdo->prepare("
                 INSERT INTO shipping_methods 
-                    (name, description, match_type, match_value, cost, actual_cost, free_above_amount, is_active, sort_order) 
-                VALUES (?,?,?,?,?,?,?,?,?)
+                    (name, description, estimated_delivery, match_type, match_value, cost, actual_cost, free_above_amount, is_active, sort_order) 
+                VALUES (?,?,?,?,?,?,?,?,?,?)
             ");
             $stmt->execute([
                 $name,
                 $description ?: null,
+                $estimatedDelivery ?: null,
                 $matchType,
                 $matchType === 'province_contains' ? $matchValue : null,
                 $cost,
@@ -159,6 +169,58 @@ function deleteShippingMethodRecord(int $id): array
     $stmt = db()->prepare("DELETE FROM shipping_methods WHERE id = ?");
     $stmt->execute([$id]);
     return ['ok' => true, 'error' => null];
+}
+
+/**
+ * Toggle active status of a shipping method.
+ *
+ * @return array{ok: bool, error: ?string, is_active: ?int}
+ */
+function toggleShippingMethodActive(int $id): array
+{
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT is_active FROM shipping_methods WHERE id = ?");
+    $stmt->execute([$id]);
+    $current = $stmt->fetchColumn();
+
+    if ($current === false) {
+        return ['ok' => false, 'error' => 'روش ارسال یافت نشد.', 'is_active' => null];
+    }
+
+    $newStatus = ((int)$current === 1) ? 0 : 1;
+    $upd = $pdo->prepare("UPDATE shipping_methods SET is_active = ? WHERE id = ?");
+    $upd->execute([$newStatus, $id]);
+
+    return ['ok' => true, 'error' => null, 'is_active' => $newStatus];
+}
+
+/**
+ * Batch reorder shipping methods by an array of IDs in order.
+ *
+ * @param int[] $orderedIds
+ * @return array{ok: bool, error: ?string}
+ */
+function reorderShippingMethods(array $orderedIds): array
+{
+    if (empty($orderedIds)) {
+        return ['ok' => true, 'error' => null];
+    }
+
+    $pdo = db();
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare("UPDATE shipping_methods SET sort_order = ? WHERE id = ?");
+        foreach ($orderedIds as $index => $id) {
+            $stmt->execute([$index + 1, (int)$id]);
+        }
+        $pdo->commit();
+        return ['ok' => true, 'error' => null];
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        return ['ok' => false, 'error' => 'خطا در مرتب‌سازی روش‌های ارسال: ' . $e->getMessage()];
+    }
 }
 
 /**
@@ -203,3 +265,59 @@ function moveShippingMethodOrder(int $id, string $direction): array
     return ['ok' => true, 'error' => null];
 }
 
+/**
+ * Calculate KPI summary metrics for active and total shipping methods.
+ *
+ * @return array{
+ *     total_methods: int,
+ *     active_methods: int,
+ *     avg_cost: int,
+ *     avg_actual_cost: int,
+ *     net_unit_subsidy: int,
+ *     free_shipping_count: int,
+ *     min_free_threshold: ?int
+ * }
+ */
+function getShippingSummaryMetrics(): array
+{
+    $methods = getAdminShippingMethods();
+    $total = count($methods);
+    $active = 0;
+    $sumCost = 0;
+    $sumActualCost = 0;
+    $actualCount = 0;
+    $freeShippingCount = 0;
+    $minFreeThreshold = null;
+
+    foreach ($methods as $m) {
+        if (!empty($m['is_active'])) {
+            $active++;
+            $sumCost += (int)$m['cost'];
+            if ($m['actual_cost'] !== null) {
+                $sumActualCost += (int)$m['actual_cost'];
+                $actualCount++;
+            }
+            if ($m['free_above_amount'] !== null && (int)$m['free_above_amount'] > 0) {
+                $freeShippingCount++;
+                $th = (int)$m['free_above_amount'];
+                if ($minFreeThreshold === null || $th < $minFreeThreshold) {
+                    $minFreeThreshold = $th;
+                }
+            }
+        }
+    }
+
+    $avgCost = $active > 0 ? (int)round($sumCost / $active) : 0;
+    $avgActualCost = $actualCount > 0 ? (int)round($sumActualCost / $actualCount) : $avgCost;
+    $netUnitSubsidy = $avgActualCost - $avgCost; // Positive means store subsidizes shipping
+
+    return [
+        'total_methods' => $total,
+        'active_methods' => $active,
+        'avg_cost' => $avgCost,
+        'avg_actual_cost' => $avgActualCost,
+        'net_unit_subsidy' => $netUnitSubsidy,
+        'free_shipping_count' => $freeShippingCount,
+        'min_free_threshold' => $minFreeThreshold,
+    ];
+}

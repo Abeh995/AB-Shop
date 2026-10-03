@@ -1,0 +1,428 @@
+/**
+ * AB-Socks Logistics & Shipping Methods Modern Workstation Styles
+ * v1.26.0 - High-density Bento KPIs, Dual-Pane Master Table & Sticky Live Studio
+ */
+
+:root {
+    --ship-primary: #3b82f6;
+    --ship-primary-hover: #2563eb;
+    --ship-bg-tint: rgba(59, 130, 246, 0.08);
+    --ship-border: #e2e8f0;
+    --ship-card-bg: #ffffff;
+    --ship-success: #10b981;
+    --ship-success-bg: rgba(16, 185, 129, 0.1);
+    --ship-warning: #f59e0b;
+    --ship-warning-bg: rgba(245, 158, 11, 0.1);
+    --ship-danger: #ef4444;
+    --ship-danger-bg: rgba(239, 68, 68, 0.1);
+    --ship-muted: #64748b;
+    --ship-radius: 14px;
+    --ship-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] {
+    --ship-border: #334155;
+    --ship-card-bg: #1e293b;
+    --ship-muted: #94a3b8;
+    --ship-bg-tint: rgba(59, 130, 246, 0.15);
+    --ship-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.shipping-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* 1. Bento KPI Stats Grid */
+.shipping-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.shipping-kpi-card {
+    background: var(--ship-card-bg);
+    border: 1px solid var(--ship-border);
+    border-radius: var(--ship-radius);
+    padding: 18px 20px;
+    box-shadow: var(--ship-shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shipping-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+}
+
+.kpi-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.kpi-icon-blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.kpi-icon-green { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.kpi-icon-amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.kpi-icon-purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+
+.kpi-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.kpi-label {
+    font-size: 0.8rem;
+    color: var(--ship-muted);
+    font-weight: 500;
+}
+
+.kpi-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text, #1e293b);
+    line-height: 1.2;
+}
+
+.kpi-sub {
+    font-size: 0.75rem;
+    color: var(--ship-muted);
+}
+
+/* 2. Dual-Pane Master-Detail Grid */
+.shipping-split-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .shipping-split-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Master Table Section */
+.shipping-table-card {
+    background: var(--ship-card-bg);
+    border: 1px solid var(--ship-border);
+    border-radius: var(--ship-radius);
+    padding: 20px;
+    box-shadow: var(--ship-shadow);
+}
+
+.shipping-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.shipping-card-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.shipping-method-row {
+    transition: background-color 0.15s ease;
+}
+
+.shipping-method-row:hover {
+    background: var(--ship-bg-tint);
+}
+
+.shipping-method-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.method-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color-text, #0f172a);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.method-desc {
+    font-size: 0.78rem;
+    color: var(--ship-muted);
+}
+
+.delivery-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+[data-theme="dark"] .delivery-pill {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+.badge-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.badge-province {
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+[data-theme="dark"] .badge-province {
+    background: rgba(139, 92, 246, 0.22);
+    color: #c4b5fd;
+}
+
+.badge-default {
+    background: rgba(100, 116, 139, 0.1);
+    color: #475569;
+    border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+[data-theme="dark"] .badge-default {
+    background: rgba(100, 116, 139, 0.25);
+    color: #cbd5e1;
+}
+
+.cost-split {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.customer-fee {
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+.actual-cost-note {
+    font-size: 0.74rem;
+    color: var(--ship-muted);
+}
+
+.subsidy-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.72rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.subsidy-tag.subsidy {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.subsidy-tag.margin {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.subsidy-tag.neutral {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+}
+
+.free-threshold-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Quick Active Switch */
+.switch-label {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.switch-label input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cbd5e1;
+    transition: .25s;
+    border-radius: 22px;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .25s;
+    border-radius: 50%;
+}
+
+input:checked + .switch-slider {
+    background-color: #10b981;
+}
+
+input:checked + .switch-slider:before {
+    transform: translateX(18px);
+}
+
+/* Sticky Smart Studio */
+.shipping-studio-card {
+    background: var(--ship-card-bg);
+    border: 1px solid var(--ship-border);
+    border-radius: var(--ship-radius);
+    padding: 22px;
+    box-shadow: var(--ship-shadow);
+    position: sticky;
+    top: 85px;
+}
+
+.studio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--ship-border);
+}
+
+.studio-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.studio-mode-pill {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.mode-edit { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.mode-new { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+/* Live Simulation Card */
+.shipping-preview-box {
+    background: rgba(241, 245, 249, 0.6);
+    border: 1px dashed var(--ship-border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 20px;
+}
+
+[data-theme="dark"] .shipping-preview-box {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: #334155;
+}
+
+.preview-badge-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ship-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.preview-checkout-row {
+    background: var(--ship-card-bg);
+    border: 1px solid var(--ship-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.preview-name-part {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text, #1e293b);
+}
+
+.preview-delivery-part {
+    font-size: 0.75rem;
+    color: var(--ship-muted);
+}
+
+.preview-cost-part {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #2563eb;
+    white-space: nowrap;
+}
+
+.btn-reset-studio {
+    background: transparent;
+    border: none;
+    color: var(--ship-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-reset-studio:hover {
+    color: var(--ship-primary);
+}

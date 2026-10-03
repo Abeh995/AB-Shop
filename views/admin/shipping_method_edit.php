@@ -19,6 +19,11 @@
         </div>
 
         <div class="form-group">
+            <label>زمان تخمینی تحویل (نمایش به مشتری)</label>
+            <input class="form-control" type="text" name="estimated_delivery" value="<?= e($method['estimated_delivery'] ?? '') ?>" placeholder="مثلاً: ۲ الی ۴ روز کاری (پست پیشتاز)">
+        </div>
+
+        <div class="form-group">
             <label>نوع تطبیق</label>
             <select class="form-control" name="match_type" id="matchType">
                 <option value="province_contains" <?= (($method['match_type'] ?? '') === 'province_contains') ? 'selected' : '' ?>>فقط وقتی استان مشتری شامل متن خاصی باشد</option>

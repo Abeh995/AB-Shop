@@ -41,7 +41,7 @@
             </div>
             <p id="shippingEstimateNote" style="font-size:.85rem; color:var(--color-muted); margin-top:-10px; margin-bottom:16px;">
                 <?php if ($shippingPreview['method_name']): ?>
-                    هزینه ارسال (<?= e($shippingPreview['method_name']) ?>): <?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?>
+                    هزینه ارسال (<?= e($shippingPreview['method_name']) ?><?= !empty($shippingPreview['estimated_delivery']) ? ' • ' . e($shippingPreview['estimated_delivery']) : '' ?>): <?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?>
                 <?php else: ?>
                     هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.
                 <?php endif; ?>
@@ -119,7 +119,7 @@
             </div>
             <?php endif; ?>
             <div class="row" id="shippingRow">
-                <span>هزینه ارسال<?= $shippingPreview['method_name'] ? ' (' . e($shippingPreview['method_name']) . ')' : '' ?></span>
+                <span>هزینه ارسال<?= $shippingPreview['method_name'] ? ' (' . e($shippingPreview['method_name']) . (!empty($shippingPreview['estimated_delivery']) ? ' • ' . e($shippingPreview['estimated_delivery']) : '') . ')' : '' ?></span>
                 <span id="shippingCostValue"><?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?></span>
             </div>
             <div class="row total-row">
@@ -151,12 +151,19 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data.ok) return;
-                var label = data.method_name ? ('هزینه ارسال (' + data.method_name + ')') : 'هزینه ارسال';
-                shippingRow.querySelector('span').textContent = label;
-                shippingCostValue.textContent = data.is_free ? 'رایگان' : data.cost_formatted;
-                note.textContent = data.method_name
-                    ? (label + ': ' + (data.is_free ? 'رایگان' : data.cost_formatted))
-                    : 'هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.';
+                var deliveryText = data.estimated_delivery ? (' • ' + data.estimated_delivery) : '';
+                var label = data.method_name ? ('هزینه ارسال (' + data.method_name + deliveryText + ')') : 'هزینه ارسال';
+                if (shippingRow && shippingRow.querySelector('span')) {
+                    shippingRow.querySelector('span').textContent = label;
+                }
+                if (shippingCostValue) {
+                    shippingCostValue.textContent = data.is_free ? 'رایگان' : data.cost_formatted;
+                }
+                if (note) {
+                    note.textContent = data.method_name
+                        ? (label + ': ' + (data.is_free ? 'رایگان' : data.cost_formatted))
+                        : 'هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.';
+                }
                 if (grandTotalValue) grandTotalValue.textContent = data.grand_total_formatted;
             })
             .catch(function () { /* keep the last known estimate on a network error */ });

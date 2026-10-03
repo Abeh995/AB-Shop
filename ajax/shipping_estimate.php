@@ -30,12 +30,12 @@ if ($appliedCoupon) {
 $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
 $shipping = calculateShippingCost($province, $subtotal);
 $grandTotal = max(0, $subtotal - $discount + $shipping['cost'] + $postOrderResult['total']);
-
 echo json_encode([
     'ok' => true,
     'cost' => $shipping['cost'],
     'cost_formatted' => formatPrice($shipping['cost']),
     'method_name' => $shipping['method_name'],
+    'estimated_delivery' => $shipping['estimated_delivery'] ?? null,
     'is_free' => $shipping['is_free'],
     'grand_total_formatted' => formatPrice($grandTotal),
 ], JSON_UNESCAPED_UNICODE);
