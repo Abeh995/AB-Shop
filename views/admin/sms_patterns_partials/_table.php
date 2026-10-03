@@ -1,6 +1,10 @@
 <?php
 /**
  * AB-Socks SMS Patterns — High-Density Pattern Matrix Table
+ * High-aesthetic data table with compact horizontal alignment, vector SVG badges,
+ * and ergonomic action groups.
+ * View Purity: 0 SQL, 0 $_POST, pure presentation (Rule 7).
+ *
  * @var array $patterns
  * @var array $availableEvents
  */
@@ -10,12 +14,12 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th style="width:65px; text-align:center;">شناسه</th>
+                    <th style="width:60px; text-align:center;">شناسه</th>
                     <th style="width:140px;">کد پترن (Faraz)</th>
                     <th>عنوان الگو و توضیحات</th>
                     <th>رویداد متناظر سیستمی</th>
                     <th>متغیرها و نگاشت داده</th>
-                    <th style="width:90px; text-align:center;">وضعیت</th>
+                    <th style="width:110px; text-align:center;">وضعیت</th>
                     <th style="width:150px; text-align:center;">عملیات</th>
                 </tr>
             </thead>
@@ -35,73 +39,73 @@
                 data-search="<?= e($searchStr) ?>">
                 <!-- 1. ID -->
                 <td style="text-align:center;">
-                    <code style="font-size:0.85rem; color:var(--sms-muted);">#<?= (int)$p['id'] ?></code>
+                    <span class="sms-id-badge">#<?= (int)$p['id'] ?></span>
                 </td>
 
                 <!-- 2. Pattern Code -->
                 <td>
                     <?php if ($isUnset): ?>
-                        <span class="pattern-code-unset">
-                            <span>⚠️</span> تنظیم‌نشده
-                        </span>
+                        <a href="sms_pattern_edit.php?id=<?= (int)$p['id'] ?>" class="pattern-code-unset" title="برای تنظیم کلیک کنید">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>تنظیم‌نشده ←</span>
+                        </a>
                     <?php else: ?>
-                        <span class="pattern-code-badge" title="کد ثبت شده در فراز اس‌ام‌اس">
-                            <?= e($p['pattern_code']) ?>
-                        </span>
+                        <div class="pattern-code-wrap">
+                            <span class="pattern-code-badge" title="کد ثبت شده در فراز اس‌ام‌اس"><?= e($p['pattern_code']) ?></span>
+                            <button type="button" class="btn-copy-code" onclick="navigator.clipboard.writeText('<?= e($p['pattern_code']) ?>'); this.textContent='✓'; setTimeout(()=>this.textContent='کپی', 1200);" title="کپی کد">کپی</button>
+                        </div>
                     <?php endif; ?>
                 </td>
 
                 <!-- 3. Title & Description -->
                 <td>
-                    <div style="font-weight:700; font-size:0.92rem; color:var(--color-text, #0f172a);">
-                        <?= e($p['title']) ?>
+                    <div class="sms-title-cell">
+                        <div class="sms-title-text"><?= e($p['title']) ?></div>
+                        <?php if (!empty($p['description'])): ?>
+                            <div class="sms-desc-text"><?= e($p['description']) ?></div>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($p['description'])): ?>
-                        <div style="font-size:0.77rem; color:var(--sms-muted); margin-top:2px;">
-                            <?= e($p['description']) ?>
-                        </div>
-                    <?php endif; ?>
                 </td>
 
-                <!-- 4. Event Badge -->
+                <!-- 4. Event Category Badge -->
                 <td>
                     <?php if (!empty($p['event_key']) && isset($availableEvents[$p['event_key']])): ?>
                         <span class="event-badge <?= e($category) ?>">
-                            <?= e($availableEvents[$p['event_key']]) ?>
+                            <span class="event-dot"></span>
+                            <span><?= e($availableEvents[$p['event_key']]) ?></span>
                         </span>
                     <?php elseif (!empty($p['event_key'])): ?>
                         <span class="event-badge other">
-                            <?= e($p['event_key']) ?>
+                            <span class="event-dot"></span>
+                            <span><?= e($p['event_key']) ?></span>
                         </span>
                     <?php else: ?>
-                        <span style="color:var(--sms-muted); font-size:0.8rem;">— بدون انتساب —</span>
+                        <span class="event-badge-none">— بدون انتساب —</span>
                     <?php endif; ?>
                 </td>
 
                 <!-- 5. Dynamic Variables & Data-Binding -->
                 <td>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:0.75rem; font-weight:700; color:var(--sms-muted);">
-                            <?= toPersianDigits((string)$p['variables_count']) ?> متغیر
-                        </span>
+                    <div class="sms-var-summary">
+                        <span class="var-count-badge"><?= toPersianDigits((string)$p['variables_count']) ?> متغیر</span>
+                        <?php if (!empty($cfg)): ?>
+                            <div class="var-chips-inline">
+                                <?php foreach ($cfg as $v): 
+                                    $isBound = !empty($v['source_token']);
+                                ?>
+                                    <span class="var-chip <?= $isBound ? 'bound' : '' ?>" 
+                                          title="<?= $isBound ? 'متصل به: ' . e($v['source_token']) : 'بدون نگاشت داده' ?>">
+                                        %<?= e($v['name']) ?>%
+                                    </span>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($cfg)): ?>
-                        <div class="var-chips-wrap">
-                            <?php foreach ($cfg as $v): 
-                                $isBound = !empty($v['source_token']);
-                            ?>
-                                <span class="var-chip <?= $isBound ? 'bound' : '' ?>" 
-                                      title="<?= $isBound ? 'متصل به داده: ' . e($v['source_token']) : 'بدون نگاشت خودکار' ?>">
-                                    %<?= e($v['name']) ?>%<?= $isBound ? ' 🔗' : '' ?>
-                                </span>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
                 </td>
 
                 <!-- 6. Quick Active Switch -->
                 <td style="text-align:center;">
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                    <div class="sms-status-cell">
                         <label class="switch-label" title="تغییر وضعیت فعال/غیرفعال">
                             <input type="checkbox" class="sms-active-toggle" data-id="<?= (int)$p['id'] ?>" <?= !empty($p['is_active']) ? 'checked' : '' ?>>
                             <span class="switch-slider"></span>
@@ -114,15 +118,18 @@
 
                 <!-- 7. Actions -->
                 <td style="text-align:center;">
-                    <div class="admin-actions" style="justify-content:center;">
-                        <a href="sms_pattern_edit.php?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-outline" title="ویرایش و تست ارسال">
-                            ویرایش و تست
+                    <div class="table-action-group">
+                        <a href="sms_pattern_edit.php?id=<?= (int)$p['id'] ?>" class="btn-action-edit" title="ویرایش و تست ارسال">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            <span>ویرایش و تست</span>
                         </a>
                         <form method="post" style="display:inline;" onsubmit="return confirm('آیا از حذف الگوی «<?= e($p['title']) ?>» اطمینان دارید؟');">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                            <button type="submit" class="btn btn-sm btn-danger" style="padding:4px 8px;" title="حذف الگو">🗑️</button>
+                            <button type="submit" class="btn-action-delete" title="حذف الگو">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
                         </form>
                     </div>
                 </td>
@@ -138,7 +145,7 @@
 
             <?php if (empty($patterns)): ?>
             <tr>
-                <td colspan="7" style="text-align:center; padding:32px 0; color:var(--sms-muted);">
+                <td colspan="7" style="text-align:center; padding:36px 0; color:var(--sms-muted);">
                     هنوز هیچ الگوی پیامکی در سیستم ثبت نشده است. روی «الگوی جدید» بزنید.
                 </td>
             </tr>

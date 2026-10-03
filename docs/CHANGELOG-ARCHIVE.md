@@ -1,9 +1,31 @@
-# Changelog Archive (v1.0.0 — v1.23.2)
+# Changelog Archive (v1.0.0 — v1.24.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.23.2.
+Historical release notes for AB-Socks versions 1.0.0 through 1.24.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.24.0 — 2026-10-03
+
+### Store Settings Hub Redesign, Order Policies, Banking/IBAN Integration & Migration 022
+
+- **Master-Tabbed Settings Workspace Architecture (`views/admin/settings.php`, `views/admin/settings_partials/`, `assets/css/admin-settings.css`)**:
+  - Decomposed the monolithic 466-line settings template into an 84-line master assembly view with 8 modular partials (`_header_stats.php`, `_nav_tabs.php`, `_tab_orders.php`, `_tab_payments.php`, `_tab_general.php`, `_tab_catalog_search.php`, `_tab_seo_social.php`, `_tab_legal_cms.php`, `_tab_workstations.php`) conforming to Rule 7.
+  - Introduced dedicated design system stylesheet `assets/css/admin-settings.css` replacing all inline styles with modern design tokens, interactive tabs, iOS-style toggle switches, input addons, and Bento station cards.
+  - Implemented client-side hash routing (`#orders`, `#payments`, `#general`, `#catalog`, `#seo_social`, `#legal`, `#workstations`) with automatic redirect state preservation in `app/controllers/admin/settings.php`.
+- **E-Commerce Order & Inventory Operational Policies (`app/controllers/site/checkout.php`, `app/controllers/site/cart.php`, `views/site/cart.php`, `app/services/SettingService.php`)**:
+  - *Store Vacation / Maintenance Mode (`store_order_status` & `store_paused_message`)*: Added administrative toggle to pause checkout with a customizable notification banner across cart and checkout flows.
+  - *Minimum Order Requirement (`min_order_amount`)*: Enforces subtotal threshold prior to checkout entry, preventing uneconomic microscopic shipments.
+  - *Card-to-Card Slip Upload Window (`c2c_timeout_hours`)*: Configurable expiration window for customer payment receipt uploads.
+  - *Critical Low-Stock Alert Threshold (`low_stock_threshold`)*: Global threshold for triggering inventory shortage badges across dashboard and catalog tables.
+- **Financial, Banking & Invoice Customization (`app/services/SettingService.php`, `app/controllers/site/card_to_card.php`, `views/site/card_to_card.php`, `views/admin/order_detail.php`, `assets/css/admin-orders.css`)**:
+  - *Store Bank Account & IBAN (`store_shaba`, `store_bank_name`)*: Extended payment configuration with 24-digit Shaba (IBAN) format validation and bank name, dynamically rendered on the customer digital payment card.
+  - *Printable Invoice Customization (`invoice_footer_note`)*: Custom invoice terms and return policies dynamically appended to print-sheet orders (`@media print`).
+  - *VAT / Tax Architecture (`tax_enabled`, `tax_percentage`)*: Configured foundation for tax calculation modeling.
+  - *Corporate Identification (`store_economic_code`, `store_national_id`, `admin_alert_mobile`)*: Added economic code, national ID, and dedicated administrative alert mobile number for event notifications.
+- **Database Migration 022 (`database/migrations/022_v1.24.0_store_settings_enhancement.sql`, `database/schema.sql`)**:
+  - Seeded all new configuration keys into `settings` table with safe fallbacks and mirrored into baseline `schema.sql`.
+
 
 ## 1.23.2 — 2026-10-03
 
