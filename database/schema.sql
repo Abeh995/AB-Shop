@@ -16,7 +16,28 @@ CREATE TABLE IF NOT EXISTS admins (
     role ENUM('super_admin','admin') NOT NULL DEFAULT 'admin',
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     full_name VARCHAR(120) DEFAULT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    email VARCHAR(150) DEFAULT NULL,
+    last_login_at TIMESTAMP NULL DEFAULT NULL,
+    last_login_ip VARCHAR(45) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Admin audit logs (security trail for administrative operations)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT UNSIGNED NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT UNSIGNED DEFAULT NULL,
+    description VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE,
+    INDEX idx_admin_action (admin_id, action),
+    INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

@@ -54,15 +54,24 @@ Offline payments via Card-to-Card require strict isolation of customer financial
 
 ---
 
-## 3. Admin Access Control (RBAC)
+## 3. Admin Access Control (RBAC) & Audit Trail
 
-Admin privileges are partitioned into two roles (`admins.role`):
+Admin privileges and account management are partitioned into roles (`admins.role`):
 
 - **`admin`**: Full operational access (managing products, updating order statuses, viewing finance dashboards, adjusting shipping methods). Protected by `requireAdmin()`.
 - **`super_admin`**: Exclusive access to sensitive administrative actions (managing other admin users, viewing raw SMS/email diagnostic logs, permanently deleting orders). Protected by `requireSuperAdmin()`.
+- **Account Metadata & Session Tracking**:
+   - `admins.phone`: Contact mobile phone number.
+   - `admins.email`: Contact email address.
+   - `admins.last_login_at` & `admins.last_login_ip`: Automatically recorded upon successful password verification in `attemptAdminLogin()`.
 - **Safety Invariants**:
    - The system prevents an admin from deactivating or deleting their own account.
-   - The system enforces that at least one active `super_admin` must always exist in the database.
+   - The system enforces that at least one active `super_admin` must always exist in the database (preventing lockout through deletion, deactivation, or demotion).
+
+### 3.1 Security & Activity Audit Trail (`admin_audit_logs`)
+- Critical administrative operations (creation, profile updates, password resets, active toggles, deletions, and logins) are recorded in `admin_audit_logs`.
+- Records store `admin_id`, `action`, `entity_type`, `entity_id`, `description`, `ip_address`, and `created_at`.
+- All writes are executed with exception insulation (`logAdminAction`) ensuring auditing never disrupts operational requests.
 
 ---
 

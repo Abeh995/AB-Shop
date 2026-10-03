@@ -46,6 +46,20 @@ function attemptAdminLogin(string $username, string $password): bool
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
         $_SESSION['admin_role'] = $admin['role'];
+
+        // Track last login session and security audit trail
+        $clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        try {
+            $upStmt = db()->prepare('UPDATE admins SET last_login_at = NOW(), last_login_ip = ? WHERE id = ?');
+            $upStmt->execute([$clientIp, $admin['id']]);
+        } catch (\Throwable $e) {
+            // Non-breaking fallback if migration not yet applied
+        }
+
+        if (function_exists('logAdminAction')) {
+            logAdminAction((int)$admin['id'], 'login', 'admin', (int)$admin['id'], 'ورود موفق به پنل مدیریت');
+        }
+
         return true;
     }
 

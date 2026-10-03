@@ -1,83 +1,126 @@
-<?php require APP_ROOT . '/views/admin/layout/header.php'; ?>
+<?php
+/**
+ * Admin Users & Security Audit Workspace View
+ * Decomposed into modular partials with Bento KPIs, instant filtering,
+ * modal editors, and security audit trail.
+ *
+ * Strict Layer Boundaries: Pure presentation only, 0 SQL, 0 direct form processing (Rule 7).
+ */
 
-<div class="admin-card">
-    <h3 style="margin-bottom:14px;">افزودن ادمین جدید</h3>
-    <form method="post">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="create">
-        <div class="form-row">
-            <div class="form-group">
-                <label>نام کاربری</label>
-                <input class="form-control" type="text" name="username" dir="ltr" required minlength="3">
-            </div>
-            <div class="form-group">
-                <label>نام کامل (اختیاری)</label>
-                <input class="form-control" type="text" name="full_name">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>رمز عبور (حداقل ۸ کاراکتر)</label>
-                <input class="form-control" type="password" name="password" required minlength="8">
-            </div>
-            <div class="form-group">
-                <label>سطح دسترسی</label>
-                <select class="form-control" name="role">
-                    <option value="admin">ادمین عادی (بدون دسترسی به مدیریت ادمین‌ها)</option>
-                    <option value="super_admin">مدیر کل (دسترسی کامل)</option>
-                </select>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">افزودن ادمین</button>
-    </form>
+require APP_ROOT . '/views/admin/layout/header.php';
+?>
+
+<div class="usr-workspace">
+
+    <!-- 1. Bento KPI Grid -->
+    <?php require __DIR__ . '/users_partials/_kpis.php'; ?>
+
+    <!-- 2. Action & Filter Toolbar -->
+    <?php require __DIR__ . '/users_partials/_toolbar.php'; ?>
+
+    <!-- 3. Interactive Admins Table -->
+    <?php require __DIR__ . '/users_partials/_table.php'; ?>
+
+    <!-- 4. Security Audit Trail -->
+    <?php require __DIR__ . '/users_partials/_audit_trail.php'; ?>
+
 </div>
 
-<div class="admin-card">
-    <h3 style="margin-bottom:14px;">لیست ادمین‌ها</h3>
-    <table class="admin-table">
-        <thead><tr><th>نام کاربری</th><th>نام کامل</th><th>سطح دسترسی</th><th>وضعیت</th><th>تاریخ عضویت</th><th>عملیات</th></tr></thead>
-        <tbody>
-        <?php foreach ($admins as $a): $isMe = (int)$a['id'] === (int)$_SESSION['admin_id']; ?>
-        <tr>
-            <td dir="ltr"><?= e($a['username']) ?> <?= $isMe ? '<span style="color:var(--color-muted); font-size:.8rem;">(شما)</span>' : '' ?></td>
-            <td><?= e($a['full_name'] ?: '—') ?></td>
-            <td><?= $a['role'] === 'super_admin' ? '<span class="status-pill status-shipped">مدیر کل</span>' : '<span class="status-pill status-processing">ادمین</span>' ?></td>
-            <td><?= $a['is_active'] ? '<span class="status-pill status-delivered">فعال</span>' : '<span class="status-pill status-cancelled">غیرفعال</span>' ?></td>
-            <td><?= toPersianDigits(date('Y/m/d', strtotime($a['created_at']))) ?></td>
-            <td>
-                <div class="admin-actions">
-                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('pw-<?= (int)$a['id'] ?>').style.display='flex'">تغییر رمز</button>
-                    <?php if (!$isMe): ?>
-                    <form method="post" style="display:inline;">
-                        <?= csrfField() ?>
-                        <input type="hidden" name="action" value="toggle_active">
-                        <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                        <button type="submit" class="btn btn-sm btn-outline"><?= $a['is_active'] ? 'غیرفعال کردن' : 'فعال کردن' ?></button>
-                    </form>
-                    <form method="post" onsubmit="return confirm('حذف این حساب ادمین؟');" style="display:inline;">
-                        <?= csrfField() ?>
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-            </td>
-        </tr>
-        <tr id="pw-<?= (int)$a['id'] ?>" style="display:none;">
-            <td colspan="6">
-                <form method="post" style="display:flex; gap:8px; align-items:center; max-width:420px;">
-                    <?= csrfField() ?>
-                    <input type="hidden" name="action" value="change_password">
-                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                    <input class="form-control" type="password" name="password" placeholder="رمز عبور جدید (حداقل ۸ کاراکتر)" minlength="8" required>
-                    <button type="submit" class="btn btn-sm btn-primary">ذخیره رمز</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
+<!-- 5. Interactive Modals -->
+<?php require __DIR__ . '/users_partials/_modals.php'; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Modal Controllers
+    window.openCreateModal = function () {
+        closeAllModals();
+        const m = document.getElementById('modalCreateAdmin');
+        if (m) m.classList.add('active');
+    };
+
+    window.openEditModal = function (data) {
+        closeAllModals();
+        document.getElementById('editAdminId').value = data.id || '';
+        document.getElementById('editAdminUsername').value = data.username || '';
+        document.getElementById('editAdminFullName').value = data.full_name || '';
+        document.getElementById('editAdminRole').value = data.role || 'admin';
+        document.getElementById('editAdminPhone').value = data.phone || '';
+        document.getElementById('editAdminEmail').value = data.email || '';
+        
+        const m = document.getElementById('modalEditAdmin');
+        if (m) m.classList.add('active');
+    };
+
+    window.openPasswordModal = function (id, username) {
+        closeAllModals();
+        document.getElementById('pwAdminId').value = id;
+        document.getElementById('pwAdminUsername').textContent = '@' + username;
+        
+        const m = document.getElementById('modalPasswordAdmin');
+        if (m) m.classList.add('active');
+    };
+
+    window.closeAllModals = function () {
+        document.querySelectorAll('.usr-modal-backdrop').forEach(m => m.classList.remove('active'));
+    };
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+
+    // Real-time Search & Filtering
+    const searchInput = document.getElementById('adminSearchInput');
+    const filterPills = document.querySelectorAll('.usr-filter-pill');
+    const tableRows = document.querySelectorAll('.usr-row');
+
+    let activeFilter = 'all';
+
+    function applyFilters() {
+        const query = (searchInput.value || '').trim().toLowerCase();
+
+        tableRows.forEach(row => {
+            const role = row.getAttribute('data-role');
+            const status = row.getAttribute('data-status');
+            const searchIndex = row.getAttribute('data-search') || '';
+
+            // Check pill filter
+            let matchesFilter = true;
+            if (activeFilter === 'super_admin') {
+                matchesFilter = (role === 'super_admin');
+            } else if (activeFilter === 'admin') {
+                matchesFilter = (role === 'admin');
+            } else if (activeFilter === 'active') {
+                matchesFilter = (status === 'active');
+            } else if (activeFilter === 'inactive') {
+                matchesFilter = (status === 'inactive');
+            }
+
+            // Check search query
+            const matchesQuery = !query || searchIndex.includes(query);
+
+            if (matchesFilter && matchesQuery) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', function () {
+            filterPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            activeFilter = this.getAttribute('data-filter') || 'all';
+            applyFilters();
+        });
+    });
+});
+</script>
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

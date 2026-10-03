@@ -1,0 +1,529 @@
+/**
+ * Admin Users & Security Audit Workspace Stylesheet
+ * High-aesthetic Bento grid, interactive modals, avatar badges, and audit timeline.
+ */
+
+:root {
+    --usr-primary: #4F46E5;
+    --usr-primary-hover: #4338CA;
+    --usr-primary-light: rgba(79, 70, 229, 0.08);
+    --usr-gold: #D97706;
+    --usr-gold-light: rgba(217, 119, 6, 0.1);
+    --usr-success: #059669;
+    --usr-success-light: rgba(5, 150, 105, 0.1);
+    --usr-danger: #DC2626;
+    --usr-danger-light: rgba(220, 38, 38, 0.1);
+    --usr-surface: var(--color-surface, #ffffff);
+    --usr-border: var(--color-border, #e2e8f0);
+    --usr-text: var(--color-text, #1e293b);
+    --usr-text-muted: var(--color-text-muted, #64748b);
+}
+
+.usr-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 1. Bento KPI Grid */
+.usr-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 1024px) {
+    .usr-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .usr-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.usr-kpi-card {
+    background: var(--usr-surface);
+    border: 1px solid var(--usr-border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.usr-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.usr-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.usr-kpi-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.usr-kpi-label {
+    font-size: 0.78rem;
+    color: var(--usr-text-muted);
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.usr-kpi-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--usr-text);
+    line-height: 1.2;
+}
+
+.usr-kpi-sub {
+    font-size: 0.72rem;
+    color: var(--usr-text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 2. Toolbar & Filter */
+.usr-toolbar {
+    background: var(--usr-surface);
+    border: 1px solid var(--usr-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.usr-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    max-width: 400px;
+}
+
+.usr-search-box input {
+    width: 100%;
+    padding: 8px 36px 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--usr-border);
+    background: var(--color-bg, #f8fafc);
+    color: var(--usr-text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.usr-search-box input:focus {
+    outline: none;
+    border-color: var(--usr-primary);
+    box-shadow: 0 0 0 3px var(--usr-primary-light);
+    background: #fff;
+}
+
+.usr-search-icon {
+    position: absolute;
+    right: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--usr-text-muted);
+    pointer-events: none;
+}
+
+.usr-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.usr-filter-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--usr-border);
+    background: transparent;
+    color: var(--usr-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.usr-filter-pill:hover,
+.usr-filter-pill.active {
+    background: var(--usr-primary);
+    border-color: var(--usr-primary);
+    color: #fff;
+}
+
+/* 3. Table Container */
+.usr-table-container {
+    background: var(--usr-surface);
+    border: 1px solid var(--usr-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.usr-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+    font-size: 0.86rem;
+}
+
+.usr-table th {
+    background: var(--color-bg, #f8fafc);
+    padding: 12px 16px;
+    font-weight: 700;
+    color: var(--usr-text-muted);
+    font-size: 0.78rem;
+    border-bottom: 1px solid var(--usr-border);
+    white-space: nowrap;
+}
+
+.usr-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--usr-border);
+    color: var(--usr-text);
+    vertical-align: middle;
+}
+
+.usr-table tr:last-child td {
+    border-bottom: none;
+}
+
+.usr-table tr:hover td {
+    background: rgba(79, 70, 229, 0.015);
+}
+
+/* User Profile Badge */
+.usr-profile-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.usr-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #fff;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.usr-profile-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.usr-profile-name {
+    font-weight: 700;
+    color: var(--usr-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.usr-profile-username {
+    font-size: 0.78rem;
+    color: var(--usr-text-muted);
+    font-family: monospace;
+    direction: ltr;
+    text-align: right;
+}
+
+.usr-self-badge {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--usr-primary);
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Role Badges */
+.usr-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.usr-role-super {
+    background: var(--usr-gold-light);
+    color: var(--usr-gold);
+    border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.usr-role-admin {
+    background: var(--usr-primary-light);
+    color: var(--usr-primary);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+/* Status Pulse */
+.usr-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.usr-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.usr-pulse-active {
+    background: var(--usr-success);
+    box-shadow: 0 0 0 3px var(--usr-success-light);
+}
+
+.usr-pulse-inactive {
+    background: var(--usr-danger);
+    box-shadow: 0 0 0 3px var(--usr-danger-light);
+}
+
+/* Contact Badges */
+.usr-contact-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.76rem;
+}
+
+.usr-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--usr-text-muted);
+}
+
+/* Session Cell */
+.usr-session-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.78rem;
+}
+
+.usr-session-time {
+    font-weight: 600;
+    color: var(--usr-text);
+}
+
+.usr-session-ip {
+    font-size: 0.72rem;
+    color: var(--usr-text-muted);
+    font-family: monospace;
+    direction: ltr;
+    text-align: right;
+}
+
+/* Action Group */
+.usr-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.usr-btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--usr-border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--usr-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.usr-btn-icon:hover {
+    background: var(--usr-primary-light);
+    color: var(--usr-primary);
+    border-color: var(--usr-primary);
+}
+
+.usr-btn-icon.usr-btn-danger:hover {
+    background: var(--usr-danger-light);
+    color: var(--usr-danger);
+    border-color: var(--usr-danger);
+}
+
+/* 4. Modals */
+.usr-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.usr-modal-backdrop.active {
+    display: flex;
+}
+
+.usr-modal-card {
+    background: var(--usr-surface);
+    border: 1px solid var(--usr-border);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: usrModalSlide 0.2s ease-out;
+    overflow: hidden;
+}
+
+@keyframes usrModalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.usr-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--usr-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.usr-modal-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--usr-text);
+}
+
+.usr-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--usr-text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+.usr-modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.usr-modal-footer {
+    padding: 14px 20px;
+    background: var(--color-bg, #f8fafc);
+    border-top: 1px solid var(--usr-border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 5. Audit Trail */
+.usr-audit-card {
+    background: var(--usr-surface);
+    border: 1px solid var(--usr-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.usr-audit-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--usr-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-bg, #f8fafc);
+}
+
+.usr-audit-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--usr-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.usr-audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.usr-audit-table th {
+    padding: 10px 14px;
+    background: var(--color-bg, #f8fafc);
+    font-weight: 700;
+    color: var(--usr-text-muted);
+    border-bottom: 1px solid var(--usr-border);
+    font-size: 0.74rem;
+}
+
+.usr-audit-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--usr-border);
+    color: var(--usr-text);
+    vertical-align: middle;
+}
+
+.usr-audit-table tr:last-child td {
+    border-bottom: none;
+}
+
+.usr-action-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: monospace;
+}

@@ -7,6 +7,33 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.29.0 — 2026-10-04
+
+### Site Admins Workspace Redesign, Security & Activity Audit Trail & Migration 026
+
+- **Modernized Site Admins Workspace Architecture (`views/admin/users.php`, `views/admin/users_partials/`, `assets/css/admin-users.css`)**:
+  - Replaced legacy table with modular Bento-inspired administrative workstation adhering strictly to Rule 7:
+    - `views/admin/users_partials/_kpis.php`: Bento KPIs featuring total admin count, active accounts, super admins ratio, and real-time last active session card with IP.
+    - `views/admin/users_partials/_toolbar.php`: interactive live search by name, username, email or mobile, role/status filter pills, and modal trigger CTA.
+    - `views/admin/users_partials/_table.php`: interactive admin table featuring dynamic gradient initials avatars, contact badges (phone, email), role pills (gold for super admin, blue for admin), active pulsing status indicators, and quick action buttons.
+    - `views/admin/users_partials/_modals.php`: accessible, animated dialog modals for creating new admins, editing existing profiles, and resetting passwords without page reloads.
+    - `views/admin/users_partials/_audit_trail.php`: real-time security timeline displaying recent administrative operations with actor metadata, event tags, descriptions, IP addresses, and Persian timestamps.
+- **Service Layer Expansion & Security Audit Trail (`app/services/AdminUserService.php`)**:
+  - Implemented `getAdminUsersMetrics()` aggregating total, active, super_admins, and latest login session.
+  - Implemented `updateAdminUserRecord()` enabling super admins to update username, full name, phone, email, and role, while strictly enforcing safety invariants (preventing demotion of the last super admin).
+  - Implemented `logAdminAction()` and `getRecentAdminAuditLogs()` recording administrative operations into `admin_audit_logs` with exception insulation.
+  - Enhanced `createAdminUserRecord()` with input format validations and backwards-compatible payload handling.
+  - Hardened `toggleAdminUserActiveStatus()` and `deleteAdminUserRecord()` to guarantee that at least one active super admin remains.
+- **Session Tracking & Login Audit Integration (`app/core/auth.php`)**:
+  - Enhanced `attemptAdminLogin()`: automatically updates `last_login_at` timestamp and `last_login_ip` address on verified logins.
+  - Emits immutable `login` audit event into `admin_audit_logs`.
+- **Database Schema Migration 026 (`database/migrations/026_v1.29.0_admin_users_and_audit.sql`, `database/schema.sql`)**:
+  - Added guarded columns `phone`, `email`, `last_login_at`, and `last_login_ip` to `admins` table.
+  - Created `admin_audit_logs` table with foreign key cascading and indexes on `(admin_id, action)` and `created_at`.
+- **Ultra-Lean Controller Footprint & View Purity**:
+  - `app/controllers/admin/users.php` strictly bounded at 53 lines (soft ceiling: 80 lines).
+  - Exactly zero SQL queries or form mutations in view templates.
+
 ## 1.28.0 — 2026-10-04
 
 ### Email Studio & Webmail Workspace Overhaul, Coupon Management Architecture & Migration 025

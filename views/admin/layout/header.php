@@ -43,6 +43,7 @@ $adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/a
 $adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-sms.css') ?: 1);
 $adminEmailsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-emails.css') ?: 1);
 $adminCouponsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-coupons.css') ?: 1);
+$adminUsersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-users.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -81,6 +82,9 @@ $adminCouponsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 <?php endif; ?>
 <?php if ($currentPage === 'coupons.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-coupons.css?v=<?= $adminCouponsCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'users.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-users.css?v=<?= $adminUsersCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){
