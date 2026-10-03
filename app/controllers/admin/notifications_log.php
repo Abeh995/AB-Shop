@@ -1,18 +1,12 @@
 <?php
 /**
- * Full log of SMS/email send attempts — for troubleshooting without
- * needing SSH or server log-file access.
+ * Notifications Log Controller — Forwarder to Unified Diagnostic Studio
+ *
+ * Keeps backwards compatibility with existing bookmarks and links while
+ * routing all log viewing into the unified Diagnostic Studio (Rule 7).
  */
 
 requireSuperAdmin();
-$pageTitle = 'لاگ پیامک و ایمیل';
 
-$tab = $_GET['tab'] === 'email' ? 'email' : 'sms';
-
-if ($tab === 'sms') {
-    $rows = db()->query("SELECT * FROM sms_log ORDER BY created_at DESC LIMIT 100")->fetchAll();
-} else {
-    $rows = db()->query("SELECT * FROM email_log ORDER BY created_at DESC LIMIT 100")->fetchAll();
-}
-
-renderView('admin/notifications_log', compact('pageTitle', 'tab', 'rows'));
+$type = ($_GET['tab'] ?? '') === 'email' ? 'email' : 'sms';
+redirect('diagnostics.php?tab=notifications&type=' . $type . '#notifications');

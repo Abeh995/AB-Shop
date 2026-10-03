@@ -1,90 +1,68 @@
-<?php require APP_ROOT . '/views/admin/layout/header.php'; ?>
+<?php
+/**
+ * Admin System Health & Diagnostic Studio Master View
+ *
+ * Coordinates Host Quotas, Connectivity Suite, Notifications Log,
+ * System PHP Error Viewer, and Audit Trail.
+ * View Purity: 0 SQL, 0 $_POST, pure presentation (Rule 7).
+ */
 
-<div class="admin-card">
-    <h3 style="margin-bottom:14px;">مقادیر فعلی تنظیمات (کلیدها جزئی مخفی شده‌اند)</h3>
-    <table class="admin-table">
-        <tbody>
-        <?php foreach ($configSnapshot as $key => $value): ?>
-            <tr><td style="font-weight:600;"><?= e($key) ?></td><td dir="ltr" style="font-family:monospace;"><?= e($value) ?></td></tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php if ($lineNumberWarning): ?>
-        <div class="alert alert-error" style="margin-top:14px;">⚠️ <?= e($lineNumberWarning) ?></div>
-    <?php endif; ?>
+require APP_ROOT . '/views/admin/layout/header.php';
+?>
+
+<div class="diag-workspace">
+
+    <!-- 1. System Pulse & Vital Gauges -->
+    <?php require __DIR__ . '/diagnostics_partials/_header_pulse.php'; ?>
+
+    <!-- 2. Master Navigation Tabs -->
+    <?php require __DIR__ . '/diagnostics_partials/_nav_tabs.php'; ?>
+
+    <!-- 3. Tab Panes -->
+    <?php require __DIR__ . '/diagnostics_partials/_tab_server_health.php'; ?>
+    <?php require __DIR__ . '/diagnostics_partials/_tab_connectivity.php'; ?>
+    <?php require __DIR__ . '/diagnostics_partials/_tab_notifications_log.php'; ?>
+    <?php require __DIR__ . '/diagnostics_partials/_tab_system_errors.php'; ?>
+    <?php require __DIR__ . '/diagnostics_partials/_tab_audit_trail.php'; ?>
+
 </div>
 
-<div class="admin-card">
-    <h3 style="margin-bottom:10px;">۱) تست کلید API فراز اس‌ام‌اس</h3>
-    <p style="color:var(--color-muted); font-size:.88rem; margin-bottom:14px;">این تست فقط موجودی حساب را می‌خواند؛ هیچ پیامکی ارسال نمی‌شود و هزینه‌ای ندارد.</p>
-    <form method="post">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="check_balance">
-        <button type="submit" class="btn btn-primary">تست اتصال و موجودی</button>
-    </form>
-    <?php if ($balanceResult): ?>
-        <div class="alert alert-<?= $balanceResult['ok'] ? 'success' : 'error' ?>" style="margin-top:14px;">
-            <?= $balanceResult['ok'] ? '✅' : '❌' ?> <?= e($balanceResult['summary']) ?>
-        </div>
-        <?php if ($balanceResult['debug']): ?>
-        <details style="margin-top:10px;">
-            <summary style="cursor:pointer; color:var(--color-muted); font-size:.85rem;">جزئیات فنی (درخواست/پاسخ خام)</summary>
-            <pre style="background:#f6f2ea; padding:12px; border-radius:8px; font-size:.78rem; overflow-x:auto; direction:ltr; text-align:left;"><?= e(json_encode($balanceResult['debug'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) ?></pre>
-        </details>
-        <?php endif; ?>
-    <?php endif; ?>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabBtns = document.querySelectorAll('.diag-tab-btn');
+    const tabPanes = document.querySelectorAll('.diag-tab-pane');
 
-<div class="admin-card">
-    <h3 style="margin-bottom:10px;">۲) بررسی جزئیات پترن (تایید نام واقعی متغیر)</h3>
-    <p style="color:var(--color-muted); font-size:.88rem; margin-bottom:14px;">
-        این تست نام واقعی متغیر(های) پترن ثبت‌شده در پنل فراز را نشان می‌دهد تا با مقدار
-        <code>FARAZ_OTP_PATTERN_VAR</code> در config.php مقایسه کنید. اگر یکی نباشند، پیامک ارسال نمی‌شود.
-    </p>
-    <form method="post">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="check_pattern">
-        <button type="submit" class="btn btn-primary">بررسی پترن</button>
-    </form>
-    <?php if ($patternResult): ?>
-        <div class="alert alert-<?= $patternResult['ok'] ? 'success' : 'error' ?>" style="margin-top:14px;">
-            <?= $patternResult['ok'] ? '✅' : '❌' ?> <?= e($patternResult['summary']) ?>
-        </div>
-        <?php if (!empty($patternResult['raw'])): ?>
-        <pre style="background:#f6f2ea; padding:12px; border-radius:8px; font-size:.78rem; overflow-x:auto; direction:ltr; text-align:left;"><?= e(json_encode($patternResult['raw'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) ?></pre>
-        <?php endif; ?>
-        <?php if ($patternResult['debug']): ?>
-        <details style="margin-top:10px;">
-            <summary style="cursor:pointer; color:var(--color-muted); font-size:.85rem;">جزئیات فنی</summary>
-            <pre style="background:#f6f2ea; padding:12px; border-radius:8px; font-size:.78rem; overflow-x:auto; direction:ltr; text-align:left;"><?= e(json_encode($patternResult['debug'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) ?></pre>
-        </details>
-        <?php endif; ?>
-    <?php endif; ?>
-</div>
+    function activateTab(tabKey) {
+        if (!tabKey) tabKey = 'health';
+        const targetBtn = document.querySelector(`.diag-tab-btn[data-tab="${tabKey}"]`);
+        const targetPane = document.getElementById(`pane-${tabKey}`);
 
-<div class="admin-card">
-    <h3 style="margin-bottom:10px;">۳) تست اتصال SMTP (بدون ارسال ایمیل واقعی)</h3>
-    <p style="color:var(--color-muted); font-size:.88rem; margin-bottom:14px;">این تست فقط اتصال، STARTTLS و احراز هویت را بررسی می‌کند؛ هیچ ایمیلی ارسال نمی‌شود.</p>
-    <form method="post">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="check_smtp">
-        <button type="submit" class="btn btn-primary">تست اتصال SMTP</button>
-    </form>
-    <?php if ($smtpResult): ?>
-        <div class="alert alert-<?= $smtpResult['ok'] ? 'success' : 'error' ?>" style="margin-top:14px;">
-            <?= $smtpResult['ok'] ? '✅' : '❌' ?> <?= e($smtpResult['summary']) ?>
-        </div>
-        <?php if ($smtpResult['debug']): ?>
-        <details style="margin-top:10px;" open>
-            <summary style="cursor:pointer; color:var(--color-muted); font-size:.85rem;">مکالمه کامل SMTP</summary>
-            <pre style="background:#f6f2ea; padding:12px; border-radius:8px; font-size:.78rem; overflow-x:auto; direction:ltr; text-align:left; max-height:300px;"><?= e($smtpResult['debug']) ?></pre>
-        </details>
-        <?php endif; ?>
-    <?php endif; ?>
-</div>
+        if (targetBtn && targetPane) {
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
 
-<div class="admin-card">
-    <a href="notifications_log.php" class="btn btn-outline">مشاهده لاگ کامل تمام تلاش‌های ارسال (پیامک و ایمیل) ←</a>
-</div>
+            targetBtn.classList.add('active');
+            targetPane.classList.add('active');
+        }
+    }
+
+    // Initial load from URL Hash or server-side activeTab
+    const initialHash = window.location.hash.replace('#', '');
+    if (initialHash) {
+        activateTab(initialHash);
+    } else {
+        const serverTab = <?= json_encode($activeTab ?? 'health') ?>;
+        activateTab(serverTab);
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const tabKey = this.getAttribute('data-tab');
+            activateTab(tabKey);
+            history.replaceState(null, '', '#' + tabKey);
+        });
+    });
+});
+</script>
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

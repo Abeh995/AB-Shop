@@ -1,0 +1,394 @@
+/**
+ * AB-Socks Admin Diagnostics & Health Studio Styles (admin-diagnostics.css)
+ * DirectAdmin Host Resource Gauges, Bento Health Cards & Real-Time Log Studio.
+ */
+
+:root {
+    --diag-primary: #0284C7;
+    --diag-primary-hover: #0369A1;
+    --diag-primary-light: rgba(2, 132, 199, 0.08);
+    --diag-success: #10B981;
+    --diag-success-light: rgba(16, 185, 129, 0.1);
+    --diag-warning: #F59E0B;
+    --diag-warning-light: rgba(245, 158, 11, 0.1);
+    --diag-danger: #EF4444;
+    --diag-danger-light: rgba(239, 68, 68, 0.1);
+    --diag-card-bg: #FFFFFF;
+    --diag-bg-subtle: #F8FAFC;
+    --diag-border: #E2E8F0;
+    --diag-border-subtle: #F1F5F9;
+    --diag-text-main: #0F172A;
+    --diag-text-secondary: #475569;
+    --diag-text-muted: #64748B;
+    --diag-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --diag-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --diag-radius-sm: 8px;
+    --diag-radius-md: 12px;
+    --diag-radius-lg: 16px;
+    --diag-radius-pill: 9999px;
+}
+
+/* 1. Master Workspace */
+.diag-workspace {
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 12px 16px 80px;
+    box-sizing: border-box;
+    font-family: inherit;
+    color: var(--diag-text-main);
+}
+
+/* 2. Header Pulse Bar */
+.diag-pulse-card {
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: var(--diag-radius-md);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--diag-shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.diag-pulse-lead {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.diag-pulse-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--diag-radius-md);
+    background: var(--diag-primary-light);
+    color: var(--diag-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.diag-pulse-title {
+    margin: 0 0 2px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--diag-text-main);
+}
+
+.diag-pulse-desc {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--diag-text-muted);
+}
+
+.diag-pulse-metrics {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.diag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--diag-radius-pill);
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--diag-border);
+    background: var(--diag-bg-subtle);
+    color: var(--diag-text-secondary);
+}
+
+.diag-badge.success {
+    background: var(--diag-success-light);
+    color: #065F46;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.diag-badge.warning {
+    background: var(--diag-warning-light);
+    color: #92400E;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.diag-badge.danger {
+    background: var(--diag-danger-light);
+    color: #991B1B;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.diag-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+}
+
+/* 3. Navigation Tabs */
+.diag-tabs-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--diag-border);
+    scrollbar-width: thin;
+}
+
+.diag-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--diag-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    color: var(--diag-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.diag-tab-btn:hover {
+    color: var(--diag-text-main);
+    background: var(--diag-bg-subtle);
+}
+
+.diag-tab-btn.active {
+    color: #FFFFFF;
+    background: var(--diag-primary);
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+/* 4. Tab Panes */
+.diag-tab-pane {
+    display: none;
+    animation: diagFadeIn 0.2s ease-out;
+}
+
+.diag-tab-pane.active {
+    display: block;
+}
+
+@keyframes diagFadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 5. Bento Grid Layouts */
+.diag-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.diag-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+    .diag-grid-2, .diag-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 6. Card Containers */
+.diag-card {
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: var(--diag-radius-md);
+    box-shadow: var(--diag-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.diag-card-header {
+    padding: 14px 20px;
+    background: var(--diag-bg-subtle);
+    border-bottom: 1px solid var(--diag-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.diag-card-title {
+    margin: 0 0 3px;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--diag-text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.diag-card-desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--diag-text-muted);
+}
+
+.diag-card-body {
+    padding: 20px;
+}
+
+/* 7. Quota Progress Gauge */
+.diag-gauge-wrap {
+    margin-top: 12px;
+}
+
+.diag-gauge-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+}
+
+.diag-gauge-track {
+    height: 10px;
+    background: var(--diag-border);
+    border-radius: var(--diag-radius-pill);
+    overflow: hidden;
+    position: relative;
+}
+
+.diag-gauge-bar {
+    height: 100%;
+    border-radius: var(--diag-radius-pill);
+    transition: width 0.3s ease;
+}
+
+.diag-gauge-bar.safe {
+    background: #10B981;
+}
+
+.diag-gauge-bar.warn {
+    background: #F59E0B;
+}
+
+.diag-gauge-bar.crit {
+    background: #EF4444;
+}
+
+/* 8. Diagnostic Test Card */
+.diag-test-item {
+    border: 1px solid var(--diag-border);
+    border-radius: var(--diag-radius-sm);
+    padding: 16px;
+    background: var(--diag-card-bg);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.diag-test-info {
+    flex: 1 1 300px;
+}
+
+.diag-test-title {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--diag-text-main);
+}
+
+.diag-test-desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--diag-text-muted);
+}
+
+/* 9. Log Studio & Tables */
+.diag-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    text-align: right;
+}
+
+.diag-log-table th {
+    background: var(--diag-bg-subtle);
+    padding: 10px 14px;
+    font-weight: 700;
+    color: var(--diag-text-secondary);
+    border-bottom: 1px solid var(--diag-border);
+    white-space: nowrap;
+}
+
+.diag-log-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--diag-border-subtle);
+    vertical-align: middle;
+}
+
+.diag-log-table tr:hover td {
+    background: rgba(2, 132, 199, 0.02);
+}
+
+/* 10. Filter Toolbar */
+.diag-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    background: var(--diag-bg-subtle);
+    padding: 12px 16px;
+    border-radius: var(--diag-radius-sm);
+    border: 1px solid var(--diag-border);
+}
+
+.diag-input {
+    border: 1px solid var(--diag-border);
+    border-radius: var(--diag-radius-sm);
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background: #FFFFFF;
+    color: var(--diag-text-main);
+}
+
+.diag-input:focus {
+    outline: none;
+    border-color: var(--diag-primary);
+    box-shadow: 0 0 0 2px var(--diag-primary-light);
+}
+
+/* 11. Monospace Code & Debug Details */
+.diag-code-box {
+    background: #1C1917;
+    color: #F5F5F4;
+    border-radius: var(--diag-radius-sm);
+    padding: 12px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    direction: ltr;
+    text-align: left;
+    overflow-x: auto;
+    max-height: 340px;
+}
+
+.mono-num {
+    font-family: monospace;
+    direction: ltr;
+    display: inline-block;
+}

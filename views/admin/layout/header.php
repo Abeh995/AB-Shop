@@ -44,6 +44,7 @@ $adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-
 $adminEmailsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-emails.css') ?: 1);
 $adminCouponsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-coupons.css') ?: 1);
 $adminUsersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-users.css') ?: 1);
+$adminDiagnosticsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-diagnostics.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -85,6 +86,9 @@ $adminUsersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admi
 <?php endif; ?>
 <?php if ($currentPage === 'users.php'): ?>
 <link rel="stylesheet" href="/assets/css/admin-users.css?v=<?= $adminUsersCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['diagnostics.php', 'notifications_log.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-diagnostics.css?v=<?= $adminDiagnosticsCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

@@ -118,3 +118,29 @@ The email subsystem operates on two distinct layers:
    - Connects to IMAP via PHP extension with multipart MIME body extraction and XSS sanitization.
    - Dispatches rich HTML emails via authenticated SMTP with official store branding and account signatures.
    - Live socket diagnostics (`testConnection()`) testing both IMAP and SMTP ports.
+
+---
+
+## 6. System Diagnostics, Host Health & Unified Log Studio (`DiagnosticService.php`)
+
+To guarantee long-term stability and observability on DirectAdmin shared hosting without requiring SSH or cPanel access, the diagnostics subsystem was consolidated into a unified service:
+1. **Shared Hosting Quota Monitoring**:
+   - DirectAdmin imposes strict hardware ceilings: **200 MB database quota** and **1.5 GB disk storage**.
+   - `DiagnosticService::getServerHealthMetrics()` measures live database size using `information_schema.TABLES` and tracks recursive byte counts across all upload directories (`products`, `branding`, `card_to_card`, `expenses`, `tmp`).
+   - Visual progress gauges provide early warnings before storage limits trigger hosting account suspensions.
+2. **Server Environment & Invariant Auditing**:
+   - Real-time audit of PHP runtime constraints (`memory_limit`, `upload_max_filesize`, `max_execution_time`).
+   - Validates existence and functioning of critical PHP extensions: `pdo_mysql`, `curl`, `mbstring`, `gd` (specifically `imagewebp` for WebP generation), `openssl`, and `imap`.
+   - Continuous verification of clock synchronization between PHP and MySQL session (`drift_seconds <= 60`).
+3. **Safe Outbound Connectivity Testing**:
+   - `DiagnosticService::testConnectivity()` executes non-destructive diagnostic probes:
+     - Faraz SMS balance & credit check without decrementing wallet funds.
+     - OTP pattern validation checking remote variable definitions.
+     - SMTP live socket handshake verifying STARTTLS and credentials.
+     - MySQL database query roundtrip ping latency in milliseconds.
+     - Outbound HTTP probe verifying reachability of Zarinpal payment gateway.
+4. **Unified Error & Security Logging**:
+   - `storage_errors.log` parser reading and categorizing fatal PHP exceptions and PDO connection dropouts with 1-click log rotation/clearing.
+   - Centralized viewer for `admin_audit_logs` tracking sensitive administrative actions.
+   - Unified notification log viewer (`sms_log` and `email_log`) with keyword search and debug payload inspectors.
+   - Housekeeping tool (`cleanTemporaryUploads()`) garbage-collecting temporary card-to-card upload receipts older than 24 hours.
