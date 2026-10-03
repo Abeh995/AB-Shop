@@ -1,9 +1,27 @@
-# Changelog Archive (v1.0.0 — v1.22.0)
+# Changelog Archive (v1.0.0 — v1.22.1)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.22.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.22.1.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.22.1 — 2026-10-02
+
+### Image Optimizer Engine DRY Architecture, 40MB Upload Limit & High-Fidelity Quality Preset
+
+- **Centralized Dynamic Image Optimizer (`assets/js/admin-image-optimizer.js`, `assets/css/admin.css`)**:
+  - Eliminated hardcoded marketing and technical verbose text ("پشتیبانی از انواع فرمت‌ها دوربین آیفون و حذف متادیتا") across the codebase in compliance with DRY principles.
+  - Formulated single-source dynamic template generation for dropzone hints: `فرمت‌های مجاز: {formats} (حداکثر {max_size})`.
+  - Upgraded administrative upload threshold to 40 MB default (`data-max-size="۴۰ مگابایت"`).
+  - Shifted default WebP quality baseline from aggressive 30% (`0.30`) to visually lossless 85% (`0.85`), maximizing graphic fidelity with minimal compression artifacts.
+  - Added native compact layout mode (`data-layout="compact"` / `.aio-dropzone-compact`) for space-constrained sidebars, drawers, and modal workstations.
+  - Added programmatic `change` event dispatching on DataTransfer sync to trigger reactive UI updates in consuming listeners.
+- **Admin Views Image Upload Standardization**:
+  - Decomposed and standardized image dropzones in `views/admin/gift_items_partials/_studio.php` and `views/admin/categories.php`, eliminating redundant custom markup and unifying under `data-optimize-image`.
+  - Harmonized `views/admin/product_edit.php` (main and gallery), `views/admin/appearance.php` (branding logo with SVG detection), `views/admin/gift_item_edit.php`, and `views/admin/card_to_card_payments.php` modal dropzone.
+- **Storefront Checkout Upload Polish (`views/site/card_to_card.php`, `assets/js/card-to-card.js`)**:
+  - Cleaned customer-facing payment receipt dropzone copy: removed device-specific jargon and verbose badge labels, presenting concise format and size parameters (`فرمت‌های مجاز: JPG، PNG، WebP (حداکثر ۵ مگابایت)`).
+  - Cleaned conversion loading status messages.
 
 ## 1.22.0 — 2026-10-02
 

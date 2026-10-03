@@ -24,6 +24,10 @@ Customer identity is built around a verified Iranian mobile phone number (`custo
    - Standardized 11-event catalog (`otp`, `order_created`, `order_paid`, `order_shipped`, `order_delivered`, `order_cancelled`, `c2c_instructions`, `card_to_card_approved`, `card_to_card_rejected`, `admin_new_order`, `admin_c2c_receipt`).
    - Dynamic Variable Data-Binding: Maps arbitrary Faraz variable names to system contextual tokens (`source_token`) stored in `sms_patterns.variables_config`.
    - Dispatched safely via `dispatchSmsEvent()` with zero-failure guarantee (never aborts checkouts or status changes).
+- **SMS Patterns Workstation & Mobile Simulator (`SmsPatternService.php`, `sms_patterns.php`, `sms_pattern_edit.php`)**:
+   - High-density administrative workstation with Bento KPIs (active patterns, gateway connectivity & balance check, unconfigured patterns, today's dispatched SMS count).
+   - Event categorization and search toolbar (`auth`, `orders`, `c2c`, `admin`, `unset`) with instant client-side filtering and optimistic AJAX status toggling.
+   - Live Smartphone Mockup Preview rendering real-time message bubble simulation, automatic token placeholder replacement, and Unicode/Persian GSM part counter.
 - **WebOTP Browser API**:
    - View `views/site/verify_phone.php` uses `autocomplete="one-time-code"`, `inputmode="numeric"`, and `maxlength="6"` for cross-browser autocomplete.
    - In supporting browsers (Chrome/Android), executes `navigator.credentials.get({ otp: { transport: ["sms"] } })` to automatically read the incoming SMS and submit the verification form without manual user entry.

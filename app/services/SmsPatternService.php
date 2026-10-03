@@ -375,3 +375,83 @@ function dispatchSmsEvent(string $eventKey, array $contextData, ?string $recipie
         return ['ok' => false, 'error' => $e->getMessage(), 'skipped' => true];
     }
 }
+
+/**
+ * Calculate summary metrics for the SMS patterns dashboard.
+ *
+ * @return array{
+ *     total_patterns: int,
+ *     active_patterns: int,
+ *     configured_patterns: int,
+ *     unset_patterns: int,
+ *     total_sent_today: int,
+ *     gateway_status: array{ok: bool, summary: string, debug: mixed}
+ * }
+ */
+function getSmsPatternsSummaryMetrics(): array
+{
+    $pdo = db();
+    $patterns = getSmsPatternsList();
+    $total = count($patterns);
+    $active = 0;
+    $configured = 0;
+    $unset = 0;
+
+    foreach ($patterns as $p) {
+        if (!empty($p['is_active'])) {
+            $active++;
+        }
+        $code = trim($p['pattern_code'] ?? '');
+        if ($code !== '' && $code !== 'unset') {
+            $configured++;
+        } else {
+            $unset++;
+        }
+    }
+
+    $sentToday = 0;
+    try {
+        $stmt = $pdo->query("SELECT COUNT(*) FROM sms_log WHERE DATE(created_at) = CURRENT_DATE()");
+        $sentToday = (int) $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        $sentToday = 0;
+    }
+
+    $gatewayStatus = FarazSmsService::checkBalance();
+
+    return [
+        'total_patterns'      => $total,
+        'active_patterns'     => $active,
+        'configured_patterns' => $configured,
+        'unset_patterns'      => $unset,
+        'total_sent_today'    => $sentToday,
+        'gateway_status'      => $gatewayStatus,
+    ];
+}
+
+/**
+ * Resolve event category key for grouping and filtering.
+ */
+function getSmsEventCategory(string $eventKey): string
+{
+    switch ($eventKey) {
+        case 'otp':
+            return 'auth';
+        case 'order_created':
+        case 'order_paid':
+        case 'order_shipped':
+        case 'order_delivered':
+        case 'order_cancelled':
+            return 'orders';
+        case 'c2c_instructions':
+        case 'card_to_card_approved':
+        case 'card_to_card_rejected':
+            return 'c2c';
+        case 'admin_new_order':
+        case 'admin_c2c_receipt':
+            return 'admin';
+        default:
+            return 'other';
+    }
+}
+

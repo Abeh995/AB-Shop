@@ -40,6 +40,7 @@ $adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/ad
 $adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-settings.css') ?: 1);
 $adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-appearance.css') ?: 1);
 $adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-shipping.css') ?: 1);
+$adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-sms.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -69,6 +70,9 @@ $adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/a
 <?php endif; ?>
 <?php if (in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-shipping.css?v=<?= $adminShippingCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-sms.css?v=<?= $adminSmsCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){
