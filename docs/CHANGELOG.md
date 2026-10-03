@@ -3,9 +3,24 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.25.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.26.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.30.2 — 2026-10-04
+
+### Shipping Methods Master Table Streamlining, Zero-Overflow 5-Column Architecture & SVG Polish
+
+- **Streamlined 5-Column Matrix Table (`views/admin/shipping_methods_partials/_table.php`, `assets/css/admin-shipping.css`)**:
+  - Eliminated table horizontal overflow and bulky browser scrollbars by restructuring into 5 balanced, high-density columns:
+    - `اولویت`: Vertical rank pill (`#1`, `#2`) with compact increment/decrement micro-chevrons.
+    - `روش ارسال و پوشش جغرافیایی`: Contextual SVG logistics icons (courier bike, post truck, express lightning, cargo box) with dedicated color tints, title, scope pills (`استان «تهران»` / `سراسر کشور`), delivery speed chips (`⚡ تحویل همان‌روز یا ۲۴ ساعته`), and description.
+    - `تعرفه و تراز مالی`: Unified pricing cell combining customer fee, postal expense comparison, store margin/subsidy indicators (`+سود` / `−یارانه` / `سربه‌سر`), and free-shipping threshold tags (`🎁 رایگان بالای ۵۰۰,۰۰۰ ت`).
+    - `وضعیت`: Centered iOS toggle switch with instant AJAX persistence.
+    - `عملیات`: Grouped 32x32px edit and delete buttons with polished hover states and full selector integrity.
+- **Logistics Workstation Aesthetic Upgrade (`views/admin/shipping_methods_partials/_kpis.php`, `views/admin/shipping_methods_partials/_studio.php`)**:
+  - Upgraded Bento KPI cards and live checkout simulation headers from legacy emojis to crisp, scalable vector SVG icons matching the AB-Socks design system.
+  - Adjusted master-detail split layout to `minmax(0, 1.55fr) minmax(350px, 1fr)` ensuring seamless responsiveness across desktop and laptop viewports.
 
 ## 1.30.1 — 2026-10-04
 
@@ -151,25 +166,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Ultra-Lean Controller Footprint (`app/controllers/admin/shipping_methods.php`, `app/controllers/admin/shipping_method_edit.php`)**:
   - Maintained `shipping_methods.php` controller at 72 lines (well within Rule 7 soft ceiling of 80 lines).
   - Maintained `shipping_method_edit.php` at 34 lines for seamless backward compatibility.
-
-## 1.25.0 — 2026-10-03
-
-### Appearance & Homepage Workspace Overhaul, Hero Promo Banner, Trust Badges, Favicon & Migration 023
-
-- **Master-Tabbed Appearance Workspace Architecture (`views/admin/appearance.php`, `views/admin/appearance_partials/`, `assets/css/admin-appearance.css`)**:
-  - Decomposed the legacy monolithic 221-line appearance template with hardcoded inline styles into an elegant 60-line master view with 5 specialized partials (`_header_stats.php`, `_nav_tabs.php`, `_tab_sections.php`, `_tab_hero.php`, `_tab_trust.php`, `_tab_branding.php`, `_tab_announcement.php`) conforming to Rule 7.
-  - Introduced dedicated design system stylesheet `assets/css/admin-appearance.css` with responsive layout cards, dropzone file uploaders, live theme token color swatches, browser tab preview mockups, and URL hash tab synchronization.
-- **Hero Promo Banner & Conversion Architecture (`app/controllers/site/home.php`, `views/site/home.php`, `assets/css/style.css`, `app/services/SettingService.php`)**:
-  - Added configurable Hero Promo Banner supporting background image upload, seasonal promotional badge, main headline (H1), subtitle, and call-to-action (CTA) button with custom destination URL.
-  - Implemented automatic responsive styling with high-contrast text overlay, graceful degradation to text Hero Intro when disabled, and live preview simulator in admin panel.
-- **Value Propositions & Trust Bar (`app/controllers/site/home.php`, `views/site/home.php`, `assets/css/style.css`, `app/services/SettingService.php`)**:
-  - Integrated 4 customizable trust cards (fast courier delivery, 7-day quality guarantee, 100% natural cotton fibers, hygienic gift-ready packaging) designed specifically to maximize checkout conversion for sock retail.
-- **Branding Assets & Browser Favicon Management (`app/core/functions.php`, `app/services/SettingService.php`, `views/layout/header.php`, `views/admin/layout/header.php`)**:
-  - Added full administrator management for site Favicon (ICO, PNG, SVG) with secure MIME validation, standardized naming (`favicon-0-site-{hash}.{ext}`), and instant browser tab mockup preview.
-  - Introduced `siteFaviconUrl()` and `heroBannerImageUrl()` helper functions in `app/core/functions.php`.
-- **Homepage Product Slider Limits & Streamlined Controller (`app/controllers/site/home.php`, `views/admin/appearance_partials/_tab_sections.php`)**:
-  - Configurable item counts (4, 6, 8, 12, 16) for Featured Products and Newest Products sliders.
-  - Streamlined `app/controllers/site/home.php` to 66 lines, strictly respecting Rule 7 soft ceiling (< 80 lines).
-- **Database Migration 023 (`database/migrations/023_v1.25.0_appearance_enhancement.sql`, `database/schema.sql`)**:
-  - Seeded all 18 new configuration keys into `settings` table with safe fallbacks and mirrored into baseline `schema.sql`.
 
