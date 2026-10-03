@@ -103,3 +103,18 @@ The database layer is managed through a lightweight PDO singleton in `app/core/d
 - **Singleton Connection**: `db()` returns a shared `PDO` instance configured with `ATTR_ERRMODE => ERRMODE_EXCEPTION` and `ATTR_DEFAULT_FETCH_MODE => FETCH_ASSOC`.
 - **Dynamic Timezone Synchronization**: Shared hosts typically run MySQL in `UTC`, while PHP defaults to `Asia/Tehran` (`UTC+3:30`). Without synchronization, database timestamps (`CURRENT_TIMESTAMP`) differ by 3.5 hours from PHP's `time()`, causing rate limits and token expiry checks to fail.
 - **Fix**: Upon PDO connection, `db()` calculates PHP's current timezone offset and immediately executes `SET time_zone = '+HH:MM'` on the MySQL session, ensuring complete synchronization.
+
+---
+
+## 5. Domain Mailbox & Email Architecture
+
+The email subsystem operates on two distinct layers:
+1. **System & Authentication SMTP (`EmailService.php`)**:
+   - Dispatches transactional customer verification codes (OTP) using global credentials from `config.php` (`SMTP_HOST`, `SMTP_PORT`, etc.).
+   - Full SMTP conversation is captured and logged into `email_log.debug_info`.
+2. **Domain Mailboxes & Webmail Client (`MailboxService.php`, `admin/emails.php`)**:
+   - Manages custom domain mailboxes (`info@`, `support@`) stored in `email_accounts`.
+   - Passwords encrypted at rest using AES-256-GCM via `encryptMailboxSecret()`.
+   - Connects to IMAP via PHP extension with multipart MIME body extraction and XSS sanitization.
+   - Dispatches rich HTML emails via authenticated SMTP with official store branding and account signatures.
+   - Live socket diagnostics (`testConnection()`) testing both IMAP and SMTP ports.

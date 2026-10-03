@@ -198,11 +198,13 @@ CREATE TABLE IF NOT EXISTS coupons (
     type ENUM('percent','fixed') NOT NULL DEFAULT 'percent',
     value DECIMAL(12,0) NOT NULL,
     min_order_amount DECIMAL(12,0) DEFAULT 0,
+    max_discount_amount DECIMAL(12,0) DEFAULT NULL,
     max_uses INT DEFAULT NULL,
     used_count INT NOT NULL DEFAULT 0,
     expires_at DATE DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_coupon_lookup (code, is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
@@ -568,6 +570,7 @@ CREATE TABLE IF NOT EXISTS email_accounts (
     smtp_port SMALLINT UNSIGNED NOT NULL DEFAULT 587,
     smtp_encryption VARCHAR(10) NOT NULL DEFAULT 'tls',
     password_encrypted TEXT NOT NULL,
+    signature TEXT DEFAULT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

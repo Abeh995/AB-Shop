@@ -626,6 +626,9 @@ function getSettingsDirectoryStats(): array
     // Admins count
     $adminCount = (int) $pdo->query("SELECT COUNT(*) FROM admins WHERE is_active = 1")->fetchColumn();
 
+    // Coupons count
+    $couponCount = (int) $pdo->query("SELECT COUNT(*) FROM coupons WHERE is_active = 1")->fetchColumn();
+
     // Active theme
     $activeTheme = $pdo->query("SELECT name FROM themes WHERE is_active = 1 LIMIT 1")->fetch();
     $activeThemeName = $activeTheme['name'] ?? 'پیش‌فرض';
@@ -643,6 +646,7 @@ function getSettingsDirectoryStats(): array
         'smsActiveCount'      => $smsCount,
         'emailActiveCount'    => $emailCount,
         'adminActiveCount'    => $adminCount,
+        'couponActiveCount'   => $couponCount,
         'activeThemeName'     => $activeThemeName,
         'paymentSummary'      => implode(' · ', $paymentStatus),
         'seoIndexed'          => getSetting('seo_indexing_enabled', '0') === '1',

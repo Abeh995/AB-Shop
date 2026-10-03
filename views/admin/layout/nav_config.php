@@ -52,7 +52,7 @@ if (!function_exists('getAdminNavConfig')) {
                 'label' => 'محصولات',
                 'url' => 'products.php',
                 'icon' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-                'active' => in_array($currentPage, ['products.php', 'product_edit.php', 'categories.php', 'pricing.php', 'gift_items.php', 'gift_item_edit.php'], true),
+                'active' => in_array($currentPage, ['products.php', 'product_edit.php', 'categories.php', 'pricing.php', 'gift_items.php', 'gift_item_edit.php', 'coupons.php'], true),
                 'badge' => 0,
                 'sub_items' => [
                     [
@@ -69,6 +69,11 @@ if (!function_exists('getAdminNavConfig')) {
                         'label' => 'تغییر قیمت گروهی',
                         'url' => 'pricing.php',
                         'active' => ($currentPage === 'pricing.php')
+                    ],
+                    [
+                        'label' => 'کدهای تخفیف',
+                        'url' => 'coupons.php',
+                        'active' => ($currentPage === 'coupons.php')
                     ],
                     [
                         'label' => 'هدایای سبد و جانبی',
@@ -131,9 +136,9 @@ if (!function_exists('getAdminNavConfig')) {
                         'active' => in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true)
                     ],
                     [
-                        'label' => 'ایمیل‌ها',
-                        'url' => 'email_accounts.php',
-                        'active' => in_array($currentPage, ['email_accounts.php', 'emails.php', 'email_read.php', 'email_compose.php'], true)
+                        'label' => 'ایمیل‌ها و وب‌میل',
+                        'url' => 'emails.php',
+                        'active' => in_array($currentPage, ['emails.php', 'email_accounts.php', 'email_read.php', 'email_compose.php'], true)
                     ],
                 ]
             ],

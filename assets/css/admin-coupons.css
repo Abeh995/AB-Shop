@@ -1,0 +1,104 @@
+/**
+ * Admin Coupons & Promotions Stylesheet
+ */
+
+.coupons-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.coupon-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.coupon-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.coupon-kpi-info h4 {
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.coupon-kpi-info .kpi-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.coupon-code-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1.5px dashed #94a3b8;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-family: monospace, Tahoma;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 1px;
+}
+
+.btn-copy-code {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.btn-copy-code:hover {
+    color: #2563eb;
+}
+
+.usage-meter {
+    width: 100%;
+    max-width: 120px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.usage-meter-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 4px;
+}
+
+.coupon-table-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+}
+
+.coupon-table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}

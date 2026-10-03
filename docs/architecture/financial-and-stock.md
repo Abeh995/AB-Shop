@@ -58,6 +58,13 @@ Overselling the last unit during simultaneous checkout attempts is strictly prev
 - **Merchandising & Cart Targeting (v1.22.0 / Migration 020)**:
   - Supports customer-facing taglines (`tagline`), promotional badges (`badge_text`), smart cart thresholds (`min_cart_total`), and manual sequence prioritization (`sort_order`).
   - Transactional sequence persistence (`reorderGiftItems()`) executing atomic batch updates inside a PDO transaction.
+
+### CouponService (`app/services/CouponService.php`)
+- Encapsulates promotional discount code validation and calculation (`validate()`, `calculateDiscount()`).
+- Supports percentage discounts (`percent`) with maximum discount ceilings (`max_discount_amount`) and fixed monetary discounts (`fixed`).
+- Validates minimum order amounts (`min_order_amount`), usage limits (`max_uses`), active status, and date expiration windows.
+- Atomic usage incrementation (`markUsed()`) invoked directly within `OrderService::createFromCheckout()` inside the order placement transaction.
+- Full administrative management via `admin/coupons.php` (`getAll()`, `save()`, `toggle()`, `delete()`).
   - Smart cart filtering (`getAvailablePostOrderItems(?int $cartSubtotal)`) matching subtotal thresholds against `min_cart_total`.
 - Snapshots cost and selling prices into `order_gift_items`.
 - Provides catalog workstation metrics (`getAdminGiftItemsMetrics()`) for inventory capital valuation, utilization rates, lifetime upsell gross revenue, net profit, cart attach rate (Take Rate %), and top-performer detection.

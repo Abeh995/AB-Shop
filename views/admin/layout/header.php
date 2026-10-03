@@ -41,6 +41,8 @@ $adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/a
 $adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-appearance.css') ?: 1);
 $adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-shipping.css') ?: 1);
 $adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-sms.css') ?: 1);
+$adminEmailsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-emails.css') ?: 1);
+$adminCouponsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-coupons.css') ?: 1);
 ?>
 <link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
@@ -73,6 +75,12 @@ $adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-
 <?php endif; ?>
 <?php if (in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true)): ?>
 <link rel="stylesheet" href="/assets/css/admin-sms.css?v=<?= $adminSmsCssVer ?>">
+<?php endif; ?>
+<?php if (in_array($currentPage, ['emails.php', 'email_accounts.php', 'email_read.php', 'email_compose.php'], true)): ?>
+<link rel="stylesheet" href="/assets/css/admin-emails.css?v=<?= $adminEmailsCssVer ?>">
+<?php endif; ?>
+<?php if ($currentPage === 'coupons.php'): ?>
+<link rel="stylesheet" href="/assets/css/admin-coupons.css?v=<?= $adminCouponsCssVer ?>">
 <?php endif; ?>
 <script>
 (function(){

@@ -3,9 +3,37 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.23.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.24.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.28.0 — 2026-10-04
+
+### Email Studio & Webmail Workspace Overhaul, Coupon Management Architecture & Migration 025
+
+- **Unified Admin Email Studio & Webmail Architecture (`app/controllers/admin/emails.php`, `views/admin/emails.php`, `views/admin/emails_partials/`, `assets/css/admin-emails.css`)**:
+  - Replaced scattered legacy email scripts with a unified, high-aesthetic Master-Detail Email Studio conforming to Rule 7:
+    - `views/admin/emails_partials/_header_stats.php`: Bento KPIs featuring active mailbox account, total inbox messages, live IMAP extension status, and quick compose action.
+    - `views/admin/emails_partials/_inbox_pane.php`: split-pane master-detail inbox with account switcher, real-time subject search, unread status indicators, and clean reading pane with sanitized HTML preview and 1-click reply modal trigger.
+    - `views/admin/emails_partials/_compose_modal.php`: modal smart composer with account selector, recipient autocomplete, canned responses selector (postal tracking, payment approval, stock inquiries), and signature rendering.
+    - `views/admin/emails_partials/_accounts_pane.php`: dedicated domain mailbox accounts management hub with AES-256 encrypted credentials, IMAP/SMTP configurations, active toggles, and live connection test.
+- **Critical Mailbox Service Fixes & Live Diagnostics (`app/services/MailboxService.php`)**:
+  - Fixed fatal error bug on line 37 where `self::logSend()` was called on an undefined method; implemented robust `logSend()` logging both successful and failed dispatches into `email_log`.
+  - Implemented `testConnection()` executing live socket handshakes to both IMAP and SMTP ports with full debug trace capture.
+  - Implemented secure HTML body extraction, multipart MIME parsing, charset conversion, and XSS sanitization.
+  - Integrated official store signature generation (`buildHtmlEmailTemplate()`) into outgoing transactional and admin emails.
+- **Admin Coupons & Promotion Management System (`app/controllers/admin/coupons.php`, `views/admin/coupons.php`, `assets/css/admin-coupons.css`, `app/services/CouponService.php`)**:
+  - Introduced dedicated Coupons workstation allowing store owners to define, monitor, and manage discount codes without direct database access.
+  - Extended `CouponService`: implemented CRUD (`getAll`, `getById`, `save`, `toggle`, `delete`), added percentage and fixed discount calculations with minimum basket amounts, usage caps, and expiration validations.
+  - Fixed column discrepancies (`max_uses` vs `usage_limit`, `discount_type` vs `type`) with seamless backward-compatible fallbacks.
+  - Added Bento station card in `views/admin/settings_partials/_tab_workstations.php` and navigation link in `views/admin/layout/nav_config.php`.
+- **Database Schema Migration 025 (`database/migrations/025_v1.28.0_email_studio_and_coupons.sql`, `database/schema.sql`)**:
+  - Added `signature TEXT DEFAULT NULL` to `email_accounts` table.
+  - Added guarded `max_discount_amount DECIMAL(12,0) DEFAULT NULL` column and `idx_coupon_lookup` index to `coupons` table.
+- **Ultra-Lean Controller Footprint & Full Layer Boundaries**:
+  - `emails.php` controller strictly bounded at 68 lines (Rule 7 soft limit: 80 lines).
+  - `coupons.php` controller strictly bounded at 46 lines.
+  - Zero SQL queries across all view templates and partials.
 
 ## 1.27.0 — 2026-10-03
 
@@ -95,68 +123,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Database Migration 022 (`database/migrations/022_v1.24.0_store_settings_enhancement.sql`, `database/schema.sql`)**:
   - Seeded all new configuration keys into `settings` table with safe fallbacks and mirrored into baseline `schema.sql`.
 
-## 1.23.2 — 2026-10-03
-
-### Inventory Valuation Fatal 500 Column Mismatch Elimination
-
-- **Inventory Valuation Schema & Query Alignment (`app/services/AccountingService.php`)**:
-  - Eliminated fatal uncaught `PDOException` in `getInventoryValuationReport()` caused by invalid database columns (`p.has_variants`, `p.status`, `pv.label`).
-  - Replaced `p.has_variants` with dynamic variant detection and subquery `variant_count` on `product_variants`.
-  - Replaced non-existent `p.status != 'deleted'` with standard active filter `p.is_active = 1`.
-  - Replaced non-existent `pv.label` with `TRIM(CONCAT_WS(' - ', pv.size, pv.color)) AS label`.
-  - Optimized product image resolution by directly utilizing `p.image` rather than subquerying `product_images`.
-
-## 1.23.1 — 2026-10-02
-
-### Operating Expenses Mobile View Architecture, Inventory Valuation 404 Fix & Image Safety
-
-- **Operating Expenses Mobile View & Card Feed (`views/admin/expenses_partials/_cards_stack.php`, `views/admin/expenses.php`, `assets/css/admin-finance.css`)**:
-  - Implemented high-density adaptive financial card feed for mobile viewports ($\le 768$px) via dedicated partial `_cards_stack.php`:
-    - Top meta strip with Shamsi date badge, expense nature indicator, and archive status.
-    - Card body with bold title, category chip, payee tag, and notes.
-    - Financial row highlighting payment source pill alongside large, formatted Tomans price.
-    - Footer strip featuring single-tap invoice/receipt lightbox modal trigger, submitter meta, and touch-optimized action buttons ($\ge 36\times 36$px tap targets).
-  - Compact 2x2 Bento KPI Grid on mobile, compressing all 4 key operating expense metrics within 130px height without vertical scroll waste.
-  - Horizontal swipeable touch chips for category distribution breakdown and quick Shamsi date range presets.
-  - Collapsible filter drawer accordion with dynamic active filter counter badge (`فیلترها (N)`).
-  - Preserved 100% pixel-perfect desktop table view on $\ge 769$px.
-- **Inventory Valuation Physical Entrypoint Fix (`admin/inventory_valuation.php`)**:
-  - Added missing physical entrypoint `admin/inventory_valuation.php` delegating to `app/controllers/admin/inventory_valuation.php` with `requireAdmin()` guard, resolving DirectAdmin Apache 404 routing fall-through.
-  - Applied `.fin-dual-grid` class to `views/admin/inventory_valuation.php` for responsive breakdown tables on tablet and mobile.
-- **Admin Combobox Persian Text Anti-Clipping (`assets/css/admin-finance.css`, `views/admin/expenses.php`)**:
-  - Introduced dedicated `.fin-filter-select`, `.fin-filter-input`, and `.fin-filter-date` classes with 38px height, custom inner padding, `line-height: normal`, and custom SVG chevron.
-  - Resolved vertical clipping and bisected Persian characters in Chromium/Windows native select boxes.
-- **Pre-emptive Fatal Error Fixes & Image Constant Standardization (`app/services/AccountingService.php`, `ajax/admin_search.php`, `views/admin/expense_edit.php`, `views/admin/expenses.php`)**:
-  - Replaced undefined function call `imageUrl()` in `AccountingService.php` (`getInventoryValuationReport()`) and `productImageUrl()` in `ajax/admin_search.php` with standard `UPLOAD_URL` and `placeholder-sock.svg` fallback.
-  - Standardized expense receipt preview URLs across `expenses.php` and `expense_edit.php` to use `EXPENSE_UPLOAD_URL`.
-
-## 1.23.0 — 2026-10-02
-
-### Operating Expenses Workstation 2.0, Dedicated Expense Service, Inventory Valuation Hub & Migration 021
-
-- **Dedicated Expense Service Layer & Architectural Decomposition (`app/services/ExpenseService.php`, `app/services/AccountingService.php`)**:
-  - Extracted expense management methods out of `AccountingService.php` to a dedicated `ExpenseService.php` (~400 lines) adhering to Rule 7 (Separation of Concerns and Boy Scout Rule).
-  - Implemented comprehensive operational expense methods: `getExpensesList()`, `getExpenseSummaryMetrics()`, `getExpenseById()`, `saveExpense()`, `archiveExpense()`, `restoreExpense()`, `getExpenseCategories()`, `getExpensePaymentSources()`, `getExpensePayees()`, and `exportExpensesCsv()`.
-  - Added WebP image conversion with GD compression (`uploadExpenseReceipt()`) preserving invoices and receipts under `uploads/expenses/`.
-- **Database Migration 021 (`database/migrations/021_v1.23.0_expenses_enhancement.sql`, `database/schema.sql`)**:
-  - Extended `expenses` table schema:
-    - `payment_source VARCHAR(60) NOT NULL DEFAULT 'کارت اصلی فروشگاه'`: tracks bank card, online gateway settlement, or petty cash.
-    - `payee VARCHAR(120) NULL DEFAULT NULL`: tracks vendors, workshops, suppliers, or postal contractors.
-    - `expense_nature ENUM('fixed', 'variable', 'capital') NOT NULL DEFAULT 'variable'`: categorizes operational nature to refine break-even modeling.
-    - `receipt_image VARCHAR(255) NULL DEFAULT NULL`: image attachment for invoices and pos slips.
-  - Added indexes: `idx_payment_source`, `idx_payee`, `idx_expense_nature`.
-  - Mirrored changes into baseline `database/schema.sql`.
-- **Operating Expenses High-Density Workstation (`views/admin/expenses.php`, `views/admin/expense_edit.php`, `assets/css/admin-finance.css`)**:
-  - Replaced legacy card-to-card styling in `expenses.php` with unified `--fin-*` Bento design tokens.
-  - 4 Hero Bento KPI Cards: Filtered Period Total (with fixed vs variable breakdown), Expense Count, Average per Expense, and Top Cost Center with percentage share.
-  - Visual Category Distribution Strip: stacked multi-segment progress bar illustrating real-time cost center distribution.
-  - Quick Shamsi Date Presets Toolbar: `امروز | ۷ روز | ۳۰ روز | ماه جاری | ماه قبل | امسال | همه تاریخ‌ها`.
-  - Active vs. Archived Status Tabs with soft-archive restoration support (`restoreExpense()`).
-  - Modal Lightbox: client-side invoice and receipt preview modal without page navigation.
-  - One-click UTF-8 BOM CSV / Excel export of filtered expenses.
-  - Form enhancements in `expense_edit.php`: live Persian currency words formatter ("حروف"), payee datalist auto-completion, nature card selector, and receipt image uploader with preview and deletion support.
-- **Inventory Valuation & Capital Health Hub (`views/admin/inventory_valuation.php`, `app/controllers/admin/inventory_valuation.php`, `app/services/AccountingService.php`)**:
-  - Implemented `getInventoryValuationReport()` in `AccountingService.php`: computes physical inventory capital valuation ($\sum \text{stock} \times \text{cost\_price}$), expected retail turnover, potential unrealized gross profit, and category-level capital distribution.
-  - Dead & Slow-Moving Stock Detection: automated alert card flagging products with high stock but 0 sales over the last 60 days to help liquidate trapped capital.
-  - Top Capital-Concentrated Catalog Table: reveals which items tie up the most physical working capital.
-  - Integrated into administrative sidebar navigation under Finance Hub (`views/admin/layout/nav_config.php`, `views/admin/layout/header.php`).

@@ -64,8 +64,8 @@
             </div>
         </a>
 
-        <!-- 4. Email Accounts -->
-        <a href="email_accounts.php" class="bento-station-card">
+        <!-- 4. Email Accounts & Webmail Studio -->
+        <a href="emails.php" class="bento-station-card">
             <div>
                 <div class="station-lead">
                     <div class="station-icon-box" style="background:rgba(5, 150, 105, 0.1); color:#059669;">
@@ -73,11 +73,28 @@
                     </div>
                     <span class="pulse-badge active" style="font-size:.72rem;"><?= (int)($stats['emailActiveCount'] ?? 0) ?> حساب ایمیل</span>
                 </div>
-                <h4 class="station-title">حساب‌های ایمیل و وب‌میل</h4>
-                <p class="station-desc">پیکربندی IMAP/SMTP، صندوق دریافت و ارسال ایمیل سازمانی برای ارتباط رسمی با خریداران.</p>
+                <h4 class="station-title">ایمیل‌ها و وب‌میل سازمانی</h4>
+                <p class="station-desc">صندوق دریافت و ارسال، خواندن پیام‌ها، پاسخ‌دهی هوشمند و پیکربندی امن حساب‌های IMAP/SMTP.</p>
             </div>
             <div class="station-action-link">
-                <span>مدیریت ایمیل‌ها ←</span>
+                <span>ورود به وب‌میل و مدیریت ایمیل‌ها ←</span>
+            </div>
+        </a>
+
+        <!-- 5. Discount Coupons -->
+        <a href="coupons.php" class="bento-station-card">
+            <div>
+                <div class="station-lead">
+                    <div class="station-icon-box" style="background:rgba(234, 88, 12, 0.1); color:#EA580C;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l5.58-5.58c.94-.94.94-2.48 0-3.42L11 3H9Z"/><circle cx="6" cy="8" r="1.5" fill="currentColor"/></svg>
+                    </div>
+                    <span class="pulse-badge active" style="font-size:.72rem;"><?= (int)($stats['couponActiveCount'] ?? 0) ?> کوپن فعال</span>
+                </div>
+                <h4 class="station-title">کدهای تخفیف و پروموشن‌ها</h4>
+                <p class="station-desc">تعریف تخفیف‌های درصدی و مبلغی، سقف تخفیف، محدودیت دفعات مصرف و تاریخ انقضا برای مشتریان.</p>
+            </div>
+            <div class="station-action-link">
+                <span>مدیریت کدهای تخفیف ←</span>
             </div>
         </a>
 
