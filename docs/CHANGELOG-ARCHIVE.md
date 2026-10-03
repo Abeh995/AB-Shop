@@ -1,9 +1,32 @@
-# Changelog Archive (v1.0.0 — v1.26.0)
+# Changelog Archive (v1.0.0 — v1.27.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.26.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.27.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.27.0 — 2026-10-03
+
+### SMS Patterns Workstation Overhaul, Live Smartphone Simulator, Telephony KPIs & Filter Toolbar
+
+- **Modern Telephony & SMS Patterns Workstation (`views/admin/sms_patterns.php`, `views/admin/sms_patterns_partials/`, `assets/css/admin-sms.css`)**:
+  - Replaced legacy basic HTML table with high-density administrative workstation complying with Rule 7:
+    - `views/admin/sms_patterns_partials/_kpis.php`: Bento KPIs featuring active patterns count, real-time Faraz SMS API gateway connectivity & balance status, unconfigured (`unset`) patterns alert, and today's dispatched SMS count.
+    - `views/admin/sms_patterns_partials/_toolbar.php`: interactive category filter pills (`همه الگوها`, `احراز هویت OTP`, `سفارشات مشتری`, `کارت‌به‌کارت`, `هشدارهای ادمین`, `تنظیم‌نشده‌ها`) with dynamic item counts, instant real-time search input, and fast action CTA.
+    - `views/admin/sms_patterns_partials/_table.php`: high-density pattern matrix table with monospace pattern code badge, event category badges, dynamic variable tags with contextual system token indicators (`🔗`), optimistic AJAX active toggle, and edit/test actions.
+- **Dual-Pane SMS Pattern Studio & Live Smartphone Mockup (`views/admin/sms_pattern_edit.php`, `views/admin/sms_pattern_edit_partials/`, `assets/js/admin-sms.js`)**:
+  - Decomposed legacy monolithic 340-line edit view down into modular partials:
+    - `_form_fields.php`: pattern code, title, event mapping, active toggle, reference text, and internal description.
+    - `_variables_builder.php`: interactive variable cards with type selection, max length constraints, and token mapping dropdown.
+    - `_mobile_simulator.php`: authentic smartphone frame mockup rendering an incoming SMS bubble that updates in real time as the admin types pattern text or test values.
+  - Built-in Unicode/Persian GSM part counter calculating character count and message parts (Part 1: 70 characters, subsequent: 67 characters/part).
+  - Live Test Sending Console: integrated test dispatch panel allowing immediate verification of Faraz SMS delivery to an admin test phone number.
+- **Service Layer & Telephony Analytics (`app/services/SmsPatternService.php`)**:
+  - Implemented `getSmsPatternsSummaryMetrics()` aggregating pattern counts, active statuses, configured vs unset ratio, today's sent SMS count from `sms_log`, and live balance from `FarazSmsService::checkBalance()`.
+  - Implemented `getSmsEventCategory()` mapping 11 core system events to logical business domains (`auth`, `orders`, `c2c`, `admin`).
+- **Ultra-Lean Controller Footprint (`app/controllers/admin/sms_patterns.php`, `app/controllers/admin/sms_pattern_edit.php`)**:
+  - `sms_patterns.php` maintained at 49 lines with AJAX status toggle support.
+  - `sms_pattern_edit.php` maintained at 78 lines (both well below Rule 7 soft ceiling of 80 lines).
 
 ## 1.26.0 — 2026-10-03
 

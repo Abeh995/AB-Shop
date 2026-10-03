@@ -68,7 +68,7 @@ foreach ($ordersData['orders'] as $ord) {
 }
 ?>
 
-<main class="dash-workspace">
+<div class="dash-workspace">
 
     <!-- =================================================================== -->
     <!-- 4 Bento Metric Cards (Key Store Stream Insights)                     -->
@@ -1107,4 +1107,5 @@ window.addEventListener('keydown', (e) => {
 });
 </script>
 
+</div>
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

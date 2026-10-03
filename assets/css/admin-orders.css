@@ -67,8 +67,14 @@ body.admin-page-orders {
     line-height: 1.5;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
-    padding-bottom: 95px;
+    padding-bottom: 0;
     min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+    body.admin-page-orders {
+        padding-bottom: 95px;
+    }
 }
 
 

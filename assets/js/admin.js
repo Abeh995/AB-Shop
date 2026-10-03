@@ -421,5 +421,13 @@
                 });
             }
         });
+
+        // Auto-scroll active sub-item into view smoothly if navigation was tall
+        var activeSub = sidebar.querySelector('.nav-sub-item.active');
+        if (activeSub) {
+            setTimeout(function () {
+                activeSub.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }, 100);
+        }
     }
 })();

@@ -3,9 +3,24 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.27.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.28.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.31.1 — 2026-10-04
+
+### Desktop Navigation Viewport Lock, Orders Scroll Isolation & UX Smooth ScrollIntoView
+
+- **Desktop Sidebar Viewport Lock & Scroll Bleed Isolation (`assets/css/admin.css`)**:
+  - Pinned `.admin-sidebar` to strict `height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; overflow: hidden;` eliminating page layout stretching when accordion groups are expanded.
+  - Set `.admin-sidebar-nav` to `flex: 1 1 auto; min-height: 0; overscroll-behavior: contain;` allowing the navigation accordion menu to independently scroll inside the sidebar while completely preventing scroll chaining/bleeding into the global page window.
+  - Adjusted desktop `.admin-main` bottom padding from legacy `95px` down to `24px` (`padding: 0 0 24px 0;`), preserving `padding-bottom: 92px` strictly for mobile screens under `@media (max-width: 900px)` for bottom navigation bar clearance.
+- **Orders Workspace Body Padding Containment (`assets/css/admin-orders.css`)**:
+  - Scoped the aggressive `padding-bottom: 95px` on `body.admin-page-orders` exclusively to mobile viewports (`@media (max-width: 900px)`), resetting desktop to `padding-bottom: 0`. This eliminates the window overscroll space that previously allowed sticky elements to be displaced ~95px off-screen when scrolling to the bottom of the orders table.
+- **Nested Main Tag Fix (`views/admin/orders.php`)**:
+  - Replaced invalid nested `<main class="dash-workspace">` with `<div class="dash-workspace">` and closed it properly before the admin layout footer, resolving DOM specification errors.
+- **Active Navigation UX Enhancement (`assets/js/admin.js`)**:
+  - Implemented automatic smooth `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` for `.nav-sub-item.active` upon initial sidebar hydration, guaranteeing the currently selected sub-page is immediately visible in view even if multiple parent navigation groups are open.
 
 ## 1.31.0 — 2026-10-04
 
@@ -144,26 +159,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `coupons.php` controller strictly bounded at 46 lines.
   - Zero SQL queries across all view templates and partials.
 
-## 1.27.0 — 2026-10-03
-
-### SMS Patterns Workstation Overhaul, Live Smartphone Simulator, Telephony KPIs & Filter Toolbar
-
-- **Modern Telephony & SMS Patterns Workstation (`views/admin/sms_patterns.php`, `views/admin/sms_patterns_partials/`, `assets/css/admin-sms.css`)**:
-  - Replaced legacy basic HTML table with high-density administrative workstation complying with Rule 7:
-    - `views/admin/sms_patterns_partials/_kpis.php`: Bento KPIs featuring active patterns count, real-time Faraz SMS API gateway connectivity & balance status, unconfigured (`unset`) patterns alert, and today's dispatched SMS count.
-    - `views/admin/sms_patterns_partials/_toolbar.php`: interactive category filter pills (`همه الگوها`, `احراز هویت OTP`, `سفارشات مشتری`, `کارت‌به‌کارت`, `هشدارهای ادمین`, `تنظیم‌نشده‌ها`) with dynamic item counts, instant real-time search input, and fast action CTA.
-    - `views/admin/sms_patterns_partials/_table.php`: high-density pattern matrix table with monospace pattern code badge, event category badges, dynamic variable tags with contextual system token indicators (`🔗`), optimistic AJAX active toggle, and edit/test actions.
-- **Dual-Pane SMS Pattern Studio & Live Smartphone Mockup (`views/admin/sms_pattern_edit.php`, `views/admin/sms_pattern_edit_partials/`, `assets/js/admin-sms.js`)**:
-  - Decomposed legacy monolithic 340-line edit view down into modular partials:
-    - `_form_fields.php`: pattern code, title, event mapping, active toggle, reference text, and internal description.
-    - `_variables_builder.php`: interactive variable cards with type selection, max length constraints, and token mapping dropdown.
-    - `_mobile_simulator.php`: authentic smartphone frame mockup rendering an incoming SMS bubble that updates in real time as the admin types pattern text or test values.
-  - Built-in Unicode/Persian GSM part counter calculating character count and message parts (Part 1: 70 characters, subsequent: 67 characters/part).
-  - Live Test Sending Console: integrated test dispatch panel allowing immediate verification of Faraz SMS delivery to an admin test phone number.
-- **Service Layer & Telephony Analytics (`app/services/SmsPatternService.php`)**:
-  - Implemented `getSmsPatternsSummaryMetrics()` aggregating pattern counts, active statuses, configured vs unset ratio, today's sent SMS count from `sms_log`, and live balance from `FarazSmsService::checkBalance()`.
-  - Implemented `getSmsEventCategory()` mapping 11 core system events to logical business domains (`auth`, `orders`, `c2c`, `admin`).
-- **Ultra-Lean Controller Footprint (`app/controllers/admin/sms_patterns.php`, `app/controllers/admin/sms_pattern_edit.php`)**:
-  - `sms_patterns.php` maintained at 49 lines with AJAX status toggle support.
-  - `sms_pattern_edit.php` maintained at 78 lines (both well below Rule 7 soft ceiling of 80 lines).
 
