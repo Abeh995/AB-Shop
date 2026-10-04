@@ -504,7 +504,7 @@ if (!empty($pathCoords)) {
     function copyDashCode(code, element) {
         if (!navigator.clipboard) return;
         navigator.clipboard.writeText(code).then(() => {
-            showDashToast('کد سفارش ' + code + ' در حافظه کپی شد!');
+            showToast('کد سفارش ' + code + ' در حافظه کپی شد!');
             const orig = element.innerHTML;
             element.innerHTML = 'کپی شد ✓';
             element.style.color = '#059669';
@@ -513,18 +513,6 @@ if (!empty($pathCoords)) {
                 element.style.color = '';
             }, 1400);
         });
-    }
-
-    // Toast Helper
-    function showDashToast(message) {
-        const toast = document.getElementById('dashToast');
-        const msgSpan = document.getElementById('dashToastMsg');
-        if (!toast || !msgSpan) return;
-        msgSpan.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2400);
     }
 
     // Command Palette Modal

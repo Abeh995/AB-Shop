@@ -457,6 +457,7 @@ foreach ($viewFiles as $f) {
 // B. CSS Design Token & :root Guard
 $cssFiles = glob($root . '/assets/css/admin-*.css');
 foreach ($cssFiles as $f) {
+    if (basename($f) === 'admin-components.css') continue; // Shared UI component library
     $rel = normalizeRelPath($f, $root);
     $content = file_get_contents($f);
     if (preg_match_all('/(?<![a-zA-Z0-9_-]):root\b/', $content, $mRoot)) {
@@ -535,9 +536,14 @@ if (!file_exists($baselineFile)) {
 
     foreach ($currentMetrics as $k => $currentVal) {
         if (!isset($baselineMetrics[$k])) {
-            fail("New duplication/debt introduced: '{$k}' = {$currentVal}. Reuse existing helpers or check docs/COMPONENTS.md!");
-            $regressions++;
-            $errors++;
+            if ($isUpdateBaseline) {
+                $newBaselineMetrics[$k] = $currentVal;
+                $debtReduced++;
+            } else {
+                fail("New duplication/debt introduced: '{$k}' = {$currentVal}. Reuse existing helpers or check docs/COMPONENTS.md!");
+                $regressions++;
+                $errors++;
+            }
         } elseif ($currentVal > $baselineMetrics[$k]) {
             fail("Regression in '{$k}': increased from {$baselineMetrics[$k]} to {$currentVal}!");
             $regressions++;

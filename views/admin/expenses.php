@@ -502,11 +502,11 @@ if ($sort !== 'date_desc') $activeFiltersCount++;
 <!-- =================================================================== -->
 <!-- Receipt Lightbox Modal                                              -->
 <!-- =================================================================== -->
-<div id="receiptModal" class="fin-modal-overlay" onclick="if(event.target === this) closeReceiptModal();">
+<div id="receiptModal" class="fin-modal-overlay" data-ab-modal>
     <div class="fin-modal-content">
         <div class="fin-modal-head">
             <span id="receiptModalTitle" style="font-size: 0.9rem; font-weight: 700; color: var(--fin-text-primary);">تصویر فاکتور / رسید پرداختی</span>
-            <button type="button" onclick="closeReceiptModal()" class="fin-action-btn fin-btn-outline" style="padding: 4px 10px; height: 30px;">✕ بستن</button>
+            <button type="button" data-ab-modal-close class="fin-action-btn fin-btn-outline" style="padding: 4px 10px; height: 30px;">✕ بستن</button>
         </div>
         <div class="fin-modal-body">
             <img id="receiptModalImg" src="" alt="رسید">
@@ -516,23 +516,18 @@ if ($sort !== 'date_desc') $activeFiltersCount++;
 
 <script>
 function toggleMobileFilters() {
-    var drawer = document.getElementById('finFilterDrawer');
-    if (drawer) {
-        drawer.classList.toggle('is-open');
-    }
+    var d = document.getElementById('finFilterDrawer');
+    if (d) d.classList.toggle('is-open');
 }
 function openReceiptModal(url, title) {
     document.getElementById('receiptModalImg').src = url;
     document.getElementById('receiptModalTitle').innerText = 'فاکتور: ' + title;
-    document.getElementById('receiptModal').classList.add('is-active');
+    window.AB ? AB.modal.open('receiptModal') : document.getElementById('receiptModal').classList.add('is-active');
 }
 function closeReceiptModal() {
-    document.getElementById('receiptModal').classList.remove('is-active');
+    window.AB ? AB.modal.close('receiptModal') : document.getElementById('receiptModal').classList.remove('is-active');
     document.getElementById('receiptModalImg').src = '';
 }
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeReceiptModal();
-});
 </script>
 
 <?php require APP_ROOT . '/views/admin/layout/footer.php'; ?>

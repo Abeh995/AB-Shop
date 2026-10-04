@@ -88,7 +88,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
                 </form>
             <?php endif; ?>
 
-            <button type="button" class="btn btn-primary" onclick="openTagModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.84rem; padding:8px 16px; border-radius:10px;">
+            <button type="button" class="btn btn-primary" data-ab-modal-open="tagModal" onclick="openTagModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.84rem; padding:8px 16px; border-radius:10px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 افزودن برچسب جدید
             </button>
@@ -111,8 +111,11 @@ require APP_ROOT . '/views/admin/layout/header.php';
                 <tbody>
                     <?php if (empty($tags)): ?>
                         <tr>
-                            <td colspan="5" style="text-align:center; padding:48px; color:var(--cpn-text-muted);">
-                                هیچ برچسبی یافت نشد.
+                            <td colspan="5">
+                                <?php component('empty_state', [
+                                    'title'   => 'هیچ برچسبی یافت نشد',
+                                    'message' => 'می‌توانید با فرم بالا برچسب جدیدی ثبت کنید.',
+                                ]); ?>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -168,13 +171,13 @@ require APP_ROOT . '/views/admin/layout/header.php';
     </section>
 
     <!-- 5. Tag Create/Edit Modal -->
-    <div class="cpn-modal-overlay <?= $editTag ? 'active' : '' ?>" id="tagModal">
+    <div class="cpn-modal-overlay <?= $editTag ? 'active' : '' ?>" id="tagModal" data-ab-modal>
         <div class="cpn-modal-card" style="max-width:480px;">
             <div class="cpn-modal-header">
                 <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a;">
                     <?= $editTag ? 'ویرایش برچسب' : 'تعریف برچسب جدید' ?>
                 </h3>
-                <button type="button" class="btn-copy-code" onclick="closeTagModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+                <button type="button" class="btn-copy-code" data-ab-modal-close style="font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
             <form method="post" action="/admin/tags.php" class="cpn-modal-body">
@@ -196,7 +199,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
                 </div>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-outline" onclick="closeTagModal()">انصراف</button>
+                    <button type="button" class="btn btn-outline" data-ab-modal-close>انصراف</button>
                     <button type="submit" class="btn btn-primary" style="padding:9px 24px; font-weight:700;">
                         <?= $editTag ? 'ذخیره تغییرات' : 'ایجاد برچسب' ?>
                     </button>
@@ -209,10 +212,18 @@ require APP_ROOT . '/views/admin/layout/header.php';
 
 <script>
 function openTagModal() {
-    document.getElementById('tagModal').classList.add('active');
+    if (window.AB && window.AB.modal) {
+        window.AB.modal.open('tagModal');
+    } else {
+        document.getElementById('tagModal').classList.add('active');
+    }
 }
 function closeTagModal() {
-    document.getElementById('tagModal').classList.remove('active');
+    if (window.AB && window.AB.modal) {
+        window.AB.modal.close('tagModal');
+    } else {
+        document.getElementById('tagModal').classList.remove('active');
+    }
     if (window.location.search.includes('edit=')) {
         window.location.href = '/admin/tags.php';
     }

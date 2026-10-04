@@ -45,14 +45,11 @@ require APP_ROOT . '/views/admin/layout/header.php';
 <script>
 // ---------- Modal Controls ----------
 function openCouponModal() {
-    document.getElementById('couponModal').classList.add('active');
+    window.AB ? AB.modal.open('couponModal') : document.getElementById('couponModal').classList.add('active');
 }
-
 function closeCouponModal() {
-    document.getElementById('couponModal').classList.remove('active');
-    if (window.location.search.includes('edit=')) {
-        window.location.href = '/admin/coupons.php';
-    }
+    window.AB ? AB.modal.close('couponModal') : document.getElementById('couponModal').classList.remove('active');
+    if (window.location.search.includes('edit=')) window.location.href = '/admin/coupons.php';
 }
 
 function handleCouponTypeChange(val) {

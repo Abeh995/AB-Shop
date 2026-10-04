@@ -68,12 +68,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return Math.round(num).toLocaleString('fa-IR') + ' تومان';
     }
 
-    function toPersian(str) {
-        const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-        return String(str).replace(/[0-9]/g, function (d) {
-            return persianDigits[d];
-        });
-    }
+    const toPersian = str => (window.AB && window.AB.fmt ? window.AB.fmt.faDigits(str) : String(str));
+
 
     // Get Active Rounding Step
     function getRoundingStep() {
@@ -422,17 +418,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function closeModal() {
+    const hidePricingModal = () => {
         if (modalBackdrop) modalBackdrop.classList.remove('open');
-    }
+    };
 
-    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
-    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal);
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', hidePricingModal);
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', hidePricingModal);
     if (modalBackdrop) {
         modalBackdrop.addEventListener('click', function (e) {
-            if (e.target === modalBackdrop) closeModal();
+            if (e.target === modalBackdrop) hidePricingModal();
         });
     }
+
 
     // 8. Final Form Submission
     if (modalConfirmBtn) {

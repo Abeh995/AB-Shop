@@ -28,68 +28,48 @@ $pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardTo
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <?php endif; ?>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-components.css')) ?>">
 <?php
-$styleCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/style.css') ?: 1);
-$adminCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin.css') ?: 1);
-$adminOrdersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-orders.css') ?: 1);
-$adminProductsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-products.css') ?: 1);
-$adminCategoriesCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-categories.css') ?: 1);
-$adminPricingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-pricing.css') ?: 1);
-$adminGiftItemsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-gift-items.css') ?: 1);
-$adminFinanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-finance.css') ?: 1);
-$adminSettingsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-settings.css') ?: 1);
-$adminAppearanceCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-appearance.css') ?: 1);
-$adminShippingCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-shipping.css') ?: 1);
-$adminSmsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-sms.css') ?: 1);
-$adminEmailsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-emails.css') ?: 1);
-$adminCouponsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-coupons.css') ?: 1);
-$adminUsersCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-users.css') ?: 1);
-$adminDiagnosticsCssVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/css/admin-diagnostics.css') ?: 1);
+$pageCssMap = [
+    'orders.php'                => '/assets/css/admin-orders.css',
+    'order_detail.php'          => '/assets/css/admin-orders.css',
+    'card_to_card_payments.php' => '/assets/css/admin-orders.css',
+    'products.php'              => '/assets/css/admin-products.css',
+    'product_edit.php'          => '/assets/css/admin-products.css',
+    'categories.php'            => '/assets/css/admin-categories.css',
+    'pricing.php'               => '/assets/css/admin-pricing.css',
+    'gift_items.php'            => '/assets/css/admin-gift-items.css',
+    'gift_item_edit.php'        => '/assets/css/admin-gift-items.css',
+    'finance_dashboard.php'     => '/assets/css/admin-finance.css',
+    'expenses.php'              => '/assets/css/admin-finance.css',
+    'expense_edit.php'          => '/assets/css/admin-finance.css',
+    'inventory_valuation.php'   => '/assets/css/admin-finance.css',
+    'settings.php'              => '/assets/css/admin-settings.css',
+    'appearance.php'            => '/assets/css/admin-appearance.css',
+    'shipping_methods.php'      => '/assets/css/admin-shipping.css',
+    'shipping_method_edit.php'  => '/assets/css/admin-shipping.css',
+    'sms_patterns.php'          => '/assets/css/admin-sms.css',
+    'sms_pattern_edit.php'      => '/assets/css/admin-sms.css',
+    'emails.php'                => '/assets/css/admin-emails.css',
+    'email_accounts.php'        => '/assets/css/admin-emails.css',
+    'email_read.php'            => '/assets/css/admin-emails.css',
+    'email_compose.php'         => '/assets/css/admin-emails.css',
+    'coupons.php'               => '/assets/css/admin-coupons.css',
+    'tags.php'                  => '/assets/css/admin-coupons.css',
+    'users.php'                 => '/assets/css/admin-users.css',
+    'diagnostics.php'           => '/assets/css/admin-diagnostics.css',
+    'notifications_log.php'     => '/assets/css/admin-diagnostics.css',
+];
+
+$activePageCss = $pageStylesheets ?? $pageCssMap[$currentPage] ?? null;
+if ($activePageCss) {
+    foreach ((array)$activePageCss as $cssFile) {
+        echo '<link rel="stylesheet" href="' . e(asset($cssFile)) . '">' . "\n";
+    }
+}
 ?>
-<link rel="stylesheet" href="/assets/css/style.css?v=<?= $styleCssVer ?>">
-<link rel="stylesheet" href="/assets/css/admin.css?v=<?= $adminCssVer ?>">
-<?php if (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-orders.css?v=<?= $adminOrdersCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['products.php', 'product_edit.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-products.css?v=<?= $adminProductsCssVer ?>">
-<?php endif; ?>
-<?php if ($currentPage === 'categories.php'): ?>
-<link rel="stylesheet" href="/assets/css/admin-categories.css?v=<?= $adminCategoriesCssVer ?>">
-<?php endif; ?>
-<?php if ($currentPage === 'pricing.php'): ?>
-<link rel="stylesheet" href="/assets/css/admin-pricing.css?v=<?= $adminPricingCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['gift_items.php', 'gift_item_edit.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-gift-items.css?v=<?= $adminGiftItemsCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['finance_dashboard.php', 'expenses.php', 'expense_edit.php', 'inventory_valuation.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-finance.css?v=<?= $adminFinanceCssVer ?>">
-<?php endif; ?>
-<?php if ($currentPage === 'settings.php'): ?>
-<link rel="stylesheet" href="/assets/css/admin-settings.css?v=<?= $adminSettingsCssVer ?>">
-<?php endif; ?>
-<?php if ($currentPage === 'appearance.php'): ?>
-<link rel="stylesheet" href="/assets/css/admin-appearance.css?v=<?= $adminAppearanceCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['shipping_methods.php', 'shipping_method_edit.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-shipping.css?v=<?= $adminShippingCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['sms_patterns.php', 'sms_pattern_edit.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-sms.css?v=<?= $adminSmsCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['emails.php', 'email_accounts.php', 'email_read.php', 'email_compose.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-emails.css?v=<?= $adminEmailsCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['coupons.php', 'tags.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-coupons.css?v=<?= $adminCouponsCssVer ?>">
-<?php endif; ?>
-<?php if ($currentPage === 'users.php'): ?>
-<link rel="stylesheet" href="/assets/css/admin-users.css?v=<?= $adminUsersCssVer ?>">
-<?php endif; ?>
-<?php if (in_array($currentPage, ['diagnostics.php', 'notifications_log.php'], true)): ?>
-<link rel="stylesheet" href="/assets/css/admin-diagnostics.css?v=<?= $adminDiagnosticsCssVer ?>">
-<?php endif; ?>
 <script>
 (function(){
     try {

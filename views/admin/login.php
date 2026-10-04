@@ -6,8 +6,8 @@
 <title>ورود به پنل مدیریت</title>
 <meta name="robots" content="noindex, nofollow">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="/assets/css/style.css">
-<link rel="stylesheet" href="/assets/css/admin.css">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin.css')) ?>">
 </head>
 <body>
 <div class="login-wrap">

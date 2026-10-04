@@ -20,9 +20,11 @@
             <tbody>
                 <?php if (empty($coupons)): ?>
                     <tr>
-                        <td colspan="7" style="text-align:center; padding:48px; color:var(--cpn-text-muted);">
-                            <div style="font-size:1.1rem; font-weight:700; color:#334155; margin-bottom:6px;">هیچ کد تخفیفی با این مشخصات یافت نشد</div>
-                            <p style="font-size:.84rem; margin:0;">می‌توانید فیلترها را ریست کنید یا کد تخفیف جدیدی ایجاد نمایید.</p>
+                        <td colspan="7">
+                            <?php component('empty_state', [
+                                'title'   => 'هیچ کد تخفیفی با این مشخصات یافت نشد',
+                                'message' => 'می‌توانید فیلترها را ریست کنید یا کد تخفیف جدیدی ایجاد نمایید.',
+                            ]); ?>
                         </td>
                     </tr>
                 <?php else: ?>
@@ -124,15 +126,17 @@
 
                             <!-- 6. Status -->
                             <td>
-                                <?php if (!$c['is_active']): ?>
-                                    <span class="badge" style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:6px; font-size:.76rem; font-weight:700;">غیرفعال</span>
-                                <?php elseif ($isExpired): ?>
-                                    <span class="badge" style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-size:.76rem; font-weight:700;">منقضی</span>
-                                <?php elseif ($isLimitReached): ?>
-                                    <span class="badge" style="background:#e2e8f0; color:#475569; padding:3px 8px; border-radius:6px; font-size:.76rem; font-weight:700;">تکمیل ظرفیت</span>
-                                <?php else: ?>
-                                    <span class="badge" style="background:#d1fae5; color:#065f46; padding:3px 8px; border-radius:6px; font-size:.76rem; font-weight:700;">فعال</span>
-                                <?php endif; ?>
+                                <?php
+                                if (!$c['is_active']) {
+                                    component('badge', ['text' => 'غیرفعال', 'type' => 'danger']);
+                                } elseif ($isExpired) {
+                                    component('badge', ['text' => 'منقضی', 'type' => 'warning']);
+                                } elseif ($isLimitReached) {
+                                    component('badge', ['text' => 'تکمیل ظرفیت', 'type' => 'muted']);
+                                } else {
+                                    component('badge', ['text' => 'فعال', 'type' => 'success', 'dot' => true]);
+                                }
+                                ?>
                             </td>
 
                             <!-- 7. Actions -->

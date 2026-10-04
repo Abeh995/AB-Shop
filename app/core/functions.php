@@ -676,3 +676,59 @@ function appDateTime($dateTime = null, string $format = 'shamsi_text')
             return $shamsiText;
     }
 }
+
+/**
+ * Emits a JSON response with proper HTTP status code and headers, then terminates.
+ *
+ * @param array $data
+ * @param int $statusCode
+ * @return never
+ */
+function jsonResponse(array $data, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+/**
+ * Renders an isolated presentation component from views/admin/components/.
+ *
+ * @param string $name Component name without .php extension
+ * @param array $props Explicit associative parameters passed to the component
+ */
+function component(string $name, array $props = []): void
+{
+    $file = APP_ROOT . '/views/admin/components/' . $name . '.php';
+    if (file_exists($file)) {
+        extract($props, EXTR_SKIP);
+        require $file;
+    }
+}
+
+/**
+ * Generates an asset URL with automated cache-busting based on file modification time.
+ *
+ * @param string $path Relative path from web root (e.g. '/assets/css/admin.css' or 'assets/js/ab-kit.js')
+ * @return string Asset URL with ?v=... cache buster
+ */
+function asset(string $path): string
+{
+    $cleanPath = '/' . ltrim($path, '/');
+    $localFile = APP_ROOT . $cleanPath;
+
+    $mtime = @filemtime($localFile);
+    $version = APP_VERSION . '.' . ($mtime !== false ? $mtime : 1);
+
+    return $cleanPath . '?v=' . $version;
+}
+
+/**
+ * Alias for asset().
+ */
+function assetUrl(string $path): string
+{
+    return asset($path);
+}
+

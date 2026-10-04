@@ -11,24 +11,14 @@
 (function () {
     'use strict';
 
-    // Persian number formatter
-    function toPersianDigits(str) {
-        if (str === null || str === undefined) return '';
-        const id = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-        return String(str).replace(/[0-9]/g, function (w) {
-            return id[+w];
-        });
-    }
+    // Persian number formatter & byte size delegators (SSoT: assets/js/ab-kit.js)
+    const toPersianDigits = function (str) {
+        return (window.AB && window.AB.fmt) ? window.AB.fmt.faDigits(str) : String(str ?? '');
+    };
 
-    // Format byte sizes into readable Persian units
-    function formatBytes(bytes) {
-        if (!bytes || bytes === 0) return '۰ بایت';
-        const k = 1024;
-        const sizes = ['بایت', 'کیلوبایت', 'مگابایت', 'گیگابایت'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        const val = (bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1);
-        return toPersianDigits(val) + ' ' + sizes[i];
-    }
+    const formatBytes = function (bytes) {
+        return (window.AB && window.AB.fmt) ? window.AB.fmt.bytes(bytes) : String(bytes ?? '');
+    };
 
     // Dynamically load heic2any if a HEIC/HEIF file is encountered
     let heicPromise = null;

@@ -47,7 +47,7 @@ $searchQuery = $filters['q'] ?? '';
             <?php endif; ?>
         </form>
 
-        <button type="button" class="btn btn-primary" onclick="openCouponModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.84rem; padding:8px 16px; border-radius:10px;">
+        <button type="button" class="btn btn-primary" data-ab-modal-open="couponModal" onclick="openCouponModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.84rem; padding:8px 16px; border-radius:10px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
             افزودن کد تخفیف
         </button>

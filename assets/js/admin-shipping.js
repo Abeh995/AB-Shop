@@ -27,16 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var previewDelivery = document.getElementById('previewDeliveryTime');
     var previewCost = document.getElementById('previewCostText');
 
-    function formatNumber(num) {
-        return (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-
-    function toPersianDigits(str) {
-        if (!str) return '';
-        var persianMap = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-        return str.toString().replace(/[0-9]/g, function (d) { return persianMap[+d]; });
-    }
-
     function updatePreview() {
         if (!previewName || !previewCost) return;
         var name = (nameInput && nameInput.value.trim()) || 'نام روش ارسال';
@@ -51,12 +41,14 @@ document.addEventListener('DOMContentLoaded', function () {
             previewDelivery.style.display = delivery ? 'inline' : 'none';
         }
 
+        var priceFmt = (window.AB && window.AB.fmt) ? window.AB.fmt.price : function(n) { return n + ' تومان'; };
+
         if (cost === 0) {
             previewCost.textContent = 'رایگان';
         } else if (freeAbove > 0) {
-            previewCost.textContent = toPersianDigits(formatNumber(cost)) + ' تومان (رایگان از ' + toPersianDigits(formatNumber(freeAbove)) + ')';
+            previewCost.textContent = priceFmt(cost) + ' (رایگان از ' + priceFmt(freeAbove) + ')';
         } else {
-            previewCost.textContent = toPersianDigits(formatNumber(cost)) + ' تومان';
+            previewCost.textContent = priceFmt(cost);
         }
     }
 
@@ -131,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (studioTitle) studioTitle.textContent = 'ویرایش روش ارسال';
         if (studioModePill) {
-            studioModePill.textContent = 'شناسه #' + toPersianDigits(m.id);
+            studioModePill.textContent = 'شناسه #' + (window.AB && window.AB.fmt ? window.AB.fmt.faDigits(m.id) : m.id);
             studioModePill.className = 'studio-mode-pill mode-edit';
         }
         if (submitBtn) submitBtn.textContent = 'ذخیره تغییرات';

@@ -1,9 +1,43 @@
-# Changelog Archive (v1.0.0 — v1.30.0)
+# Changelog Archive (v1.0.0 — v1.30.2)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.30.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.30.2.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.30.2 — 2026-10-04
+
+### Shipping Methods Master Table Streamlining, Zero-Overflow 5-Column Architecture & SVG Polish
+
+- **Streamlined 5-Column Matrix Table (`views/admin/shipping_methods_partials/_table.php`, `assets/css/admin-shipping.css`)**:
+  - Eliminated table horizontal overflow and bulky browser scrollbars by restructuring into 5 balanced, high-density columns:
+    - `اولویت`: Vertical rank pill (`#1`, `#2`) with compact increment/decrement micro-chevrons.
+    - `روش ارسال و پوشش جغرافیایی`: Contextual SVG logistics icons (courier bike, post truck, express lightning, cargo box) with dedicated color tints, title, scope pills (`استان «تهران»` / `سراسر کشور`), delivery speed chips (`⚡ تحویل همان‌روز یا ۲۴ ساعته`), and description.
+    - `تعرفه و تراز مالی`: Unified pricing cell combining customer fee, postal expense comparison, store margin/subsidy indicators (`+سود` / `−یارانه` / `سربه‌سر`), and free-shipping threshold tags (`🎁 رایگان بالای ۵۰۰,۰۰۰ ت`).
+    - `وضعیت`: Centered iOS toggle switch with instant AJAX persistence.
+    - `عملیات`: Grouped 32x32px edit and delete buttons with polished hover states and full selector integrity.
+- **Logistics Workstation Aesthetic Upgrade (`views/admin/shipping_methods_partials/_kpis.php`, `views/admin/shipping_methods_partials/_studio.php`)**:
+  - Upgraded Bento KPI cards and live checkout simulation headers from legacy emojis to crisp, scalable vector SVG icons matching the AB-Socks design system.
+  - Adjusted master-detail split layout to `minmax(0, 1.55fr) minmax(350px, 1fr)` ensuring seamless responsiveness across desktop and laptop viewports.
+
+## 1.30.1 — 2026-10-04
+
+### Shipping Methods & SMS Patterns Data Tables Modernization, Base Admin Table Styling & SVG Icons
+
+- **Universal Admin Table Styling Foundation (`assets/css/admin.css`)**:
+  - Implemented cohesive `.admin-table` design system token specifications: clean subtle borders (`#E2E8F0`), vertical cell padding (12px 16px), dedicated `#F8FAFC` header styling with uppercase 11px font, and smooth hover highlighting (`#F8FAFC`).
+  - Elevated `.switch-label` and `.switch-slider` CSS rules to global `admin.css`, permanently fixing unstyled native HTML checkboxes on the SMS patterns page and across the entire admin panel.
+- **Shipping Methods Table Polish & Visual Hierarchy (`views/admin/shipping_methods_partials/_table.php`, `assets/css/admin-shipping.css`)**:
+  - Replaced legacy text emojis with lightweight inline vector SVG icons (truck, package, express) for modern, cross-platform visual consistency.
+  - Implemented `.priority-stepper` with distinct `#1` priority badge alongside subtle increment/decrement order steppers.
+  - Revamped economics column with high-contrast customer fee pills, subsidized freight margin badges (`حاشیه سود / یارانه ارسال`), and free delivery threshold chips.
+  - Restyled table action buttons (`.btn-action-edit`, `.btn-action-delete`) with unified `.table-action-group` styling matching the admin design system.
+- **SMS Patterns Matrix Table High-Density Redesign (`views/admin/sms_patterns_partials/_table.php`, `assets/css/admin-sms.css`)**:
+  - Compacted row height to high-density ~52px (reducing previous ~110px vertical sprawl) with clean vertical rhythm and border separators.
+  - Replaced raw text IDs with subtle `.sms-id-badge` badges and introduced 1-click copyable monospace pattern code chips (`.btn-copy-code`) with hover feedback.
+  - Added highlighted amber alert button (`.pattern-code-unset`) for unconfigured patterns directing the store owner straight to pattern setup.
+  - Replaced multiline block variable listings with compact, horizontal inline token chips (`.var-chips-inline`) with copy-friendly monospace fonts.
+  - Preserved all JavaScript selectors (`.shipping-active-toggle`, `.btn-edit-method`, `.sms-active-toggle`, `#status-badge-{$id}`) guaranteeing 100% AJAX feature parity.
 
 ## 1.30.0 — 2026-10-04
 

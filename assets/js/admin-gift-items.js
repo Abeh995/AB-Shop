@@ -13,43 +13,17 @@
     let currentPopoverItemId = null;
     let draggedRow = null;
 
-    // Helper: Persian Numbers
-    function toFaDigits(str) {
-        const f = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-        return String(str).replace(/[0-9]/g, w => f[+w]);
-    }
-
     // Helper: Format Price
     function formatPriceJs(num) {
-        if (isNaN(num) || num === null || num === '') return '—';
-        return toFaDigits(Number(num).toLocaleString('en-US')) + ' تومان';
-    }
-
-    // Toast Notification System
-    function showToast(message, type = 'success') {
-        let container = document.getElementById('giftToastContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'giftToastContainer';
-            container.className = 'gift-toast-container';
-            document.body.appendChild(container);
+        if (window.AB && window.AB.fmt) {
+            return window.AB.fmt.price(num);
         }
-
-        const toast = document.createElement('div');
-        toast.className = 'gift-toast toast-' + type;
-        const icon = type === 'success' ? '✓' : '⚠️';
-        toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-text">${message}</span>`;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('is-visible');
-        }, 10);
-
-        setTimeout(() => {
-            toast.classList.remove('is-visible');
-            setTimeout(() => toast.remove(), 250);
-        }, 3200);
+        if (isNaN(num) || num === null || num === '') return '—';
+        return Number(num).toLocaleString('fa-IR') + ' تومان';
     }
+
+    // Note: showToast and toFaDigits are provided globally by assets/js/ab-kit.js
+
 
     // Initialize Page
     document.addEventListener('DOMContentLoaded', function () {
@@ -296,7 +270,7 @@
                 if (row) {
                     const badge = row.querySelector('.gift-stock-badge');
                     if (badge) {
-                        badge.textContent = newStock === 0 ? 'ناموجود' : toFaDigits(newStock);
+                        badge.textContent = newStock === 0 ? 'ناموجود' : (window.AB && window.AB.fmt ? window.AB.fmt.faDigits(newStock) : newStock);
                         badge.className = 'gift-stock-badge ' + (newStock === 0 ? 'gift-stock-out' : (newStock <= 5 ? 'gift-stock-low' : 'gift-stock-ok'));
                         badge.setAttribute('onclick', `openInlineStockPopover(event, ${currentPopoverItemId}, ${newStock}, '${row.querySelector('.gift-item-title').textContent.trim()}')`);
                     }
@@ -524,7 +498,7 @@
         const marginPercent = Math.round((profit / sale) * 100);
 
         profitEl.textContent = formatPriceJs(profit);
-        marginEl.textContent = toFaDigits(marginPercent) + '٪';
+        marginEl.textContent = (window.AB && window.AB.fmt ? window.AB.fmt.faDigits(marginPercent) : marginPercent) + '٪';
 
         const clampedWidth = Math.max(0, Math.min(100, marginPercent));
         if (barEl) barEl.style.width = clampedWidth + '%';

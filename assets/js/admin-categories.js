@@ -42,20 +42,7 @@
     var filterBtns = document.querySelectorAll('.cat-filter-btn');
     var rows = document.querySelectorAll('.cat-row');
     var emptyNotice = document.getElementById('catEmptySearch');
-    var toastEl = document.getElementById('catToast');
 
-    // ==========================================
-    // 1. Toast Notification Helper
-    // ==========================================
-    function showToast(message, isError) {
-        if (!toastEl) return;
-        toastEl.textContent = message;
-        toastEl.classList.toggle('toast-error', !!isError);
-        toastEl.classList.add('is-show');
-        setTimeout(function () {
-            toastEl.classList.remove('is-show');
-        }, 3000);
-    }
 
     // ==========================================
     // 2. Persian Slug Generator

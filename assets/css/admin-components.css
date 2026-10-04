@@ -1,0 +1,561 @@
+/**
+ * AB-Socks UI Component Library & Shared Presentation Kit
+ * Single Source of Truth for AB-Kit client widgets and server-side components.
+ */
+
+/* ==========================================================================
+   1. AB-Kit Shared Notifications (Toast)
+   ========================================================================== */
+.ab-toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .ab-toast-container {
+        bottom: 84px;
+        left: 16px;
+        right: 16px;
+        align-items: center;
+    }
+}
+
+.ab-toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: var(--radius-md, 10px);
+    background: #1E293B;
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    max-width: 90vw;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ab-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.ab-toast-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ab-toast-success .ab-toast-icon {
+    color: #10B981;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.ab-toast-error .ab-toast-icon {
+    color: #EF4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.ab-toast-warning .ab-toast-icon {
+    color: #F59E0B;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.ab-toast-info .ab-toast-icon {
+    color: #3B82F6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.ab-toast-msg {
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   2. AB-Kit Centralized Autocomplete & Tokenizer Components
+   ========================================================================== */
+.ab-autocomplete-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.ab-tokens-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    min-height: 44px;
+    cursor: text;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ab-tokens-box:focus-within {
+    border-color: var(--color-primary, #C46C46);
+    box-shadow: 0 0 0 3px rgba(196, 108, 70, 0.12);
+}
+
+.ab-tokens-list {
+    display: contents;
+}
+
+.ab-token-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(196, 108, 70, 0.08);
+    color: var(--color-primary, #C46C46);
+    border: 1px solid rgba(196, 108, 70, 0.2);
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.82rem;
+    font-weight: 600;
+    user-select: none;
+    line-height: 1.2;
+}
+
+.ab-token-pill.ab-token-new {
+    background: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.ab-token-badge {
+    font-size: 0.65rem;
+    background: #10B981;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.ab-token-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    color: currentColor;
+    opacity: 0.65;
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.ab-token-remove:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.ab-autocomplete-input {
+    flex: 1;
+    min-width: 140px;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 4px 0;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: var(--color-text, #1e293b);
+}
+
+.ab-autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    z-index: 1050;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.ab-autocomplete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    transition: background 0.15s;
+}
+
+.ab-autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.ab-autocomplete-item:hover,
+.ab-autocomplete-item.is-highlighted,
+.ab-autocomplete-item.selected {
+    background: rgba(196, 108, 70, 0.06);
+}
+
+.ab-autocomplete-title {
+    font-weight: 600;
+    color: var(--color-text, #0f172a);
+}
+
+.ab-autocomplete-meta {
+    font-size: 0.76rem;
+    color: var(--color-muted, #64748b);
+}
+
+.ab-autocomplete-item-new {
+    background: rgba(16, 185, 129, 0.05);
+    color: #059669;
+}
+
+.ab-autocomplete-item-new:hover,
+.ab-autocomplete-item-new.is-highlighted {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.ab-autocomplete-empty {
+    padding: 14px;
+    text-align: center;
+    color: var(--color-muted, #94a3b8);
+    font-size: 0.82rem;
+}
+
+/* ==========================================================================
+   3. Bento KPI Cards & Grids
+   ========================================================================== */
+.ab-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.ab-kpi-card {
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.ab-kpi-card.is-clickable {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ab-kpi-card.is-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+    border-color: var(--color-primary, #C46C46);
+}
+
+.ab-kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.ab-kpi-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-muted, #64748b);
+    margin: 0;
+}
+
+.ab-kpi-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.ab-kpi-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text, #0f172a);
+    line-height: 1.2;
+}
+
+.ab-kpi-unit {
+    font-size: 0.76rem;
+    color: var(--color-muted, #94a3b8);
+    font-weight: 500;
+}
+
+.ab-kpi-sub {
+    font-size: 0.75rem;
+    color: var(--color-muted, #64748b);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.ab-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md, 10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+.ab-kpi-icon.icon-emerald { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.ab-kpi-icon.icon-rose    { background: rgba(244, 63, 94, 0.12);  color: #E11D48; }
+.ab-kpi-icon.icon-sky     { background: rgba(14, 165, 233, 0.12); color: #0284C7; }
+.ab-kpi-icon.icon-amber   { background: rgba(245, 158, 11, 0.12); color: #D97706; }
+.ab-kpi-icon.icon-purple  { background: rgba(139, 92, 246, 0.12); color: #7C3AED; }
+.ab-kpi-icon.icon-primary { background: rgba(196, 108, 70, 0.12); color: var(--color-primary, #C46C46); }
+.ab-kpi-icon.icon-blue    { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+.ab-kpi-icon.icon-green   { background: rgba(34, 197, 94, 0.12);  color: #16A34A; }
+
+/* ==========================================================================
+   4. Master Navigation Tabs
+   ========================================================================== */
+.ab-nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    margin-bottom: 20px;
+}
+
+.ab-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border: none;
+    background: transparent;
+    color: var(--color-muted, #64748b);
+    border-radius: var(--radius-md, 10px);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+}
+
+.ab-tab-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--color-text, #0f172a);
+}
+
+.ab-tab-btn.active {
+    background: var(--color-primary, #C46C46);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(196, 108, 70, 0.25);
+}
+
+.ab-tab-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.ab-tab-badge {
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.ab-tab-btn.active .ab-tab-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+/* ==========================================================================
+   5. Standard Empty State
+   ========================================================================== */
+.ab-empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted, #64748b);
+}
+
+.ab-empty-icon {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.ab-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    margin: 0 0 6px 0;
+}
+
+.ab-empty-desc {
+    font-size: 0.85rem;
+    margin: 0 0 16px 0;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   6. Status Badges
+   ========================================================================== */
+.ab-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ab-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ab-badge-success { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.ab-badge-danger  { background: rgba(239, 68, 68, 0.12);  color: #DC2626; }
+.ab-badge-warning { background: rgba(245, 158, 11, 0.12); color: #D97706; }
+.ab-badge-info    { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+.ab-badge-primary { background: rgba(196, 108, 70, 0.12); color: var(--color-primary, #C46C46); }
+.ab-badge-muted   { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+
+/* ==========================================================================
+   7. Declarative Modal Dialogs
+   ========================================================================== */
+.ab-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.ab-modal.is-open,
+.ab-modal:not([hidden]) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ab-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.ab-modal-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.2));
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ab-modal.is-open .ab-modal-content,
+.ab-modal:not([hidden]) .ab-modal-content {
+    transform: scale(1);
+}
+
+.ab-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.ab-modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    margin: 0;
+}
+
+.ab-modal-close {
+    background: none;
+    border: none;
+    color: var(--color-muted, #64748b);
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm, 6px);
+    transition: background 0.15s, color 0.15s;
+}
+
+.ab-modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-text, #0f172a);
+}
+
+.ab-modal-body {
+    padding: 20px;
+}
+
+.ab-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-surface-hover, #f8fafc);
+    border-bottom-left-radius: var(--radius-lg, 16px);
+    border-bottom-right-radius: var(--radius-lg, 16px);
+}

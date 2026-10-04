@@ -3,13 +3,13 @@
  * Create / Edit Coupon Promotion Modal.
  */
 ?>
-<div class="cpn-modal-overlay <?= $editCoupon ? 'active' : '' ?>" id="couponModal">
+<div class="cpn-modal-overlay <?= $editCoupon ? 'active' : '' ?>" id="couponModal" data-ab-modal>
     <div class="cpn-modal-card">
         <div class="cpn-modal-header">
             <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a;">
                 <?= $editCoupon ? 'ویرایش کد تخفیف' : 'تعریف کد تخفیف جدید' ?>
             </h3>
-            <button type="button" class="btn-copy-code" onclick="closeCouponModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="btn-copy-code" data-ab-modal-close onclick="closeCouponModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
         </div>
 
         <form method="post" action="/admin/coupons.php" class="cpn-modal-body">
@@ -118,7 +118,7 @@
 
             <!-- Footer -->
             <div style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:16px; border-top:1px solid #e2e8f0;">
-                <button type="button" class="btn btn-outline" onclick="closeCouponModal()">انصراف</button>
+                <button type="button" class="btn btn-outline" data-ab-modal-close onclick="closeCouponModal()">انصراف</button>
                 <button type="submit" class="btn btn-primary" style="padding:9px 24px; font-weight:700;">
                     <?= $editCoupon ? 'بروزرسانی تغییرات کد' : 'ذخیره و انتشار کد تخفیف' ?>
                 </button>

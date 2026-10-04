@@ -26,18 +26,7 @@
     var rowCheckboxes = document.querySelectorAll('.prod-check-row');
     var toastEl = document.getElementById('prodToast');
 
-    // ==========================================
-    // 1. Toast Notification Helper
-    // ==========================================
-    function showToast(message, isError) {
-        if (!toastEl) return;
-        toastEl.textContent = message;
-        toastEl.classList.toggle('toast-error', !!isError);
-        toastEl.classList.add('is-show');
-        setTimeout(function () {
-            toastEl.classList.remove('is-show');
-        }, 3200);
-    }
+
 
     // ==========================================
     // 2. Side Dossier Drawer
@@ -117,7 +106,7 @@
                 p.variants.forEach(function (v) {
                     var label = [v.size, v.color].filter(Boolean).join(' - ') || 'پیش‌فرض';
                     var tr = document.createElement('tr');
-                    tr.innerHTML = '<td><strong>' + escapeHtml(label) + '</strong></td>' +
+                    tr.innerHTML = '<td><strong>' + (window.AB && window.AB.fmt ? window.AB.fmt.esc(label) : label) + '</strong></td>' +
                         '<td style="text-align:center;">' +
                         '<div class="prod-stepper">' +
                         '<button type="button" class="prod-stepper-btn btn-step-minus" data-target="v_' + v.id + '">−</button>' +
@@ -536,11 +525,5 @@
         }
     });
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
 })();
+

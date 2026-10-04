@@ -145,15 +145,8 @@
                 });
         }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
+        const escapeHtml = str => (window.AB && window.AB.fmt ? window.AB.fmt.esc(str) : String(str || ''));
+
 
         function renderResults(data, query) {
             var pages = data.pages || [];
@@ -226,11 +219,8 @@
         var dateEl = document.getElementById('liveClockDate');
         if (!timeEl && !dateEl) return;
 
-        function toFaDigits(str) {
-            return ('' + str).replace(/\d/g, function (d) {
-                return '۰۱۲۳۴۵۶۷۸۹'[d];
-            });
-        }
+        const toFaDigits = str => (window.AB && window.AB.fmt ? window.AB.fmt.faDigits(str) : String(str || ''));
+
 
         function getJalaliDate(d) {
             try {

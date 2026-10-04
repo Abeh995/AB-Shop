@@ -23,13 +23,15 @@ $showBottomNav = function_exists('shouldShowAdminBottomNav') ? shouldShowAdminBo
     </nav>
 <?php endif; ?>
 
-<?php
-$mainJsVer  = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/js/main.js') ?: 1);
-$aioJsVer   = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/js/admin-image-optimizer.js') ?: 1);
-$adminJsVer = APP_VERSION . '.' . (@filemtime(APP_ROOT . '/assets/js/admin.js') ?: 1);
-?>
-<script src="/assets/js/main.js?v=<?= $mainJsVer ?>"></script>
-<script src="/assets/js/admin-image-optimizer.js?v=<?= $aioJsVer ?>"></script>
-<script src="/assets/js/admin.js?v=<?= $adminJsVer ?>"></script>
+<script src="<?= e(asset('/assets/js/ab-kit.js')) ?>"></script>
+<script src="<?= e(asset('/assets/js/main.js')) ?>"></script>
+<script src="<?= e(asset('/assets/js/admin-image-optimizer.js')) ?>"></script>
+<script src="<?= e(asset('/assets/js/admin.js')) ?>"></script>
+<?php if (!empty($pageScripts)): ?>
+    <?php foreach ((array)$pageScripts as $script): ?>
+        <script src="<?= e(asset($script)) ?>"></script>
+    <?php endforeach; ?>
+<?php endif; ?>
+
 </body>
 </html>

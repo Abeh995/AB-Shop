@@ -144,3 +144,24 @@ To guarantee long-term stability and observability on DirectAdmin shared hosting
    - Centralized viewer for `admin_audit_logs` tracking sensitive administrative actions.
    - Unified notification log viewer (`sms_log` and `email_log`) with keyword search and debug payload inspectors.
    - Housekeeping tool (`cleanTemporaryUploads()`) garbage-collecting temporary card-to-card upload receipts older than 24 hours.
+
+---
+
+## 7. Front-End Component Registry & Client Framework (`AB-Kit`)
+
+To strictly uphold Rule 11 (Reuse-First Protocol & Anti-Duplication Invariant) and eliminate scattered JavaScript and inline CSS:
+1. **AB-Kit Client Library (`assets/js/ab-kit.js`)**:
+   - Single Source of Truth for formatters (`AB.fmt.faDigits`, `AB.fmt.price`, `AB.fmt.bytes`, `AB.fmt.esc`, `AB.fmt.normalizeText`).
+   - Accessible Toast Notification Center (`AB.toast` / `window.showToast`) with CSS micro-animations.
+   - Declarative Modals (`AB.modal` via `data-ab-modal-open` / `data-ab-modal-close`) and live client-side table filter (`AB.tableFilter` via `data-ab-table-filter`).
+   - Lightweight AJAX fetch helper (`AB.api`) with automatic CSRF header injection.
+2. **Provider-Based Search Architecture (`SearchService.php`, `ajax/admin_search.php`, `AB.autocomplete`)**:
+   - Pluggable provider system for administrative search (`tags`, `products`, `customers`, `orders`).
+   - Multi-token autocomplete and live suggestions via `AB.autocomplete`.
+3. **Server-Side Presentation Component Engine (`app/core/functions.php`, `views/admin/components/`)**:
+   - Global `component(string $name, array $props)` renderer ensuring 100% view purity (0 SQL queries, 0 DB mutations).
+   - Core presentation components: `kpi_card`, `kpi_grid`, `nav_tabs`, `empty_state`, `badge`.
+4. **CSS Tokens & Cache-Busting**:
+   - Centralized `:root` design tokens in `assets/css/admin.css` and shared UI kit `assets/css/admin-components.css`.
+   - Asset helpers `asset()` and `assetUrl()` appending mtime timestamps (`?v=1.32.2.<mtime>`) for reliable browser cache invalidation without server-side build steps.
+
