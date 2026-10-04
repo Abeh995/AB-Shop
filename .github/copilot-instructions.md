@@ -11,3 +11,5 @@
   - Push with tags `git push origin main --follow-tags`.
   - Create GitHub Release via `gh release create`.
 - Strictly adhere to layer boundaries: Controllers < 80-120 lines, Views 0 SQL queries, Services handle all mutations and transactions.
+- Follow the **Reuse-First Protocol (DRY / SSoT)**: Consult `docs/COMPONENTS.md` before coding, avoid duplicate helpers/scripts, drive admin views via declarative `data-ab-*` attributes (no inline `<script>` > 20 lines), and use unified `:root` CSS variables.
+

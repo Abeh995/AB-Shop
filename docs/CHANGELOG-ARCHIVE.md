@@ -1,11 +1,37 @@
-# Changelog Archive (v1.0.0 — v1.29.0)
+# Changelog Archive (v1.0.0 — v1.30.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.29.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.30.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 1.30.0 — 2026-10-04
+
+### System Diagnostics & Health Studio Redesign, Host Resource Quota Monitoring & Unified Log Center
+
+- **Unified System Diagnostics & Health Studio Architecture (`views/admin/diagnostics.php`, `views/admin/diagnostics_partials/`, `assets/css/admin-diagnostics.css`)**:
+  - Replaced legacy disjointed diagnostic screens with a modern Master-Tabbed Health Studio adhering strictly to Rule 7:
+    - `views/admin/diagnostics_partials/_header_pulse.php`: Real-time system pulse displaying live database quota gauge (200MB limit), media disk quota gauge (1500MB limit), clock synchronization status, and active PHP version.
+    - `views/admin/diagnostics_partials/_nav_tabs.php`: Master tab navigation with responsive styling and URL hash state synchronization (`health`, `tests`, `notifications`, `errors`, `audit`).
+    - `views/admin/diagnostics_partials/_tab_server_health.php`: Host and database resource metrics, top 6 tables by storage and row count, upload directory breakdowns (`products`, `branding`, `card_to_card`, `expenses`, `tmp`), directory write permissions, PHP environment variables, critical extensions check (PDO, cURL, Mbstring, GD with WebP, OpenSSL, IMAP), and server clock synchronization metrics.
+    - `views/admin/diagnostics_partials/_tab_connectivity.php`: Interactive live connectivity test suite for Faraz SMS balance & credit, OTP pattern validation, SMTP email socket handshake, MySQL database ping latency (ms), and Zarinpal payment gateway reachability, alongside a masked active configuration table.
+    - `views/admin/diagnostics_partials/_tab_notifications_log.php`: Filterable notification dispatch logs (SMS and Email) with search, status filters (`sent`, `failed`, `logged`), and expandable technical debug payloads.
+    - `views/admin/diagnostics_partials/_tab_system_errors.php`: Real-time PHP and database error viewer parsing `storage_errors.log` by severity (`Fatal`, `Warning`, `Notice`, `Database`) with one-click log clearing action.
+    - `views/admin/diagnostics_partials/_tab_audit_trail.php`: Visual security audit viewer for `admin_audit_logs` with admin, action type, description, and IP address filtering.
+- **Diagnostic & Resource Management Service (`app/services/DiagnosticService.php`)**:
+  - Implemented `getServerHealthMetrics()` measuring database size via `information_schema.TABLES`, upload directory usage, extension availability, and timezone drift between PHP and MySQL session.
+  - Implemented `testConnectivity()` providing safe, non-destructive connection testing for Faraz SMS, SMTP, database roundtrip latency, and Zarinpal payment gateway.
+  - Implemented `getNotificationLogs()` encapsulating prepared-statement queries for `sms_log` and `email_log`.
+  - Implemented `getSystemErrorLogs()` and `clearSystemErrorLogs()` reading and clearing `storage_errors.log`.
+  - Implemented `getAdminAuditTrail()` joining `admin_audit_logs` with `admins` metadata.
+  - Implemented `cleanTemporaryUploads()` garbage-collecting temporary card-to-card upload receipts older than 24 hours.
+- **Strict Layer Boundary & Anti-Bloat Refactoring**:
+  - Refactored `app/controllers/admin/notifications_log.php`: removed all raw SQL queries (`db()->query(...)`), transforming the controller into a clean 10-line forwarder to the unified Diagnostic Studio.
+  - Re-architected `app/controllers/admin/diagnostics.php` to strictly remain under 65 lines (soft ceiling: 80 lines), delegating all business logic to `DiagnosticService`.
+  - Guaranteed 100% view purity across all diagnostics partials (0 SQL queries, 0 direct form processing).
+
 ## 1.29.0 — 2026-10-04
+
 
 ### Site Admins Workspace Redesign, Security & Activity Audit Trail & Migration 026
 

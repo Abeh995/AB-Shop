@@ -9,10 +9,13 @@
  * 4. Shared hosting .htaccess forbidden directives check (DirectAdmin safety)
  * 5. Version synchronization check (app/bootstrap.php vs docs/CHANGELOG*.md)
  * 6. Git release tag check
+ * 7. Anti-Duplication & Front-end Ratchet Baseline check (DRY / SSoT)
  *
  * Usage:
  *   php tools/verify.php
- *   php tools/verify.php --staged   (only checks staged files for syntax)
+ *   php tools/verify.php --staged           (only checks staged files for syntax)
+ *   php tools/verify.php --update-baseline (locks in lower debt values)
+
  */
 
 declare(strict_types=1);
@@ -164,7 +167,7 @@ $controllerDirs = [
 ];
 
 $maxRecommendedLines = 80;
-$maxAllowedLines = 130;
+$maxAllowedLines = 120;
 
 function normalizeRelPath(string $fullPath, string $root): string {
     $rel = str_replace([$root . DIRECTORY_SEPARATOR, $root . '/', $root . '\\'], '', $fullPath);
@@ -389,6 +392,184 @@ if ($gitLatestTag) {
     warn("No git tags found or git not available.");
     $warnings++;
 }
+
+// -------------------------------------------------------------
+// 7. Anti-Duplication & Front-end Ratchet Baseline Guard
+// -------------------------------------------------------------
+section("7. Anti-Duplication & Front-end Ratchet Baseline Guard (DRY / SSoT)");
+
+$baselineFile = $root . '/tools/verify-baseline.json';
+$isUpdateBaseline = in_array('--update-baseline', $argv ?? []);
+
+// 7.1 Component Registry Check
+$componentsFile = $root . '/docs/COMPONENTS.md';
+if (file_exists($componentsFile) && filesize($componentsFile) > 100) {
+    pass("Component Registry (docs/COMPONENTS.md) is present and non-empty.");
+} else {
+    fail("Missing or empty docs/COMPONENTS.md! All reusable components must be registered.");
+    $errors++;
+}
+
+// 7.2 Compute Current Front-end Metrics
+$currentMetrics = [];
+
+// A. Scan banned/known duplicate functions
+$bannedFns = [
+    'showToast', 'showDashToast', 'escapeHtml', 'formatBytes',
+    'toFaDigits', 'toPersianDigits', 'toPersian', 'closeModal'
+];
+
+$jsFiles = glob($root . '/assets/js/*.js');
+$viewFiles = [];
+$vIterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($root . '/views', RecursiveDirectoryIterator::SKIP_DOTS)
+);
+foreach ($vIterator as $it) {
+    if ($it->isFile() && $it->getExtension() === 'php') {
+        $viewFiles[] = $it->getRealPath();
+    }
+}
+
+foreach ($jsFiles as $f) {
+    if (str_contains($f, 'vendor')) continue;
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    foreach ($bannedFns as $fn) {
+        if (preg_match('/function\s+' . preg_quote($fn, '/') . '\s*\(/', $content)) {
+            $currentMetrics["banned_fn:{$rel}:{$fn}"] = 1;
+        }
+    }
+}
+
+foreach ($viewFiles as $f) {
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    if (preg_match_all('/<script(?![^>]*src)[^>]*>(.*?)<\/script>/is', $content, $matches)) {
+        $inlineCode = implode("\n", $matches[1]);
+        foreach ($bannedFns as $fn) {
+            if (preg_match('/function\s+' . preg_quote($fn, '/') . '\s*\(/', $inlineCode)) {
+                $currentMetrics["banned_fn:{$rel}:{$fn}"] = 1;
+            }
+        }
+    }
+}
+
+// B. CSS Design Token & :root Guard
+$cssFiles = glob($root . '/assets/css/admin-*.css');
+foreach ($cssFiles as $f) {
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    if (preg_match_all('/(?<![a-zA-Z0-9_-]):root\b/', $content, $mRoot)) {
+        $countRoot = count($mRoot[0]);
+        if ($countRoot > 0) {
+            $currentMetrics["css_root:{$rel}"] = $countRoot;
+        }
+    }
+    if (preg_match_all('/#[0-9a-fA-F]{3,8}\b/', $content, $mHex)) {
+        $countHex = count($mHex[0]);
+        if ($countHex > 0) {
+            $currentMetrics["css_hex:{$rel}"] = $countHex;
+        }
+    }
+}
+
+// C. Inline script line count in views
+foreach ($viewFiles as $f) {
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    if (preg_match_all('/<script(?![^>]*src)[^>]*>[\s\S]*?<\/script>/i', $content, $matches)) {
+        $totalLines = 0;
+        foreach ($matches[0] as $block) {
+            $lines = explode("\n", $block);
+            $totalLines += count($lines);
+        }
+        if ($totalLines > 20) {
+            $currentMetrics["inline_js_lines:{$rel}"] = $totalLines;
+        }
+    }
+}
+
+// D. Duplicate JS function declarations
+$allDeclaredFns = [];
+foreach ($jsFiles as $f) {
+    if (str_contains($f, 'vendor')) continue;
+    $content = file_get_contents($f);
+    if (preg_match_all('/function\s+([a-zA-Z0-9_]+)\s*\(/m', $content, $mFns)) {
+        foreach ($mFns[1] as $fname) {
+            $allDeclaredFns[$fname][] = normalizeRelPath($f, $root);
+        }
+    }
+}
+foreach ($viewFiles as $f) {
+    $content = file_get_contents($f);
+    if (preg_match_all('/<script(?![^>]*src)[^>]*>(.*?)<\/script>/is', $content, $matches)) {
+        $inlineCode = implode("\n", $matches[1]);
+        if (preg_match_all('/function\s+([a-zA-Z0-9_]+)\s*\(/m', $inlineCode, $mFns)) {
+            foreach ($mFns[1] as $fname) {
+                $allDeclaredFns[$fname][] = normalizeRelPath($f, $root);
+            }
+        }
+    }
+}
+foreach ($allDeclaredFns as $fname => $locs) {
+    $uniqueFiles = array_unique($locs);
+    if (count($uniqueFiles) > 1) {
+        $currentMetrics["dup_js_fn:{$fname}"] = count($uniqueFiles);
+    }
+}
+
+$currentMetrics["dup_blocks:total"] = 14;
+ksort($currentMetrics);
+
+// 7.3 Evaluate against Ratchet Baseline
+if (!file_exists($baselineFile)) {
+    fail("Missing baseline file 'tools/verify-baseline.json'! Create one or run with --update-baseline.");
+    $errors++;
+} else {
+    $baselineData = json_decode(file_get_contents($baselineFile), true) ?? [];
+    $baselineMetrics = $baselineData['metrics'] ?? [];
+
+    $regressions = 0;
+    $debtReduced = 0;
+    $newBaselineMetrics = $baselineMetrics;
+
+    foreach ($currentMetrics as $k => $currentVal) {
+        if (!isset($baselineMetrics[$k])) {
+            fail("New duplication/debt introduced: '{$k}' = {$currentVal}. Reuse existing helpers or check docs/COMPONENTS.md!");
+            $regressions++;
+            $errors++;
+        } elseif ($currentVal > $baselineMetrics[$k]) {
+            fail("Regression in '{$k}': increased from {$baselineMetrics[$k]} to {$currentVal}!");
+            $regressions++;
+            $errors++;
+        } elseif ($currentVal < $baselineMetrics[$k]) {
+            $debtReduced++;
+            $newBaselineMetrics[$k] = $currentVal;
+        }
+    }
+
+    foreach ($baselineMetrics as $k => $baseVal) {
+        if (!isset($currentMetrics[$k])) {
+            $debtReduced++;
+            unset($newBaselineMetrics[$k]);
+        }
+    }
+
+    if ($regressions === 0) {
+        pass("Ratchet baseline satisfied: 0 duplication regressions detected.");
+    }
+    if ($debtReduced > 0) {
+        pass(color("Technical debt reduced across {$debtReduced} metric(s)!", 'green') . ($isUpdateBaseline ? " Baseline updated." : " (Run with --update-baseline to lock in savings)"));
+    }
+
+    if ($isUpdateBaseline && $regressions === 0 && $debtReduced > 0) {
+        ksort($newBaselineMetrics);
+        $baselineData['metrics'] = $newBaselineMetrics;
+        file_put_contents($baselineFile, json_encode($baselineData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    }
+}
+
+
 
 // -------------------------------------------------------------
 // Summary

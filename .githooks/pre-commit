@@ -1,0 +1,10 @@
+#!/bin/sh
+# Local quality gate: blocks commits that add syntax errors, layer violations,
+# or new front-end duplication (see tools/verify.php).
+# Enable once per clone:  git config core.hooksPath .githooks
+# Emergency bypass (avoid): git commit --no-verify
+php tools/verify.php || {
+  echo ""
+  echo "pre-commit: tools/verify.php failed. Fix the FAIL lines above (see docs/COMPONENTS.md)."
+  exit 1
+}

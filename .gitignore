@@ -130,3 +130,5 @@ showing_table_*.png
 
 /.agents/
 /.obsidian/
+# Local-only analysis reports (tools/dup-report.ps1)
+tools/.reports/

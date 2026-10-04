@@ -132,6 +132,13 @@ them silently is worse than asking first.
     precision, frameworks, and actionable diffs. Terminate responses immediately
     upon delivering the solution without pleasantries or follow-up offers. (User
     communication remains in Persian per Rule 6; comments and code in English).
+11. **Reuse-First Protocol & Anti-Duplication Invariant (DRY / SSoT).**
+    - **Single Source of Truth Component Registry**: Before writing any UI interaction, formatter, modal, search, or component, check `docs/COMPONENTS.md`. Re-implementing an existing helper (e.g. `toFaDigits`, `formatBytes`, `showToast`, `escapeHtml`, live search) is strictly prohibited.
+    - **The Rule of Two**: If interaction logic or a utility pattern is needed across more than one view or script, it MUST be extracted into a shared reusable component or helper (`assets/js/ab-kit/`, `views/admin/components/`, or `app/core/`). Never copy-paste.
+    - **Declarative Admin Views (`data-ab-*`)**: Admin views must NOT contain heavy inline `<script>` tags (hard limit 20 lines). All interactive behaviors (autocomplete, modals, image uploads, toasts, table filters) are declared via HTML data-attributes (`data-ab-*`) and handled by shared scripts.
+    - **CSS Design Token Discipline**: Colors, radiuses, and shadows MUST come from the unified `:root` variables in `admin.css`. Individual page stylesheets must never declare competing `:root` palettes or hardcode raw `#hex` values.
+    - **Ratchet Baseline Enforced**: `php tools/verify.php` enforces a strict ratchet baseline (`tools/verify-baseline.json`). Introducing new duplicate functions, inline scripts >20 lines, or un-baselined CSS deviations will immediately FAIL the quality gate.
+
 
 ## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")
 
