@@ -156,6 +156,9 @@
         });
     };
 
+    // Polymorphic method alias for backward and forward compatibility
+    AB.toast.show = AB.toast;
+
     // Global canonical alias for backward compatibility across all workstations
     window.showToast = function (message, type, duration) {
         AB.toast(message, type, duration);
@@ -763,13 +766,107 @@
         }
     };
 
+    // =========================================================================
+    // 7. Master Navigation Tabs Engine (AB.tabs)
+    // =========================================================================
+    AB.tabs = {
+        /**
+         * Activates target tab within a nav container and displays corresponding pane.
+         * @param {HTMLElement|string} navContainer
+         * @param {string} tabKey
+         * @param {boolean} [updateHash=true]
+         */
+        activate: function (navContainer, tabKey, updateHash = true) {
+            const nav = typeof navContainer === 'string' ? document.getElementById(navContainer) : navContainer;
+            if (!nav || !tabKey) return;
+
+            const buttons = nav.querySelectorAll('[data-tab], .ab-tab-btn, .settings-tab-btn, .diag-tab-btn, .appearance-tab-btn');
+            let targetBtn = null;
+            buttons.forEach(function (btn) {
+                const k = btn.getAttribute('data-tab');
+                if (k === tabKey) {
+                    btn.classList.add('active');
+                    targetBtn = btn;
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Target pane matching
+            let targetPane = document.getElementById('pane-' + tabKey);
+            if (!targetPane) {
+                targetPane = document.querySelector('[data-tab-pane="' + tabKey + '"]');
+            }
+
+            if (targetPane) {
+                const parent = targetPane.parentElement;
+                if (parent) {
+                    parent.querySelectorAll('.tab-pane, .settings-tab-pane, .diag-tab-pane, .appearance-tab-pane, [data-tab-pane]').forEach(function (p) {
+                        p.classList.remove('active');
+                    });
+                }
+                targetPane.classList.add('active');
+            }
+
+            if (updateHash && window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', '#' + tabKey);
+            }
+
+            nav.dispatchEvent(new CustomEvent('ab:tab:change', {
+                bubbles: true,
+                detail: { tab: tabKey, button: targetBtn, pane: targetPane }
+            }));
+        },
+
+        /**
+         * Initializes event listeners and hash sync for a tabs navigation container.
+         * @param {HTMLElement} nav
+         */
+        init: function (nav) {
+            if (!nav || nav._abTabsInit) return;
+            nav._abTabsInit = true;
+
+            const buttons = nav.querySelectorAll('[data-tab], .ab-tab-btn, .settings-tab-btn, .diag-tab-btn, .appearance-tab-btn');
+            buttons.forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    const tabKey = this.getAttribute('data-tab');
+                    if (tabKey && !this.getAttribute('href')) {
+                        e.preventDefault();
+                        AB.tabs.activate(nav, tabKey, true);
+                    }
+                });
+            });
+
+            // Sync from initial hash if present
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                const hasMatching = Array.from(buttons).some(b => b.getAttribute('data-tab') === hash);
+                if (hasMatching) {
+                    AB.tabs.activate(nav, hash, false);
+                }
+            }
+        },
+
+        /**
+         * Auto-initializes all tab containers matching .ab-nav-tabs or [data-ab-tabs].
+         */
+        autoInit: function (root = document) {
+            const navs = root.querySelectorAll('.ab-nav-tabs, [data-ab-tabs], .settings-tabs-nav, .diag-tabs-nav, .appearance-tabs-nav');
+            navs.forEach(function (n) {
+                AB.tabs.init(n);
+            });
+        }
+    };
+
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             AB.autocomplete.autoInit();
+            AB.tabs.autoInit();
         });
     } else {
         AB.autocomplete.autoInit();
+        AB.tabs.autoInit();
     }
 
     // Register into global scope

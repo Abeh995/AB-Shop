@@ -79,6 +79,7 @@ if ($activePageCss) {
     } catch(e){}
 })();
 </script>
+<script src="<?= e(asset('/assets/js/ab-kit.js')) ?>"></script>
 </head>
 <body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true) ? 'admin-page-orders' : '') ?>">
 

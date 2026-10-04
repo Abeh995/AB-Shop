@@ -46,5 +46,6 @@ component('nav_tabs', [
     'activeTab' => 'orders',
     'id'        => 'settingsTabsNav',
     'class'     => 'settings-tabs-nav',
+    'btnClass'  => 'settings-tab-btn',
     'ariaLabel' => 'تب‌های تنظیمات فروشگاه',
 ]);

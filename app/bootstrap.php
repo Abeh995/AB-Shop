@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.32.2');
+define('APP_VERSION', '1.32.3');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------

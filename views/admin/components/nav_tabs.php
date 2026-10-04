@@ -13,6 +13,18 @@
 $currentActive = $activeTab ?? '';
 $extraClass = !empty($class) ? ' ' . e($class) : '';
 $btnExtraClass = !empty($btnClass) ? ' ' . e($btnClass) : '';
+
+// Auto-derive legacy button classes for full backward compatibility if not passed
+if (empty($btnClass) && !empty($class)) {
+    if (strpos($class, 'settings-tabs-nav') !== false) {
+        $btnExtraClass = ' settings-tab-btn';
+    } elseif (strpos($class, 'diag-tabs-nav') !== false) {
+        $btnExtraClass = ' diag-tab-btn';
+    } elseif (strpos($class, 'appearance-tabs-nav') !== false) {
+        $btnExtraClass = ' appearance-tab-btn';
+    }
+}
+
 $idAttr = !empty($id) ? ' id="' . e($id) . '"' : '';
 $labelAttr = !empty($ariaLabel) ? ' aria-label="' . e($ariaLabel) . '"' : ' aria-label="تب‌های ناوبری"';
 ?>

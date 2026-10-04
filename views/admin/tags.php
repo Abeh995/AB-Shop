@@ -177,7 +177,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
                 <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a;">
                     <?= $editTag ? 'ویرایش برچسب' : 'تعریف برچسب جدید' ?>
                 </h3>
-                <button type="button" class="btn-copy-code" data-ab-modal-close style="font-size:1.2rem; cursor:pointer;">✕</button>
+                <button type="button" class="btn-copy-code" data-ab-modal-close onclick="closeTagModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
             <form method="post" action="/admin/tags.php" class="cpn-modal-body">
@@ -199,7 +199,7 @@ require APP_ROOT . '/views/admin/layout/header.php';
                 </div>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-outline" data-ab-modal-close>انصراف</button>
+                    <button type="button" class="btn btn-outline" data-ab-modal-close onclick="closeTagModal()">انصراف</button>
                     <button type="submit" class="btn btn-primary" style="padding:9px 24px; font-weight:700;">
                         <?= $editTag ? 'ذخیره تغییرات' : 'ایجاد برچسب' ?>
                     </button>

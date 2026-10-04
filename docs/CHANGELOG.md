@@ -7,6 +7,26 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.32.3 — 2026-10-04
+
+### Admin Workstation Logic Stability, SearchService Database Alignment & Script Load Order Fixes
+
+- **Database Column Alignment in SearchService (`app/services/SearchService.php`)**:
+  - Fixed database column mismatches in `SearchService::searchOrders()`: replaced invalid `customer_phone` with `phone` and `total_amount` with `total`.
+  - Prevented fatal PDO SQL exceptions and restored live order search results across the admin header and dashboard.
+- **Client Toast Polymorphism & Copy Handlers (`assets/js/ab-kit.js`, `assets/js/admin-c2c.js`)**:
+  - Bound `AB.toast.show = AB.toast` to provide polymorphic method-chaining and prevent `TypeError: AB.toast.show is not a function`.
+  - Updated card-to-card inspection workstation copy action to invoke `AB.toast` seamlessly.
+- **Navigation Tabs Engine & Backward Compatible Classes (`views/admin/components/nav_tabs.php`, `assets/js/ab-kit.js`)**:
+  - Restored explicit `btnClass => 'settings-tab-btn'` in `settings_partials/_nav_tabs.php` and `'btnClass' => 'diag-tab-btn'` in `diagnostics_partials/_nav_tabs.php`.
+  - Added smart fallback class derivation in `views/admin/components/nav_tabs.php` based on parent navigation container classes.
+  - Implemented declarative `AB.tabs` navigation engine in `assets/js/ab-kit.js` with automated pane switching and URL hash synchronization.
+- **Script Lifecycle & Zero Race Conditions (`views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
+  - Enqueued `assets/js/ab-kit.js` early in `<head>` via `views/admin/layout/header.php`, guaranteeing `window.AB`, `showToast`, and UI helpers exist before any page body or script executes.
+  - Removed duplicate script inclusion from `views/admin/layout/footer.php`.
+- **Modal Lifecycle & State Cleanup (`views/admin/tags.php`)**:
+  - Restored `onclick="closeTagModal()"` on modal dismiss and cancel actions in `tags.php` to clean URL query parameters (`?edit=`) upon dismissal.
+
 ## 1.32.2 — 2026-10-04
 
 ### AB-Kit Front-End Framework, Presentation Components Engine & Comprehensive DRY/SSoT Refactoring

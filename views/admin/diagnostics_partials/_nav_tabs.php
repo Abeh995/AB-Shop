@@ -40,5 +40,6 @@ component('nav_tabs', [
     'activeTab' => $currentTab,
     'id'        => 'diagTabsNav',
     'class'     => 'diag-tabs-nav',
+    'btnClass'  => 'diag-tab-btn',
     'ariaLabel' => 'تب‌های عیب‌یابی و لاگ',
 ]);

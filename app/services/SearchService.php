@@ -293,9 +293,9 @@ class SearchService
 
         try {
             $stmt = db()->prepare("
-                SELECT id, order_code, customer_name, customer_phone, total_amount, status, created_at
+                SELECT id, order_code, customer_name, phone, total, status, created_at
                 FROM orders
-                WHERE order_code LIKE ? OR customer_name LIKE ? OR customer_phone LIKE ?
+                WHERE order_code LIKE ? OR customer_name LIKE ? OR phone LIKE ?
                 ORDER BY id DESC
                 LIMIT ?
             ");
@@ -313,9 +313,9 @@ class SearchService
                     'order_code' => $o['order_code'],
                     'title' => '#' . $o['order_code'] . ' — ' . $o['customer_name'],
                     'customer_name' => $o['customer_name'],
-                    'customer_phone' => $o['customer_phone'],
-                    'total_amount' => (int) $o['total_amount'],
-                    'total_amount_formatted' => formatPrice($o['total_amount']),
+                    'customer_phone' => $o['phone'],
+                    'total_amount' => (int) $o['total'],
+                    'total_amount_formatted' => formatPrice($o['total']),
                     'status' => $o['status'],
                     'status_label' => $statusLabels[$o['status']] ?? $o['status'],
                     'url' => 'order_detail.php?id=' . (int) $o['id'],

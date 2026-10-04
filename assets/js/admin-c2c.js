@@ -36,7 +36,7 @@
         if (!navigator.clipboard) return;
         navigator.clipboard.writeText(text).then(() => {
             if (window.AB && AB.toast) {
-                AB.toast.show('کپی شد!', 'success', 1600);
+                AB.toast('کپی شد!', 'success', 1600);
             }
             if (btnElement) {
                 const origText = btnElement.innerHTML;
