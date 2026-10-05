@@ -1,9 +1,32 @@
-# Changelog Archive (v1.0.0 — v1.30.2)
+# Changelog Archive (v1.0.0 — v1.31.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.30.2.
+Historical release notes for AB-Socks versions 1.0.0 through 1.31.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.31.0 — 2026-10-04
+
+### Promotions & Coupons Workstation Redesign, Financial ROI Tracking, Free Shipping Campaigns, Tags Taxonomy & Migration 027
+
+- **Modular Coupons Workstation Architecture (`views/admin/coupons.php`, `views/admin/coupons_partials/`, `assets/css/admin-coupons.css`)**:
+  - Replaced legacy monolithic 294-line template with a modern component-driven workstation adhering strictly to Rule 7:
+    - `views/admin/coupons_partials/_kpis.php`: Bento KPI statistics header displaying active coupons, lifetime redemption count, total discount disbursed (Toman), and total gross revenue generated with promotions.
+    - `views/admin/coupons_partials/_toolbar.php`: interactive status filter pills (`همه کدهای تخفیف`, `فعال`, `منقضی‌شده`, `تکمیل ظرفیت`, `غیرفعال دستی`), real-time search box, and fast action CTAs.
+    - `views/admin/coupons_partials/_table.php`: high-density data matrix featuring 1-click copyable monospace code badges, campaign title notes, discount type chips (`درصدی`, `مبلغ ثابت`, `ارسال رایگان`), minimum basket conditions, usage progress meters with customer caps, Shamsi expiry dates (`appDateTime`), and quick action buttons.
+    - `views/admin/coupons_partials/_modal.php`: creation and editing modal featuring 1-click random code generation (`btn-magic-generate`), dynamic field visibility (hiding value and caps for free-shipping promotions), category scoping, and customer limits.
+    - `views/admin/coupons_partials/_drawer_stats.php`: slide-over analytics drawer rendering real-time financial ROI metrics (order count, gross sales volume, total discount, average order value) and a table of the recent 12 orders that redeemed the coupon.
+- **Coupon Promotion Capabilities & Database Migration (`database/migrations/027_v1.31.0_coupons_and_tags_enhancement.sql`, `database/schema.sql`, `app/services/CouponService.php`, `app/services/OrderService.php`, `app/controllers/site/checkout.php`)**:
+  - Added `title VARCHAR(150)`, `max_uses_per_customer INT NOT NULL DEFAULT 1`, `category_id INT UNSIGNED DEFAULT NULL`, and updated `type` ENUM to include `free_shipping` via guarded Migration 027.
+  - Implemented per-customer usage validation preventing promotion abuse across repeated orders with identical phone numbers.
+  - Added category-scoped promotions verifying eligibility against cart item categories.
+  - Added native Free Shipping coupon support automatically discounting full courier/postal shipping costs during checkout and order persistence.
+- **Product Tags & Taxonomy Management Hub (`app/controllers/admin/tags.php`, `views/admin/tags.php`, `app/services/TagService.php`, `admin/tags.php`, `views/admin/layout/nav_config.php`)**:
+  - Introduced dedicated product tags management view and controller in the Products Hub (`tags.php`) enabling store owners to manage SEO keywords, inspect connected product counts, edit slugs, and prune unused orphan tags in one click.
+- **Ultra-Lean Controller Footprint (`app/controllers/admin/coupons.php`, `app/controllers/admin/tags.php`, `app/controllers/site/checkout.php`)**:
+  - `app/controllers/admin/coupons.php` maintained at 65 lines with AJAX performance stats and random code generation endpoints.
+  - `app/controllers/admin/tags.php` maintained at 35 lines.
+  - `app/controllers/site/checkout.php` refactored to 75 lines, resolving pre-existing anti-bloat warning.
 
 ## 1.30.2 — 2026-10-04
 

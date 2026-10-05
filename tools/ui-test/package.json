@@ -1,0 +1,14 @@
+{
+  "name": "ab-socks-ui-audit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only Playwright visual and responsive audit harness for AB-Socks admin panel",
+  "scripts": {
+    "ui:audit": "node audit.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "devDependencies": {}
+}

@@ -132,3 +132,13 @@ showing_table_*.png
 /.obsidian/
 # Local-only analysis reports (tools/dup-report.ps1)
 tools/.reports/
+
+# =========================================================
+# Playwright UI Test Harness (tools/ui-test) — dev-only
+# =========================================================
+
+tools/ui-test/node_modules/
+tools/ui-test/output/
+tools/ui-test/.auth/
+tools/ui-test/pages.local.json
+

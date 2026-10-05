@@ -163,3 +163,20 @@ Don't reskin the whole site in one change on a live store:
 4. Admin panel stays predominantly solid throughout — it's a data tool used
    by the store owner, not a storefront moment; legibility wins there by
    default (see the table above).
+
+---
+
+## Admin UI Migration Status
+
+Baseline measured as part of `ADMIN-UI-PLAN.md` Phase 0 (version 1.32.4). This table tracks the progress of the admin design system unification across phases.
+
+| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status |
+|---|---|---|---|
+| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | 17,374 lines |
+| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 1,279 occurrences |
+| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 15 blocks |
+| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences |
+| Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | ~50 queries |
+| Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 0 |
+| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 |
+

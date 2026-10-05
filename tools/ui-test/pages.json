@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Admin routes and parameters for the Playwright UI audit. IDs can be overridden via tools/ui-test/pages.local.json or AB_* environment variables.",
+  "defaults": {
+    "product_id": 1,
+    "order_id": 1,
+    "expense_id": 1,
+    "gift_item_id": 1,
+    "shipping_method_id": 1,
+    "sms_pattern_id": 1,
+    "theme_id": 1,
+    "email_id": 1
+  },
+  "pages": [
+    {
+      "id": "dashboard",
+      "name": "داشبورد",
+      "path": "/admin/index.php",
+      "archetype": "dashboard",
+      "mobileCritical": true,
+      "auth": true
+    },
+    {
+      "id": "orders",
+      "name": "سفارش‌ها",
+      "path": "/admin/orders.php",
+      "archetype": "workstation",
+      "mobileCritical": true,
+      "auth": true
+    },
+    {
+      "id": "card_to_card_payments",
+      "name": "فیش‌های کارت‌به‌کارت",
+      "path": "/admin/card_to_card_payments.php",
+      "archetype": "workstation",
+      "mobileCritical": true,
+      "auth": true
+    },
+    {
+      "id": "order_detail",
+      "name": "جزئیات سفارش",
+      "path": "/admin/order_detail.php",
+      "params": { "id": "{order_id}" },
+      "archetype": "workstation",
+      "mobileCritical": true,
+      "auth": true
+    },
+    {
+      "id": "order_receipt",
+      "name": "رسید چاپ سفارش",
+      "path": "/admin/order_receipt.php",
+      "params": { "id": "{order_id}" },
+      "archetype": "print",
+      "auth": true
+    },
+    {
+      "id": "products",
+      "name": "همه محصولات",
+      "path": "/admin/products.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "product_edit",
+      "name": "ویرایش محصول",
+      "path": "/admin/product_edit.php",
+      "params": { "id": "{product_id}" },
+      "archetype": "form",
+      "mobileCritical": true,
+      "auth": true
+    },
+    {
+      "id": "categories",
+      "name": "دسته‌بندی‌ها",
+      "path": "/admin/categories.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "tags",
+      "name": "برچسب‌ها و مشخصات",
+      "path": "/admin/tags.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "pricing",
+      "name": "تغییر قیمت گروهی",
+      "path": "/admin/pricing.php",
+      "archetype": "workstation",
+      "auth": true
+    },
+    {
+      "id": "coupons",
+      "name": "کدهای تخفیف",
+      "path": "/admin/coupons.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "gift_items",
+      "name": "هدایای سبد و جانبی",
+      "path": "/admin/gift_items.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "gift_item_edit",
+      "name": "ویرایش هدیه سبد",
+      "path": "/admin/gift_item_edit.php",
+      "params": { "id": "{gift_item_id}" },
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "finance_dashboard",
+      "name": "داشبورد مالی",
+      "path": "/admin/finance_dashboard.php",
+      "archetype": "dashboard",
+      "auth": true
+    },
+    {
+      "id": "expenses",
+      "name": "هزینه‌ها",
+      "path": "/admin/expenses.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "expense_edit",
+      "name": "ویرایش هزینه",
+      "path": "/admin/expense_edit.php",
+      "params": { "id": "{expense_id}" },
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "inventory_valuation",
+      "name": "ارزش‌گذاری انبار",
+      "path": "/admin/inventory_valuation.php",
+      "archetype": "dashboard",
+      "auth": true
+    },
+    {
+      "id": "settings",
+      "name": "تنظیمات عمومی",
+      "path": "/admin/settings.php",
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "appearance",
+      "name": "ظاهر و صفحه اصلی",
+      "path": "/admin/appearance.php",
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "themes",
+      "name": "قالب‌ها",
+      "path": "/admin/themes.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "theme_edit",
+      "name": "ویرایش قالب",
+      "path": "/admin/theme_edit.php",
+      "params": { "id": "{theme_id}" },
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "shipping_methods",
+      "name": "روش‌های ارسال",
+      "path": "/admin/shipping_methods.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "shipping_method_edit",
+      "name": "ویرایش روش ارسال",
+      "path": "/admin/shipping_method_edit.php",
+      "params": { "id": "{shipping_method_id}" },
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "sms_patterns",
+      "name": "الگوهای پیامک",
+      "path": "/admin/sms_patterns.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "sms_pattern_edit",
+      "name": "ویرایش الگوی پیامک",
+      "path": "/admin/sms_pattern_edit.php",
+      "params": { "id": "{sms_pattern_id}" },
+      "archetype": "form",
+      "auth": true
+    },
+    {
+      "id": "emails",
+      "name": "ایمیل‌ها و وب‌میل",
+      "path": "/admin/emails.php",
+      "archetype": "workstation",
+      "auth": true
+    },
+    {
+      "id": "email_accounts",
+      "name": "حساب‌های ایمیل",
+      "path": "/admin/email_accounts.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "email_read",
+      "name": "مشاهده ایمیل",
+      "path": "/admin/email_read.php",
+      "params": { "id": "{email_id}" },
+      "archetype": "workstation",
+      "auth": true
+    },
+    {
+      "id": "email_compose",
+      "name": "ارسال ایمیل جدید",
+      "path": "/admin/email_compose.php",
+      "archetype": "workstation",
+      "auth": true
+    },
+    {
+      "id": "users",
+      "name": "مدیران سایت",
+      "path": "/admin/users.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "diagnostics",
+      "name": "عیب‌یابی و لاگ",
+      "path": "/admin/diagnostics.php",
+      "archetype": "workstation",
+      "auth": true
+    },
+    {
+      "id": "notifications_log",
+      "name": "گزارش پیامک‌ها و اعلان‌ها",
+      "path": "/admin/notifications_log.php",
+      "archetype": "list",
+      "auth": true
+    },
+    {
+      "id": "login",
+      "name": "ورود به مدیریت",
+      "path": "/admin/login.php",
+      "archetype": "workstation",
+      "auth": false
+    }
+  ]
+}

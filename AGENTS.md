@@ -30,7 +30,10 @@ every technical decision in this repo:
 - **No Composer, no npm, no build step in production.** `app/vendor/` is
   vendored by hand (see `PHPMailer`). Any new dependency must either be
   vendored the same way or avoided. Do not introduce a `package.json`,
-  webpack/vite config, or anything assuming a build step runs on the server.
+  webpack/vite config, or anything assuming a build step runs on the server
+  (Exception: `tools/ui-test/` is a dev-only Node/Playwright harness with its
+  own `package.json`, executed locally on developer machines only and excluded
+  from deploy packages by `tools/build-deploy.ps1`).
 - **1.5 GB disk, 200 MB database, 80 GB/month bandwidth.** Keep this in mind
   for anything image- or asset-heavy — this is directly relevant to the
   current UI redesign (see `docs/DESIGN.md`).
