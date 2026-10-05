@@ -156,7 +156,7 @@ async function ensureAuthenticated(browser) {
   }
 
   console.log(`[AUTH] Authenticating admin user (${ADMIN_USER}) at ${BASE_URL}/admin/login.php...`);
-  const context = await browser.newContext();
+  const context = await browser.newContext({ ignoreHTTPSErrors: true });
   const page = await context.newPage();
 
   try {
@@ -377,6 +377,7 @@ async function runAudit() {
         viewport: { width: vp.width, height: vp.height },
         isMobile: vp.isMobile ?? false,
         hasTouch: vp.hasTouch ?? false,
+        ignoreHTTPSErrors: true,
       };
 
       if (pageDef.auth !== false && fs.existsSync(authState)) {

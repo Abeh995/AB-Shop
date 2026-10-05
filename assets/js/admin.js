@@ -246,7 +246,8 @@
         }
 
         function tick() {
-            if (window.innerWidth <= 768) {
+            var bpMd = (window.AB && window.AB.bp) ? window.AB.bp.md : 1024;
+            if (window.innerWidth < bpMd) {
                 return;
             }
             var now = new Date();
@@ -285,6 +286,11 @@
         var STORAGE_KEY_COLLAPSED = 'admin_sidebar_collapsed';
         var STORAGE_KEY_GROUPS = 'admin_sidebar_groups';
 
+        function isMobileView() {
+            var bpMd = (window.AB && window.AB.bp) ? window.AB.bp.md : 1024;
+            return window.innerWidth < bpMd;
+        }
+
         // 1. Initial State Restoration
         var isCollapsed = false;
         try {
@@ -292,7 +298,7 @@
         } catch (e) {}
 
         function applySidebarState(collapsed) {
-            if (window.innerWidth <= 900) {
+            if (isMobileView()) {
                 document.documentElement.classList.remove('sidebar-collapsed');
                 document.body.classList.remove('sidebar-collapsed');
                 return;
@@ -327,7 +333,7 @@
         // In collapsed desktop rail mode, clicking the logo badge expands the sidebar
         if (logoEl) {
             logoEl.addEventListener('click', function (e) {
-                if (window.innerWidth > 900 && document.documentElement.classList.contains('sidebar-collapsed')) {
+                if (!isMobileView() && document.documentElement.classList.contains('sidebar-collapsed')) {
                     e.preventDefault();
                     toggleSidebar();
                 }
@@ -336,7 +342,7 @@
 
         // Window resize listener: protect mobile from desktop collapsed class and restore on expand
         window.addEventListener('resize', function () {
-            if (window.innerWidth <= 900) {
+            if (isMobileView()) {
                 document.documentElement.classList.remove('sidebar-collapsed');
                 document.body.classList.remove('sidebar-collapsed');
             } else {
@@ -354,7 +360,7 @@
                 return;
             }
             if (e.key === '[' || (e.ctrlKey && (e.key === 'b' || e.key === 'B'))) {
-                if (window.innerWidth > 900) {
+                if (!isMobileView()) {
                     e.preventDefault();
                     toggleSidebar();
                 }

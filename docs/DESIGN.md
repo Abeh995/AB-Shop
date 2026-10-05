@@ -170,13 +170,14 @@ Don't reskin the whole site in one change on a live store:
 
 Baseline measured as part of `ADMIN-UI-PLAN.md` Phase 0 (version 1.32.4). This table tracks the progress of the admin design system unification across phases.
 
-| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status |
+| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 1 — v1.33.0) |
 |---|---|---|---|
-| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | 17,374 lines |
-| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 1,279 occurrences |
-| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 15 blocks |
+| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | 15,999 lines (21 files, layers established) |
+| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 902 occurrences outside `admin-tokens.css` (377 removed) |
+| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 14 blocks (admin.css :root unified into tokens) |
 | Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences |
-| Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | ~50 queries |
-| Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 0 |
-| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 |
+| Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | Shell unified at `sm`, `md`, `lg` (`admin.js` literals removed) |
+| Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 0 (Component library v2 in Phase 2) |
+| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 (Phase 1: Tokens, Base, Shell only) |
+
 

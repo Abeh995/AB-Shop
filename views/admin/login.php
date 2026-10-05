@@ -2,11 +2,15 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ورود به پنل مدیریت</title>
 <meta name="robots" content="noindex, nofollow">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="<?= e(asset('/assets/css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-tokens.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-base.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-shell.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-components.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-utilities.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('/assets/css/admin.css')) ?>">
 </head>
 <body>

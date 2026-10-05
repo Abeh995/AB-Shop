@@ -1,9 +1,33 @@
-# Changelog Archive (v1.0.0 — v1.31.0)
+# Changelog Archive (v1.0.0 — v1.31.2)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.31.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.31.2.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.31.2 — 2026-10-04
+
+### Product Tags Service Bootstrap Registration & Workstation Stylesheet Attachment
+
+- **TagService Autoloading Registration (`app/bootstrap.php`)**:
+  - Registered `TagService.php` in the core application bootstrap service registry (`app/bootstrap.php`), eliminating fatal `Class "TagService" not found` errors and resolving HTTP 500 crashes when accessing `/admin/tags.php`.
+- **Tags Workstation Stylesheet Enqueuing (`views/admin/layout/header.php`)**:
+  - Updated admin layout stylesheet loader to include `admin-coupons.css` on `tags.php` in addition to `coupons.php`, ensuring complete visual styling for Bento KPI cards, high-density matrix tables, search toolbars, and tag creation modals.
+
+## 1.31.1 — 2026-10-04
+
+### Desktop Navigation Viewport Lock, Orders Scroll Isolation & UX Smooth ScrollIntoView
+
+- **Desktop Sidebar Viewport Lock & Scroll Bleed Isolation (`assets/css/admin.css`)**:
+  - Pinned `.admin-sidebar` to strict `height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; overflow: hidden;` eliminating page layout stretching when accordion groups are expanded.
+  - Set `.admin-sidebar-nav` to `flex: 1 1 auto; min-height: 0; overscroll-behavior: contain;` allowing the navigation accordion menu to independently scroll inside the sidebar while completely preventing scroll chaining/bleeding into the global page window.
+  - Adjusted desktop `.admin-main` bottom padding from legacy `95px` down to `24px` (`padding: 0 0 24px 0;`), preserving `padding-bottom: 92px` strictly for mobile screens under `@media (max-width: 900px)` for bottom navigation bar clearance.
+- **Orders Workspace Body Padding Containment (`assets/css/admin-orders.css`)**:
+  - Scoped the aggressive `padding-bottom: 95px` on `body.admin-page-orders` exclusively to mobile viewports (`@media (max-width: 900px)`), resetting desktop to `padding-bottom: 0`. This eliminates the window overscroll space that previously allowed sticky elements to be displaced ~95px off-screen when scrolling to the bottom of the orders table.
+- **Nested Main Tag Fix (`views/admin/orders.php`)**:
+  - Replaced invalid nested `<main class="dash-workspace">` with `<div class="dash-workspace">` and closed it properly before the admin layout footer, resolving DOM specification errors.
+- **Active Navigation UX Enhancement (`assets/js/admin.js`)**:
+  - Implemented automatic smooth `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` for `.nav-sub-item.active` upon initial sidebar hydration, guaranteeing the currently selected sub-page is immediately visible in view even if multiple parent navigation groups are open.
 
 ## 1.31.0 — 2026-10-04
 

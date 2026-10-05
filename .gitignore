@@ -29,11 +29,11 @@ storage_errors.log
 # =========================================================
 
 /uploads/*
-!/uploads/.htaccess
-!/uploads/products/
+/uploads/products/*
 !/uploads/products/.gitkeep
-!/uploads/branding/
+/uploads/branding/*
 !/uploads/branding/.gitkeep
+!/uploads/.htaccess
 
 android-chrome-192x192.png
 android-chrome-512x512.png

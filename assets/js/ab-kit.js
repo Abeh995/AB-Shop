@@ -9,6 +9,13 @@
 
     const AB = window.AB || {};
 
+    // Standard Responsive Breakpoints (mirrored in admin-tokens.css and verified by verify.php)
+    AB.bp = {
+        sm: 640,
+        md: 1024,
+        lg: 1440
+    };
+
     // =========================================================================
     // 1. Text & Number Formatters (AB.fmt)
     // =========================================================================

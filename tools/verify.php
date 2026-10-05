@@ -401,13 +401,78 @@ section("7. Anti-Duplication & Front-end Ratchet Baseline Guard (DRY / SSoT)");
 $baselineFile = $root . '/tools/verify-baseline.json';
 $isUpdateBaseline = in_array('--update-baseline', $argv ?? []);
 
-// 7.1 Component Registry Check
+// 7.1 Component Registry & Architecture Sync
 $componentsFile = $root . '/docs/COMPONENTS.md';
 if (file_exists($componentsFile) && filesize($componentsFile) > 100) {
     pass("Component Registry (docs/COMPONENTS.md) is present and non-empty.");
 } else {
     fail("Missing or empty docs/COMPONENTS.md! All reusable components must be registered.");
     $errors++;
+}
+
+// 7.1.1 Breakpoint Synchronization Guard (bp_sync)
+$abKitFile = $root . '/assets/js/ab-kit.js';
+$tokensCssFile = $root . '/assets/css/admin-tokens.css';
+if (file_exists($abKitFile) && file_exists($tokensCssFile)) {
+    $abKitContent = file_get_contents($abKitFile);
+    $tokensCssContent = file_get_contents($tokensCssFile);
+    $bpJs = [];
+    $bpCss = [];
+    if (preg_match('/AB\.bp\s*=\s*\{\s*sm:\s*(\d+),\s*md:\s*(\d+),\s*lg:\s*(\d+)\s*\}/', $abKitContent, $mJs)) {
+        $bpJs = ['sm' => (int)$mJs[1], 'md' => (int)$mJs[2], 'lg' => (int)$mJs[3]];
+    }
+    if (preg_match('/sm:\s*[^(\n]*\((\d+)px\)/', $tokensCssContent, $mSm)) $bpCss['sm'] = (int)$mSm[1];
+    if (preg_match('/md:\s*[^(\n]*\((\d+)px\)/', $tokensCssContent, $mMd)) $bpCss['md'] = (int)$mMd[1];
+    if (preg_match('/lg:\s*[^(\n]*\((\d+)px\)/', $tokensCssContent, $mLg)) $bpCss['lg'] = (int)$mLg[1];
+    if (!empty($bpJs) && $bpJs === $bpCss) {
+        pass("Breakpoint sync (bp_sync) verified: sm={$bpJs['sm']}, md={$bpJs['md']}, lg={$bpJs['lg']}.");
+    } else {
+        fail("Breakpoint mismatch (bp_sync)! ab-kit.js (" . json_encode($bpJs) . ") does not match admin-tokens.css (" . json_encode($bpCss) . ").");
+        $errors++;
+    }
+}
+
+// 7.1.2 Component Registry & Call Verification (component_registry)
+$compDir = $root . '/views/admin/components';
+if (is_dir($compDir)) {
+    $compDocs = file_get_contents($componentsFile);
+    $compFiles = glob($compDir . '/*.php');
+    $compMissingDocs = [];
+    foreach ($compFiles as $cf) {
+        $cname = basename($cf, '.php');
+        if (!str_contains($compDocs, $cname)) {
+            $compMissingDocs[] = $cname;
+        }
+    }
+    if (!empty($compMissingDocs)) {
+        fail("Component(s) missing from docs/COMPONENTS.md: " . implode(', ', $compMissingDocs));
+        $errors++;
+    }
+    $compMissingFiles = [];
+    $adminViewIterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($root . '/views/admin', RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($adminViewIterator as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $vContent = file_get_contents($it->getRealPath());
+            if (preg_match_all('/\bcomponent\(\s*[\'"]([a-zA-Z0-9_\-]+)[\'"]/i', $vContent, $mComps)) {
+                foreach ($mComps[1] as $cCall) {
+                    if (!file_exists($compDir . '/' . $cCall . '.php')) {
+                        $compMissingFiles[$cCall][] = normalizeRelPath($it->getRealPath(), $root);
+                    }
+                }
+            }
+        }
+    }
+    if (!empty($compMissingFiles)) {
+        foreach ($compMissingFiles as $cCall => $callers) {
+            fail("Undefined component '{$cCall}' called in: " . implode(', ', $callers));
+            $errors++;
+        }
+    }
+    if (empty($compMissingDocs) && empty($compMissingFiles)) {
+        pass("Component registry verified: all components documented in docs/COMPONENTS.md, all component() calls resolve to templates.");
+    }
 }
 
 // 7.2 Compute Current Front-end Metrics
@@ -454,10 +519,10 @@ foreach ($viewFiles as $f) {
     }
 }
 
-// B. CSS Design Token & :root Guard
-$cssFiles = glob($root . '/assets/css/admin-*.css');
-foreach ($cssFiles as $f) {
-    if (basename($f) === 'admin-components.css') continue; // Shared UI component library
+// B. CSS Design Token, :root & Hex Guard (all admin*.css except admin-tokens.css)
+$allAdminCssFiles = glob($root . '/assets/css/admin*.css');
+foreach ($allAdminCssFiles as $f) {
+    if (basename($f) === 'admin-tokens.css') continue; // Single Source of Truth for tokens and hex
     $rel = normalizeRelPath($f, $root);
     $content = file_get_contents($f);
     if (preg_match_all('/(?<![a-zA-Z0-9_-]):root\b/', $content, $mRoot)) {
@@ -470,6 +535,123 @@ foreach ($cssFiles as $f) {
         $countHex = count($mHex[0]);
         if ($countHex > 0) {
             $currentMetrics["css_hex:{$rel}"] = $countHex;
+        }
+    }
+}
+
+// C. Page/Workstation CSS Media Query Guard (no layout @media in pages; only print, hover, pointer, prefers-*)
+$systemCssFiles = [
+    'admin-tokens.css',
+    'admin-base.css',
+    'admin-shell.css',
+    'admin-components.css',
+    'admin-patterns.css',
+    'admin-utilities.css'
+];
+foreach ($allAdminCssFiles as $f) {
+    if (in_array(basename($f), $systemCssFiles)) continue;
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    if (preg_match_all('/@media\s*([^{]+)\{/i', $content, $mMedia)) {
+        $pageMediaCount = 0;
+        foreach ($mMedia[1] as $query) {
+            if (!preg_match('/\b(print|hover|pointer|prefers-)\b/i', $query)) {
+                $pageMediaCount++;
+            }
+        }
+        if ($pageMediaCount > 0) {
+            $currentMetrics["css_media_page:{$rel}"] = $pageMediaCount;
+        }
+    }
+}
+
+// D. CSS !important occurrences
+foreach ($allAdminCssFiles as $f) {
+    if (basename($f) === 'admin-tokens.css') continue;
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    $count = preg_match_all('/!important/i', $content);
+    if ($count > 0) {
+        $currentMetrics["css_important:{$rel}"] = $count;
+    }
+}
+
+// E. CSS transition: all occurrences
+foreach ($allAdminCssFiles as $f) {
+    if (basename($f) === 'admin-tokens.css') continue;
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    $count = preg_match_all('/transition\s*:[^;]*\ball\b/i', $content);
+    if ($count > 0) {
+        $currentMetrics["css_transition_all:{$rel}"] = $count;
+    }
+}
+
+// F. CSS Physical directional properties (RTL hygiene; allow /* physical */ comment escape)
+foreach ($allAdminCssFiles as $f) {
+    if (basename($f) === 'admin-tokens.css') continue;
+    $rel = normalizeRelPath($f, $root);
+    $lines = file($f, FILE_IGNORE_NEW_LINES);
+    $count = 0;
+    foreach ($lines as $line) {
+        if (str_contains($line, '/* physical */')) continue;
+        if (preg_match('/\b(margin-left|margin-right|padding-left|padding-right|text-align\s*:\s*(?:left|right))\b|(?<![a-zA-Z0-9_\-\$])(?:left|right)\s*:/i', $line)) {
+            $count++;
+        }
+    }
+    if ($count > 0) {
+        $currentMetrics["css_physical_dir:{$rel}"] = $count;
+    }
+}
+
+// G. View inline style="" occurrences (allow style="-- dynamic CSS vars)
+$adminViewsIterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($root . '/views/admin', RecursiveDirectoryIterator::SKIP_DOTS)
+);
+foreach ($adminViewsIterator as $it) {
+    if ($it->isFile() && $it->getExtension() === 'php') {
+        $rel = normalizeRelPath($it->getRealPath(), $root);
+        $content = file_get_contents($it->getRealPath());
+        if (preg_match_all('/style\s*=\s*["\']([^"\']*)["\']/i', $content, $mStyles)) {
+            $count = 0;
+            foreach ($mStyles[1] as $styleVal) {
+                $trimmed = trim($styleVal);
+                if (str_starts_with($trimmed, '--')) continue; // allow dynamic CSS variables
+                $count++;
+            }
+            if ($count > 0) {
+                $currentMetrics["view_inline_style:{$rel}"] = $count;
+            }
+        }
+    }
+}
+
+// H. View legacy class family occurrences
+$legacyClasses = [
+    'btn-primary', 'btn-outline', 'fin-btn-outline', 'btn-dash-action',
+    'btn-sm', 'action-btn', 'act-btn', 'usr-btn-icon', 'fin-btn-icon',
+    'close-btn', 'chip-btn', 'pill-btn', 'preset-btn', 'filter-btn',
+    'tab-btn', 'subtab-btn', 'seg-btn', 'nav-btn', 'btn-danger',
+    'btn-reject-receipt', 'btn-appr-danger', 'admin-table', 'fin-data-table',
+    'usr-table', 'prod-table', 'cat-table', 'od-table',
+    'alert-success', 'alert-error', 'alert-danger', 'admin-modal',
+    'cat-kpi-card', 'prod-kpi-card', 'fin-kpi-card', 'kpi-card'
+];
+$legacyRegex = '/\b(' . implode('|', array_map('preg_quote', $legacyClasses)) . ')\b/';
+foreach ($adminViewsIterator as $it) {
+    if ($it->isFile() && $it->getExtension() === 'php') {
+        $rel = normalizeRelPath($it->getRealPath(), $root);
+        $content = file_get_contents($it->getRealPath());
+        if (preg_match_all('/class\s*=\s*["\']([^"\']*)["\']/i', $content, $mClasses)) {
+            $count = 0;
+            foreach ($mClasses[1] as $classVal) {
+                if (preg_match_all($legacyRegex, $classVal, $mMatches)) {
+                    $count += count($mMatches[0]);
+                }
+            }
+            if ($count > 0) {
+                $currentMetrics["view_legacy_class:{$rel}"] = $count;
+            }
         }
     }
 }

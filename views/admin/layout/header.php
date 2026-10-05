@@ -15,7 +15,7 @@ $pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardTo
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title><?= e($pageTitle) ?> | مدیریت <?= e(SITE_NAME) ?></title>
 <meta name="robots" content="noindex, nofollow">
 <?php $adminFavicon = siteFaviconUrl(); ?>
@@ -28,9 +28,13 @@ $pendingC2CCount = class_exists('OrderService') ? OrderService::getPendingCardTo
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <?php endif; ?>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="<?= e(asset('/assets/css/style.css')) ?>">
-<link rel="stylesheet" href="<?= e(asset('/assets/css/admin.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-tokens.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-base.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-shell.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('/assets/css/admin-components.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-patterns.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin-utilities.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/admin.css')) ?>">
 <?php
 $pageCssMap = [
     'orders.php'                => '/assets/css/admin-orders.css',
@@ -73,7 +77,7 @@ if ($activePageCss) {
 <script>
 (function(){
     try {
-        if (localStorage.getItem('admin_sidebar_collapsed') === 'true' && window.innerWidth > 900) {
+        if (localStorage.getItem('admin_sidebar_collapsed') === 'true' && window.innerWidth >= 1024) {
             document.documentElement.classList.add('sidebar-collapsed');
         }
     } catch(e){}
@@ -81,11 +85,30 @@ if ($activePageCss) {
 </script>
 <script src="<?= e(asset('/assets/js/ab-kit.js')) ?>"></script>
 </head>
-<body class="admin-body <?= $currentPage === 'index.php' ? 'admin-page-dashboard' : (in_array($currentPage, ['orders.php', 'order_detail.php', 'card_to_card_payments.php'], true) ? 'admin-page-orders' : '') ?>">
+<body class="admin-body">
 
 <?php
 require_once APP_ROOT . '/views/admin/layout/nav_config.php';
 $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount, $pendingC2CCount);
+
+$pageTone = $pageTone ?? null;
+if (!$pageTone) {
+    foreach ($adminNav as $group) {
+        if (!empty($group['sub_items'])) {
+            foreach ($group['sub_items'] as $sub) {
+                if (!empty($sub['active']) && !empty($sub['tone'])) {
+                    $pageTone = $sub['tone'];
+                    break 2;
+                }
+            }
+        }
+        if (!empty($group['active']) && !empty($group['tone'])) {
+            $pageTone = $group['tone'];
+            break;
+        }
+    }
+}
+$pageTone = $pageTone ?? 'brand';
 ?>
 
 <div class="admin-wrap">
@@ -130,7 +153,7 @@ $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount, $pendingC2CCoun
                             </div>
                         </button>
                         <div class="nav-sub-list">
-                            <div class="nav-flyout-header" style="display:none;"><?= e($group['label']) ?></div>
+                            <div class="nav-flyout-header"><?= e($group['label']) ?></div>
                             <?php foreach ($group['sub_items'] as $sub): ?>
                                 <a href="<?= e($sub['url']) ?>" class="nav-sub-item <?= $sub['active'] ? 'active' : '' ?>">
                                     <span class="sub-indicator"></span>
@@ -211,11 +234,12 @@ $adminNav = getAdminNavConfig($currentPage, $pendingOrdersCount, $pendingC2CCoun
             </div>
         </header>
 
-        <?php if ($flash): ?>
-            <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
-        <?php endif; ?>
-
         <?php if (!in_array($currentPage, ['index.php', 'order_detail.php'], true)): ?>
             <?php require APP_ROOT . '/views/admin/layout/sub_nav.php'; ?>
         <?php endif; ?>
+
+        <div class="ab-page" data-tone="<?= e($pageTone) ?>">
+            <?php if ($flash): ?>
+                <div class="ab-flash alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+            <?php endif; ?>
 

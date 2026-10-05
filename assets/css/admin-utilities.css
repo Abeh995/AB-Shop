@@ -1,0 +1,113 @@
+/**
+ * AB-Socks Admin Utility Classes (assets/css/admin-utilities.css)
+ * Layout primitives, accessibility helpers, typography and visibility utilities.
+ *
+ * Rules:
+ * - Wrapped in @layer utilities
+ * - 100% token-driven, ZERO raw hex colors
+ * - RTL logical properties
+ */
+
+@layer utilities {
+  /* ========================================================================
+     1. Layout Primitives
+     ======================================================================== */
+
+  /* Vertical Stack */
+  .ab-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-gap, var(--space-3));
+  }
+
+  .ab-stack--xs { --stack-gap: var(--space-1); }
+  .ab-stack--sm { --stack-gap: var(--space-2); }
+  .ab-stack--md { --stack-gap: var(--space-4); }
+  .ab-stack--lg { --stack-gap: var(--space-6); }
+
+  /* Horizontal Cluster */
+  .ab-cluster {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--cluster-gap, var(--space-2));
+  }
+
+  .ab-cluster--xs { --cluster-gap: var(--space-1); }
+  .ab-cluster--sm { --cluster-gap: var(--space-2); }
+  .ab-cluster--md { --cluster-gap: var(--space-4); }
+  .ab-cluster--lg { --cluster-gap: var(--space-6); }
+  .ab-cluster--between { justify-content: space-between; }
+  .ab-cluster--end { justify-content: flex-end; }
+  .ab-cluster--nowrap { flex-wrap: nowrap; }
+
+  /* Intrinsic Auto-fit Grid */
+  .ab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min, 16rem)), 1fr));
+    gap: var(--grid-gap, var(--space-4));
+  }
+
+  .ab-grid--sm { --grid-min: 12rem; }
+  .ab-grid--md { --grid-min: 16rem; }
+  .ab-grid--lg { --grid-min: 22rem; }
+
+  /* ========================================================================
+     2. Typography & Text Utilities
+     ======================================================================== */
+
+  .ab-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: isolate;
+  }
+
+  .ab-nowrap {
+    white-space: nowrap;
+  }
+
+  .ab-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ab-text-muted {
+    color: var(--text-muted);
+  }
+
+  .ab-text-xs {
+    font-size: var(--text-xs);
+  }
+
+  .ab-text-sm {
+    font-size: var(--text-sm);
+  }
+
+  .ab-text-md {
+    font-size: var(--text-md);
+  }
+
+  .ab-text-lg {
+    font-size: var(--text-lg);
+  }
+
+  /* ========================================================================
+     3. Accessibility & Visibility Helpers
+     ======================================================================== */
+
+  .ab-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}

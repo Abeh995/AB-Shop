@@ -1,0 +1,279 @@
+/**
+ * AB-Socks Admin Base & Reset Styles (assets/css/admin-base.css)
+ * Element defaults, reset rules, focus styles, and storefront style.css replacement aliases.
+ *
+ * Rules:
+ * - Pure CSS, no raw hex colors (tokens only)
+ * - RTL logical properties
+ * - max(16px, 1rem) input font-size to prevent iOS zoom
+ */
+
+@layer reset {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: var(--text-md);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  img, picture, svg, video {
+    display: block;
+    max-width: 100%;
+  }
+
+  input, button, textarea, select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin-block-start: 0;
+    margin-block-end: .5em;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  p {
+    margin-block-start: 0;
+    margin-block-end: 1em;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer base {
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Form control defaults (iOS zoom guard RULE P5) */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="search"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: max(16px, 1rem);
+  }
+
+  /* Tabular numerals helper */
+  .ab-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: isolate;
+  }
+
+  /* ========================================================================
+     LEGACY ALIASES (3.9) — Replacing storefront style.css in admin
+     To be removed in Phase 6 once views use ab-* classes exclusively
+     ======================================================================== */
+
+  /* Forms & Fields */
+  :is(.ab-field, .form-group) {
+    margin-block-end: var(--space-4);
+  }
+
+  :is(.ab-field, .form-group) > label {
+    display: block;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    margin-block-end: var(--space-2);
+    color: var(--text);
+  }
+
+  :is(.ab-input, .ab-select, .ab-textarea, .form-control) {
+    width: 100%;
+    min-height: var(--control-h);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: max(16px, 1rem);
+    transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+    box-sizing: border-box;
+  }
+
+  :is(.ab-input, .ab-select, .ab-textarea, .form-control):focus {
+    outline: none;
+    border-color: var(--tone);
+    box-shadow: var(--focus-ring);
+  }
+
+  textarea:is(.ab-textarea, .form-control) {
+    resize: vertical;
+    min-height: 90px;
+    height: auto;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-4);
+  }
+
+  .form-error {
+    color: var(--danger);
+    font-size: var(--text-xs);
+    margin-block-start: var(--space-1);
+  }
+
+  /* Buttons */
+  :is(.ab-btn, .btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: background-color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease), transform var(--dur-1) var(--ease), box-shadow var(--dur-2) var(--ease);
+    user-select: none;
+    -webkit-user-select: none;
+    box-sizing: border-box;
+  }
+
+  :is(.ab-btn--primary, .btn-primary) {
+    background: var(--tone);
+    color: var(--tone-on);
+  }
+
+  @media (hover: hover) {
+    :is(.ab-btn--primary, .btn-primary):hover {
+      background: var(--tone-strong);
+    }
+  }
+
+  :is(.ab-btn--outline, .btn-outline) {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  @media (hover: hover) {
+    :is(.ab-btn--outline, .btn-outline):hover {
+      border-color: var(--tone);
+      color: var(--tone);
+      background: var(--tone-soft);
+    }
+  }
+
+  :is(.ab-btn--danger, .btn-danger) {
+    background: var(--danger);
+    color: var(--surface);
+  }
+
+  @media (hover: hover) {
+    :is(.ab-btn--danger, .btn-danger):hover {
+      background: var(--danger-strong);
+    }
+  }
+
+  :is(.ab-btn--sm, .btn-sm) {
+    min-height: var(--control-h-sm);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  :is(.ab-btn, .btn):disabled,
+  :is(.ab-btn, .btn)[aria-disabled="true"] {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Alerts */
+  :is(.ab-alert, .alert) {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    margin-block: var(--space-4);
+    font-size: var(--text-sm);
+    border: 1px solid transparent;
+  }
+
+  :is(.alert-success, .ab-alert[data-state="success"]) {
+    background: var(--success-soft);
+    color: var(--success-ink);
+    border-color: color-mix(in srgb, var(--success) 30%, var(--border));
+  }
+
+  :is(.alert-error, .alert-danger, .ab-alert[data-state="danger"]) {
+    background: var(--danger-soft);
+    color: var(--danger-ink);
+    border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
+  }
+
+  :is(.alert-warning, .ab-alert[data-state="warning"]) {
+    background: var(--warning-soft);
+    color: var(--warning-ink);
+    border-color: color-mix(in srgb, var(--warning) 30%, var(--border));
+  }
+
+  :is(.alert-info, .ab-alert[data-state="info"]) {
+    background: var(--info-soft);
+    color: var(--info-ink);
+    border-color: color-mix(in srgb, var(--info) 30%, var(--border));
+  }
+
+  /* Shared empty state */
+  .empty-state {
+    text-align: center;
+    padding: var(--space-7) var(--space-4);
+    color: var(--text-muted);
+  }
+}

@@ -3,9 +3,36 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.31.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.32.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.33.0 — 2026-10-05
+
+### Admin Design System Foundation: CSS Layers, Tokens, Reset, Shell & Breakpoint Unification (Phase 1)
+
+- **Cascade Layers Architecture & Single Source of Truth Tokens (`assets/css/admin-tokens.css`)**:
+  - Established CSS `@layer reset, tokens, base, layout, components, patterns, pages, utilities;` enforcing strict cascade precedence.
+  - Built unified token system defining color primitives (`--c-mocha-*`, `--c-latte-*`, `--c-blue-*`, `--c-emerald-*`, etc.) as the exclusive location for raw hex codes across the entire admin panel.
+  - Implemented semantic surfaces, borders, shadows, fluid typography clamps (`--text-xs` to `--text-xl`), density variables, and tone systems (`brand`, `blue`, `sky`, `emerald`, `amber`, `rose`, `purple`, `teal`, `slate`).
+  - Added complete backward-compatibility legacy alias mapping for all 15 historical `:root` blocks, ensuring 0 visual regressions for unmigrated pages.
+- **Admin CSS Reset & Storefront Decoupling (`assets/css/admin-base.css`, `views/admin/layout/header.php`, `views/admin/login.php`)**:
+  - Implemented `@layer reset, base` with box-sizing, form control font inheritance, focus rings, and iOS focus zoom guard (`font-size: max(16px, 1rem)`).
+  - Aliased legacy UI classes (`:is(.ab-btn, .btn)`, `:is(.ab-field, .form-group)`, `:is(.ab-input, .form-control)`, `:is(.ab-alert, .alert)`), completely severing the admin panel's dependency on the storefront's `style.css`.
+  - Added `viewport-fit=cover` to admin layout and login viewport headers for full iOS safe-area compliance.
+- **Admin Layout Shell Extraction & Container Gutter (`assets/css/admin-shell.css`, `views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
+  - Extracted 1,234 lines of sidebar, collapsed rail, off-canvas drawer, topbar, search dropdown, and bottom navigation bar (BNB) rules out of `admin.css` into `@layer layout` in `admin-shell.css`.
+  - Eliminated arbitrary body hacks (`body:not(.admin-page-dashboard):not(.admin-page-orders) ...`) by introducing the `.ab-page` container wrapper with fluid responsive gutters (`clamp(.75rem, 2.5vw, 2rem)`).
+  - Wired dynamic `$pageTone` derivation across navigation groups in `views/admin/layout/nav_config.php` and emitted `data-tone` on `.ab-page`.
+- **Responsive Breakpoint Unification (`assets/js/ab-kit.js`, `assets/js/admin.js`, `assets/css/admin-shell.css`)**:
+  - Unified fragmented breakpoint values (768px / 900px) to standardized shell breakpoints (`sm: 640px / 40rem`, `md: 1024px / 64rem`, `lg: 1440px / 90rem`).
+  - Added `AB.bp = { sm: 640, md: 1024, lg: 1440 };` to `ab-kit.js` and replaced all literal breakpoint comparisons in `admin.js`.
+- **Admin Utility Classes & Patterns Placeholder (`assets/css/admin-utilities.css`, `assets/css/admin-patterns.css`)**:
+  - Introduced standard layout utilities (`.ab-stack`, `.ab-cluster`, `.ab-grid`, `.ab-sr-only`, `.ab-nowrap`, `.ab-num`) in `@layer utilities`.
+  - Created placeholder `admin-patterns.css` for Phase 2 page archetypes.
+- **Ratchet Baseline Quality Gate Expansion (`tools/verify.php`, `tools/verify-baseline.json`)**:
+  - Expanded `tools/verify.php` with `bp_sync` (ensuring `AB.bp` in JS matches `admin-tokens.css`), `component_registry` (ensuring all components exist and are documented), and ratchet metrics for `css_media_page`, `css_important`, `css_transition_all`, `css_physical_dir`, `view_inline_style`, and `view_legacy_class`.
+  - Excluded `admin-tokens.css` from `css_root`/`css_hex` checks as the single source of truth, and updated `tools/verify-baseline.json`.
 
 ## 1.32.4 — 2026-10-05
 
@@ -105,28 +132,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Built zero-latency client-side autocomplete with real-time substring matching, keyboard arrow navigation (`ArrowDown`/`ArrowUp`), Enter/comma selection, and automatic new tag token creation.
   - Integrated "پیشنهادات پرتکرار" (popular tags cloud) enabling 1-click tag assignment.
   - Enqueued `admin-products.css` on `product_edit.php` in `views/admin/layout/header.php`.
-
-## 1.31.2 — 2026-10-04
-
-### Product Tags Service Bootstrap Registration & Workstation Stylesheet Attachment
-
-- **TagService Autoloading Registration (`app/bootstrap.php`)**:
-  - Registered `TagService.php` in the core application bootstrap service registry (`app/bootstrap.php`), eliminating fatal `Class "TagService" not found` errors and resolving HTTP 500 crashes when accessing `/admin/tags.php`.
-- **Tags Workstation Stylesheet Enqueuing (`views/admin/layout/header.php`)**:
-  - Updated admin layout stylesheet loader to include `admin-coupons.css` on `tags.php` in addition to `coupons.php`, ensuring complete visual styling for Bento KPI cards, high-density matrix tables, search toolbars, and tag creation modals.
-
-## 1.31.1 — 2026-10-04
-
-### Desktop Navigation Viewport Lock, Orders Scroll Isolation & UX Smooth ScrollIntoView
-
-- **Desktop Sidebar Viewport Lock & Scroll Bleed Isolation (`assets/css/admin.css`)**:
-  - Pinned `.admin-sidebar` to strict `height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; overflow: hidden;` eliminating page layout stretching when accordion groups are expanded.
-  - Set `.admin-sidebar-nav` to `flex: 1 1 auto; min-height: 0; overscroll-behavior: contain;` allowing the navigation accordion menu to independently scroll inside the sidebar while completely preventing scroll chaining/bleeding into the global page window.
-  - Adjusted desktop `.admin-main` bottom padding from legacy `95px` down to `24px` (`padding: 0 0 24px 0;`), preserving `padding-bottom: 92px` strictly for mobile screens under `@media (max-width: 900px)` for bottom navigation bar clearance.
-- **Orders Workspace Body Padding Containment (`assets/css/admin-orders.css`)**:
-  - Scoped the aggressive `padding-bottom: 95px` on `body.admin-page-orders` exclusively to mobile viewports (`@media (max-width: 900px)`), resetting desktop to `padding-bottom: 0`. This eliminates the window overscroll space that previously allowed sticky elements to be displaced ~95px off-screen when scrolling to the bottom of the orders table.
-- **Nested Main Tag Fix (`views/admin/orders.php`)**:
-  - Replaced invalid nested `<main class="dash-workspace">` with `<div class="dash-workspace">` and closed it properly before the admin layout footer, resolving DOM specification errors.
-- **Active Navigation UX Enhancement (`assets/js/admin.js`)**:
-  - Implemented automatic smooth `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` for `.nav-sub-item.active` upon initial sidebar hydration, guaranteeing the currently selected sub-page is immediately visible in view even if multiple parent navigation groups are open.
 
