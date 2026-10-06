@@ -4,7 +4,6 @@
  * Accessible to authenticated admin users. Strictly adheres to Rule 7 (Controller <80 lines).
  */
 
-requireLogin();
 requireAdmin();
 
 $pageTitle = 'کتابخانه مؤلفه‌ها و راهنمای استایل (UI Kit v2)';

@@ -5,6 +5,39 @@ For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 1.32.1 — 2026-10-04
+
+### DRY / SSoT Architecture Governance, Reuse-First Protocol & Front-End Ratchet Quality Gate
+
+- **Reuse-First Protocol & Architecture Governance (`AGENTS.md`, `.cursorrules`, `.github/copilot-instructions.md`)**:
+  - Added Rule 11 (Reuse-First Protocol & Anti-Duplication Invariant DRY/SSoT) to `AGENTS.md`. Mandates consulting the component registry prior to authoring UI interactions, strictly prohibits redundant helper functions, enforces declarative admin views (`data-ab-*`), and bounds inline view scripts to <= 20 lines.
+  - Enforced single source of truth for CSS tokens (forbidding competing `:root` declarations in component stylesheets) and harmonized controller soft ceiling (80 lines) and hard ceiling (120 lines) across all project documentation.
+- **Single Source of Truth Component Registry (`docs/COMPONENTS.md`)**:
+  - Established comprehensive UI and utility registry cataloging standard formatters (`toFaDigits`, `formatBytes`, `escapeHtml`, `formatPrice`), toast notifications, declarative modals, autocomplete tokenizers, live table filters, and image optimization tools.
+- **Front-End Ratchet Quality Gate (`tools/verify.php`, `tools/verify-baseline.json`, `.githooks/pre-commit`)**:
+  - Expanded `tools/verify.php` with Section 7: Anti-Duplication & Front-end Ratchet Baseline Guard. Scans for known duplicate functions, duplicate top-level JS symbols, inline script line budgets, and rogue CSS `:root` palettes.
+  - Introduced `tools/verify-baseline.json` locking current legacy debt across 78 metrics; verification fails on any regression or new un-baselined duplication. Added `--update-baseline` flag for ratchet-down savings.
+  - Installed local Git pre-commit hook in `.githooks/pre-commit` to prevent non-compliant commits.
+- **Agent Skills Scaffolding (`.agents/skills/`, `.claude/skills/`)**:
+  - Created `ab-socks-ui-kit` skill guiding front-end reuse and declarative patterns.
+  - Created `ab-socks-admin-page` skill providing the Golden Path for scaffolding admin workstations.
+  - Updated `ab-socks-workflow` and `ab-socks-refactor` to align with the new quality gates.
+
+## 1.32.0 — 2026-10-04
+
+### Product Tags Catalog Integration, Smart Tag Search & Interactive Tag Tokenizer Autocomplete
+
+- **Catalog Tag Filtering & Smart Search (`app/services/ProductService.php`, `app/controllers/admin/products.php`, `views/admin/products.php`, `views/admin/tags.php`)**:
+  - Implemented direct `tag_id` filtering in `ProductService::getProductsCatalog()` via performant subquery (`EXISTS (SELECT 1 FROM product_tags ...)`).
+  - Upgraded general text search (`q`) to automatically match product tags (`tags.name` and `tags.slug`) in addition to titles and SKU codes, ensuring search queries like "نخی" or "پنبه" locate all tagged catalog items.
+  - Linked the "محصولات متصل" counter in `views/admin/tags.php` directly to `/admin/products.php?tag_id=...`, eliminating empty search results.
+  - Added dedicated Tag Filter dropdown in the products catalog filter toolbar and an active dismissible filter banner (`[ فیلتر برچسب فعال: «...» ✕ ]`).
+- **Interactive Tag Tokenizer & Live Autocomplete Workstation (`views/admin/product_edit.php`, `assets/css/admin-products.css`)**:
+  - Replaced legacy static checkboxes and plain comma-separated text input with a modern Tag Tokenizer component.
+  - Built zero-latency client-side autocomplete with real-time substring matching, keyboard arrow navigation (`ArrowDown`/`ArrowUp`), Enter/comma selection, and automatic new tag token creation.
+  - Integrated "پیشنهادات پرتکرار" (popular tags cloud) enabling 1-click tag assignment.
+  - Enqueued `admin-products.css` on `product_edit.php` in `views/admin/layout/header.php`.
+
 ## 1.31.2 — 2026-10-04
 
 ### Product Tags Service Bootstrap Registration & Workstation Stylesheet Attachment
