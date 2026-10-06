@@ -252,8 +252,9 @@
             return;
         }
 
-        // Close on backdrop click (when clicking outside the modal content container)
-        if (e.target.classList.contains('admin-modal') ||
+        // Close on backdrop click (when clicking outside the modal content container or native dialog backdrop)
+        if (e.target.tagName === 'DIALOG' ||
+            e.target.classList.contains('admin-modal') ||
             e.target.classList.contains('admin-modal-backdrop') ||
             e.target.classList.contains('fin-modal-overlay') ||
             e.target.classList.contains('cpn-modal-overlay') ||
@@ -864,6 +865,66 @@
             });
         }
     };
+
+    // =========================================================================
+    // 6. Split View Workstation Layout (AB.split & [data-ab-split])
+    // =========================================================================
+    AB.split = {
+        /**
+         * Switches split container to detail pane view.
+         * @param {HTMLElement|string} container
+         * @param {string} [detailId]
+         */
+        showDetail: function (container, detailId) {
+            const split = typeof container === 'string' ? document.getElementById(container) : container;
+            if (!split) return;
+            split.setAttribute('data-split-view', 'detail');
+            if (detailId) {
+                const panes = split.querySelectorAll('[data-split-pane]');
+                panes.forEach(function (p) {
+                    p.hidden = (p.getAttribute('data-split-pane') !== detailId);
+                });
+            }
+            split.dispatchEvent(new CustomEvent('ab:split:detail', { bubbles: true, detail: { split, detailId } }));
+        },
+
+        /**
+         * Switches split container back to master list view.
+         * @param {HTMLElement|string} container
+         */
+        showMaster: function (container) {
+            const split = typeof container === 'string' ? document.getElementById(container) : container;
+            if (!split) return;
+            split.setAttribute('data-split-view', 'master');
+            split.dispatchEvent(new CustomEvent('ab:split:master', { bubbles: true, detail: { split } }));
+        }
+    };
+
+    // Delegated click handlers for split view interactions
+    document.addEventListener('click', function (e) {
+        const selectTrigger = e.target.closest('[data-ab-split-select]');
+        if (selectTrigger) {
+            const split = selectTrigger.closest('.ab-split, [data-ab-split]');
+            if (split) {
+                const targetPane = selectTrigger.getAttribute('data-ab-split-select');
+                split.querySelectorAll('[data-ab-split-select]').forEach(function (el) {
+                    el.classList.remove('is-active', 'active');
+                });
+                selectTrigger.classList.add('is-active', 'active');
+                AB.split.showDetail(split, targetPane);
+            }
+            return;
+        }
+
+        const backTrigger = e.target.closest('[data-ab-split-back]');
+        if (backTrigger) {
+            e.preventDefault();
+            const split = backTrigger.closest('.ab-split, [data-ab-split]');
+            if (split) {
+                AB.split.showMaster(split);
+            }
+        }
+    });
 
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {

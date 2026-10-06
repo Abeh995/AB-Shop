@@ -240,6 +240,12 @@ $pageTone = $pageTone ?? 'brand';
 
         <div class="ab-page" data-tone="<?= e($pageTone) ?>">
             <?php if ($flash): ?>
-                <div class="ab-flash alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+                <div class="ab-flash">
+                    <?php component('alert', [
+                        'state'       => $flash['type'] ?? 'info',
+                        'message'     => $flash['message'] ?? '',
+                        'dismissible' => true,
+                    ]); ?>
+                </div>
             <?php endif; ?>
 

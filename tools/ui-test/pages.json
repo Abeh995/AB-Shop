@@ -256,6 +256,13 @@
       "path": "/admin/login.php",
       "archetype": "workstation",
       "auth": false
+    },
+    {
+      "id": "ui_kit",
+      "name": "راهنمای استایل و کیت رابط کاربری",
+      "path": "/admin/ui-kit.php",
+      "archetype": "list",
+      "auth": true
     }
   ]
 }

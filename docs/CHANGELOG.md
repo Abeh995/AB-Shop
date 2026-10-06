@@ -7,6 +7,28 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.34.0 — 2026-10-07
+
+### Admin Component Library v2 & UI Kit Showcase (Phase 2)
+
+- **Reusable Presentation Component Library (`views/admin/components/`, `assets/css/admin-components.css`)**:
+  - Implemented 13 new server-side presentation components and modernized 5 existing components under strict layer boundaries (0 SQL, 0 `$_POST` mutations): `button`, `form_field`, `card`, `page_header`, `toolbar`, `pagination`, `data_table`, `alert`, `modal`, `drawer`, `savebar`, `definition_list`, `progress`, `kpi_card`, `kpi_grid`, `badge`, `empty_state`, `nav_tabs`.
+  - Added `render_component(string $name, array $props)` helper to `app/core/functions.php` for string buffering.
+  - Rewrote `assets/css/admin-components.css` inside `@layer components` using 100% tokens and RTL logical properties with 0 raw hex codes, 0 `:root` overrides, and 0 `!important`.
+- **Intrinsic Responsiveness & Container Query Model**:
+  - Established inline container queries on `.ab-card`, `.ab-table-wrap`, `.ab-kpi-card`, and `.ab-split`.
+  - Implemented `data_table` dual responsiveness: `data-mode="stack"` (turns rows into cards with `data-label` captions below 40rem container width) and `data-mode="scroll"` (sticky first column for financial data) with 3-tier priority column hiding.
+- **Native HTML5 Dialogs & Split View Interaction (`assets/js/ab-kit.js`)**:
+  - Upgraded modals and side drawers to native `<dialog>` elements rendered in browser top layer with auto-closing backdrop support, maintaining backward compatibility for legacy `.admin-modal` structures.
+  - Implemented `AB.split` master-detail layout engine (48 lines) with declarative switching (`data-split-view`, `data-ab-split-select`, `data-ab-split-back`).
+- **Interactive UI Kit Living Style Guide (`admin/ui-kit.php`, `app/controllers/admin/ui_kit.php`, `views/admin/ui-kit.php`)**:
+  - Deployed comprehensive living style guide and edge-case stress test workstation at `/admin/ui-kit.php`, accessible to authenticated admins and linked from Diagnostics.
+  - Showcases all components across default, disabled, loading, invalid, empty, long unbroken token, long RTL Persian text, and multi-column states.
+- **Architectural Documentation & Verification Quality Gate**:
+  - Documented complete component contracts, properties, and usage examples in `docs/COMPONENTS.md`.
+  - Updated `docs/DESIGN.md` Admin UI migration status table and CSS layering architecture.
+  - Enhanced `tools/verify.php` with `ui_kit_coverage` guard ensuring 100% component coverage in the UI Kit.
+
 ## 1.33.0 — 2026-10-05
 
 ### Admin Design System Foundation: CSS Layers, Tokens, Reset, Shell & Breakpoint Unification (Phase 1)

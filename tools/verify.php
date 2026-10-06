@@ -473,6 +473,25 @@ if (is_dir($compDir)) {
     if (empty($compMissingDocs) && empty($compMissingFiles)) {
         pass("Component registry verified: all components documented in docs/COMPONENTS.md, all component() calls resolve to templates.");
     }
+
+    // 7.1.3 UI Kit Coverage Guard (ui_kit_coverage)
+    $uiKitViewFile = $root . '/views/admin/ui-kit.php';
+    if (file_exists($uiKitViewFile)) {
+        $uiKitViewContent = file_get_contents($uiKitViewFile);
+        $uncoveredComps = [];
+        foreach ($compFiles as $cf) {
+            $cname = basename($cf, '.php');
+            if (!str_contains($uiKitViewContent, "'{$cname}'") && !str_contains($uiKitViewContent, "\"{$cname}\"")) {
+                $uncoveredComps[] = $cname;
+            }
+        }
+        if (!empty($uncoveredComps)) {
+            fail("Component(s) missing from views/admin/ui-kit.php showcase: " . implode(', ', $uncoveredComps));
+            $errors++;
+        } else {
+            pass("UI Kit coverage verified: all " . count($compFiles) . " components appear in views/admin/ui-kit.php.");
+        }
+    }
 }
 
 // 7.2 Compute Current Front-end Metrics

@@ -48,5 +48,10 @@ $clockClass = ($clock['is_synced'] ?? false) ? 'success' : 'danger';
         <span class="diag-badge" title="نسخه فعال موتور PHP">
             PHP v<?= e($php['version'] ?? PHP_VERSION) ?>
         </span>
+
+        <!-- UI Kit Link Badge -->
+        <a href="ui-kit.php" class="diag-badge" title="مشاهده راهنمای استایل و کتابخانه مؤلفه‌های سیستم (UI Kit v2)">
+            کیت رابط کاربری (UI Kit) ↗
+        </a>
     </div>
 </div>

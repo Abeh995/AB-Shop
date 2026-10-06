@@ -95,6 +95,18 @@
     font-size: var(--text-lg);
   }
 
+  .ab-text-start {
+    text-align: start;
+  }
+
+  .ab-text-center {
+    text-align: center;
+  }
+
+  .ab-text-end {
+    text-align: end;
+  }
+
   /* ========================================================================
      3. Accessibility & Visibility Helpers
      ======================================================================== */

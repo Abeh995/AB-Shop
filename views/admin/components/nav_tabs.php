@@ -1,13 +1,14 @@
 <?php
 /**
- * Master Navigation Tabs Component (views/admin/components/nav_tabs.php)
- * Renders tab pills supporting either data-tab buttons or anchor links.
+ * Master Navigation Tabs Presentation Component (views/admin/components/nav_tabs.php)
+ * Pure presentation component: 0 SQL, 0 $_POST (Rule 7).
  *
- * @var array<int, array> $tabs  Array of tab definitions
- * @var string|null $activeTab   Active tab key
- * @var string|null $class       Optional nav CSS class
- * @var string|null $id          Optional nav ID
- * @var string|null $ariaLabel   Accessibility label
+ * @var array<int, array> $tabs      Array of tab definitions
+ * @var string|null       $activeTab Active tab key
+ * @var string|null       $class     Nav CSS class
+ * @var string|null       $btnClass  Button extra class
+ * @var string|null       $id        Nav ID
+ * @var string|null       $ariaLabel Accessibility label
  */
 
 $currentActive = $activeTab ?? '';

@@ -170,14 +170,29 @@ Don't reskin the whole site in one change on a live store:
 
 Baseline measured as part of `ADMIN-UI-PLAN.md` Phase 0 (version 1.32.4). This table tracks the progress of the admin design system unification across phases.
 
-| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 1 — v1.33.0) |
+| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 2 — v1.34.0) |
 |---|---|---|---|
-| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | 15,999 lines (21 files, layers established) |
-| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 902 occurrences outside `admin-tokens.css` (377 removed) |
+| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | ~16,900 lines (21 files, layers & v2 kit established) |
+| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 844 occurrences outside `admin-tokens.css` (435 removed; `admin-components.css` has 0 hex) |
 | Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 14 blocks (admin.css :root unified into tokens) |
-| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences |
+| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences (zero added in UI Kit views) |
 | Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | Shell unified at `sm`, `md`, `lg` (`admin.js` literals removed) |
-| Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 0 (Component library v2 in Phase 2) |
-| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 (Phase 1: Tokens, Base, Shell only) |
+| Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 4 active containers (`.ab-card`, `.ab-table-wrap`, `.ab-kpi-card`, `.ab-split`) |
+| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 (Component Library v2 & UI Kit ready for pilot migration) |
+
+---
+
+## Admin CSS Layering & Tone Architecture (v2)
+
+The administrative workstation interface operates on an 8-layer CSS cascade:
+```css
+@layer reset, tokens, base, layout, components, patterns, pages, utilities;
+```
+
+- **Tokens (`assets/css/admin-tokens.css`)**: Primitives, semantic surfaces, and 9 domain tones (`brand`, `blue`, `sky`, `emerald`, `amber`, `rose`, `purple`, `teal`, `slate`).
+- **Components (`assets/css/admin-components.css`)**: 100% token-driven reusable components (`.ab-btn`, `.ab-field`, `.ab-card`, `.ab-table`, `.ab-kpi`, `.ab-badge`, `.ab-alert`, `<dialog>` modals & drawers, `.ab-split`, `.ab-savebar`, `.ab-dl`, `.ab-progress`).
+- **Archetype Patterns (`assets/css/admin-patterns.css`)**: Standardized layouts for List, Dashboard, Form/Edit, and Workstation pages.
+- **Intrinsic Responsiveness**: Layout decisions are decoupled from viewport media queries; components adapt intrinsically to their container inline size (`@container`).
+- **Showcase & Test Harness**: Available at `/admin/ui-kit.php` (linked from Diagnostics).
 
 

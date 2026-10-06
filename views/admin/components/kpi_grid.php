@@ -1,11 +1,11 @@
 <?php
 /**
- * Bento KPI Grid Component (views/admin/components/kpi_grid.php)
- * Renders multiple KPI cards inside a responsive grid layout.
+ * Bento KPI Grid Presentation Component (views/admin/components/kpi_grid.php)
+ * Pure presentation component: 0 SQL, 0 $_POST (Rule 7).
  *
- * @var array<int, array> $cards  Array of kpi_card prop dictionaries
- * @var string|null $class       Optional additional grid CSS class
- * @var string|null $id          Optional grid ID
+ * @var array<int, array> $cards Array of kpi_card prop dictionaries
+ * @var string|null       $class Extra grid CSS class
+ * @var string|null       $id    Grid ID
  */
 
 $extraClass = !empty($class) ? ' ' . e($class) : '';

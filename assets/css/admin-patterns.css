@@ -1,9 +1,97 @@
 /**
  * AB-Socks Admin Page Patterns (assets/css/admin-patterns.css)
  * Page archetypes: List, Dashboard, Form/Edit, Workstation.
- * Baseline placeholder for Phase 1; populated in Phase 2.
+ *
+ * Rules:
+ * - Wrapped in @layer patterns
+ * - 100% token-driven, ZERO raw hex colors
+ * - RTL logical properties
  */
 
 @layer patterns {
-  /* Page Archetypes to be populated in Phase 2 */
+
+  /* ========================================================================
+     1. List Archetype (.ab-pattern-list)
+     Composition: Page Header -> KPI Grid? -> Card(Toolbar + Table + Pagination)
+     ======================================================================== */
+
+  .ab-pattern-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .ab-pattern-list__table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  /* ========================================================================
+     2. Dashboard Archetype (.ab-pattern-dashboard)
+     Composition: Page Header -> KPI Grid -> Grid of Cards
+     ======================================================================== */
+
+  .ab-pattern-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .ab-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+    gap: var(--space-5);
+  }
+
+  .ab-dashboard-grid--wide {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 32rem), 1fr));
+  }
+
+
+  /* ========================================================================
+     3. Form / Edit Archetype (.ab-pattern-form, .ab-form)
+     Composition: Page Header -> Cards of Form Grids -> Sticky Save Bar
+     ======================================================================== */
+
+  .ab-pattern-form,
+  .ab-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .ab-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .ab-form-section__title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    padding-block-end: var(--space-2);
+    border-block-end: 1px solid var(--border-subtle);
+  }
+
+
+  /* ========================================================================
+     4. Workstation Archetype (.ab-pattern-workstation)
+     Composition: Custom Split View / Master-Detail / Toolbar Workspaces
+     ======================================================================== */
+
+  .ab-pattern-workstation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: calc(100dvh - 9rem);
+  }
+
 }

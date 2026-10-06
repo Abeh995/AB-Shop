@@ -708,6 +708,20 @@ function component(string $name, array $props = []): void
 }
 
 /**
+ * Renders an admin presentation component and captures its HTML output as a string.
+ *
+ * @param string $name Component name in views/admin/components/
+ * @param array $props Component property values
+ * @return string Rendered HTML
+ */
+function render_component(string $name, array $props = []): string
+{
+    ob_start();
+    component($name, $props);
+    return (string) ob_get_clean();
+}
+
+/**
  * Generates an asset URL with automated cache-busting based on file modification time.
  *
  * @param string $path Relative path from web root (e.g. '/assets/css/admin.css' or 'assets/js/ab-kit.js')
