@@ -436,14 +436,29 @@ require APP_ROOT . '/views/admin/layout/header.php';
     <div class="ab-split" id="demoSplitWorkspace" data-split-view="master">
         <div class="ab-split__master">
             <div class="ab-toolbar">
-                <span class="ab-text-sm ab-text-muted">فهرست پیام‌ها (Master)</span>
+                <span class="ab-text-sm ab-text-muted">فهرست سفارش‌ها (Master)</span>
+                <?php component('badge', ['label' => '۲ مورد', 'state' => 'muted']); ?>
             </div>
-            <div class="ab-stack ab-stack--xs ab-card__body">
-                <button type="button" class="ab-btn ab-btn--ghost is-active" data-ab-split-select="pane-1">
-                    <span>سفارش شماره ۱۰۸۸</span>
+            <div class="ab-split__list">
+                <button type="button" class="ab-split__item is-active" data-ab-split-select="pane-1" aria-selected="true">
+                    <div class="ab-split__item-header">
+                        <span class="ab-split__item-title">سفارش شماره ۱۰۸۸</span>
+                        <?php component('badge', ['label' => 'ارسال شده', 'state' => 'success']); ?>
+                    </div>
+                    <div class="ab-split__item-meta">
+                        <span>علی رضایی</span>
+                        <strong>۲۴۰,۰۰۰ تومان</strong>
+                    </div>
                 </button>
-                <button type="button" class="ab-btn ab-btn--ghost" data-ab-split-select="pane-2">
-                    <span>سفارش شماره ۱۰۸۹</span>
+                <button type="button" class="ab-split__item" data-ab-split-select="pane-2" aria-selected="false">
+                    <div class="ab-split__item-header">
+                        <span class="ab-split__item-title">سفارش شماره ۱۰۸۹</span>
+                        <?php component('badge', ['label' => 'در انتظار پرداخت', 'state' => 'warning']); ?>
+                    </div>
+                    <div class="ab-split__item-meta">
+                        <span>فاطمه موسوی</span>
+                        <strong>۱۸۵,۰۰۰ تومان</strong>
+                    </div>
                 </button>
             </div>
         </div>
@@ -453,27 +468,82 @@ require APP_ROOT . '/views/admin/layout/header.php';
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
                     بازگشت به فهرست
                 </button>
-                <span class="ab-text-sm ab-text-muted">جزئیات آیتم انتخابی (Detail)</span>
+                <span class="ab-text-sm ab-text-muted">جزئیات سفارش انتخابی (Detail)</span>
             </div>
-            <div class="ab-card__body" data-split-pane="pane-1">
-                <h4>جزئیات سفارش ۱۰۸۸</h4>
-                <?php component('definition_list', [
-                    'items' => [
-                        ['label' => 'نام خریدار:', 'value' => 'علی رضایی'],
-                        ['label' => 'شماره تماس:', 'value' => '۰۹۱۲۳۴۵۶۷۸۹'],
-                        ['label' => 'مبلغ کل:', 'value' => '۲۴۰,۰۰۰ تومان'],
-                    ],
-                ]); ?>
+
+            <div class="ab-split__pane" data-split-pane="pane-1">
+                <div class="ab-split__pane-header">
+                    <div class="ab-stack ab-stack--xs">
+                        <h4 class="ab-split__pane-title">
+                            جزئیات سفارش ۱۰۸۸
+                            <?php component('badge', ['label' => 'ارسال شده', 'state' => 'success', 'dot' => true]); ?>
+                        </h4>
+                        <span class="ab-text-xs ab-text-muted">ثبت شده در ۱۵ مهر ۱۴۰۳ — ساعت ۱۱:۳۰</span>
+                    </div>
+                    <div class="ab-split__pane-actions">
+                        <?php component('button', [
+                            'label'   => 'چاپ فاکتور',
+                            'variant' => 'outline',
+                            'size'    => 'sm',
+                            'attrs'   => ['onclick' => "AB.toast('دستور چاپ فاکتور صادر گردید.', 'info')"],
+                        ]); ?>
+                        <?php component('button', [
+                            'label'   => 'ویرایش وضعیت',
+                            'variant' => 'secondary',
+                            'size'    => 'sm',
+                        ]); ?>
+                    </div>
+                </div>
+
+                <div class="ab-split__pane-section">
+                    <h5 class="ab-split__pane-section-title">اطلاعات خریدار و تحویلگیرنده</h5>
+                    <?php component('definition_list', [
+                        'items' => [
+                            ['label' => 'نام خریدار:', 'value' => 'علی رضایی'],
+                            ['label' => 'شماره تماس:', 'value' => '۰۹۱۲۳۴۵۶۷۸۹'],
+                            ['label' => 'مبلغ کل:', 'value' => '۲۴۰,۰۰۰ تومان'],
+                            ['label' => 'روش پرداخت:', 'value' => 'درگاه آنلاین (شاپرک)'],
+                            ['label' => 'کد رهگیری پستی:', 'value' => '۳۹۴۸۲۰۰۲۹۱۸۲۳'],
+                        ],
+                    ]); ?>
+                </div>
             </div>
-            <div class="ab-card__body" data-split-pane="pane-2" hidden>
-                <h4>جزئیات سفارش ۱۰۸۹</h4>
-                <?php component('definition_list', [
-                    'items' => [
-                        ['label' => 'نام خریدار:', 'value' => 'فاطمه موسوی'],
-                        ['label' => 'شماره تماس:', 'value' => '۰۹۳۵۰۰۰۱۱۲۲'],
-                        ['label' => 'مبلغ کل:', 'value' => '۱۸۵,۰۰۰ تومان'],
-                    ],
-                ]); ?>
+
+            <div class="ab-split__pane" data-split-pane="pane-2" hidden>
+                <div class="ab-split__pane-header">
+                    <div class="ab-stack ab-stack--xs">
+                        <h4 class="ab-split__pane-title">
+                            جزئیات سفارش ۱۰۸۹
+                            <?php component('badge', ['label' => 'در انتظار پرداخت', 'state' => 'warning', 'dot' => true]); ?>
+                        </h4>
+                        <span class="ab-text-xs ab-text-muted">ثبت شده در ۱۴ مهر ۱۴۰۳ — ساعت ۱۹:۴۵</span>
+                    </div>
+                    <div class="ab-split__pane-actions">
+                        <?php component('button', [
+                            'label'   => 'ثبت فیش واریزی',
+                            'variant' => 'primary',
+                            'size'    => 'sm',
+                        ]); ?>
+                        <?php component('button', [
+                            'label'   => 'لغو سفارش',
+                            'variant' => 'ghost',
+                            'size'    => 'sm',
+                        ]); ?>
+                    </div>
+                </div>
+
+                <div class="ab-split__pane-section">
+                    <h5 class="ab-split__pane-section-title">اطلاعات خریدار و تحویلگیرنده</h5>
+                    <?php component('definition_list', [
+                        'items' => [
+                            ['label' => 'نام خریدار:', 'value' => 'فاطمه موسوی'],
+                            ['label' => 'شماره تماس:', 'value' => '۰۹۳۵۰۰۰۱۱۲۲'],
+                            ['label' => 'مبلغ کل:', 'value' => '۱۸۵,۰۰۰ تومان'],
+                            ['label' => 'روش پرداخت:', 'value' => 'کارت به کارت'],
+                            ['label' => 'وضعیت فیش:', 'value' => 'در انتظار بارگذاری تصویر فیش'],
+                        ],
+                    ]); ?>
+                </div>
             </div>
         </div>
     </div>

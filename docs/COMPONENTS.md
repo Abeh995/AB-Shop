@@ -122,11 +122,28 @@ Manages master/detail collapsing on narrow screens:
 ```html
 <div class="ab-split" data-split-view="master">
     <div class="ab-split__master">
-        <button type="button" data-ab-split-select="pane-1">انتخاب آیتم ۱</button>
+        <div class="ab-toolbar">
+            <span class="ab-text-sm">فهرست آیتم‌ها</span>
+        </div>
+        <div class="ab-split__list">
+            <button type="button" class="ab-split__item is-active" data-ab-split-select="pane-1">
+                <div class="ab-split__item-header">
+                    <span class="ab-split__item-title">عنوان آیتم ۱</span>
+                </div>
+                <div class="ab-split__item-meta">
+                    <span>زیرعنوان</span>
+                </div>
+            </button>
+        </div>
     </div>
     <div class="ab-split__detail">
-        <button type="button" class="ab-split__back" data-ab-split-back>بازگشت</button>
-        <div data-split-pane="pane-1">محتوا</div>
+        <div class="ab-toolbar">
+            <button type="button" class="ab-split__back" data-ab-split-back>بازگشت</button>
+            <span>جزئیات</span>
+        </div>
+        <div class="ab-split__pane" data-split-pane="pane-1">
+            <!-- Structured detail content -->
+        </div>
     </div>
 </div>
 ```

@@ -926,6 +926,35 @@
         }
     });
 
+    // Delegated click handlers for mobile sidebar drawer
+    document.addEventListener('click', function (e) {
+        const toggleTrigger = e.target.closest('[data-ab-sidebar-toggle]');
+        if (toggleTrigger && toggleTrigger.id !== 'adminMobileMenuBtn') {
+            e.preventDefault();
+            if (window.AB && window.AB.sidebar) {
+                window.AB.sidebar.toggle();
+            }
+            return;
+        }
+
+        const openTrigger = e.target.closest('[data-ab-sidebar-open]');
+        if (openTrigger) {
+            e.preventDefault();
+            if (window.AB && window.AB.sidebar) {
+                window.AB.sidebar.open();
+            }
+            return;
+        }
+
+        const closeTrigger = e.target.closest('[data-ab-sidebar-close]');
+        if (closeTrigger) {
+            e.preventDefault();
+            if (window.AB && window.AB.sidebar) {
+                window.AB.sidebar.close();
+            }
+        }
+    });
+
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {

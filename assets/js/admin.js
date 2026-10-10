@@ -7,11 +7,17 @@
 (function () {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function initAdmin() {
         initAdminGlobalSearch();
         initLiveClock();
         initAdminSidebar();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAdmin);
+    } else {
+        initAdmin();
+    }
 
     function initAdminGlobalSearch() {
         var searchInput = document.getElementById('adminGlobalSearch');
@@ -424,6 +430,111 @@
             setTimeout(function () {
                 activeSub.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             }, 100);
+        }
+
+        // 3. Mobile Off-Canvas Drawer Controller (< 1024px)
+        var mobileMenuBtn = document.getElementById('adminMobileMenuBtn');
+        var sidebarCloseBtn = document.getElementById('adminSidebarCloseBtn');
+        var backdropEl = document.getElementById('adminSidebarBackdrop');
+
+        var openMobileDrawer = function () {
+            if (!sidebar) return;
+            sidebar.classList.add('is-open');
+            document.body.classList.add('admin-mobile-nav-open');
+            document.documentElement.classList.add('admin-mobile-nav-open');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.setAttribute('aria-expanded', 'true');
+            }
+            sidebar.setAttribute('aria-hidden', 'false');
+            if (sidebarCloseBtn) {
+                setTimeout(function () {
+                    sidebarCloseBtn.focus();
+                }, 50);
+            }
+        };
+
+        var closeMobileDrawer = function () {
+            if (!sidebar) return;
+            sidebar.classList.remove('is-open');
+            document.body.classList.remove('admin-mobile-nav-open');
+            document.documentElement.classList.remove('admin-mobile-nav-open');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuBtn.focus();
+            }
+            if (isMobileView()) {
+                sidebar.setAttribute('aria-hidden', 'true');
+            } else {
+                sidebar.removeAttribute('aria-hidden');
+            }
+        };
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (sidebar.classList.contains('is-open')) {
+                    closeMobileDrawer();
+                } else {
+                    openMobileDrawer();
+                }
+            });
+        }
+
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeMobileDrawer();
+            });
+        }
+
+        if (backdropEl) {
+            backdropEl.addEventListener('click', function (e) {
+                e.preventDefault();
+                closeMobileDrawer();
+            });
+        }
+
+        // Close on clicking a navigation item link on mobile view
+        sidebar.addEventListener('click', function (e) {
+            if (!isMobileView()) return;
+            var link = e.target.closest('a');
+            if (link) {
+                closeMobileDrawer();
+            }
+        });
+
+        // Close mobile drawer on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && isMobileView() && sidebar.classList.contains('is-open')) {
+                closeMobileDrawer();
+            }
+        });
+
+        // Window resize: auto-close drawer and clear attributes if expanding to desktop
+        window.addEventListener('resize', function () {
+            if (!isMobileView()) {
+                if (sidebar.classList.contains('is-open')) {
+                    closeMobileDrawer();
+                }
+                sidebar.removeAttribute('aria-hidden');
+            }
+        });
+
+        // Register AB.sidebar into global client kit
+        if (window.AB) {
+            window.AB.sidebar = {
+                open: openMobileDrawer,
+                close: closeMobileDrawer,
+                toggle: function () {
+                    if (sidebar.classList.contains('is-open')) {
+                        closeMobileDrawer();
+                    } else {
+                        openMobileDrawer();
+                    }
+                }
+            };
         }
     }
 })();

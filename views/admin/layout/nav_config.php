@@ -197,20 +197,25 @@ if (!function_exists('adminTones')) {
 if (!function_exists('shouldShowAdminBottomNav')) {
     /**
      * Determines whether the Mobile Bottom Navigation Bar (BNB) should render.
-     * BNB is strictly displayed on the 5 primary hubs on mobile/tablet viewports,
-     * and omitted on sub-pages/editors to prevent layer collisions with sticky action bars.
+     * BNB is rendered across all general overview, list, and dashboard pages on mobile/tablet viewports,
+     * and omitted on full-screen editors and workstations with sticky bottom action bars
+     * to prevent layer collisions and touch target interference.
      */
     function shouldShowAdminBottomNav(string $currentPage): bool
     {
-        $primaryHubs = [
-            'index.php',
-            'dashboard.php',
-            'orders.php',
-            'products.php',
-            'finance_dashboard.php',
-            'settings.php',
+        $stickyActionPages = [
+            'product_edit.php',
+            'expense_edit.php',
+            'gift_item_edit.php',
+            'shipping_method_edit.php',
+            'sms_pattern_edit.php',
+            'theme_edit.php',
+            'order_detail.php',
+            'card_to_card_payments.php',
+            'email_compose.php',
+            'pricing.php',
         ];
 
-        return in_array($currentPage, $primaryHubs, true);
+        return !in_array($currentPage, $stickyActionPages, true);
     }
 }

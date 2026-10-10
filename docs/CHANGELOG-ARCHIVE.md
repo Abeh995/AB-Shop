@@ -1,9 +1,39 @@
-# Changelog Archive (v1.0.0 — v1.31.2)
+# Changelog Archive (v1.0.0 — v1.32.2)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.31.2.
+Historical release notes for AB-Socks versions 1.0.0 through 1.32.2.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.32.2 — 2026-10-04
+
+### AB-Kit Front-End Framework, Presentation Components Engine & Comprehensive DRY/SSoT Refactoring
+
+- **Unified Front-End Library (`assets/js/ab-kit.js`)**:
+  - Implemented the canonical client kit providing Single Source of Truth for formatters (`AB.fmt.faDigits`, `AB.fmt.price`, `AB.fmt.bytes`, `AB.fmt.esc`, `AB.fmt.normalizeText`).
+  - Built unified Toast Notification Center (`AB.toast` / `window.showToast`) with CSS transitions and accessible ARIA attributes.
+  - Implemented declarative modal system (`AB.modal` via `data-ab-modal-open` / `data-ab-modal-close`) and live client-side table filter (`AB.tableFilter` via `data-ab-table-filter`).
+  - Added lightweight CSRF-aware AJAX fetch helper (`AB.api`).
+- **Provider-Based Search Architecture (`app/services/SearchService.php`, `ajax/admin_search.php`, `AB.autocomplete`)**:
+  - Extracted inline search logic into extensible `SearchService` supporting pluggable providers (`tags`, `products`, `customers`, `orders`).
+  - Refactored `ajax/admin_search.php` to a lean 22-line proxy.
+  - Built multi-token autocomplete and live suggestions in `ab-kit.js`.
+- **Server-Side Presentation Component Engine (`app/core/functions.php`, `views/admin/components/`)**:
+  - Introduced global `component(string $name, array $props)` presentation renderer.
+  - Built reusable, zero-DB presentation components: `kpi_card`, `kpi_grid`, `nav_tabs`, `empty_state`, and `badge`.
+  - Migrated partial templates across 9 admin workstations (`coupons`, `gift_items`, `users`, `shipping_methods`, `sms_patterns`, `appearance`, `diagnostics`, `settings`, `expenses`).
+- **CSS Design Tokens & Shared Component Kit (`assets/css/admin.css`, `assets/css/admin-components.css`)**:
+  - Consolidated all admin color, radius, and shadow tokens into `:root` in `admin.css`.
+  - Created standalone component stylesheet `admin-components.css` enqueued globally.
+  - Introduced cache-busting asset helpers `asset()` and `assetUrl()` in `app/core/functions.php` with mtime timestamping.
+- **Inline Script Extraction & Ratchet Debt Paydown (`assets/js/admin-*.js`, `tools/verify-baseline.json`)**:
+  - Extracted over 1,100 lines of heavy inline JavaScript into modular external scripts:
+    - `assets/js/admin-orders.js` (orders table drawer, receipt modal, copy actions).
+    - `assets/js/admin-c2c.js` (card-to-card inspection workstation, split modal, zoom/rotate, keyboard shortcuts).
+    - `assets/js/admin-order-detail.js` (order detail gallery lightbox, swipe navigation, receipt zoom, postal label copy).
+    - `assets/js/admin-product-edit.js` (variant row manager, live profit margin calculator, tag tokenizer binding).
+  - Passed dynamic server data using `<script type="application/json" id="...">` data islands.
+  - Reduced technical debt across 8 metrics in `tools/verify-baseline.json` via `php tools/verify.php --update-baseline`.
 
 ## 1.32.1 — 2026-10-04
 

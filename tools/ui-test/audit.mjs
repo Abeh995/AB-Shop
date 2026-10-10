@@ -41,6 +41,7 @@ const filterViewports = filterVpArg ? filterVpArg.split(',').map((s) => s.trim()
 
 const HEADED = hasFlag('--headed') || hasFlag('--no-headless');
 const UPDATE_SNAPSHOTS = hasFlag('--update-snapshots');
+const FRESH_AUTH = hasFlag('--fresh-auth') || hasFlag('--force-login');
 
 // ---------------------------------------------------------------------------
 // 2. Load Page Inventory & Parameters
@@ -145,6 +146,10 @@ fs.mkdirSync(authDir, { recursive: true });
 // ---------------------------------------------------------------------------
 
 async function ensureAuthenticated(browser) {
+  if (FRESH_AUTH && fs.existsSync(authStateFile)) {
+    try { fs.unlinkSync(authStateFile); } catch (_) {}
+  }
+
   if (fs.existsSync(authStateFile)) {
     try {
       const stats = fs.statSync(authStateFile);
@@ -170,20 +175,29 @@ async function ensureAuthenticated(browser) {
       await passInput.first().fill(ADMIN_PASS);
 
       await Promise.all([
-        page.waitForNavigation({ timeout: 10000 }).catch(() => null),
+        page.waitForURL((url) => !url.pathname.includes('login.php'), { timeout: 12000 }).catch(() => null),
         page.locator('button[type="submit"], input[type="submit"]').first().click(),
       ]);
     }
 
     // Verify authentication by checking redirect away from login.php
     if (page.url().includes('login.php')) {
-      console.warn(`[WARN] Login page did not redirect. Credentials may be invalid or session established.`);
+      const errorMsg = (await page.locator('.alert-error, .alert-danger, .alert').textContent().catch(() => '')) || '';
+      console.warn(`[WARN] Login page did not redirect. Error: "${errorMsg.trim()}". Credentials may be invalid.`);
+      if (fs.existsSync(authStateFile)) {
+        try { fs.unlinkSync(authStateFile); } catch (_) {}
+      }
+      return null;
     }
 
     await context.storageState({ path: authStateFile });
     console.log(`[AUTH] Authentication saved to ${authStateFile}`);
   } catch (err) {
-    console.warn(`[WARN] Automated login encountered an issue: ${err.message}. Proceeding with unauthenticated storage.`);
+    console.warn(`[WARN] Automated login encountered an issue: ${err.message}.`);
+    if (fs.existsSync(authStateFile)) {
+      try { fs.unlinkSync(authStateFile); } catch (_) {}
+    }
+    return null;
   } finally {
     await context.close();
   }
@@ -380,7 +394,7 @@ async function runAudit() {
         ignoreHTTPSErrors: true,
       };
 
-      if (pageDef.auth !== false && fs.existsSync(authState)) {
+      if (pageDef.auth !== false && authState && fs.existsSync(authState)) {
         contextOptions.storageState = authState;
       }
 
@@ -409,6 +423,10 @@ async function runAudit() {
 
       try {
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+
+        if (pageDef.auth !== false && pageDef.id !== 'login' && page.url().includes('login.php')) {
+          throw new Error(`Authentication failed: Target redirected to login.php`);
+        }
 
         // Apply font scale if specified
         if (vp.fontScale) {

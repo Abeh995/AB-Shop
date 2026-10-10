@@ -3,9 +3,30 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.32.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.32.3 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.34.2 — 2026-10-11
+
+### Admin Mobile Navigation Shell, DataTable Scroll Zoom Fix, Split View Polish & Native Dialog Transitions
+
+- **Admin Responsive Navigation Shell (`assets/css/admin-shell.css`, `assets/js/admin.js`, `views/admin/layout/header.php`, `views/admin/layout/nav_config.php`)**:
+  - Added accessible topbar mobile hamburger toggle button (`#adminMobileMenuBtn`) for viewports below `1024px` (`width < 64rem`).
+  - Implemented off-canvas drawer slide-out with backdrop overlay, keyboard `Escape` handler, and outside click dismiss for the sidebar on mobile and tablet devices.
+  - Resolved mobile isolation bug on subpages and workstation pages where Bottom Navigation Bar (BNB) is omitted.
+- **DataTable Horizontal Scroll & Priority Preservation (`assets/css/admin-components.css`)**:
+  - Scoped column priority suppression (`[data-priority="3"]` and `[data-priority="2"]`) strictly to non-scroll modes (`.ab-table-wrap:not([data-mode="scroll"])`).
+  - Guaranteed `width: max-content; min-width: 100%` and `white-space: nowrap` in `data-mode="scroll"`, preserving all columns (e.g. 12-column matrix tables) with horizontal scrolling under narrow containers and high zoom levels (110% to 200%).
+  - Maintained sticky first column (`inset-inline-start: 0`) in RTL with negative directional border shadow (`-1px 0 0 var(--border)`).
+- **Dual-Pane Workstation Polish (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
+  - Enhanced `.ab-split` with dedicated `.ab-split__list` scroll container and structured workstation item `.ab-split__item` featuring an active indicator bar (`border-inline-start: 3px solid var(--tone)`), header badges, and meta rows.
+  - Structured `.ab-split__pane` with dedicated action toolbar, section cards, and definition list layouts.
+  - Preserved fluid container query collapse (`@container ab-split (width < 48rem)`) with single-pane mobile back button navigation.
+- **Native HTML5 Dialog Transitions & Order Drawer (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
+  - Added 60fps GPU-accelerated dialog and backdrop blur animations using modern CSS `@starting-style` and discrete transition behavior (`allow-discrete`).
+  - Added mobile bottom sheet slide transitions for modals and side drawer modular classes (`.ab-drawer__section`, `.ab-drawer__timeline`, `.ab-drawer__item-list`).
+  - Implemented comprehensive order dossier drawer demo with multi-step timeline, customer card, items breakdown, and postal details.
 
 ## 1.34.1 — 2026-10-07
 
@@ -98,34 +119,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Removed duplicate script inclusion from `views/admin/layout/footer.php`.
 - **Modal Lifecycle & State Cleanup (`views/admin/tags.php`)**:
   - Restored `onclick="closeTagModal()"` on modal dismiss and cancel actions in `tags.php` to clean URL query parameters (`?edit=`) upon dismissal.
-
-## 1.32.2 — 2026-10-04
-
-### AB-Kit Front-End Framework, Presentation Components Engine & Comprehensive DRY/SSoT Refactoring
-
-- **Unified Front-End Library (`assets/js/ab-kit.js`)**:
-  - Implemented the canonical client kit providing Single Source of Truth for formatters (`AB.fmt.faDigits`, `AB.fmt.price`, `AB.fmt.bytes`, `AB.fmt.esc`, `AB.fmt.normalizeText`).
-  - Built unified Toast Notification Center (`AB.toast` / `window.showToast`) with CSS transitions and accessible ARIA attributes.
-  - Implemented declarative modal system (`AB.modal` via `data-ab-modal-open` / `data-ab-modal-close`) and live client-side table filter (`AB.tableFilter` via `data-ab-table-filter`).
-  - Added lightweight CSRF-aware AJAX fetch helper (`AB.api`).
-- **Provider-Based Search Architecture (`app/services/SearchService.php`, `ajax/admin_search.php`, `AB.autocomplete`)**:
-  - Extracted inline search logic into extensible `SearchService` supporting pluggable providers (`tags`, `products`, `customers`, `orders`).
-  - Refactored `ajax/admin_search.php` to a lean 22-line proxy.
-  - Built multi-token autocomplete and live suggestions in `ab-kit.js`.
-- **Server-Side Presentation Component Engine (`app/core/functions.php`, `views/admin/components/`)**:
-  - Introduced global `component(string $name, array $props)` presentation renderer.
-  - Built reusable, zero-DB presentation components: `kpi_card`, `kpi_grid`, `nav_tabs`, `empty_state`, and `badge`.
-  - Migrated partial templates across 9 admin workstations (`coupons`, `gift_items`, `users`, `shipping_methods`, `sms_patterns`, `appearance`, `diagnostics`, `settings`, `expenses`).
-- **CSS Design Tokens & Shared Component Kit (`assets/css/admin.css`, `assets/css/admin-components.css`)**:
-  - Consolidated all admin color, radius, and shadow tokens into `:root` in `admin.css`.
-  - Created standalone component stylesheet `admin-components.css` enqueued globally.
-  - Introduced cache-busting asset helpers `asset()` and `assetUrl()` in `app/core/functions.php` with mtime timestamping.
-- **Inline Script Extraction & Ratchet Debt Paydown (`assets/js/admin-*.js`, `tools/verify-baseline.json`)**:
-  - Extracted over 1,100 lines of heavy inline JavaScript into modular external scripts:
-    - `assets/js/admin-orders.js` (orders table drawer, receipt modal, copy actions).
-    - `assets/js/admin-c2c.js` (card-to-card inspection workstation, split modal, zoom/rotate, keyboard shortcuts).
-    - `assets/js/admin-order-detail.js` (order detail gallery lightbox, swipe navigation, receipt zoom, postal label copy).
-    - `assets/js/admin-product-edit.js` (variant row manager, live profit margin calculator, tag tokenizer binding).
-  - Passed dynamic server data using `<script type="application/json" id="...">` data islands.
-  - Reduced technical debt across 8 metrics in `tools/verify-baseline.json` via `php tools/verify.php --update-baseline`.
 

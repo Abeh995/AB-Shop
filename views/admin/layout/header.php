@@ -124,6 +124,9 @@ $pageTone = $pageTone ?? 'brand';
             <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" title="تغییر وضعیت سایدبار (کلید میانبر: [ )" aria-label="جمع کردن یا باز کردن سایدبار">
                 <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
+            <button type="button" class="admin-sidebar-close" id="adminSidebarCloseBtn" title="بستن منو" aria-label="بستن منوی ناوبری">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
 
         <nav class="admin-sidebar-nav" id="adminSidebarNav">
@@ -181,11 +184,16 @@ $pageTone = $pageTone ?? 'brand';
             </a>
         </div>
     </aside>
+    <div class="admin-sidebar-backdrop" id="adminSidebarBackdrop" aria-hidden="true"></div>
 
     <main class="admin-main">
         <!-- Unified Modern Admin Topbar (Global across all tabs) -->
         <header class="dash-topbar" id="adminGlobalTopbar">
             <div class="dash-topbar-right">
+                <button type="button" class="admin-mobile-menu-btn" id="adminMobileMenuBtn" aria-label="منوی ناوبری پنل مدیریت" aria-expanded="false" aria-controls="adminSidebar" data-ab-sidebar-toggle>
+                    <svg class="admin-menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+
                 <!-- Global Responsive Pill Search Bar -->
                 <div class="admin-search-box">
                     <div class="admin-search-input-wrap">
