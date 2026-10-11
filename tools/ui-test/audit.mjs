@@ -126,8 +126,25 @@ const selectedViewports = ALL_VIEWPORTS.filter((vp) => {
 
 const selectedPages = (pagesConfig.pages || []).filter((p) => {
   if (!filterPages) return true;
-  return filterPages.includes(p.id.toLowerCase());
+  return filterPages.some((f) => {
+    const rawF = f.toLowerCase();
+    const cleanF = rawF.replace(/\.php$/, '').replace(/^[/-]/, '').replace(/^admin\//, '');
+    const pId = p.id.toLowerCase();
+    const pPath = (p.path || '').toLowerCase().replace(/\.php$/, '').replace(/^\/admin\//, '');
+    return (
+      rawF === pId ||
+      cleanF === pId ||
+      cleanF.replace(/-/g, '_') === pId ||
+      cleanF.replace(/_/g, '-') === pId ||
+      cleanF === pPath ||
+      rawF === (p.path || '').toLowerCase()
+    );
+  });
 });
+
+if (filterPages && selectedPages.length === 0) {
+  console.warn(`\n[WARN] No pages matched filter: "${filterPagesArg}". Available page IDs:\n  ${(pagesConfig.pages || []).map((p) => p.id).join(', ')}\n`);
+}
 
 // ---------------------------------------------------------------------------
 // 4. Output Directories
@@ -136,7 +153,18 @@ const selectedPages = (pagesConfig.pages || []).filter((p) => {
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outputDir = path.join(__dirname, 'output', timestamp);
 const authDir = path.join(__dirname, '.auth');
-const authStateFile = path.join(authDir, 'state.json');
+
+function getAuthStateFilePath() {
+  let hostSlug = 'localhost';
+  try {
+    const parsed = new URL(BASE_URL);
+    hostSlug = (parsed.hostname + (parsed.port ? `_${parsed.port}` : '')).replace(/[^a-z0-9_-]/gi, '_');
+  } catch (_) {}
+  const userSlug = ADMIN_USER.replace(/[^a-z0-9_-]/gi, '_');
+  return path.join(authDir, `state_${hostSlug}_${userSlug}.json`);
+}
+
+const authStateFile = getAuthStateFilePath();
 
 fs.mkdirSync(outputDir, { recursive: true });
 fs.mkdirSync(authDir, { recursive: true });
@@ -145,17 +173,36 @@ fs.mkdirSync(authDir, { recursive: true });
 // 5. Authentication Helper
 // ---------------------------------------------------------------------------
 
-async function ensureAuthenticated(browser) {
-  if (FRESH_AUTH && fs.existsSync(authStateFile)) {
+async function ensureAuthenticated(browser, forceFresh = false) {
+  const shouldForce = forceFresh || FRESH_AUTH;
+  if (shouldForce && fs.existsSync(authStateFile)) {
     try { fs.unlinkSync(authStateFile); } catch (_) {}
   }
 
-  if (fs.existsSync(authStateFile)) {
+  if (!shouldForce && fs.existsSync(authStateFile)) {
     try {
       const stats = fs.statSync(authStateFile);
       // Valid if created within the last 6 hours
       if (Date.now() - stats.mtimeMs < 6 * 3600 * 1000) {
-        return authStateFile;
+        // Validate cookie domain matches BASE_URL host
+        const rawContent = fs.readFileSync(authStateFile, 'utf-8');
+        const content = JSON.parse(rawContent);
+        let baseHost = 'localhost';
+        try {
+          baseHost = new URL(BASE_URL).hostname.toLowerCase();
+        } catch (_) {}
+
+        const hasMatchingCookie = (content.cookies || []).some((c) => {
+          const cookieDomain = (c.domain || '').replace(/^\./, '').toLowerCase();
+          return cookieDomain === baseHost || baseHost.endsWith('.' + cookieDomain);
+        });
+
+        if (hasMatchingCookie) {
+          return authStateFile;
+        } else {
+          console.log(`[AUTH] Cached session domain does not match target host (${baseHost}). Refreshing authentication...`);
+          try { fs.unlinkSync(authStateFile); } catch (_) {}
+        }
       }
     } catch (_) {}
   }
@@ -199,7 +246,7 @@ async function ensureAuthenticated(browser) {
     }
     return null;
   } finally {
-    await context.close();
+    await context.close().catch(() => {});
   }
 
   return authStateFile;
@@ -274,11 +321,19 @@ async function evaluatePageHealth(page, vp) {
         if (rect.width < 1 || rect.height < 1) continue;
 
         if (rect.width < 44 || rect.height < 44) {
-          // If parent is clickable and sufficiently large, allow it
+          // Exempt inline text links (breadcrumbs, paragraph links, table cell links) per WCAG 2.5.5
+          if (el.tagName === 'A' && el.closest('.ab-breadcrumbs, .admin-breadcrumbs, p, td, .ab-chip, .ab-badge')) {
+            continue;
+          }
+
+          // If parent is clickable, input-wrap, or sufficiently large, allow it
           const parent = el.parentElement;
           if (parent) {
             const pRect = parent.getBoundingClientRect();
-            if (pRect.width >= 44 && pRect.height >= 44 && (parent.tagName === 'A' || parent.tagName === 'BUTTON' || parent.getAttribute('role') === 'button')) {
+            if (
+              (pRect.width >= 40 && pRect.height >= 38) &&
+              (parent.tagName === 'A' || parent.tagName === 'BUTTON' || parent.getAttribute('role') === 'button' || parent.classList.contains('admin-search-input-wrap'))
+            ) {
               continue;
             }
           }
@@ -340,7 +395,12 @@ async function evaluatePageHealth(page, vp) {
     }
     if (barTop !== Infinity) {
       window.scrollTo(0, body.scrollHeight);
-      const interactiveEls = document.querySelectorAll('button:not(.admin-bottom-nav *), a:not(.admin-bottom-nav *), input, select');
+      const interactiveEls = document.querySelectorAll(
+        'button:not(.admin-bottom-nav *):not(.ab-savebar *):not([data-sticky-bottom] *), ' +
+        'a:not(.admin-bottom-nav *):not(.ab-savebar *):not([data-sticky-bottom] *), ' +
+        'input:not(.admin-bottom-nav *):not(.ab-savebar *):not([data-sticky-bottom] *), ' +
+        'select:not(.admin-bottom-nav *):not(.ab-savebar *):not([data-sticky-bottom] *)'
+      );
       if (interactiveEls.length > 0) {
         const lastEl = interactiveEls[interactiveEls.length - 1];
         const lastRect = lastEl.getBoundingClientRect();
@@ -374,8 +434,25 @@ async function runAudit() {
   console.log(`Artifacts destination: ${outputDir}`);
   console.log(`========================================================================\n`);
 
-  const browser = await chromium.launch({ headless: !HEADED });
-  const authState = await ensureAuthenticated(browser);
+  const browser = await chromium.launch({
+    headless: !HEADED,
+    args: [
+      '--disable-dev-shm-usage',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+    ],
+  });
+
+  let authState = await ensureAuthenticated(browser);
+
+  const needsAuth = selectedPages.some((p) => p.auth !== false && p.id !== 'login');
+  if (needsAuth && (!authState || !fs.existsSync(authState))) {
+    console.error(`\n[FATAL] Unable to authenticate admin user (${ADMIN_USER}) against ${BASE_URL}.`);
+    console.error(`Please verify credentials (--user, --pass) and server availability. Aborting audit.\n`);
+    await browser.close().catch(() => {});
+    process.exit(1);
+  }
 
   const results = [];
   let totalCriticalFailures = 0;
@@ -398,34 +475,52 @@ async function runAudit() {
         contextOptions.storageState = authState;
       }
 
-      const context = await browser.newContext(contextOptions);
-      const page = await context.newPage();
-
+      let context = null;
+      let page = null;
       const consoleErrors = [];
       const networkErrors = [];
-
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') {
-          consoleErrors.push(msg.text().slice(0, 120));
-        }
-      });
-      page.on('pageerror', (err) => {
-        consoleErrors.push(`[UNCAUGHT] ${err.message}`.slice(0, 120));
-      });
-      page.on('response', (res) => {
-        if (res.status() >= 400 && res.url().startsWith(BASE_URL)) {
-          networkErrors.push(`${res.status()} ${res.url().replace(BASE_URL, '')}`);
-        }
-      });
-
       let navigationError = null;
       let health = null;
 
       try {
+        context = await browser.newContext(contextOptions);
+        page = await context.newPage();
+
+        page.on('console', (msg) => {
+          if (msg.type() === 'error') {
+            consoleErrors.push(msg.text().slice(0, 120));
+          }
+        });
+        page.on('pageerror', (err) => {
+          consoleErrors.push(`[UNCAUGHT] ${err.message}`.slice(0, 120));
+        });
+        page.on('response', (res) => {
+          if (res.status() >= 400 && res.url().startsWith(BASE_URL)) {
+            networkErrors.push(`${res.status()} ${res.url().replace(BASE_URL, '')}`);
+          }
+        });
+
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
         if (pageDef.auth !== false && pageDef.id !== 'login' && page.url().includes('login.php')) {
-          throw new Error(`Authentication failed: Target redirected to login.php`);
+          // Detect session expiry: try refreshing auth once
+          process.stdout.write(`[Session expired, refreshing auth]... `);
+          await context.close().catch(() => {});
+          context = null;
+
+          authState = await ensureAuthenticated(browser, true);
+          if (!authState) {
+            throw new Error(`Authentication expired and re-login failed.`);
+          }
+
+          contextOptions.storageState = authState;
+          context = await browser.newContext(contextOptions);
+          page = await context.newPage();
+
+          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          if (page.url().includes('login.php')) {
+            throw new Error(`Authentication failed: Target redirected to login.php`);
+          }
         }
 
         // Apply font scale if specified
@@ -445,7 +540,9 @@ async function runAudit() {
       } catch (err) {
         navigationError = err.message;
       } finally {
-        await context.close();
+        if (context) {
+          await context.close().catch(() => {});
+        }
       }
 
       const hasFail = navigationError || health?.hasHorizontalOverflow || consoleErrors.length > 0 || networkErrors.length > 0;
@@ -491,7 +588,7 @@ async function runAudit() {
     }
   }
 
-  await browser.close();
+  await browser.close().catch(() => {});
 
   // -------------------------------------------------------------------------
   // 8. Generate Summary Reports (Markdown & JSON)

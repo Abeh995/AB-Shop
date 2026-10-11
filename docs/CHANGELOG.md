@@ -7,6 +7,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.34.3 — 2026-10-11
+
+### Admin Mobile Touch Targets & Playwright Audit Harness Resiliency
+
+- **Admin Mobile Header Touch Target Refinements (`assets/css/admin-shell.css`)**:
+  - Enlarged mobile hamburger drawer button (`.admin-mobile-menu-btn`) dimensions to `40x40px` (`min-width: 40px; min-height: 40px;`), providing an ergonomic touch target within the 54px header.
+  - Enlarged compact storefront header link (`.btn-dash-store-compact`) on narrow mobile screens (`< 40rem`) to `38x38px` with circular boundary preservation.
+  - Standardized `.admin-search-input-wrap` with `min-height: 38px` and full-height inner input for seamless touch interaction.
+- **Playwright Responsive Audit Harness Polish (`tools/ui-test/audit.mjs`)**:
+  - Scoped authentication session storage states by hostname and username (`state_${host}_${user}.json`), with cookie domain validation to eliminate redirect loops when switching test base URLs.
+  - Implemented automatic re-authentication recovery upon encountering login redirects on authenticated test routes.
+  - Added Chromium headless launch flags (`--disable-dev-shm-usage`, `--no-sandbox`, `--disable-gpu`) and guarded browser/context lifecycles to prevent crashes on high-resolution viewports (4K / 3840x2160).
+  - Resolved false-positive `stickyBarOverlap` check by excluding child elements of fixed/sticky bottom bars (`.ab-savebar`, `.admin-bottom-nav`) from being measured as obscured background content.
+  - Added flexible route matching for CLI `--pages` arguments, supporting trailing `.php`, paths, and hyphen/underscore variations.
+
 ## 1.34.2 — 2026-10-11
 
 ### Admin Mobile Navigation Shell, DataTable Scroll Zoom Fix, Split View Polish & Native Dialog Transitions
