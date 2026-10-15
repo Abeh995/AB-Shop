@@ -968,7 +968,7 @@ input:checked + .switch-slider:before {
     border-bottom: 1px solid #E8E1D5;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: var(--z-sticky);
     display: flex;
     align-items: center;
     justify-content: space-between;

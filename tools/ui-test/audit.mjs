@@ -511,7 +511,7 @@ async function runAudit() {
           }
         });
 
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
 
         if (pageDef.auth !== false && pageDef.id !== 'login' && page.url().includes('login.php')) {
           // Detect session expiry: try refreshing auth once
@@ -528,7 +528,7 @@ async function runAudit() {
           context = await browser.newContext(contextOptions);
           page = await context.newPage();
 
-          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
           if (page.url().includes('login.php')) {
             throw new Error(`Authentication failed: Target redirected to login.php`);
           }

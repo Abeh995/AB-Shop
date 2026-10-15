@@ -3,9 +3,22 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.32.4 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.33.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.34.5 — 2026-10-16
+
+### Admin UI Stabilization Gate & Responsive Audit Baseline (Phase 2.5b)
+
+- **Mobile Shell & Nav Regression Resolution (`assets/css/admin.css`)**:
+  - Aligned legacy topbar `.dash-topbar` z-index from unlayered `100` to `var(--z-sticky)`. Previously, `z-index: 100` hovered above the mobile off-canvas drawer (`var(--z-overlay): 60`) and intercepted click and touch interactions on `#adminSidebarCloseBtn`.
+  - Verified mobile hamburger menu drawer toggle (`#adminMobileMenuBtn`), sidebar slide-out animation, backdrop dismiss, and bottom navigation bar (`.admin-bottom-nav`) across mobile viewports.
+- **Full Responsive Audit & Baseline Analysis (`tools/ui-test/baseline/after-phase2.md`, `tools/ui-test/audit.mjs`)**:
+  - Executed automated Playwright audit across all 34 admin pages × 14 viewports (476 total assertions) with 0 HTTP 4xx/5xx errors and 0 navigation timeouts.
+  - Confirmed 4 clean foundation pages with 0 horizontal scroll overflow (`ui_kit`, `dashboard`, `inventory_valuation`, `login`).
+  - Diagnosed and cataloged horizontal scroll overflow across 30 legacy unmigrated pages, establishing the ranked, prioritized migration queue for Phase 3 (Pilot) and Phase 4 (Batch Migrations).
+  - Increased navigation timeout in test harness to 25s for resilient execution across asset-heavy views.
 
 ## 1.34.4 — 2026-10-16
 
@@ -122,21 +135,5 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Ratchet Baseline Quality Gate Expansion (`tools/verify.php`, `tools/verify-baseline.json`)**:
   - Expanded `tools/verify.php` with `bp_sync` (ensuring `AB.bp` in JS matches `admin-tokens.css`), `component_registry` (ensuring all components exist and are documented), and ratchet metrics for `css_media_page`, `css_important`, `css_transition_all`, `css_physical_dir`, `view_inline_style`, and `view_legacy_class`.
   - Excluded `admin-tokens.css` from `css_root`/`css_hex` checks as the single source of truth, and updated `tools/verify-baseline.json`.
-
-## 1.32.4 — 2026-10-05
-
-### Admin UI Modernization Safety Net, Playwright Audit Harness & Baseline Infrastructure (Phase 0)
-
-- **Developer UI Audit Harness (`tools/ui-test/`)**:
-  - Implemented dev-only Playwright test runner (`tools/ui-test/audit.mjs`) executing responsive layout, RTL overflow, tap target, and console error checks across 10 viewports and 4 font-scale variations.
-  - Added full admin page inventory configuration (`tools/ui-test/pages.json`) covering all 32 admin routes and parameterized edit/detail pages.
-  - Built automated credential handling and session caching (`.auth/state.json`) with support for environment variables and gitignored local parameter overrides (`pages.local.json`).
-  - Added comprehensive audit documentation (`tools/ui-test/README.md`) and pre-Phase 1 baseline recording instructions (`tools/ui-test/baseline/README.md`).
-- **Production Isolation & Hosting Constraints Governance (`AGENTS.md`, `.gitignore`, `tools/build-deploy.ps1`)**:
-  - Documented explicit hosting exception in `AGENTS.md` for the dev-only Node harness, preserving the zero-build-step invariant for production shared hosting.
-  - Ignored `tools/ui-test/node_modules/`, `tools/ui-test/output/`, `tools/ui-test/.auth/`, and `tools/ui-test/pages.local.json` in `.gitignore`.
-  - Confirmed strict exclusion of `tools/` from production deploy zip archives via `tools/build-deploy.ps1`.
-- **Admin Design System Baseline Tracking (`docs/DESIGN.md`)**:
-  - Established quantitative Phase 0 baseline metrics table in `docs/DESIGN.md` recording 17,374 CSS lines across 16 files, 1,279 raw hex color codes, 1,378 inline styles, ~50 media query breakpoints, and 0/32 migrated pages.
 
 

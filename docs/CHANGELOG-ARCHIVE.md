@@ -1,9 +1,26 @@
-# Changelog Archive (v1.0.0 — v1.32.3)
+# Changelog Archive (v1.0.0 — v1.32.4)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.32.3.
+Historical release notes for AB-Socks versions 1.0.0 through 1.32.4.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.32.4 — 2026-10-05
+
+### Admin UI Modernization Safety Net, Playwright Audit Harness & Baseline Infrastructure (Phase 0)
+
+- **Developer UI Audit Harness (`tools/ui-test/`)**:
+  - Implemented dev-only Playwright test runner (`tools/ui-test/audit.mjs`) executing responsive layout, RTL overflow, tap target, and console error checks across 10 viewports and 4 font-scale variations.
+  - Added full admin page inventory configuration (`tools/ui-test/pages.json`) covering all 32 admin routes and parameterized edit/detail pages.
+  - Built automated credential handling and session caching (`.auth/state.json`) with support for environment variables and gitignored local parameter overrides (`pages.local.json`).
+  - Added comprehensive audit documentation (`tools/ui-test/README.md`) and pre-Phase 1 baseline recording instructions (`tools/ui-test/baseline/README.md`).
+- **Production Isolation & Hosting Constraints Governance (`AGENTS.md`, `.gitignore`, `tools/build-deploy.ps1`)**:
+  - Documented explicit hosting exception in `AGENTS.md` for the dev-only Node harness, preserving the zero-build-step invariant for production shared hosting.
+  - Ignored `tools/ui-test/node_modules/`, `tools/ui-test/output/`, `tools/ui-test/.auth/`, and `tools/ui-test/pages.local.json` in `.gitignore`.
+  - Confirmed strict exclusion of `tools/` from production deploy zip archives via `tools/build-deploy.ps1`.
+- **Admin Design System Baseline Tracking (`docs/DESIGN.md`)**:
+  - Established quantitative Phase 0 baseline metrics table in `docs/DESIGN.md` recording 17,374 CSS lines across 16 files, 1,279 raw hex color codes, 1,378 inline styles, ~50 media query breakpoints, and 0/32 migrated pages.
+
 
 ## 1.32.3 — 2026-10-04
 
