@@ -698,26 +698,26 @@ function jsonResponse(array $data, int $statusCode = 200): void
  * @param string $name Component name without .php extension
  * @param array $props Explicit associative parameters passed to the component
  */
-function component(string $name, array $props = []): void
+function component(string $_componentName, array $_componentProps = []): void
 {
-    $file = APP_ROOT . '/views/admin/components/' . $name . '.php';
-    if (file_exists($file)) {
-        extract($props, EXTR_SKIP);
-        require $file;
+    $_componentFile = APP_ROOT . '/views/admin/components/' . $_componentName . '.php';
+    if (file_exists($_componentFile)) {
+        extract($_componentProps, EXTR_OVERWRITE);
+        require $_componentFile;
     }
 }
 
 /**
  * Renders an admin presentation component and captures its HTML output as a string.
  *
- * @param string $name Component name in views/admin/components/
- * @param array $props Component property values
+ * @param string $_componentName Component name in views/admin/components/
+ * @param array $_componentProps Component property values
  * @return string Rendered HTML
  */
-function render_component(string $name, array $props = []): string
+function render_component(string $_componentName, array $_componentProps = []): string
 {
     ob_start();
-    component($name, $props);
+    component($_componentName, $_componentProps);
     return (string) ob_get_clean();
 }
 

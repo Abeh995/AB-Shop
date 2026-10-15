@@ -4,6 +4,10 @@ Target repo: `github.com/Abeh995/AB-Shop` · Baseline version: `1.32.3` · Scope
 
 This file is an execution plan for an AI coding agent. Work through it phase by phase. Do not skip ahead. Do not improvise architecture; if something here is wrong or impossible, stop and report instead of silently deviating.
 
+**Status (rev 2):** Phases 0–2 are DONE (releases `1.34.0`–`1.34.3`: tokens/shell/component library v2/UI Kit/audit script, plus patches for the `ui-kit` controller fatal, mobile hamburger nav, table/split/dialog polish, and touch targets). Next step is **Phase 2.5 (stabilization gate)**, then Phase 3.
+
+**Rev 2 changes vs rev 1:** (1) the agent has a real browser and must verify its own work; (2) table `priority` hiding applies to `stack` mode only; (3) mobile nav trigger (hamburger + backdrop) is listed explicitly as part of the shell; (4) new Phase 2.5 gate; (5) chat granularity rules for Phase 4; (6) updated session prompt (Section 11).
+
 ---
 
 ## 0. Agent operating protocol
@@ -12,10 +16,12 @@ This file is an execution plan for an AI coding agent. Work through it phase by 
 2. **One phase (or one batch inside a phase) per session.** Finish it, run the gate, report, stop. Never start the next phase unless the owner says so.
 3. **Presentation-only changes.** Do not alter business logic, SQL, services, routes, form field names, or POST handling. Controllers may change only to pass presentation variables (e.g. `$pageTone`).
 4. Never hand-edit generated output: `deploy/`, `dist/`. Never touch `config/config.php`.
-5. You cannot run a browser. State that plainly. Verification you can do: `php -l`, `php tools/verify.php`, grep-based audits. Visual/responsive verification is done by the owner with the Playwright script from Phase 0 — tell the owner exactly which command to run and which pages to look at.
+5. **You have a browser (Antigravity). Use it.** Never report a page as done without: (a) loading it and confirming HTTP 200 and no console errors, (b) running the Playwright audit (Section 6) for the touched pages on all viewports, (c) opening the screenshots yourself and comparing them against `/admin/ui-kit.php` and the Expenses page look, (d) exercising each modal/drawer/tab and submitting one non-destructive form. Also run `php -l` on touched files and `php tools/verify.php`. Lesson from Phase 2: patches `1.34.1`–`1.34.3` were all things a browser run would have caught before commit. The owner only checks real-device touch/keyboard behavior on mobile-critical pages.
 6. Every release follows `AGENTS.md` rule 8 (bump `APP_VERSION`, prepend `docs/CHANGELOG.md`, update `docs/COMPONENTS.md` / `docs/DESIGN.md` / `docs/architecture/*` in place, Conventional Commit message). The owner's delivery format: zip with **only changed files** + commit message in chat.
 7. Persian UI strings are never translated or reworded. New comments are English.
 8. If a task would increase any ratchet metric in `tools/verify-baseline.json`, stop. Metrics may only go down.
+9. **Shared component bugs:** if a shared component (`admin-components.css`, `ab-kit.js`, `views/admin/components/*`) has a bug that blocks a page, you may fix it in place **only if** you also add a UI Kit case that reproduces it and re-run the UI Kit audit; list this fix separately in your report. Never work around a component bug with page-level CSS, and never add page CSS that re-creates a component.
+10. **Stop rule:** if one chat needs more than 2 fix rounds for the same page, or the diff exceeds ~15 files, commit what is green and stop; the remainder goes to a new chat.
 
 ---
 
@@ -240,7 +246,7 @@ Principle: **pages never decide breakpoints. Components decide based on their ow
 8. **Tables** (biggest mobile problem), two modes selected by the component, not the page:
    - `data-mode="stack"` (entity lists): below `40rem` container width each row becomes a card; cells show `data-label` as a caption via `::before { content: attr(data-label) }`.
    - `data-mode="scroll"` (numeric/financial): horizontal scroll inside `.ab-table-wrap`, first column sticky (`inset-inline-start: 0`).
-   - Column `priority`: `1` always visible, `2` hidden below `40rem`, `3` hidden below `56rem` (container widths). Hidden columns remain reachable in the row drawer/detail link.
+   - Column `priority` applies to **`stack` mode only** (decided during Phase 2, release `1.34.2`): `1` always visible, `2` hidden below `40rem`, `3` hidden below `56rem` (container widths). `scroll` mode never hides columns (numeric/financial data); it scrolls horizontally with a sticky first column. Hidden stack columns remain reachable via the row drawer/detail link.
 9. **Max content discipline.** Long Persian text and long unbroken tokens: `overflow-wrap: anywhere` on table cells, cards, and badges; `min-width: 0` on flex/grid children.
 
 ### 3.6 Component catalog (v2) — CSS class + PHP component, one contract each
@@ -308,9 +314,10 @@ CSS skeleton to implement (adapt, do not copy blindly):
   .ab-table :is(th, td) { padding: var(--space-3) var(--space-4); text-align: start; overflow-wrap: anywhere; }
   .ab-table th { position: sticky; inset-block-start: 0; background: var(--surface-2);
                  border-block-end: 2px solid var(--tone-border); }
-  @container ab-table (width < 56rem) { .ab-table [data-priority="3"] { display: none; } }
+  /* priority hiding is scoped to stack mode only */
+  @container ab-table (width < 56rem) { .ab-table-wrap[data-mode="stack"] [data-priority="3"] { display: none; } }
   @container ab-table (width < 40rem) {
-    .ab-table [data-priority="2"] { display: none; }
+    .ab-table-wrap[data-mode="stack"] [data-priority="2"] { display: none; }
     .ab-table-wrap[data-mode="stack"] :is(.ab-table, tbody, tr, td) { display: block; }
     .ab-table-wrap[data-mode="stack"] thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; }
     .ab-table-wrap[data-mode="stack"] td::before { content: attr(data-label); display: block; color: var(--text-muted); font-size: var(--text-xs); }
@@ -359,13 +366,14 @@ Suggested versions are guidance; follow the `PATCH`/`MINOR` rule from `AGENTS.md
 - [ ] Record current metrics in `docs/DESIGN.md` §"Admin UI migration status" table (CSS lines, hex count, inline styles, distinct breakpoints, pages migrated 0/32).
 - [ ] Gate: `php tools/verify.php` passes unchanged.
 
-**Owner action after Phase 0:** `cd tools/ui-test && npm i && npx playwright install chromium && AB_BASE_URL=... AB_ADMIN_USER=... AB_ADMIN_PASS=... node audit.mjs` → keep the report as "before".
+**After Phase 0:** `cd tools/ui-test && npm i && npx playwright install chromium && AB_BASE_URL=... AB_ADMIN_USER=... AB_ADMIN_PASS=... node audit.mjs` → keep the report as "before". (The agent runs this itself from now on; the owner only supplies credentials/environment.)
 
 ### Phase 1 — Tokens, base, shell (MINOR `1.33.0`, **no visible change**)
 
 - [ ] Create `admin-tokens.css` per 3.3/3.4 (layer order first line, primitives, semantic, tones, density, motion, legacy alias block).
 - [ ] Create `admin-base.css` (`@layer reset, base`): box-sizing, form control font inheritance, `font-size: max(16px,1rem)` for inputs, headings, links, focus-visible ring, `[hidden]`, reduced motion, tabular numerals helper. Replace what admin takes from storefront `style.css`.
 - [ ] Audit what admin needs from `style.css` (`body` font, `a`, headings, `.btn`, `.form-group`, `.form-control`, `.alert*`, `textarea.form-control`). Implement equivalents in the new files with the 3.9 aliases. **Then stop loading `style.css` in `views/admin/layout/header.php`** (and `views/admin/login.php` if it loads it separately). Verify with grep that no other admin class relies on it.
+- [x] *(done in `1.34.2`; originally missing from this plan)* Mobile nav trigger: hamburger button + backdrop + focus trap/Escape close for the off-canvas sidebar below `md`; every admin page (including legacy ones) must be able to open/close navigation on a phone.
 - [ ] Extract shell rules (sidebar, collapsed rail, off-canvas, bottom nav, flash area, topbar) out of `admin.css` into `admin-shell.css`; unify breakpoint at `md` (replace 768/900). Remove the `body:not(.admin-page-dashboard):not(.admin-page-orders) .admin-main > :not(.dash-topbar)` hack and the `admin-page-*` body classes once `.ab-page` wrapper exists.
 - [ ] `header.php`: add `viewport-fit=cover`; emit `data-tone` from nav group (`$pageTone`); load new files in the order from 3.1; remove inline `style="display:none;"` on `.nav-flyout-header`.
 - [ ] `nav_config.php`: add `'tone'` per group (3.4 table).
@@ -392,17 +400,36 @@ For **each** component in 3.6, one checklist item = CSS (tokens only) + PHP comp
 - [ ] Update `docs/COMPONENTS.md` (new sections), `docs/DESIGN.md` (admin system, tones, breakpoints, layers).
 - [ ] Acceptance: UI Kit passes the Playwright audit at all viewports with zero overflow; tap-target check clean on mobile viewports.
 
-### Phase 3 — Pilot migration (PATCH `1.34.x`)
+### Phase 2.5 — Stabilization gate (no feature work; PATCH only if fixes are needed)
 
-Pilot page: **`users.php`** (0 inline styles, has KPIs + toolbar + table + modals + audit trail). Then `coupons.php` as second confirmation.
+Goal: prove the foundation is solid before migrating real pages. Run it as its own chat.
+
+- [ ] Run the full audit on **all ~32 admin pages × all viewports** (including `zoom200`, `zoom300`, `zoom50`, font-scale 125% / 200%). Save `report.md` as `tools/ui-test/baseline/after-phase2.md` and diff it against the Phase 0 report. Goal: no page got **worse** after the shell change (hamburger/nav/layers); list pages that still overflow — this becomes the prioritized migration list.
+- [x] UI Kit audit: zero overflow, zero console errors, tap targets clean, at every viewport and font-scale, in both table modes, with every modal/drawer opened. (Completed in v1.34.4 / Phase 2.5a)
+- [ ] Legacy pages inside the new shell: verify sidebar/hamburger/bottom-nav work on at least `orders`, `products`, `finance_dashboard`, `settings` at phone width.
+- [ ] Fix only regressions found here (shell/components). No page migration in this chat.
+- [ ] Exit criteria: UI Kit all green; no legacy page regressed vs Phase 0. Only then start Phase 3.
+
+### Phase 3 — Trial-page migration ("pilot") (PATCH `1.34.x`)
+
+Purpose: the first real page rebuilt with the new system, to find component problems on real data **before** migrating dozens of pages. Pick the simplest page; if it cannot be built cleanly from components, fix the components, not the page.
+
+Trial page: **`users.php`** (0 inline styles, has KPIs + toolbar + table + modals + audit trail). Then `coupons.php` as second confirmation.
 
 - [ ] Apply the **Page Migration Recipe** (Section 5) to `users`.
 - [ ] Delete `admin-users.css` entirely and its `$pageCssMap` entry.
 - [ ] Record before/after in `docs/DESIGN.md` migration table (CSS lines removed, hex removed, inline styles removed).
-- [ ] **STOP. Owner reviews on desktop + phone + zoom.** Collect feedback; fix the system (components), not the page.
+- [ ] **STOP. Owner reviews on desktop + phone + zoom.** Collect feedback; fix the system (components, per protocol item 9), not the page.
 - [ ] Repeat for `coupons`/`tags`.
 
-### Phase 4 — Batch migration (one batch per session; PATCH each)
+### Phase 4 — Batch migration (PATCH each)
+
+**Chat granularity (decided in rev 2):**
+- **Solo chat per page** for heavy pages (view > ~400 lines or > ~20 inline styles): `products`, `categories`, `dashboard`, `finance_dashboard`, `inventory_valuation`, `product_edit`, `orders`, `order_detail`, `card_to_card_payments`, `pricing`.
+- **One chat per hub (nav group)** for small pages, e.g. [`shipping_methods`, `shipping_method_edit`], [`sms_patterns`, `sms_pattern_edit`], [`gift_items`, `gift_item_edit`], [`themes`, `theme_edit`, `notifications_log`], [`email_accounts`, `emails`, `email_read`, `email_compose`], [`expenses`, `expense_edit`], [`tags`, `coupons`], [`settings`], [`appearance`], [`diagnostics`, `login`].
+- Expect ~15–18 chats. Apply protocol item 10 (stop rule). Tag/commit before each chat so a bad chat can be reverted instead of patched.
+- Suggested order after the trial page: mobile-critical pages early (`card_to_card_payments`, `orders`, `order_detail`, `product_edit`, `dashboard`), then lists, then the rest. Alternatively follow the Phase 2.5 overflow list, worst first.
+- Record each chat's result in the `docs/DESIGN.md` migration table (CSS lines removed, hex removed, inline styles removed, pages migrated N/32).
 
 Page inventory (views in `views/admin/`). Columns: archetype · current page CSS · inline-style count · notes. **MC = mobile-critical.**
 
@@ -503,7 +530,7 @@ Starter class mapping (extend as you discover more; every mapping goes into `COM
 
 ---
 
-## 6. Playwright audit specification (`tools/ui-test/`, dev-only, runs on the owner's machine)
+## 6. Playwright audit specification (`tools/ui-test/`, dev-only; run by the agent from the repo, credentials supplied via env)
 
 `package.json`: `"type": "module"`, dependency `playwright` (and optionally `@axe-core/playwright`), scripts `"ui:audit": "node audit.mjs"`.
 
@@ -569,7 +596,7 @@ Every metric may only decrease. Phase 6 sets admin-wide targets to 0.
 - [ ] Uses only `ab-*` components/utilities; no private table/button/KPI/modal/badge CSS.
 - [ ] 0 inline `style=""` (except dynamic vars), 0 `<script>` > 20 lines.
 - [ ] Page CSS file deleted, or ≤150 lines, tokens only, in `@layer pages`.
-- [ ] Playwright: no overflow, no console errors, tap targets OK at all viewports (MC pages: also screenshot reviewed by owner on a real phone).
+- [ ] Agent verified in the browser: page loads HTTP 200, no console errors, audit (Section 6) clean at all viewports, screenshots inspected, modals/drawers/tabs exercised, one non-destructive form submitted. MC pages: owner additionally checks on a real phone.
 - [ ] Works at zoom 50%/150%/200%/300% (the equivalent viewports) and 125%/200% font scale.
 - [ ] RTL logical properties only.
 - [ ] All forms still submit the same field names; CSRF intact.
@@ -619,9 +646,21 @@ Rules to follow from Phase 1 so a later "admin theme settings" page is cheap:
 
 ```
 Read AGENTS.md, docs/COMPONENTS.md, docs/DESIGN.md and ADMIN-UI-PLAN.md.
-Execute ONLY: Phase <N> — <batch/page list>.
+Execute ONLY: Phase <N> — <page(s)>.
 Follow section 0 (protocol), section 5 (recipe) and section 8 (Definition of Done).
-Do not touch anything outside this scope. If a task conflicts with the plan or is impossible, stop and report.
-Deliver: changed files only (zip), docs/CHANGELOG.md entry, Conventional Commit message,
-the exact Playwright command for the owner, and a list of anything you could not verify.
+
+Verification (mandatory, you have a browser):
+1. Load every touched page. Confirm HTTP 200 and no console errors BEFORE writing the report.
+2. Run the Playwright audit for these pages on all viewports and open the screenshots yourself.
+   Compare against /admin/ui-kit.php and the Expenses page look; fix visible inconsistencies.
+3. Exercise every modal/drawer/tab, and submit one form (no destructive actions).
+
+Scope: touch only these pages and their CSS. If a shared component (admin-components.css, ab-kit.js, components/*)
+has a bug, fix it ONLY if you also add a UI Kit case that reproduces it and re-run the UI Kit audit; list it separately.
+Before finishing: grep touched views for leftover legacy classes and style="".
+Stop rule: >2 fix rounds on one page or >~15 changed files -> commit what is green and stop.
+Report: JS hooks preserved, audit results (counts only), what you could not verify.
+Deliver: CHANGELOG entry, Conventional Commit message.
 ```
+
+For Phase 2.5 use: `Execute ONLY: Phase 2.5 — stabilization gate (no migrations, fix regressions only).`

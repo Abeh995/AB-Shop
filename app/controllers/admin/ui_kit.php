@@ -14,6 +14,13 @@ $pageTone = $activeTone;
 
 $tones = ['brand', 'blue', 'sky', 'emerald', 'amber', 'rose', 'purple', 'teal', 'slate'];
 
+// Non-destructive form submission demonstration (Phase 2.5 DOD)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
+    setFlash('success', 'اطلاعات فرم نمونه با موفقیت اعتبارسنجی و ثبت گردید (آزمایش غیرمخرب).');
+    redirect('ui-kit.php' . (!empty($activeTone) ? '?tone=' . urlencode($activeTone) : ''));
+}
+
 // Sample data for data_table demonstration
 $sampleTableRows = [
     ['id' => 101, 'code' => 'SKU-8821', 'name' => 'جوراب کالج پنبه‌ای اعلا', 'category' => 'کالج', 'stock' => 45, 'price' => 58000, 'cost_price' => 32000, 'status' => ['label' => 'موجود', 'state' => 'success', 'dot' => true], 'date' => '۱۴۰۳/۰۷/۱۵', 'search' => '101 SKU-8821 کالج موجود'],

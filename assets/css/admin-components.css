@@ -895,10 +895,20 @@
     justify-content: space-between;
     align-items: flex-start;
     position: relative;
+    overflow: hidden;
     box-shadow: var(--shadow-1);
     transition: transform var(--dur-2) var(--ease),
                 box-shadow var(--dur-2) var(--ease),
                 border-color var(--dur-2) var(--ease);
+  }
+
+  .ab-kpi-card::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 3px;
+    background: var(--tone);
   }
 
   .ab-kpi-card.is-clickable {
@@ -908,6 +918,10 @@
   }
 
   @media (hover: hover) {
+    .ab-kpi-card:hover {
+      box-shadow: var(--shadow-2);
+    }
+
     .ab-kpi-card.is-clickable:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-2);
@@ -1691,6 +1705,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
+    min-height: var(--control-h);
     padding: var(--space-2) var(--space-4);
     border: none;
     background: transparent;
@@ -1735,6 +1750,17 @@
   .ab-tab-btn.active .ab-tab-badge {
     background: color-mix(in srgb, var(--tone-on) 25%, transparent);
     color: var(--tone-on);
+  }
+
+  /* Tab Content Panes */
+  .ab-tab-pane,
+  [data-tab-pane] {
+    display: none;
+  }
+
+  .ab-tab-pane.active,
+  [data-tab-pane].active {
+    display: block;
   }
 
 

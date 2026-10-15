@@ -72,6 +72,21 @@ require APP_ROOT . '/views/admin/layout/header.php';
         'ariaLabel' => 'دسته‌بندی‌های کیت طراحی',
     ]); ?>
 
+    <div class="ab-tab-content ab-m-block-sm">
+        <div id="pane-all" class="ab-tab-pane active" data-tab-pane="all">
+            <p class="ab-text-xs ab-text-muted">نمایش هم‌زمان کلیه مؤلفه‌ها و کانتینرهای پنل مدیریت.</p>
+        </div>
+        <div id="pane-buttons" class="ab-tab-pane" data-tab-pane="buttons">
+            <p class="ab-text-xs ab-text-muted">تمرکز بر مؤلفه‌های دکمه، ورودی‌های فرم و عناصر کنترلی.</p>
+        </div>
+        <div id="pane-tables" class="ab-tab-pane" data-tab-pane="tables">
+            <p class="ab-text-xs ab-text-muted">بررسی جدول داده در حالت‌های Stack و Scroll و رفتارهای واکنش‌گرا.</p>
+        </div>
+        <div id="pane-overlays" class="ab-tab-pane" data-tab-pane="overlays">
+            <p class="ab-text-xs ab-text-muted">دیالوگ‌های بومی HTML5، کشوهای جانبی و اعلان‌های موقت سیستم.</p>
+        </div>
+    </div>
+
 
     <!-- 3. KPI Cards & Bento Grid (All Tones & Trends) -->
     <?php component('kpi_grid', [
@@ -195,77 +210,93 @@ require APP_ROOT . '/views/admin/layout/header.php';
 
     <!-- 5. Form Fields, Controls & Intrinsic Grids -->
     <?php ob_start(); ?>
-    <div class="ab-stack ab-stack--md">
-        <div class="ab-form-grid">
-            <?php component('form_field', [
-                'name'        => 'demo_title',
-                'label'       => 'عنوان کالا',
-                'placeholder' => 'مثال: جوراب مچی طرح کهکشان',
-                'required'    => true,
-                'hint'        => 'نام محصول در فروشگاه و فاکتورها درج می‌شود.',
-            ]); ?>
+    <form id="uiKitDemoForm" method="post" action="ui-kit.php<?= !empty($activeTone) ? '?tone=' . urlencode($activeTone) : '' ?>" class="ab-form">
+        <?= csrfField() ?>
+        <div class="ab-stack ab-stack--md">
+            <div class="ab-form-grid">
+                <?php component('form_field', [
+                    'name'        => 'demo_title',
+                    'label'       => 'عنوان کالا',
+                    'placeholder' => 'مثال: جوراب مچی طرح کهکشان',
+                    'required'    => true,
+                    'hint'        => 'نام محصول در فروشگاه و فاکتورها درج می‌شود.',
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'        => 'demo_price',
+                    'label'       => 'قیمت فروش',
+                    'type'        => 'number',
+                    'value'       => '68000',
+                    'unit'        => 'تومان',
+                    'dir'         => 'ltr',
+                    'required'    => true,
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'    => 'demo_category',
+                    'label'   => 'دسته‌بندی',
+                    'type'    => 'select',
+                    'options' => [
+                        'college' => 'جوراب کالج',
+                        'crew'    => 'جوراب ساقدار',
+                        'ankle'   => 'جوراب مچی',
+                        'sports'  => 'جوراب ورزشی',
+                    ],
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'     => 'demo_error_field',
+                    'label'    => 'کد شناسه محصول (SKU)',
+                    'value'    => 'INVALID_CODE',
+                    'dir'      => 'ltr',
+                    'error'    => 'شناسه وارد شده معتبر نیست یا تکراری است.',
+                    'required' => true,
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'     => 'demo_disabled_field',
+                    'label'    => 'موجودی انبار مرکزی (غیرقابل ویرایش مستقیم)',
+                    'value'    => '۱۲۰ جفت',
+                    'disabled' => true,
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'    => 'demo_switch',
+                    'label'   => 'نمایش در ویترین صفحه اصلی',
+                    'type'    => 'switch',
+                    'checked' => true,
+                ]); ?>
+
+                <?php component('form_field', [
+                    'name'    => 'demo_check',
+                    'label'   => 'شامل ارسال رایگان برای سفارش‌های بالای ۳۰۰ هزار تومان',
+                    'type'    => 'check',
+                    'checked' => true,
+                ]); ?>
+            </div>
 
             <?php component('form_field', [
-                'name'        => 'demo_price',
-                'label'       => 'قیمت فروش',
-                'type'        => 'number',
-                'value'       => '68000',
-                'unit'        => 'تومان',
-                'dir'         => 'ltr',
-                'required'    => true,
+                'name'        => 'demo_textarea',
+                'label'       => 'توضیحات و مشخصات بافت',
+                'type'        => 'textarea',
+                'placeholder' => 'جزئیات جنس نخ، کشسانی و نحوه شست‌وشو...',
+                'rows'        => 3,
             ]); ?>
 
-            <?php component('form_field', [
-                'name'    => 'demo_category',
-                'label'   => 'دسته‌بندی',
-                'type'    => 'select',
-                'options' => [
-                    'college' => 'جوراب کالج',
-                    'crew'    => 'جوراب ساقدار',
-                    'ankle'   => 'جوراب مچی',
-                    'sports'  => 'جوراب ورزشی',
-                ],
-            ]); ?>
-
-            <?php component('form_field', [
-                'name'     => 'demo_error_field',
-                'label'    => 'کد شناسه محصول (SKU)',
-                'value'    => 'INVALID_CODE',
-                'dir'      => 'ltr',
-                'error'    => 'شناسه وارد شده معتبر نیست یا تکراری است.',
-                'required' => true,
-            ]); ?>
-
-            <?php component('form_field', [
-                'name'     => 'demo_disabled_field',
-                'label'    => 'موجودی انبار مرکزی (غیرقابل ویرایش مستقیم)',
-                'value'    => '۱۲۰ جفت',
-                'disabled' => true,
-            ]); ?>
-
-            <?php component('form_field', [
-                'name'    => 'demo_switch',
-                'label'   => 'نمایش در ویترین صفحه اصلی',
-                'type'    => 'switch',
-                'checked' => true,
-            ]); ?>
-
-            <?php component('form_field', [
-                'name'    => 'demo_check',
-                'label'   => 'شامل ارسال رایگان برای سفارش‌های بالای ۳۰۰ هزار تومان',
-                'type'    => 'check',
-                'checked' => true,
-            ]); ?>
+            <div class="ab-form-actions ab-cluster ab-cluster--sm">
+                <?php component('button', [
+                    'label'   => 'ثبت آزمایشی فرم (غیرمخرب)',
+                    'variant' => 'primary',
+                    'type'    => 'submit',
+                ]); ?>
+                <?php component('button', [
+                    'label'   => 'پاک کردن فرم',
+                    'variant' => 'secondary',
+                    'type'    => 'reset',
+                ]); ?>
+            </div>
         </div>
-
-        <?php component('form_field', [
-            'name'        => 'demo_textarea',
-            'label'       => 'توضیحات و مشخصات بافت',
-            'type'        => 'textarea',
-            'placeholder' => 'جزئیات جنس نخ، کشسانی و نحوه شست‌وشو...',
-            'rows'        => 3,
-        ]); ?>
-    </div>
+    </form>
     <?php $formContent = ob_get_clean(); ?>
 
     <?php component('card', [
@@ -402,22 +433,37 @@ require APP_ROOT . '/views/admin/layout/header.php';
         </p>
         <div class="ab-cluster ab-cluster--sm">
             <?php component('button', [
-                'label'   => 'باز کردن مودال متوسط',
-                'variant' => 'primary',
-                'attrs'   => ['data-ab-modal-open' => 'demoModalMd'],
-            ]); ?>
-            <?php component('button', [
-                'label'   => 'باز کردن مودال کوچک',
+                'label'   => 'مودال کوچک (sm)',
                 'variant' => 'secondary',
                 'attrs'   => ['data-ab-modal-open' => 'demoModalSm'],
             ]); ?>
             <?php component('button', [
-                'label'   => 'باز کردن کشوی جانبی (Drawer)',
+                'label'   => 'مودال متوسط (md)',
+                'variant' => 'primary',
+                'attrs'   => ['data-ab-modal-open' => 'demoModalMd'],
+            ]); ?>
+            <?php component('button', [
+                'label'   => 'مودال بزرگ (lg)',
                 'variant' => 'outline',
+                'attrs'   => ['data-ab-modal-open' => 'demoModalLg'],
+            ]); ?>
+            <?php component('button', [
+                'label'   => 'مودال خیلی بزرگ (xl)',
+                'variant' => 'outline',
+                'attrs'   => ['data-ab-modal-open' => 'demoModalXl'],
+            ]); ?>
+            <?php component('button', [
+                'label'   => 'کشوی چپ (End)',
+                'variant' => 'secondary',
                 'attrs'   => ['data-ab-modal-open' => 'demoDrawer'],
             ]); ?>
             <?php component('button', [
-                'label'   => 'نمایش اعلان موقت (Toast)',
+                'label'   => 'کشوی راست (Start)',
+                'variant' => 'secondary',
+                'attrs'   => ['data-ab-modal-open' => 'demoDrawerStart'],
+            ]); ?>
+            <?php component('button', [
+                'label'   => 'اعلان موقت (Toast)',
                 'variant' => 'ghost',
                 'attrs'   => ['onclick' => "AB.toast('عملیات با موفقیت در سیستم اعمال گردید.', 'success')"],
             ]); ?>
@@ -651,10 +697,10 @@ require APP_ROOT . '/views/admin/layout/header.php';
     ],
 ]); ?>
 
-<!-- Drawer Instance -->
+<!-- Drawer Instance (End / Left in RTL) -->
 <?php component('drawer', [
     'id'             => 'demoDrawer',
-    'title'          => 'پرونده و گزارش جامع سفارش',
+    'title'          => 'پرونده و گزارش جامع سفارش (End Drawer)',
     'side'           => 'end',
     'content'        => render_component('definition_list', [
         'items' => [
@@ -666,6 +712,79 @@ require APP_ROOT . '/views/admin/layout/header.php';
     ]),
     'footer_actions' => [
         ['label' => 'بستن کشو', 'variant' => 'secondary', 'attrs' => ['data-ab-modal-close' => '']],
+    ],
+]); ?>
+
+<!-- Drawer Instance (Start / Right in RTL) -->
+<?php component('drawer', [
+    'id'             => 'demoDrawerStart',
+    'title'          => 'فیلترهای پیشرفته و گزینه‌ها (Start Drawer)',
+    'side'           => 'start',
+    'content'        => '<div class="ab-stack ab-stack--sm">' .
+        render_component('form_field', [
+            'name'  => 'drawer_filter_status',
+            'label' => 'وضعیت پردازش',
+            'type'  => 'select',
+            'options' => ['all' => 'همه وضعیت‌ها', 'paid' => 'پرداخت شده', 'pending' => 'در انتظار پرداخت'],
+        ]) .
+        render_component('form_field', [
+            'name'    => 'drawer_filter_stock',
+            'label'   => 'فقط کالاهای موجود در انبار',
+            'type'    => 'check',
+            'checked' => true,
+        ]) .
+        '</div>',
+    'footer_actions' => [
+        ['label' => 'اعمال فیلتر', 'variant' => 'primary', 'attrs' => ['data-ab-modal-close' => '']],
+        ['label' => 'انصراف', 'variant' => 'secondary', 'attrs' => ['data-ab-modal-close' => '']],
+    ],
+]); ?>
+
+<!-- Modal lg Instance -->
+<?php component('modal', [
+    'id'             => 'demoModalLg',
+    'title'          => 'مشاهده و ویرایش تفصیلی آیتم (Modal lg)',
+    'size'           => 'lg',
+    'content'        => '<div class="ab-stack ab-stack--sm">' .
+        '<p class="ab-text-sm ab-text-muted">این دیالوگ با عرض بزرگ (lg) برای فرم‌های چندستونه و تنظیمات گسترده طراحی شده است.</p>' .
+        render_component('definition_list', [
+            'items' => [
+                ['label' => 'عنوان محصول:', 'value' => 'جوراب ساقدار نانو طرح اسپرت'],
+                ['label' => 'موجودی کل انبار:', 'value' => '۴۵ جفت'],
+                ['label' => 'قیمت تمام شده:', 'value' => '۳۲,۰۰۰ تومان'],
+                ['label' => 'حاشیه سود تخمینی:', 'value' => '۴۵٪'],
+            ],
+        ]) .
+        '</div>',
+    'footer_actions' => [
+        ['label' => 'بستن', 'variant' => 'secondary', 'attrs' => ['data-ab-modal-close' => '']],
+        ['label' => 'ثبت تغییرات', 'variant' => 'primary'],
+    ],
+]); ?>
+
+<!-- Modal xl Instance -->
+<?php component('modal', [
+    'id'             => 'demoModalXl',
+    'title'          => 'پیش‌نمایش جامع کارتابل (Modal xl)',
+    'size'           => 'xl',
+    'content'        => '<div class="ab-stack ab-stack--md">' .
+        '<p class="ab-text-sm ab-text-muted">این دیالوگ با حداکثر عرض مجاز (xl) برای پیش‌نمایش اسناد و جداول تفصیلی کاربرد دارد.</p>' .
+        render_component('data_table', [
+            'columns' => [
+                ['key' => 'id', 'label' => 'ردیف', 'priority' => 1],
+                ['key' => 'item', 'label' => 'شرح قلم کالا', 'priority' => 1],
+                ['key' => 'qty', 'label' => 'تعداد', 'priority' => 1, 'type' => 'number'],
+                ['key' => 'price', 'label' => 'مبلغ واحد', 'priority' => 1, 'type' => 'price'],
+            ],
+            'rows' => [
+                ['id' => 1, 'item' => 'جوراب کالج پنبه‌ای سفید', 'qty' => 10, 'price' => 58000],
+                ['id' => 2, 'item' => 'جوراب نیم‌ساق نانو مشکی', 'qty' => 5, 'price' => 72000],
+            ],
+        ]) .
+        '</div>',
+    'footer_actions' => [
+        ['label' => 'بستن پنجره', 'variant' => 'secondary', 'attrs' => ['data-ab-modal-close' => '']],
+        ['label' => 'چاپ پیش‌فاکتور', 'variant' => 'outline', 'attrs' => ['onclick' => "AB.toast('دستور چاپ صادر شد.', 'info')"]],
     ],
 ]); ?>
 

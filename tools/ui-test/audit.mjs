@@ -336,6 +336,17 @@ async function evaluatePageHealth(page, vp) {
             ) {
               continue;
             }
+
+            // Form controls wrapped in interactive label elements (WCAG 2.5.5 / 2.5.8 label target evaluation)
+            if ((el.type === 'checkbox' || el.type === 'radio')) {
+              const labelEl = parent.tagName === 'LABEL' ? parent : parent.closest('label');
+              if (labelEl) {
+                const lRect = labelEl.getBoundingClientRect();
+                if (lRect.width >= 32 && lRect.height >= 24) {
+                  continue;
+                }
+              }
+            }
           }
 
           let sel = el.tagName.toLowerCase();

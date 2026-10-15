@@ -809,7 +809,7 @@
             if (targetPane) {
                 const parent = targetPane.parentElement;
                 if (parent) {
-                    parent.querySelectorAll('.tab-pane, .settings-tab-pane, .diag-tab-pane, .appearance-tab-pane, [data-tab-pane]').forEach(function (p) {
+                    parent.querySelectorAll('.tab-pane, .ab-tab-pane, .settings-tab-pane, .diag-tab-pane, .appearance-tab-pane, [data-tab-pane]').forEach(function (p) {
                         p.classList.remove('active');
                     });
                 }

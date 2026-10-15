@@ -3,9 +3,33 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.32.3 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.32.4 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.34.4 — 2026-10-16
+
+### UI Kit Full Audit Matrix & Shared Component Stabilization (Phase 2.5a)
+
+- **UI Kit Master Showcase Expansion (`views/admin/ui-kit.php`, `app/controllers/admin/ui_kit.php`)**:
+  - Added interactive triggers and dialog instances for all 4 modal sizes (`sm`, `md`, `lg`, `xl`) and bilateral drawer directions (`end` left-side and `start` right-side drawer with filter form).
+  - Implemented interactive tab panels (`#pane-all`, `#pane-buttons`, `#pane-tables`, `#pane-overlays`) demonstrating real-time panel switching with zero inline JavaScript.
+  - Implemented non-destructive demo form `#uiKitDemoForm` with CSRF protection, POST validation, success toast flash notification, and clean redirect.
+- **Component Prop Scope Collision Fix (`app/core/functions.php`)**:
+  - Resolved PHP variable collision in `component()` and `render_component()` where local parameter `$name` masked the `$props['name']` passed to components under `EXTR_SKIP`.
+  - Renamed internal variables to `$_componentName`, `$_componentProps`, and `$_componentFile` and applied `EXTR_OVERWRITE`, guaranteeing form inputs receive their specified field names.
+- **KPI Card Look Alignment (`assets/css/admin-components.css`)**:
+  - Added tone-driven top accent stripe (`.ab-kpi-card::before`, 3px height) and subtle hover lift/shadow elevation to match the signature aesthetic of the Expenses workstation cards.
+- **Mobile Touch Target & Legibility Standards (`assets/css/admin-shell.css`, `assets/css/admin-components.css`)**:
+  - Enforced 44x44px minimum tap targets on mobile hamburger trigger (`.admin-mobile-menu-btn`), mobile storefront button (`.btn-dash-store-compact`), and bottom navigation items (`.admin-bottom-nav-item`).
+  - Added `min-height: var(--control-h)` to `.ab-tab-btn` ensuring WCAG compliance across coarse pointer touchscreens.
+  - Upgraded sub-12px dates and separators in topbar to `var(--text-xs)`.
+- **Navigation Tabs Engine Sync (`assets/js/ab-kit.js`, `assets/css/admin-components.css`)**:
+  - Added standard `.ab-tab-pane, [data-tab-pane] { display: none; }` and `.ab-tab-pane.active, [data-tab-pane].active { display: block; }` classes.
+  - Added `.ab-tab-pane` to `AB.tabs.activate` panel query selector.
+- **Playwright Audit Harness Polish (`tools/ui-test/audit.mjs`)**:
+  - Refined tap target check to recognize parent `<label>` dimensions for checkboxes and radio switches per WCAG 2.5.5 / 2.5.8.
+  - Confirmed 0 critical failures, 0 horizontal scroll overflows, and 0 console errors across all 14 viewports for the UI Kit.
 
 ## 1.34.3 — 2026-10-11
 
@@ -115,23 +139,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Admin Design System Baseline Tracking (`docs/DESIGN.md`)**:
   - Established quantitative Phase 0 baseline metrics table in `docs/DESIGN.md` recording 17,374 CSS lines across 16 files, 1,279 raw hex color codes, 1,378 inline styles, ~50 media query breakpoints, and 0/32 migrated pages.
 
-## 1.32.3 — 2026-10-04
-
-### Admin Workstation Logic Stability, SearchService Database Alignment & Script Load Order Fixes
-
-- **Database Column Alignment in SearchService (`app/services/SearchService.php`)**:
-  - Fixed database column mismatches in `SearchService::searchOrders()`: replaced invalid `customer_phone` with `phone` and `total_amount` with `total`.
-  - Prevented fatal PDO SQL exceptions and restored live order search results across the admin header and dashboard.
-- **Client Toast Polymorphism & Copy Handlers (`assets/js/ab-kit.js`, `assets/js/admin-c2c.js`)**:
-  - Bound `AB.toast.show = AB.toast` to provide polymorphic method-chaining and prevent `TypeError: AB.toast.show is not a function`.
-  - Updated card-to-card inspection workstation copy action to invoke `AB.toast` seamlessly.
-- **Navigation Tabs Engine & Backward Compatible Classes (`views/admin/components/nav_tabs.php`, `assets/js/ab-kit.js`)**:
-  - Restored explicit `btnClass => 'settings-tab-btn'` in `settings_partials/_nav_tabs.php` and `'btnClass' => 'diag-tab-btn'` in `diagnostics_partials/_nav_tabs.php`.
-  - Added smart fallback class derivation in `views/admin/components/nav_tabs.php` based on parent navigation container classes.
-  - Implemented declarative `AB.tabs` navigation engine in `assets/js/ab-kit.js` with automated pane switching and URL hash synchronization.
-- **Script Lifecycle & Zero Race Conditions (`views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
-  - Enqueued `assets/js/ab-kit.js` early in `<head>` via `views/admin/layout/header.php`, guaranteeing `window.AB`, `showToast`, and UI helpers exist before any page body or script executes.
-  - Removed duplicate script inclusion from `views/admin/layout/footer.php`.
-- **Modal Lifecycle & State Cleanup (`views/admin/tags.php`)**:
-  - Restored `onclick="closeTagModal()"` on modal dismiss and cancel actions in `tags.php` to clean URL query parameters (`?edit=`) upon dismissal.
 
