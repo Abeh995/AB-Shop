@@ -7,6 +7,33 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.34.6 — 2026-10-16
+
+### Admin UI Pilot Migration — users.php (Phase 3)
+
+- **Pilot Page Full Migration (`views/admin/users.php`, `views/admin/users_partials/`)**:
+  - Rebuilt master view into the List Archetype (`.ab-pattern-list`) using AB-Kit v2 design tokens and components.
+  - Replaced legacy KPI cards with Bento `component('kpi_grid')` featuring tone-colored cards (`slate`, `amber`, `emerald`, `sky`) with accent stripes.
+  - Replaced legacy toolbar with `component('toolbar')` featuring quick filter chips (`.ab-chip`) and unified search.
+  - Migrated admin users table to `component('data_table')` in `mode => 'stack'` with column priority hierarchy (`data-priority`), custom avatar bubbles (`.ab-avatar`), semantic badges, and stacked card view at `< 40rem`.
+  - Migrated audit trail table to `component('data_table')` in `mode => 'scroll'` with responsive horizontal scrolling and sticky headers.
+  - Migrated Create Admin, Edit Admin, and Change Password modals to native `<dialog class="ab-modal">` via `component('modal')` and `component('form_field')`.
+  - Achieved strictly 0 inline styles (`style=""`) and 0 inline `<script>` tags across all users views.
+- **Page Stylesheet Deletion & CSS Debt Reduction (`assets/css/admin-users.css`, `views/admin/layout/header.php`)**:
+  - Completely deleted `assets/css/admin-users.css` (-530 lines of CSS, -17 raw hex color codes, and -1 competing `:root` palette).
+  - Removed `'users.php'` entry from `$pageCssMap` in admin header.
+- **Workspace Client Script (`assets/js/admin-users.js`, `app/controllers/admin/users.php`)**:
+  - Encapsulated live table search and role/status filtering into external `assets/js/admin-users.js` passed via `$pageScripts`.
+  - Implemented delegated modal openers with JSON payload parsing and maintained backward-compatible global helpers (`window.openCreateModal`, `window.openEditModal`, `window.openPasswordModal`, `window.closeAllModals`).
+- **Shared Component Library & UI Kit Expansion (`assets/css/admin-components.css`, `views/admin/ui-kit.php`)**:
+  - Added `.ab-avatar` base component with size variants (`.ab-avatar--sm`, `.ab-avatar--lg`) and user initials presentation.
+  - Added `.ab-inline-form` utility for table action forms and `.ab-icon-btn.ab-btn--danger` styling.
+  - Added User Avatars showcase section to `views/admin/ui-kit.php`.
+- **Automated Verification & Quality Gate (`tools/ui-test/test-users-interaction.mjs`, `tools/verify.php`)**:
+  - Validated 0 console errors and 0 page horizontal overflows across all 14 viewports in the Playwright audit.
+  - Verified 100% success on end-to-end interactive suite: modal open/close, field population, non-destructive form submission with flash feedback, quick filter chips, and live search.
+  - Locked 13 ratcheted metric reductions in `tools/verify-baseline.json`.
+
 ## 1.34.5 — 2026-10-16
 
 ### Admin UI Stabilization Gate & Responsive Audit Baseline (Phase 2.5b)
@@ -80,60 +107,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Added mobile bottom sheet slide transitions for modals and side drawer modular classes (`.ab-drawer__section`, `.ab-drawer__timeline`, `.ab-drawer__item-list`).
   - Implemented comprehensive order dossier drawer demo with multi-step timeline, customer card, items breakdown, and postal details.
 
-## 1.34.1 — 2026-10-07
 
-### Fix Admin UI Kit Undefined Auth Function
-
-- **UI Kit Controller Auth Guard (`app/controllers/admin/ui_kit.php`)**:
-  - Removed undefined `requireLogin()` function call that triggered a fatal PHP error and HTTP 500 response during route inspection. The controller now exclusively relies on `requireAdmin()` defined in `app/core/auth.php`.
-
-## 1.34.0 — 2026-10-07
-
-### Admin Component Library v2 & UI Kit Showcase (Phase 2)
-
-- **Reusable Presentation Component Library (`views/admin/components/`, `assets/css/admin-components.css`)**:
-  - Implemented 13 new server-side presentation components and modernized 5 existing components under strict layer boundaries (0 SQL, 0 `$_POST` mutations): `button`, `form_field`, `card`, `page_header`, `toolbar`, `pagination`, `data_table`, `alert`, `modal`, `drawer`, `savebar`, `definition_list`, `progress`, `kpi_card`, `kpi_grid`, `badge`, `empty_state`, `nav_tabs`.
-  - Added `render_component(string $name, array $props)` helper to `app/core/functions.php` for string buffering.
-  - Rewrote `assets/css/admin-components.css` inside `@layer components` using 100% tokens and RTL logical properties with 0 raw hex codes, 0 `:root` overrides, and 0 `!important`.
-- **Intrinsic Responsiveness & Container Query Model**:
-  - Established inline container queries on `.ab-card`, `.ab-table-wrap`, `.ab-kpi-card`, and `.ab-split`.
-  - Implemented `data_table` dual responsiveness: `data-mode="stack"` (turns rows into cards with `data-label` captions below 40rem container width) and `data-mode="scroll"` (sticky first column for financial data) with 3-tier priority column hiding.
-- **Native HTML5 Dialogs & Split View Interaction (`assets/js/ab-kit.js`)**:
-  - Upgraded modals and side drawers to native `<dialog>` elements rendered in browser top layer with auto-closing backdrop support, maintaining backward compatibility for legacy `.admin-modal` structures.
-  - Implemented `AB.split` master-detail layout engine (48 lines) with declarative switching (`data-split-view`, `data-ab-split-select`, `data-ab-split-back`).
-- **Interactive UI Kit Living Style Guide (`admin/ui-kit.php`, `app/controllers/admin/ui_kit.php`, `views/admin/ui-kit.php`)**:
-  - Deployed comprehensive living style guide and edge-case stress test workstation at `/admin/ui-kit.php`, accessible to authenticated admins and linked from Diagnostics.
-  - Showcases all components across default, disabled, loading, invalid, empty, long unbroken token, long RTL Persian text, and multi-column states.
-- **Architectural Documentation & Verification Quality Gate**:
-  - Documented complete component contracts, properties, and usage examples in `docs/COMPONENTS.md`.
-  - Updated `docs/DESIGN.md` Admin UI migration status table and CSS layering architecture.
-  - Enhanced `tools/verify.php` with `ui_kit_coverage` guard ensuring 100% component coverage in the UI Kit.
-
-## 1.33.0 — 2026-10-05
-
-### Admin Design System Foundation: CSS Layers, Tokens, Reset, Shell & Breakpoint Unification (Phase 1)
-
-- **Cascade Layers Architecture & Single Source of Truth Tokens (`assets/css/admin-tokens.css`)**:
-  - Established CSS `@layer reset, tokens, base, layout, components, patterns, pages, utilities;` enforcing strict cascade precedence.
-  - Built unified token system defining color primitives (`--c-mocha-*`, `--c-latte-*`, `--c-blue-*`, `--c-emerald-*`, etc.) as the exclusive location for raw hex codes across the entire admin panel.
-  - Implemented semantic surfaces, borders, shadows, fluid typography clamps (`--text-xs` to `--text-xl`), density variables, and tone systems (`brand`, `blue`, `sky`, `emerald`, `amber`, `rose`, `purple`, `teal`, `slate`).
-  - Added complete backward-compatibility legacy alias mapping for all 15 historical `:root` blocks, ensuring 0 visual regressions for unmigrated pages.
-- **Admin CSS Reset & Storefront Decoupling (`assets/css/admin-base.css`, `views/admin/layout/header.php`, `views/admin/login.php`)**:
-  - Implemented `@layer reset, base` with box-sizing, form control font inheritance, focus rings, and iOS focus zoom guard (`font-size: max(16px, 1rem)`).
-  - Aliased legacy UI classes (`:is(.ab-btn, .btn)`, `:is(.ab-field, .form-group)`, `:is(.ab-input, .form-control)`, `:is(.ab-alert, .alert)`), completely severing the admin panel's dependency on the storefront's `style.css`.
-  - Added `viewport-fit=cover` to admin layout and login viewport headers for full iOS safe-area compliance.
-- **Admin Layout Shell Extraction & Container Gutter (`assets/css/admin-shell.css`, `views/admin/layout/header.php`, `views/admin/layout/footer.php`)**:
-  - Extracted 1,234 lines of sidebar, collapsed rail, off-canvas drawer, topbar, search dropdown, and bottom navigation bar (BNB) rules out of `admin.css` into `@layer layout` in `admin-shell.css`.
-  - Eliminated arbitrary body hacks (`body:not(.admin-page-dashboard):not(.admin-page-orders) ...`) by introducing the `.ab-page` container wrapper with fluid responsive gutters (`clamp(.75rem, 2.5vw, 2rem)`).
-  - Wired dynamic `$pageTone` derivation across navigation groups in `views/admin/layout/nav_config.php` and emitted `data-tone` on `.ab-page`.
-- **Responsive Breakpoint Unification (`assets/js/ab-kit.js`, `assets/js/admin.js`, `assets/css/admin-shell.css`)**:
-  - Unified fragmented breakpoint values (768px / 900px) to standardized shell breakpoints (`sm: 640px / 40rem`, `md: 1024px / 64rem`, `lg: 1440px / 90rem`).
-  - Added `AB.bp = { sm: 640, md: 1024, lg: 1440 };` to `ab-kit.js` and replaced all literal breakpoint comparisons in `admin.js`.
-- **Admin Utility Classes & Patterns Placeholder (`assets/css/admin-utilities.css`, `assets/css/admin-patterns.css`)**:
-  - Introduced standard layout utilities (`.ab-stack`, `.ab-cluster`, `.ab-grid`, `.ab-sr-only`, `.ab-nowrap`, `.ab-num`) in `@layer utilities`.
-  - Created placeholder `admin-patterns.css` for Phase 2 page archetypes.
-- **Ratchet Baseline Quality Gate Expansion (`tools/verify.php`, `tools/verify-baseline.json`)**:
-  - Expanded `tools/verify.php` with `bp_sync` (ensuring `AB.bp` in JS matches `admin-tokens.css`), `component_registry` (ensuring all components exist and are documented), and ratchet metrics for `css_media_page`, `css_important`, `css_transition_all`, `css_physical_dir`, `view_inline_style`, and `view_legacy_class`.
-  - Excluded `admin-tokens.css` from `css_root`/`css_hex` checks as the single source of truth, and updated `tools/verify-baseline.json`.
 
 

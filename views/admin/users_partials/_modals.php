@@ -1,134 +1,205 @@
 <?php
 /**
  * Admin Users Partial: Interactive Modals
+ * Native <dialog> Modals via component('modal', ...)
  */
 ?>
 
 <!-- 1. Create Admin Modal -->
-<div class="usr-modal-backdrop" id="modalCreateAdmin" onclick="if(event.target===this) closeAllModals()">
-    <div class="usr-modal-card">
-        <div class="usr-modal-header">
-            <h3 class="usr-modal-title">افزودن مدیر جدید به سیستم</h3>
-            <button type="button" class="usr-modal-close" onclick="closeAllModals()">&times;</button>
-        </div>
-        <form method="post" action="users.php">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="create">
-            <div class="usr-modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>نام کاربری <span style="color:var(--usr-danger)">*</span></label>
-                        <input class="form-control" type="text" name="username" dir="ltr" required minlength="3" placeholder="admin_username">
-                    </div>
-                    <div class="form-group">
-                        <label>سطح دسترسی</label>
-                        <select class="form-control" name="role">
-                            <option value="admin">مدیر عادی (سفارش‌ها، انبار، مالی)</option>
-                            <option value="super_admin">مدیر کل (دسترسی تام و مدیران)</option>
-                        </select>
-                    </div>
-                </div>
+<?php ob_start(); ?>
+<form method="post" action="users.php" id="formCreateAdmin" class="ab-form">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="create">
 
-                <div class="form-group">
-                    <label>نام و نام خانوادگی</label>
-                    <input class="form-control" type="text" name="full_name" placeholder="مثال: علی رضایی">
-                </div>
+    <div class="ab-form-grid">
+        <?php component('form_field', [
+            'name'        => 'username',
+            'label'       => 'نام کاربری',
+            'placeholder' => 'admin_username',
+            'required'    => true,
+            'dir'         => 'ltr',
+            'attrs'       => ['minlength' => '3'],
+        ]); ?>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>شماره تماس (اختیاری)</label>
-                        <input class="form-control" type="text" name="phone" dir="ltr" placeholder="0912...">
-                    </div>
-                    <div class="form-group">
-                        <label>آدرس ایمیل (اختیاری)</label>
-                        <input class="form-control" type="email" name="email" dir="ltr" placeholder="admin@domain.com">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>رمز عبور اولیه <span style="color:var(--usr-danger)">*</span></label>
-                    <input class="form-control" type="password" name="password" required minlength="8" placeholder="حداقل ۸ کاراکتر">
-                </div>
-            </div>
-            <div class="usr-modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeAllModals()">انصراف</button>
-                <button type="submit" class="btn btn-primary">ایجاد حساب مدیر</button>
-            </div>
-        </form>
+        <?php component('form_field', [
+            'name'    => 'role',
+            'label'   => 'سطح دسترسی',
+            'type'    => 'select',
+            'options' => [
+                'admin'       => 'مدیر عادی (سفارش‌ها، انبار، مالی)',
+                'super_admin' => 'مدیر کل (دسترسی تام و مدیران)',
+            ],
+            'value'   => 'admin',
+        ]); ?>
     </div>
-</div>
+
+    <?php component('form_field', [
+        'name'        => 'full_name',
+        'label'       => 'نام و نام خانوادگی',
+        'placeholder' => 'مثال: علی رضایی',
+    ]); ?>
+
+    <div class="ab-form-grid">
+        <?php component('form_field', [
+            'name'        => 'phone',
+            'label'       => 'شماره تماس (اختیاری)',
+            'placeholder' => '0912...',
+            'dir'         => 'ltr',
+        ]); ?>
+
+        <?php component('form_field', [
+            'name'        => 'email',
+            'label'       => 'آدرس ایمیل (اختیاری)',
+            'type'        => 'email',
+            'placeholder' => 'admin@domain.com',
+            'dir'         => 'ltr',
+        ]); ?>
+    </div>
+
+    <?php component('form_field', [
+        'name'        => 'password',
+        'label'       => 'رمز عبور اولیه',
+        'type'        => 'password',
+        'placeholder' => 'حداقل ۸ کاراکتر',
+        'required'    => true,
+        'attrs'       => ['minlength' => '8'],
+    ]); ?>
+</form>
+<?php $createAdminBody = ob_get_clean(); ?>
+
+<?php component('modal', [
+    'id'             => 'modalCreateAdmin',
+    'title'          => 'افزودن مدیر جدید به سیستم',
+    'size'           => 'md',
+    'content'        => $createAdminBody,
+    'footer_actions' => [
+        [
+            'label'   => 'انصراف',
+            'variant' => 'secondary',
+            'attrs'   => ['data-ab-modal-close' => ''],
+        ],
+        [
+            'label'   => 'ایجاد حساب مدیر',
+            'variant' => 'primary',
+            'type'    => 'submit',
+            'attrs'   => ['form' => 'formCreateAdmin'],
+        ],
+    ],
+]); ?>
 
 <!-- 2. Edit Admin Modal -->
-<div class="usr-modal-backdrop" id="modalEditAdmin" onclick="if(event.target===this) closeAllModals()">
-    <div class="usr-modal-card">
-        <div class="usr-modal-header">
-            <h3 class="usr-modal-title">ویرایش مشخصات مدیر</h3>
-            <button type="button" class="usr-modal-close" onclick="closeAllModals()">&times;</button>
-        </div>
-        <form method="post" action="users.php">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="update">
-            <input type="hidden" name="id" id="editAdminId" value="">
-            <div class="usr-modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>نام کاربری <span style="color:var(--usr-danger)">*</span></label>
-                        <input class="form-control" type="text" name="username" id="editAdminUsername" dir="ltr" required minlength="3">
-                    </div>
-                    <div class="form-group">
-                        <label>سطح دسترسی</label>
-                        <select class="form-control" name="role" id="editAdminRole">
-                            <option value="admin">مدیر عادی (سفارش‌ها، انبار، مالی)</option>
-                            <option value="super_admin">مدیر کل (دسترسی تام و مدیران)</option>
-                        </select>
-                    </div>
-                </div>
+<?php ob_start(); ?>
+<form method="post" action="users.php" id="formEditAdmin" class="ab-form">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="update">
+    <input type="hidden" name="id" id="editAdminId" value="">
 
-                <div class="form-group">
-                    <label>نام و نام خانوادگی</label>
-                    <input class="form-control" type="text" name="full_name" id="editAdminFullName">
-                </div>
+    <div class="ab-form-grid">
+        <?php component('form_field', [
+            'name'     => 'username',
+            'id'       => 'editAdminUsername',
+            'label'    => 'نام کاربری',
+            'required' => true,
+            'dir'      => 'ltr',
+            'attrs'    => ['minlength' => '3'],
+        ]); ?>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>شماره تماس</label>
-                        <input class="form-control" type="text" name="phone" id="editAdminPhone" dir="ltr">
-                    </div>
-                    <div class="form-group">
-                        <label>آدرس ایمیل</label>
-                        <input class="form-control" type="email" name="email" id="editAdminEmail" dir="ltr">
-                    </div>
-                </div>
-            </div>
-            <div class="usr-modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeAllModals()">انصراف</button>
-                <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
-            </div>
-        </form>
+        <?php component('form_field', [
+            'name'    => 'role',
+            'id'      => 'editAdminRole',
+            'label'   => 'سطح دسترسی',
+            'type'    => 'select',
+            'options' => [
+                'admin'       => 'مدیر عادی (سفارش‌ها، انبار، مالی)',
+                'super_admin' => 'مدیر کل (دسترسی تام و مدیران)',
+            ],
+        ]); ?>
     </div>
-</div>
+
+    <?php component('form_field', [
+        'name'  => 'full_name',
+        'id'    => 'editAdminFullName',
+        'label' => 'نام و نام خانوادگی',
+    ]); ?>
+
+    <div class="ab-form-grid">
+        <?php component('form_field', [
+            'name'  => 'phone',
+            'id'    => 'editAdminPhone',
+            'label' => 'شماره تماس',
+            'dir'   => 'ltr',
+        ]); ?>
+
+        <?php component('form_field', [
+            'name'  => 'email',
+            'id'    => 'editAdminEmail',
+            'label' => 'آدرس ایمیل',
+            'type'  => 'email',
+            'dir'   => 'ltr',
+        ]); ?>
+    </div>
+</form>
+<?php $editAdminBody = ob_get_clean(); ?>
+
+<?php component('modal', [
+    'id'             => 'modalEditAdmin',
+    'title'          => 'ویرایش مشخصات مدیر',
+    'size'           => 'md',
+    'content'        => $editAdminBody,
+    'footer_actions' => [
+        [
+            'label'   => 'انصراف',
+            'variant' => 'secondary',
+            'attrs'   => ['data-ab-modal-close' => ''],
+        ],
+        [
+            'label'   => 'ذخیره تغییرات',
+            'variant' => 'primary',
+            'type'    => 'submit',
+            'attrs'   => ['form' => 'formEditAdmin'],
+        ],
+    ],
+]); ?>
 
 <!-- 3. Change Password Modal -->
-<div class="usr-modal-backdrop" id="modalPasswordAdmin" onclick="if(event.target===this) closeAllModals()">
-    <div class="usr-modal-card" style="max-width:440px;">
-        <div class="usr-modal-header">
-            <h3 class="usr-modal-title">تغییر رمز عبور حساب <span id="pwAdminUsername" style="color:var(--usr-primary);" dir="ltr"></span></h3>
-            <button type="button" class="usr-modal-close" onclick="closeAllModals()">&times;</button>
-        </div>
-        <form method="post" action="users.php">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="change_password">
-            <input type="hidden" name="id" id="pwAdminId" value="">
-            <div class="usr-modal-body">
-                <div class="form-group">
-                    <label>رمز عبور جدید (حداقل ۸ کاراکتر) <span style="color:var(--usr-danger)">*</span></label>
-                    <input class="form-control" type="password" name="password" required minlength="8" placeholder="رمز عبور قوی وارد کنید...">
-                </div>
-            </div>
-            <div class="usr-modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeAllModals()">انصراف</button>
-                <button type="submit" class="btn btn-primary">ثبت رمز جدید</button>
-            </div>
-        </form>
+<?php ob_start(); ?>
+<form method="post" action="users.php" id="formPasswordAdmin" class="ab-form">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="change_password">
+    <input type="hidden" name="id" id="pwAdminId" value="">
+
+    <div class="ab-stack ab-stack--sm">
+        <p class="ab-text-sm ab-text-muted">
+            تغییر رمز عبور برای حساب کاربری: <span id="pwAdminUsername" class="font-bold text-tone" dir="ltr"></span>
+        </p>
+        <?php component('form_field', [
+            'name'        => 'password',
+            'label'       => 'رمز عبور جدید',
+            'type'        => 'password',
+            'placeholder' => 'رمز عبور جدید (حداقل ۸ کاراکتر)...',
+            'required'    => true,
+            'attrs'       => ['minlength' => '8'],
+        ]); ?>
     </div>
-</div>
+</form>
+<?php $passwordAdminBody = ob_get_clean(); ?>
+
+<?php component('modal', [
+    'id'             => 'modalPasswordAdmin',
+    'title'          => 'تغییر رمز عبور مدیر',
+    'size'           => 'sm',
+    'content'        => $passwordAdminBody,
+    'footer_actions' => [
+        [
+            'label'   => 'انصراف',
+            'variant' => 'secondary',
+            'attrs'   => ['data-ab-modal-close' => ''],
+        ],
+        [
+            'label'   => 'ثبت رمز جدید',
+            'variant' => 'primary',
+            'type'    => 'submit',
+            'attrs'   => ['form' => 'formPasswordAdmin'],
+        ],
+    ],
+]); ?>

@@ -202,6 +202,20 @@
     }
   }
 
+  .ab-icon-btn.ab-btn--danger {
+    color: var(--danger);
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  @media (hover: hover) {
+    .ab-icon-btn.ab-btn--danger:hover {
+      background: var(--danger-soft);
+      border-color: var(--danger);
+      color: var(--danger-strong);
+    }
+  }
+
   /* Focus & Disabled States */
   :is(.ab-btn, .btn, .ab-icon-btn):focus-visible {
     outline: none;
@@ -1077,6 +1091,44 @@
     background: var(--tone-soft);
     border-color: var(--tone);
     color: var(--tone-strong);
+  }
+
+  /* User Avatars */
+  .ab-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-pill);
+    background: var(--tone-soft);
+    color: var(--tone-strong);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    user-select: none;
+    border: 1px solid var(--tone-border);
+  }
+
+  .ab-avatar--sm {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: var(--text-xs);
+  }
+
+  .ab-avatar--lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: var(--text-md);
+  }
+
+  /* Inline Form Utility for Action Buttons */
+  .ab-inline-form {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
   }
 
 

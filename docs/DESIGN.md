@@ -170,15 +170,15 @@ Don't reskin the whole site in one change on a live store:
 
 Baseline measured as part of `ADMIN-UI-PLAN.md` Phase 0 (version 1.32.4). This table tracks the progress of the admin design system unification across phases.
 
-| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 2 — v1.34.0) |
+| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 3 — v1.34.6) |
 |---|---|---|---|
-| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | ~16,900 lines (21 files, layers & v2 kit established) |
-| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 844 occurrences outside `admin-tokens.css` (435 removed; `admin-components.css` has 0 hex) |
-| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 14 blocks (admin.css :root unified into tokens) |
-| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences (zero added in UI Kit views) |
+| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | ~16,420 lines (20 files; deleted `admin-users.css` -530 lines) |
+| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 827 occurrences outside `admin-tokens.css` (452 removed; `admin-users.css` 17 hex removed) |
+| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 13 blocks (`admin-users.css` palette deleted) |
+| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,378 occurrences (users.php & partials strictly 0 inline styles) |
 | Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | Shell unified at `sm`, `md`, `lg` (`admin.js` literals removed) |
 | Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 4 active containers (`.ab-card`, `.ab-table-wrap`, `.ab-kpi-card`, `.ab-split`) |
-| Migrated Pages | 0 / 32 | 32 / 32 | 0 / 32 (Component Library v2 & UI Kit ready for pilot migration) |
+| Migrated Pages | 0 / 32 | 32 / 32 | 1 / 32 (Pilot 1 `users.php` fully migrated to AB-Kit v2) |
 
 ---
 

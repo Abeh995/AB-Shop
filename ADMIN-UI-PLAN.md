@@ -416,9 +416,9 @@ Purpose: the first real page rebuilt with the new system, to find component prob
 
 Trial page: **`users.php`** (0 inline styles, has KPIs + toolbar + table + modals + audit trail). Then `coupons.php` as second confirmation.
 
-- [ ] Apply the **Page Migration Recipe** (Section 5) to `users`.
-- [ ] Delete `admin-users.css` entirely and its `$pageCssMap` entry.
-- [ ] Record before/after in `docs/DESIGN.md` migration table (CSS lines removed, hex removed, inline styles removed).
+- [x] Apply the **Page Migration Recipe** (Section 5) to `users` (v1.34.6).
+- [x] Delete `admin-users.css` entirely and its `$pageCssMap` entry.
+- [x] Record before/after in `docs/DESIGN.md` migration table (CSS lines removed, hex removed, inline styles removed).
 - [ ] **STOP. Owner reviews on desktop + phone + zoom.** Collect feedback; fix the system (components, per protocol item 9), not the page.
 - [ ] Repeat for `coupons`/`tags`.
 

@@ -44,5 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $admins = getAdminUsersList();
 $metrics = getAdminUsersMetrics();
 $recentLogs = getRecentAdminAuditLogs(12);
+$pageScripts = ['/assets/js/admin-users.js'];
 
-renderView('admin/users', compact('pageTitle', 'admins', 'metrics', 'recentLogs', 'currentAdminId'));
+renderView('admin/users', compact('pageTitle', 'admins', 'metrics', 'recentLogs', 'currentAdminId', 'pageScripts'));

@@ -62,7 +62,6 @@ $pageCssMap = [
     'email_compose.php'         => '/assets/css/admin-emails.css',
     'coupons.php'               => '/assets/css/admin-coupons.css',
     'tags.php'                  => '/assets/css/admin-coupons.css',
-    'users.php'                 => '/assets/css/admin-users.css',
     'diagnostics.php'           => '/assets/css/admin-diagnostics.css',
     'notifications_log.php'     => '/assets/css/admin-diagnostics.css',
 ];

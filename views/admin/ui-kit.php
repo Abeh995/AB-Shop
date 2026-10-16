@@ -373,6 +373,16 @@ require APP_ROOT . '/views/admin/layout/header.php';
             </div>
         </div>
 
+        <!-- Avatars -->
+        <div>
+            <h4 class="ab-text-sm ab-text-muted">آواتارهای کاربری (User Avatars):</h4>
+            <div class="ab-cluster ab-cluster--sm">
+                <span class="ab-avatar ab-avatar--sm">ع</span>
+                <span class="ab-avatar">م</span>
+                <span class="ab-avatar ab-avatar--lg">س</span>
+            </div>
+        </div>
+
         <!-- Alerts -->
         <div>
             <h4 class="ab-text-sm ab-text-muted">اعلان‌های بنری (Alerts):</h4>
