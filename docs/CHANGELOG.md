@@ -7,6 +7,42 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.35.1 — 2026-10-16
+
+### Admin UI Migration — products.php (Phase 4a)
+
+- **Products Catalog Full Migration (`views/admin/products.php`, `views/admin/products_partials/`)**:
+  - Rebuilt master products catalog workstation to the List Archetype (`.ab-pattern-list`) with strictly 0 inline styles (`style=""`) and 0 executable inline scripts.
+  - Decomposed view into 5 presentation-only partials: Bento KPI metrics (`_kpis.php`), filter toolbar and active chips (`_toolbar.php`), data table with stacked responsiveness (`_table.php`), floating bulk actions bar (`_bulk_bar.php`), and side dossier inspect drawer (`_drawer_inspect.php`).
+  - Implemented 4 Bento KPI cards using `component('kpi_card')` mapped with domain tones (`purple`, `amber`, `rose`, `emerald`).
+  - Converted catalog table to `component('data_table')` in `mode => 'stack'` with selectable checkboxes, sticky header, column priority hierarchy (1-3), thumbnail preview button, SKU monospace chip, formatted prices/margins, stock badges, and action clusters.
+  - Replaced legacy drawer with native `<dialog id="prodDrawer" class="ab-drawer" data-side="end" data-ab-modal>` featuring financial telemetry metric boxes, variant stock editor with steppers, and gallery thumbnails.
+  - Replaced legacy bulk action bar with floating pill (`#prodBulkBar`) hidden by default and smoothly revealed upon row selection.
+- **Stylesheet Debt Reduction (`assets/css/admin-products.css`)**:
+  - Shrunk from 1,408 lines to 430 lines (-978 lines of legacy code).
+  - Eliminated 115 raw hex color codes, mapping 100% of styles to CSS design tokens.
+  - Eliminated competing `:root` palette block and page-level `@media` queries.
+  - Wrapped 100% in `@layer pages` using RTL logical properties.
+  - Added horizontal scroll containment for global subnav strip, eliminating `laptop_font200` overflow.
+  - Preserved `.tag-tokenizer-*` classes required by `product_edit.php` until Phase 4c.
+- **Bug Fixes & Architectural Polish**:
+  - **Shared Pagination Helper & Per-Page Normalization (`app/core/functions.php`, `app/controllers/admin/products.php`, `views/admin/products_partials/_table.php`)**:
+    - Root-caused pagination bug where unselected `per_page` evaluated to `0`, triggering service-level clamping to `LIMIT 1` and creating 1 row per page across the catalog.
+    - Extracted SSoT helper `getPaginationParams(array $allowedPerPage, int $defaultPerPage = 20): array` in `app/core/functions.php` to safely parse and sanitize pagination input across controllers.
+    - Preserved `per_page` query parameter in table pagination links to prevent resetting per-page preferences when browsing pages.
+  - **Legacy Card Background & Publication Card Static Flow (`assets/css/admin-components.css`, `views/admin/product_edit.php`)**:
+    - Restored `.admin-card` legacy alias in `assets/css/admin-components.css` (`:is(.ab-card, .admin-card)`) with `background: var(--surface)`, borders, and default padding, eliminating transparency across legacy admin forms.
+    - Removed legacy inline `style="position: sticky; ..."` from the publication card in `views/admin/product_edit.php` so it scrolls naturally in the normal document flow alongside the rest of the form.
+- **Client Script Modernization (`assets/js/admin-products.js`)**:
+  - Modernized drawer interactions to use native `AB.modal.open('prodDrawer')` and `AB.modal.close('prodDrawer')`.
+  - Replaced alert/toast implementations with global `showToast()` and `AB.fmt.faDigits()`.
+  - Preserved all existing JS hooks (`#prodBulkBar`, `.btn-inspect`, `.prod-sku-chip`, steppers, and global `window.openProductDrawer` / `window.closeProductDrawer`).
+- **Quality Gates & Verification (`tools/ui-test/test-products-interaction.mjs`, `tools/verify.php`)**:
+  - Confirmed HTTP 200 and zero console errors across all viewports.
+  - Validated interactive functionality: drawer open/step/close, row selection, bulk bar toggle, filter form submission, SKU clipboard copy with toast.
+  - Playwright visual audit passed on all 14 responsive viewports with zero horizontal overflow.
+  - Locked ratcheted debt reductions in `tools/verify-baseline.json`.
+
 ## 1.35.0 — 2026-10-16
 
 ### Admin UI Migration — coupons.php & tags.php (Phase 3)

@@ -436,7 +436,7 @@ Page inventory (views in `views/admin/`). Columns: archetype · current page CSS
 **4a — Lists**
 | Page | Arch. | CSS file | Inline | Notes |
 |---|---|---|---|---|
-| products | List | admin-products | 39 | drawer (16 rules) → `ab-drawer`; variants shown inline |
+| products | List | admin-products | ~~39~~ 0 | [x] Migrated (v1.35.1). Native `<dialog class="ab-drawer">`, `data_table` stack mode, floating bulk bar, 0 inline styles |
 | categories | List+tree | admin-categories | 27 | has `admin-categories.js` (327 lines); keep behavior, replace markup/classes |
 | tags | List | admin-coupons | 28 | |
 | coupons | List | admin-coupons | 8 | |

@@ -739,10 +739,23 @@ function asset(string $path): string
 }
 
 /**
- * Alias for asset().
+ * Safely parse and validate pagination parameters from $_GET (SSoT).
+ *
+ * @param array $allowedPerPage Allowed page sizes (e.g. [20, 50, 100])
+ * @param int   $defaultPerPage Fallback page size
+ * @return array{page: int, per_page: int, offset: int}
  */
-function assetUrl(string $path): string
+function getPaginationParams(array $allowedPerPage = [20, 50, 100], int $defaultPerPage = 20): array
 {
-    return asset($path);
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $rawPerPage = (int)($_GET['per_page'] ?? $defaultPerPage);
+    $perPage = in_array($rawPerPage, $allowedPerPage, true) ? $rawPerPage : $defaultPerPage;
+    $offset = ($page - 1) * $perPage;
+
+    return [
+        'page'     => $page,
+        'per_page' => $perPage,
+        'offset'   => $offset,
+    ];
 }
 

@@ -170,15 +170,15 @@ Don't reskin the whole site in one change on a live store:
 
 Baseline measured as part of `ADMIN-UI-PLAN.md` Phase 0 (version 1.32.4). This table tracks the progress of the admin design system unification across phases.
 
-| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 3 — v1.35.0) |
+| Metric | Phase 0 Baseline | Target (Phase 6) | Current Status (Phase 4a — v1.35.1) |
 |---|---|---|---|
-| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | ~15,938 lines (19 files; deleted `admin-coupons.css` -532 lines, `admin-users.css` -530 lines) |
-| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 783 occurrences outside `admin-tokens.css` (496 removed; `admin-coupons.css` 44 hex removed) |
-| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 12 blocks (`admin-coupons.css` palette deleted) |
-| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,342 occurrences (-36 removed; `users.php`, `coupons.php`, `tags.php` strictly 0 inline styles) |
-| Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | Shell unified at `sm`, `md`, `lg` (`admin.js` literals removed) |
+| Admin CSS Volume | 17,374 lines (16 files) | ~5,000–6,000 lines | ~14,960 lines (19 files; `admin-products.css` shrunk by -978 lines from 1,408 to 430 lines) |
+| Raw Hex Color Codes | 1,279 occurrences | 0 (all via `admin-tokens.css`) | 668 occurrences outside `admin-tokens.css` (611 removed; `admin-products.css` 115 hex eliminated) |
+| Independent `:root` Palettes | 15 blocks | 1 (in `admin-tokens.css`) | 11 blocks (`admin-products.css` palette deleted) |
+| Inline `style=""` Attributes | 1,378 occurrences (56 view files) | 0 (except dynamic CSS variables) | 1,303 occurrences (-75 removed; `products.php` strictly 0 inline styles) |
+| Distinct Breakpoints | ~50 distinct `@media` queries | 3 shell breakpoints (`sm`, `md`, `lg`) | Shell unified at `sm`, `md`, `lg` (`admin-products.css` page-level media queries eliminated) |
 | Container Queries (`@container`) | 0 | All core components (`.ab-card`, `.ab-table-wrap`, etc.) | 4 active containers (`.ab-card`, `.ab-table-wrap`, `.ab-kpi-card`, `.ab-split`) |
-| Migrated Pages | 0 / 32 | 32 / 32 | 3 / 32 (`users.php`, `coupons.php`, `tags.php` fully migrated to AB-Kit v2) |
+| Migrated Pages | 0 / 32 | 32 / 32 | 4 / 32 (`users.php`, `coupons.php`, `tags.php`, `products.php` fully migrated to AB-Kit v2) |
 
 ---
 

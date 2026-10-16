@@ -46,8 +46,9 @@ $status = trim($_GET['status'] ?? '');
 if ($status === '' && isset($_GET['featured'])) $status = 'featured';
 $status = $status === '' ? 'all' : $status;
 $sort = trim($_GET['sort'] ?? 'newest');
-$page = max(1, (int) ($_GET['page'] ?? 1));
-$perPage = in_array((int) ($_GET['per_page'] ?? 20), [20, 50, 100], true) ? (int)$_GET['per_page'] : 20;
+$pagination = getPaginationParams([20, 50, 100], 20);
+$page = $pagination['page'];
+$perPage = $pagination['per_page'];
 
 $filters = ['q' => $search, 'category_id' => $categoryId, 'tag_id' => $tagId, 'status' => $status, 'sort' => $sort];
 

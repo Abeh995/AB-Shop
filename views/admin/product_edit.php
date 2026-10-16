@@ -240,8 +240,8 @@
         <!-- ============================================== -->
         <div style="display: flex; flex-direction: column; gap: 20px;">
             
-            <!-- 1. Publication & Actions Box (Sticky) -->
-            <div class="admin-card" style="position: sticky; top: 20px; z-index: 10;">
+            <!-- 1. Publication & Actions Box -->
+            <div class="admin-card">
                 <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.05rem;">وضعیت انتشار</h3>
 
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">

@@ -471,10 +471,10 @@
 
 
   /* ==========================================================================
-     3. Card Container
+     3. Card Container (with Legacy Alias .admin-card)
      ========================================================================== */
 
-  .ab-card {
+  :is(.ab-card, .admin-card) {
     container: ab-card / inline-size;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -483,6 +483,11 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+
+  /* LEGACY ALIAS — remove in Phase 6 */
+  .admin-card {
+    padding: var(--space-5);
   }
 
   .ab-card__head {

@@ -1,39 +1,47 @@
 /**
  * AB-Socks Admin Products Catalog Client Logic (admin-products.js)
- * Side Dossier Drawer, Optimistic Toggles, Variant Popovers, Steppers, & Floating Bulk Actions.
+ * High-Density Workstation: Side Dossier Drawer, Optimistic Toggles, Steppers, & Floating Bulk Actions.
  */
 
 (function () {
     'use strict';
 
-    // State
-    var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    // 1. State & Dataset Initialization
+    var csrfToken = (window.AB && window.AB.api) ? window.AB.api.csrfToken() : '';
     if (!csrfToken) {
-        var csrfInput = document.querySelector('input[name="csrf_token"]');
-        if (csrfInput) csrfToken = csrfInput.value;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.content) csrfToken = meta.content;
+        else {
+            var input = document.querySelector('input[name="csrf_token"]');
+            if (input && input.value) csrfToken = input.value;
+        }
     }
 
-    var productsMap = window.productsDataMap || {};
+    var jsonEl = document.getElementById('productsJsonData');
+    var productsMap = {};
+    if (jsonEl && jsonEl.textContent) {
+        try {
+            productsMap = JSON.parse(jsonEl.textContent);
+        } catch (e) {
+            console.error('[Products] Failed to parse productsJsonData:', e);
+        }
+    } else if (window.productsDataMap) {
+        productsMap = window.productsDataMap;
+    }
+    window.productsDataMap = productsMap;
+
     var activeDrawerId = null;
     var lastCheckedCheckbox = null;
 
-    // DOM Elements
-    var drawerBackdrop = document.getElementById('prodDrawerBackdrop');
-    var drawer = document.getElementById('prodDrawer');
-    var bulkBar = document.getElementById('prodBulkBar');
-    var bulkCountEl = document.getElementById('prodBulkCount');
-    var checkAll = document.getElementById('prodCheckAll');
-    var rowCheckboxes = document.querySelectorAll('.prod-check-row');
-    var toastEl = document.getElementById('prodToast');
+    // Note: showToast and toFaDigits are provided globally by assets/js/ab-kit.js
 
-
-
-    // ==========================================
-    // 2. Side Dossier Drawer
-    // ==========================================
+    // =========================================================================
+    // 2. Side Dossier Quick Inspect Drawer
+    // =========================================================================
     function openDrawer(id) {
         var p = productsMap[id];
-        if (!p || !drawer || !drawerBackdrop) return;
+        var drawer = document.getElementById('prodDrawer');
+        if (!p || !drawer) return;
         activeDrawerId = id;
 
         // Highlight active row in table
@@ -66,11 +74,10 @@
         var marginEl = document.getElementById('drawerMargin');
         if (marginEl) {
             if (p.margin_percent !== null && p.margin_percent !== undefined) {
-                marginEl.textContent = p.margin_percent + '٪';
-                marginEl.style.color = p.margin_percent > 0 ? 'var(--prod-success)' : 'inherit';
+                var pctStr = (window.AB && window.AB.fmt) ? window.AB.fmt.faDigits(p.margin_percent) : String(p.margin_percent);
+                marginEl.textContent = pctStr + '٪';
             } else {
                 marginEl.textContent = '—';
-                marginEl.style.color = 'inherit';
             }
         }
 
@@ -80,7 +87,7 @@
         if (galleryBox && gallerySection) {
             galleryBox.innerHTML = '';
             if (p.gallery_urls && p.gallery_urls.length > 0) {
-                gallerySection.style.display = 'block';
+                gallerySection.removeAttribute('hidden');
                 p.gallery_urls.forEach(function (url) {
                     var img = document.createElement('img');
                     img.src = url;
@@ -89,7 +96,7 @@
                     galleryBox.appendChild(img);
                 });
             } else {
-                gallerySection.style.display = 'none';
+                gallerySection.setAttribute('hidden', '');
             }
         }
 
@@ -99,19 +106,20 @@
             stockContainer.innerHTML = '';
             if (p.variants && p.variants.length > 0) {
                 var table = document.createElement('table');
-                table.className = 'prod-stock-table';
-                table.innerHTML = '<thead><tr><th>واریانت (سایز / رنگ)</th><th style="width:120px;text-align:center;">موجودی</th></tr></thead><tbody></tbody>';
+                table.className = 'ab-table prod-stock-table';
+                table.innerHTML = '<thead><tr><th>واریانت (سایز / رنگ)</th><th style="width:130px;text-align:center;">موجودی</th></tr></thead><tbody></tbody>';
                 var tbody = table.querySelector('tbody');
 
                 p.variants.forEach(function (v) {
                     var label = [v.size, v.color].filter(Boolean).join(' - ') || 'پیش‌فرض';
                     var tr = document.createElement('tr');
-                    tr.innerHTML = '<td><strong>' + (window.AB && window.AB.fmt ? window.AB.fmt.esc(label) : label) + '</strong></td>' +
+                    var safeLabel = window.AB && window.AB.fmt ? window.AB.fmt.esc(label) : label;
+                    tr.innerHTML = '<td><strong>' + safeLabel + '</strong></td>' +
                         '<td style="text-align:center;">' +
                         '<div class="prod-stepper">' +
-                        '<button type="button" class="prod-stepper-btn btn-step-minus" data-target="v_' + v.id + '">−</button>' +
+                        '<button type="button" class="prod-stepper-btn btn-step-minus" data-target="v_' + v.id + '" aria-label="کاهش">−</button>' +
                         '<input type="number" min="0" class="prod-stepper-input" id="drawer_v_' + v.id + '" value="' + v.stock + '">' +
-                        '<button type="button" class="prod-stepper-btn btn-step-plus" data-target="v_' + v.id + '">+</button>' +
+                        '<button type="button" class="prod-stepper-btn btn-step-plus" data-target="v_' + v.id + '" aria-label="افزایش">+</button>' +
                         '</div>' +
                         '</td>';
                     tbody.appendChild(tr);
@@ -120,33 +128,42 @@
             } else {
                 // Simple product without variants
                 var div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'space-between';
-                div.style.padding = '12px';
-                div.style.background = '#FAF8F5';
-                div.style.borderRadius = 'var(--prod-radius-sm)';
+                div.className = 'ab-cluster ab-cluster--between';
+                div.style.padding = 'var(--space-3)';
+                div.style.background = 'var(--surface-2)';
+                div.style.borderRadius = 'var(--radius-md)';
                 div.innerHTML = '<span>موجودی کل انبار:</span>' +
                     '<div class="prod-stepper">' +
-                    '<button type="button" class="prod-stepper-btn btn-step-minus" data-target="parent">−</button>' +
+                    '<button type="button" class="prod-stepper-btn btn-step-minus" data-target="parent" aria-label="کاهش">−</button>' +
                     '<input type="number" min="0" class="prod-stepper-input" id="drawer_parent_stock" value="' + (p.stock || 0) + '">' +
-                    '<button type="button" class="prod-stepper-btn btn-step-plus" data-target="parent">+</button>' +
+                    '<button type="button" class="prod-stepper-btn btn-step-plus" data-target="parent" aria-label="افزایش">+</button>' +
                     '</div>';
                 stockContainer.appendChild(div);
             }
         }
 
-        // Show Drawer
-        drawerBackdrop.classList.add('is-open');
-        drawer.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
+        // Open Dialog Drawer via AB.modal
+        if (window.AB && window.AB.modal) {
+            window.AB.modal.open('prodDrawer');
+        } else if (typeof drawer.showModal === 'function') {
+            drawer.showModal();
+        } else {
+            drawer.setAttribute('open', '');
+        }
     }
 
     function closeDrawer() {
-        if (!drawer || !drawerBackdrop) return;
-        drawerBackdrop.classList.remove('is-open');
-        drawer.classList.remove('is-open');
-        document.body.style.overflow = '';
+        var drawer = document.getElementById('prodDrawer');
+        if (!drawer) return;
+
+        if (window.AB && window.AB.modal) {
+            window.AB.modal.close('prodDrawer');
+        } else if (typeof drawer.close === 'function') {
+            drawer.close();
+        } else {
+            drawer.removeAttribute('open');
+        }
+
         if (activeDrawerId) {
             var activeRow = document.getElementById('prod-row-' + activeDrawerId);
             if (activeRow) activeRow.classList.remove('is-active-drawer');
@@ -193,8 +210,7 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    showToast('موجودی انبار با موفقیت به‌روز شد.');
-                    // Update dataset
+                    showToast('موجودی انبار با موفقیت به‌روز شد.', 'success');
                     p.stock = totalStockCalc;
                     if (p.variants && p.variants.length > 0) {
                         p.variants.forEach(function (v) {
@@ -203,19 +219,21 @@
                         });
                     }
 
-                    // Reactive update of row's stock cell
+                    // Reactive update of row stock badge
                     var stockBadge = document.getElementById('stock-badge-' + activeDrawerId);
                     if (stockBadge) {
-                        stockBadge.textContent = totalStockCalc.toLocaleString('fa-IR') + ' عدد';
-                        stockBadge.className = 'prod-stock-pill ' + (totalStockCalc === 0 ? 'stock-red' : (totalStockCalc <= 3 ? 'stock-amber' : 'stock-green'));
+                        var stockFa = (window.AB && window.AB.fmt) ? window.AB.fmt.faDigits(totalStockCalc) : String(totalStockCalc);
+                        stockBadge.textContent = stockFa + ' عدد';
+                        var state = totalStockCalc === 0 ? 'danger' : (totalStockCalc <= 3 ? 'warning' : 'success');
+                        stockBadge.setAttribute('data-state', state);
                     }
                     closeDrawer();
                 } else {
-                    showToast(data.error || 'خطا در به‌روزرسانی موجودی.', true);
+                    showToast(data.error || 'خطا در به‌روزرسانی موجودی.', 'error');
                 }
             })
             .catch(function () {
-                showToast('خطای ارتباط با سرور.', true);
+                showToast('خطای ارتباط با سرور.', 'error');
             })
             .finally(function () {
                 if (saveBtn) {
@@ -225,14 +243,14 @@
             });
     }
 
-    // ==========================================
+    // =========================================================================
     // 3. Optimistic AJAX Toggles
-    // ==========================================
+    // =========================================================================
     function handleToggle(checkbox) {
         var id = checkbox.getAttribute('data-id');
         var field = checkbox.getAttribute('data-field');
         var isChecked = checkbox.checked;
-        var switchWrapper = checkbox.closest('.prod-switch');
+        var switchWrapper = checkbox.closest('.ab-switch, .prod-switch');
 
         if (switchWrapper) switchWrapper.classList.add('is-busy');
 
@@ -251,11 +269,10 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (!data.ok) {
-                    // Revert switch on failure
                     checkbox.checked = !isChecked;
-                    showToast(data.error || 'خطا در تغییر وضعیت.', true);
+                    showToast(data.error || 'خطا در تغییر وضعیت.', 'error');
                 } else {
-                    showToast('وضعیت کالا تغییر کرد.');
+                    showToast('وضعیت کالا تغییر کرد.', 'success');
                     if (productsMap[id]) {
                         productsMap[id][field] = data.new_value;
                     }
@@ -263,71 +280,56 @@
             })
             .catch(function () {
                 checkbox.checked = !isChecked;
-                showToast('خطای شبکه در ثبت وضعیت.', true);
+                showToast('خطای شبکه در ثبت وضعیت.', 'error');
             })
             .finally(function () {
                 if (switchWrapper) switchWrapper.classList.remove('is-busy');
             });
     }
 
-    // ==========================================
-    // 4. Variant Popovers
-    // ==========================================
-    function setupVariantPopovers() {
-        document.querySelectorAll('.prod-variant-trigger').forEach(function (trigger) {
-            trigger.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var popover = this.parentElement.querySelector('.prod-variant-popover');
-                if (!popover) return;
-                var isOpen = popover.classList.contains('is-open');
-                closeAllPopovers();
-                if (!isOpen) popover.classList.add('is-open');
-            });
-        });
-
-        document.addEventListener('click', function () {
-            closeAllPopovers();
-        });
+    // =========================================================================
+    // 4. Checkboxes & Floating Bulk Action Bar
+    // =========================================================================
+    function getRowCheckboxes() {
+        return document.querySelectorAll('input[name="selected_ids[]"], .prod-check-row');
     }
 
-    function closeAllPopovers() {
-        document.querySelectorAll('.prod-variant-popover.is-open').forEach(function (p) {
-            p.classList.remove('is-open');
-        });
-    }
-
-    // ==========================================
-    // 5. Checkboxes & Floating Bulk Action Bar
-    // ==========================================
     function updateBulkBar() {
-        var selected = Array.from(document.querySelectorAll('.prod-check-row:checked'));
+        var rowCbs = getRowCheckboxes();
+        var selected = Array.from(rowCbs).filter(function (cb) { return cb.checked; });
         var count = selected.length;
+        var bulkBar = document.getElementById('prodBulkBar');
+        var bulkCountEl = document.getElementById('prodBulkCount');
+        var checkAll = document.querySelector('[data-ab-select-all]') || document.getElementById('prodCheckAll');
+
         if (!bulkBar) return;
 
         if (count > 0) {
             bulkBar.classList.add('is-visible');
-            if (bulkCountEl) bulkCountEl.textContent = count.toLocaleString('fa-IR') + ' کالا انتخاب شد';
+            var countFa = (window.AB && window.AB.fmt) ? window.AB.fmt.faDigits(count) : String(count);
+            if (bulkCountEl) bulkCountEl.textContent = countFa + ' کالا انتخاب شد';
         } else {
             bulkBar.classList.remove('is-visible');
         }
 
         // Update select-all state
         if (checkAll) {
-            checkAll.checked = count > 0 && count === rowCheckboxes.length;
-            checkAll.indeterminate = count > 0 && count < rowCheckboxes.length;
+            checkAll.checked = count > 0 && count === rowCbs.length;
+            checkAll.indeterminate = count > 0 && count < rowCbs.length;
         }
 
         // Highlight selected rows
-        rowCheckboxes.forEach(function (cb) {
-            var row = cb.closest('.prod-row');
+        rowCbs.forEach(function (cb) {
+            var row = cb.closest('.prod-row, tr');
             if (row) row.classList.toggle('is-selected', cb.checked);
         });
     }
 
     function getSelectedIds() {
-        return Array.from(document.querySelectorAll('.prod-check-row:checked')).map(function (cb) {
-            return parseInt(cb.value, 10);
-        });
+        return Array.from(getRowCheckboxes())
+            .filter(function (cb) { return cb.checked; })
+            .map(function (cb) { return parseInt(cb.value, 10); })
+            .filter(Boolean);
     }
 
     function executeBulkAction(action, extraParams) {
@@ -357,47 +359,30 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    showToast('عملیات گروهی با موفقیت اعمال شد.');
+                    showToast('عملیات گروهی با موفقیت اعمال شد.', 'success');
                     setTimeout(function () { window.location.reload(); }, 600);
                 } else {
-                    showToast(data.error || 'خطا در اجرای عملیات گروهی.', true);
+                    showToast(data.error || 'خطا در اجرای عملیات گروهی.', 'error');
                 }
             })
             .catch(function () {
-                showToast('خطای ارتباط با سرور.', true);
+                showToast('خطای ارتباط با سرور.', 'error');
             });
     }
 
-    // ==========================================
-    // 6. Event Listeners & Delegation
-    // ==========================================
-    document.addEventListener('DOMContentLoaded', function () {
-        // Toggle switches
-        document.querySelectorAll('.prod-switch input').forEach(function (input) {
+    // =========================================================================
+    // 5. Event Binding & DOM Ready
+    // =========================================================================
+    function init() {
+        // Toggle Switches
+        document.querySelectorAll('.ab-switch input[data-field], .prod-switch input[data-field]').forEach(function (input) {
             input.addEventListener('change', function () {
                 handleToggle(this);
             });
         });
 
-        // Drawer openers (row click or button)
-        document.querySelectorAll('.btn-inspect').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var id = this.getAttribute('data-id');
-                if (id) openDrawer(id);
-            });
-        });
-
-        document.querySelectorAll('.prod-title-link').forEach(function (link) {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                var id = this.getAttribute('data-id');
-                if (id) openDrawer(id);
-            });
-        });
-
-        // Drawer Stepper Buttons
+        // Stepper Buttons in Drawer
+        var drawer = document.getElementById('prodDrawer');
         if (drawer) {
             drawer.addEventListener('click', function (e) {
                 var btn = e.target.closest('.prod-stepper-btn');
@@ -417,53 +402,53 @@
             });
         }
 
-        // Drawer Close
-        var closeBtn = document.getElementById('drawerClose');
-        if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-        if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeDrawer);
-
+        // Save Stock in Drawer
         var drawerSave = document.getElementById('drawerSaveStock');
         if (drawerSave) drawerSave.addEventListener('click', saveStock);
 
-        // Escape Key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeDrawer();
-                closeAllPopovers();
-            }
-        });
-
         // SKU Copy Click
-        document.querySelectorAll('.prod-sku-chip').forEach(function (chip) {
+        document.querySelectorAll('.prod-sku-chip, [data-sku]').forEach(function (chip) {
             chip.addEventListener('click', function () {
-                var sku = this.getAttribute('data-sku');
+                var sku = this.getAttribute('data-sku') || this.textContent.trim();
                 if (!sku) return;
-                navigator.clipboard.writeText(sku).then(function () {
-                    showToast('کد SKU در حافظه کپی شد: ' + sku);
-                });
+                if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                    navigator.clipboard.writeText(sku).then(function () {
+                        showToast('کد SKU کپی شد: ' + sku, 'info');
+                    }).catch(function () {
+                        showToast('کد SKU: ' + sku, 'info');
+                    });
+                } else {
+                    showToast('کد SKU: ' + sku, 'info');
+                }
             });
         });
 
-        // Popovers
-        setupVariantPopovers();
-
-        // Check All
+        // Select All Handler
+        var checkAll = document.querySelector('[data-ab-select-all]') || document.getElementById('prodCheckAll');
         if (checkAll) {
             checkAll.addEventListener('change', function () {
                 var isChecked = this.checked;
-                rowCheckboxes.forEach(function (cb) {
+                getRowCheckboxes().forEach(function (cb) {
                     cb.checked = isChecked;
                 });
                 updateBulkBar();
             });
         }
 
-        // Shift + Click Range Selection for Checkboxes
-        rowCheckboxes.forEach(function (cb) {
-            cb.addEventListener('click', function (e) {
-                if (e.shiftKey && lastCheckedCheckbox && lastCheckedCheckbox !== this) {
+        // Row Checkboxes change & Shift+Click range
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('input[name="selected_ids[]"], .prod-check-row')) {
+                updateBulkBar();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            var cb = e.target.closest('input[name="selected_ids[]"], .prod-check-row');
+            if (cb) {
+                var rowCbs = Array.from(getRowCheckboxes());
+                if (e.shiftKey && lastCheckedCheckbox && lastCheckedCheckbox !== cb) {
                     var inRange = false;
-                    rowCheckboxes.forEach(function (item) {
+                    rowCbs.forEach(function (item) {
                         if (item === cb || item === lastCheckedCheckbox) {
                             inRange = !inRange;
                         }
@@ -472,9 +457,19 @@
                         }
                     });
                 }
-                lastCheckedCheckbox = this;
+                lastCheckedCheckbox = cb;
                 updateBulkBar();
-            });
+            }
+        });
+
+        // Delegated Drawer Openers
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('.btn-inspect, .prod-title-link, [data-inspect]');
+            if (trigger) {
+                e.preventDefault();
+                var id = trigger.getAttribute('data-id') || trigger.getAttribute('data-inspect');
+                if (id) openDrawer(id);
+            }
         });
 
         // Bulk Actions
@@ -496,7 +491,8 @@
         if (bulkDelete) {
             bulkDelete.addEventListener('click', function () {
                 var count = getSelectedIds().length;
-                if (confirm('آیا از حذف قطعی ' + count.toLocaleString('fa-IR') + ' محصول انتخاب‌شده اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')) {
+                var countFa = (window.AB && window.AB.fmt) ? window.AB.fmt.faDigits(count) : String(count);
+                if (confirm('آیا از حذف قطعی ' + countFa + ' محصول انتخاب‌شده اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')) {
                     executeBulkAction('bulk_delete');
                 }
             });
@@ -518,12 +514,21 @@
         var bulkCancel = document.getElementById('bulkCancel');
         if (bulkCancel) {
             bulkCancel.addEventListener('click', function () {
-                rowCheckboxes.forEach(function (cb) { cb.checked = false; });
+                getRowCheckboxes().forEach(function (cb) { cb.checked = false; });
                 if (checkAll) checkAll.checked = false;
                 updateBulkBar();
             });
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Global hooks
+    window.openProductDrawer = openDrawer;
+    window.closeProductDrawer = closeDrawer;
 
 })();
-
