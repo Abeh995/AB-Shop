@@ -383,6 +383,29 @@ require APP_ROOT . '/views/admin/layout/header.php';
             </div>
         </div>
 
+        <!-- Code Tokens & Metric Boxes -->
+        <div>
+            <h4 class="ab-text-sm ab-text-muted">توکن‌های مونو و کدهای رهگیری (Code Tokens):</h4>
+            <div class="ab-cluster ab-cluster--sm">
+                <code class="ab-code" dir="ltr">OFF-SUMMER26</code>
+                <code class="ab-code ab-code--accent" dir="ltr">YALDA-1403</code>
+                <code class="ab-code" dir="ltr">cotton-socks</code>
+            </div>
+        </div>
+        <div>
+            <h4 class="ab-text-sm ab-text-muted">باکس‌های متریک فشرده (Compact Metric Boxes):</h4>
+            <div class="ab-grid ab-grid--sm" style="--grid-min: 10rem;">
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">سفارشات موفق</span>
+                    <span class="ab-metric-box__value ab-num">۲۴</span>
+                </div>
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">درآمد حاصله</span>
+                    <span class="ab-metric-box__value ab-num">۱,۲۵۰,۰۰۰ تومان</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Alerts -->
         <div>
             <h4 class="ab-text-sm ab-text-muted">اعلان‌های بنری (Alerts):</h4>

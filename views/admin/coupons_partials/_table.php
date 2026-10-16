@@ -1,193 +1,168 @@
 <?php
 /**
- * Master coupons matrix data table.
+ * Master coupons matrix data table (views/admin/coupons_partials/_table.php)
+ * Pure presentation: 0 SQL, 0 $_POST (Rule 7).
  */
-?>
-<section class="cpn-table-card">
-    <div style="overflow-x:auto;">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>کد و عنوان تخفیف</th>
-                    <th>نوع و ارزش</th>
-                    <th>شرایط سبد</th>
-                    <th>میزان مصرف و سقف کاربر</th>
-                    <th>مهلت اعتبار (شمسی)</th>
-                    <th>وضعیت</th>
-                    <th style="text-align:left;">عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($coupons)): ?>
-                    <tr>
-                        <td colspan="7">
-                            <?php component('empty_state', [
-                                'title'   => 'هیچ کد تخفیفی با این مشخصات یافت نشد',
-                                'message' => 'می‌توانید فیلترها را ریست کنید یا کد تخفیف جدیدی ایجاد نمایید.',
-                            ]); ?>
-                        </td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($coupons as $c): ?>
-                        <?php
-                        $isExpired = !empty($c['expires_at']) && strtotime($c['expires_at']) < strtotime('today');
-                        $isLimitReached = $c['max_uses'] !== null && (int)$c['used_count'] >= (int)$c['max_uses'];
-                        $usagePercent = !empty($c['max_uses']) ? min(100, round(((int)$c['used_count'] / (int)$c['max_uses']) * 100)) : null;
-                        $type = $c['type'] ?? 'percent';
-                        ?>
-                        <tr>
-                            <!-- 1. Code & Campaign Title -->
-                            <td>
-                                <div class="cpn-code-badge">
-                                    <span><?= e($c['code']) ?></span>
-                                    <button type="button" class="btn-copy-code" title="کپی کردن کد" onclick="copyCouponCode('<?= e($c['code']) ?>')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <?php if (!empty($c['title'])): ?>
-                                    <span class="cpn-title-tag" title="<?= e($c['title']) ?>">
-                                        <?= e($c['title']) ?>
-                                    </span>
-                                <?php endif; ?>
-                                <?php if (!empty($c['category_name'])): ?>
-                                    <span style="display:inline-block; font-size:.72rem; color:#4F46E5; background:#EEF2FF; padding:1px 6px; border-radius:4px; margin-top:3px;">
-                                        دسته: <?= e($c['category_name']) ?>
-                                    </span>
-                                <?php endif; ?>
-                            </td>
 
-                            <!-- 2. Type & Value -->
-                            <td>
-                                <?php if ($type === 'free_shipping'): ?>
-                                    <span class="cpn-type-pill cpn-type-free_shipping">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3m11 0h2l3-3v-4h-5v7Z"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-                                        ارسال رایگان
-                                    </span>
-                                <?php elseif ($type === 'percent'): ?>
-                                    <span class="cpn-type-pill cpn-type-percent">
-                                        <?= toPersianDigits((string)(float)$c['value']) ?>٪ تخفیف
-                                    </span>
-                                <?php else: ?>
-                                    <span class="cpn-type-pill cpn-type-fixed">
-                                        <?= formatPrice($c['value']) ?>
-                                    </span>
-                                <?php endif; ?>
-                            </td>
+component('data_table', [
+    'id'          => 'couponsTable',
+    'mode'        => 'stack',
+    'columns'     => [
+        ['key' => 'code_title', 'label' => 'کد و عنوان تخفیف',        'priority' => 1],
+        ['key' => 'type_value', 'label' => 'نوع و ارزش',             'priority' => 1],
+        ['key' => 'conditions', 'label' => 'شرایط سبد',              'priority' => 2],
+        ['key' => 'usage',      'label' => 'میزان مصرف و سقف کاربر', 'priority' => 2],
+        ['key' => 'expiry',     'label' => 'مهلت اعتبار (شمسی)',     'priority' => 2],
+        ['key' => 'status',     'label' => 'وضعیت',                  'priority' => 1, 'align' => 'center'],
+        ['key' => 'actions',    'label' => 'عملیات',                 'priority' => 1, 'type' => 'actions', 'align' => 'end'],
+    ],
+    'rows'        => $coupons,
+    'row_attrs'   => fn($c) => [
+        'data-id'     => $c['id'],
+        'data-search' => $c['code'] . ' ' . ($c['title'] ?? '') . ' ' . ($c['category_name'] ?? ''),
+    ],
+    'cell'        => [
+        'code_title' => function($c) {
+            $codeHtml = '<div class="ab-cluster ab-cluster--xs">'
+                . '<code class="ab-code ab-code--accent ab-num" dir="ltr">' . e($c['code']) . '</code>'
+                . '<button type="button" class="ab-icon-btn ab-icon-btn--sm" title="کپی کردن کد" data-copy-code="' . e($c['code']) . '" aria-label="کپی کد">'
+                . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>'
+                . '</button>'
+                . '</div>';
 
-                            <!-- 3. Basket Conditions -->
-                            <td>
-                                <div style="font-size:.82rem; font-weight:600; color:#1e293b;">
-                                    <?php if (!empty($c['min_order_amount']) && (float)$c['min_order_amount'] > 0): ?>
-                                        حداقل: <?= formatPrice($c['min_order_amount']) ?>
-                                    <?php else: ?>
-                                        <span style="color:#94a3b8; font-weight:500;">بدون حداقل</span>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if ($type === 'percent' && !empty($c['max_discount_amount']) && (float)$c['max_discount_amount'] > 0): ?>
-                                    <div style="font-size:.74rem; color:#64748b; margin-top:2px;">
-                                        سقف: <?= formatPrice($c['max_discount_amount']) ?>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
+            $titleHtml = !empty($c['title'])
+                ? '<div class="ab-text-xs ab-font-bold">' . e($c['title']) . '</div>'
+                : '';
 
-                            <!-- 4. Usage Count & Per-Customer Limit -->
-                            <td>
-                                <div style="font-size:.82rem; font-weight:700;">
-                                    <?= toPersianDigits((string)(int)$c['used_count']) ?> 
-                                    <?= $c['max_uses'] ? 'از ' . toPersianDigits((string)(int)$c['max_uses']) : 'بار (نامحدود)' ?>
-                                </div>
-                                <?php if ($usagePercent !== null): ?>
-                                    <div class="usage-meter">
-                                        <div class="usage-meter-fill <?= $usagePercent >= 100 ? 'full' : ($usagePercent >= 80 ? 'near-limit' : '') ?>" 
-                                             style="width:<?= $usagePercent ?>%;"></div>
-                                    </div>
-                                <?php endif; ?>
-                                <div style="font-size:.72rem; color:#64748b; margin-top:3px;">
-                                    سقف هر کاربر: <?= toPersianDigits((string)($c['max_uses_per_customer'] ?? 1)) ?> بار
-                                </div>
-                            </td>
+            $catHtml = !empty($c['category_name'])
+                ? '<div class="ab-cluster ab-cluster--xs"><span class="ab-badge" data-tone="purple">دسته: ' . e($c['category_name']) . '</span></div>'
+                : '';
 
-                            <!-- 5. Expiry Date (Shamsi) -->
-                            <td>
-                                <?php if (!empty($c['expires_at'])): ?>
-                                    <div style="font-size:.82rem; font-weight:700; color:<?= $isExpired ? 'var(--cpn-rose)' : '#334155' ?>;">
-                                        <?= appDateTime($c['expires_at'], 'shamsi') ?>
-                                    </div>
-                                    <div style="font-size:.72rem; color:<?= $isExpired ? 'var(--cpn-rose)' : '#64748b' ?>;">
-                                        <?= $isExpired ? 'منقضی شده' : e($c['expires_at']) ?>
-                                    </div>
-                                <?php else: ?>
-                                    <span style="color:#94a3b8; font-size:.82rem;">همیشگی</span>
-                                <?php endif; ?>
-                            </td>
+            return '<div class="ab-stack ab-stack--xs">' . $codeHtml . $titleHtml . $catHtml . '</div>';
+        },
 
-                            <!-- 6. Status -->
-                            <td>
-                                <?php
-                                if (!$c['is_active']) {
-                                    component('badge', ['text' => 'غیرفعال', 'type' => 'danger']);
-                                } elseif ($isExpired) {
-                                    component('badge', ['text' => 'منقضی', 'type' => 'warning']);
-                                } elseif ($isLimitReached) {
-                                    component('badge', ['text' => 'تکمیل ظرفیت', 'type' => 'muted']);
-                                } else {
-                                    component('badge', ['text' => 'فعال', 'type' => 'success', 'dot' => true]);
-                                }
-                                ?>
-                            </td>
+        'type_value' => function($c) {
+            $type = $c['type'] ?? 'percent';
+            if ($type === 'free_shipping') {
+                return '<span class="ab-badge" data-tone="sky">'
+                    . '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17h4V5H2v12h3m11 0h2l3-3v-4h-5v7Z"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>'
+                    . ' ارسال رایگان'
+                    . '</span>';
+            } elseif ($type === 'percent') {
+                return '<span class="ab-badge" data-tone="purple">'
+                    . toPersianDigits((string)(float)$c['value']) . '٪ تخفیف'
+                    . '</span>';
+            } else {
+                return '<span class="ab-badge" data-tone="emerald">'
+                    . formatPrice($c['value'])
+                    . '</span>';
+            }
+        },
 
-                            <!-- 7. Actions -->
-                            <td style="text-align:left;">
-                                <div style="display:inline-flex; align-items:center; gap:6px;">
-                                    <!-- Analytics Drawer Button -->
-                                    <button type="button" class="cpn-action-btn btn-stats" title="عملکرد مالی و سفارشات" 
-                                            onclick="openCouponDrawer(<?= (int)$c['id'] ?>, '<?= e($c['code']) ?>')">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
-                                        </svg>
-                                    </button>
+        'conditions' => function($c) {
+            $type = $c['type'] ?? 'percent';
+            $minOrder = (!empty($c['min_order_amount']) && (float)$c['min_order_amount'] > 0)
+                ? 'حداقل: ' . formatPrice($c['min_order_amount'])
+                : '<span class="ab-text-muted">بدون حداقل</span>';
 
-                                    <!-- Edit Button -->
-                                    <a href="/admin/coupons.php?edit=<?= (int)$c['id'] ?>" class="cpn-action-btn" title="ویرایش">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                                        </svg>
-                                    </a>
+            $maxCap = ($type === 'percent' && !empty($c['max_discount_amount']) && (float)$c['max_discount_amount'] > 0)
+                ? '<div class="ab-text-xs ab-text-muted">سقف: ' . formatPrice($c['max_discount_amount']) . '</div>'
+                : '';
 
-                                    <!-- Toggle Active Form -->
-                                    <form method="post" action="/admin/coupons.php" style="margin:0; display:inline;">
-                                        <?= csrfField() ?>
-                                        <input type="hidden" name="action" value="toggle">
-                                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                                        <button type="submit" class="cpn-action-btn" title="<?= $c['is_active'] ? 'تعلیق' : 'فعال‌سازی' ?>">
-                                            <?php if ($c['is_active']): ?>
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                                            <?php else: ?>
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-                                            <?php endif; ?>
-                                        </button>
-                                    </form>
+            return '<div class="ab-stack ab-stack--xs"><div class="ab-text-sm ab-font-bold">' . $minOrder . '</div>' . $maxCap . '</div>';
+        },
 
-                                    <!-- Delete Form -->
-                                    <form method="post" action="/admin/coupons.php" onsubmit="return confirm('آیا از حذف این کد تخفیف اطمینان دارید؟');" style="margin:0; display:inline;">
-                                        <?= csrfField() ?>
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                                        <button type="submit" class="cpn-action-btn btn-delete" title="حذف">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-</section>
+        'usage' => function($c) {
+            $maxUses = $c['max_uses'] !== null ? (int)$c['max_uses'] : null;
+            $usedCount = (int)$c['used_count'];
+            $usagePercent = !empty($maxUses) ? min(100, round(($usedCount / $maxUses) * 100)) : null;
+
+            $countText = toPersianDigits((string)$usedCount) . ($maxUses ? ' از ' . toPersianDigits((string)$maxUses) . ' بار' : ' بار (نامحدود)');
+
+            $progressHtml = '';
+            if ($usagePercent !== null) {
+                $tone = $usagePercent >= 100 ? 'rose' : ($usagePercent >= 80 ? 'amber' : 'purple');
+                $progressHtml = render_component('progress', [
+                    'value'        => (float)$usagePercent,
+                    'tone'         => $tone,
+                    'class'        => 'ab-progress-wrap--compact',
+                ]);
+            }
+
+            $perCustomerText = '<div class="ab-text-xs ab-text-muted">سقف هر کاربر: '
+                . toPersianDigits((string)($c['max_uses_per_customer'] ?? 1))
+                . ' بار</div>';
+
+            return '<div class="ab-stack ab-stack--xs"><div class="ab-text-sm ab-font-bold ab-num">' . $countText . '</div>' . $progressHtml . $perCustomerText . '</div>';
+        },
+
+        'expiry' => function($c) {
+            $isExpired = !empty($c['expires_at']) && strtotime($c['expires_at']) < strtotime('today');
+            if (!empty($c['expires_at'])) {
+                if ($isExpired) {
+                    return '<div class="ab-stack ab-stack--xs">'
+                        . '<div class="ab-text-danger ab-font-bold ab-text-sm">' . appDateTime($c['expires_at'], 'shamsi') . '</div>'
+                        . '<span class="ab-badge" data-state="danger">منقضی شده</span>'
+                        . '</div>';
+                }
+                return '<div class="ab-stack ab-stack--xs">'
+                    . '<div class="ab-text-sm ab-font-bold ab-num">' . appDateTime($c['expires_at'], 'shamsi') . '</div>'
+                    . '<div class="ab-text-xs ab-text-muted ab-num" dir="ltr">' . e($c['expires_at']) . '</div>'
+                    . '</div>';
+            }
+            return '<span class="ab-text-muted ab-text-sm">همیشگی</span>';
+        },
+
+        'status' => function($c) {
+            $isExpired = !empty($c['expires_at']) && strtotime($c['expires_at']) < strtotime('today');
+            $isLimitReached = $c['max_uses'] !== null && (int)$c['used_count'] >= (int)$c['max_uses'];
+
+            if (!$c['is_active']) {
+                return render_component('badge', ['text' => 'غیرفعال', 'state' => 'danger']);
+            } elseif ($isExpired) {
+                return render_component('badge', ['text' => 'منقضی', 'state' => 'warning']);
+            } elseif ($isLimitReached) {
+                return render_component('badge', ['text' => 'تکمیل ظرفیت', 'state' => 'muted']);
+            } else {
+                return render_component('badge', ['text' => 'فعال', 'state' => 'success', 'dot' => true]);
+            }
+        },
+
+        'actions' => function($c) {
+            $statsBtn = '<button type="button" class="ab-icon-btn ab-icon-btn--sm" title="عملکرد مالی و آمار سفارشات" data-coupon-stats data-id="' . (int)$c['id'] . '" data-code="' . e($c['code']) . '" aria-label="آمار عملکرد">'
+                . '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>'
+                . '</button>';
+
+            $editBtn = '<a href="/admin/coupons.php?edit=' . (int)$c['id'] . '" class="ab-icon-btn ab-icon-btn--sm" title="ویرایش کد تخفیف" aria-label="ویرایش">'
+                . '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
+                . '</a>';
+
+            $toggleBtn = '<form method="post" action="/admin/coupons.php" class="ab-inline-form">'
+                . csrfField()
+                . '<input type="hidden" name="action" value="toggle">'
+                . '<input type="hidden" name="id" value="' . (int)$c['id'] . '">'
+                . '<button type="submit" class="ab-icon-btn ab-icon-btn--sm" title="' . ($c['is_active'] ? 'تعلیق و غیرفعال‌سازی' : 'فعال‌سازی مجدد') . '" aria-label="تغییر وضعیت">'
+                . ($c['is_active']
+                    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>'
+                    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>')
+                . '</button>'
+                . '</form>';
+
+            $deleteBtn = '<form method="post" action="/admin/coupons.php" onsubmit="return confirm(\'آیا از حذف این کد تخفیف اطمینان دارید؟\');" class="ab-inline-form">'
+                . csrfField()
+                . '<input type="hidden" name="action" value="delete">'
+                . '<input type="hidden" name="id" value="' . (int)$c['id'] . '">'
+                . '<button type="submit" class="ab-icon-btn ab-icon-btn--sm ab-btn--danger" title="حذف کد تخفیف" aria-label="حذف">'
+                . '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'
+                . '</button>'
+                . '</form>';
+
+            return '<div class="ab-cluster ab-cluster--xs ab-cluster--end">' . $statsBtn . $editBtn . $toggleBtn . $deleteBtn . '</div>';
+        },
+    ],
+    'empty'       => [
+        'title'   => 'هیچ کد تخفیفی با این مشخصات یافت نشد',
+        'message' => 'می‌توانید فیلترها را ریست کنید یا کد تخفیف جدیدی ایجاد نمایید.',
+    ],
+    'sticky_head' => true,
+]);

@@ -60,8 +60,6 @@ $pageCssMap = [
     'email_accounts.php'        => '/assets/css/admin-emails.css',
     'email_read.php'            => '/assets/css/admin-emails.css',
     'email_compose.php'         => '/assets/css/admin-emails.css',
-    'coupons.php'               => '/assets/css/admin-coupons.css',
-    'tags.php'                  => '/assets/css/admin-coupons.css',
     'diagnostics.php'           => '/assets/css/admin-diagnostics.css',
     'notifications_log.php'     => '/assets/css/admin-diagnostics.css',
 ];

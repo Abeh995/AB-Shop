@@ -1,7 +1,30 @@
-# Changelog Archive (v1.0.0 — v1.34.1)
+# Changelog Archive (v1.0.0 — v1.34.2)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.34.1.
+Historical release notes for AB-Socks versions 1.0.0 through 1.34.2.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+## 1.34.2 — 2026-10-11
+
+### Admin Mobile Navigation Shell, DataTable Scroll Zoom Fix, Split View Polish & Native Dialog Transitions
+
+- **Admin Responsive Navigation Shell (`assets/css/admin-shell.css`, `assets/js/admin.js`, `views/admin/layout/header.php`, `views/admin/layout/nav_config.php`)**:
+  - Added accessible topbar mobile hamburger toggle button (`#adminMobileMenuBtn`) for viewports below `1024px` (`width < 64rem`).
+  - Implemented off-canvas drawer slide-out with backdrop overlay, keyboard `Escape` handler, and outside click dismiss for the sidebar on mobile and tablet devices.
+  - Resolved mobile isolation bug on subpages and workstation pages where Bottom Navigation Bar (BNB) is omitted.
+- **DataTable Horizontal Scroll & Priority Preservation (`assets/css/admin-components.css`)**:
+  - Scoped column priority suppression (`[data-priority="3"]` and `[data-priority="2"]`) strictly to non-scroll modes (`.ab-table-wrap:not([data-mode="scroll"])`).
+  - Guaranteed `width: max-content; min-width: 100%` and `white-space: nowrap` in `data-mode="scroll"`, preserving all columns (e.g. 12-column matrix tables) with horizontal scrolling under narrow containers and high zoom levels (110% to 200%).
+  - Maintained sticky first column (`inset-inline-start: 0`) in RTL with negative directional border shadow (`-1px 0 0 var(--border)`).
+- **Dual-Pane Workstation Polish (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
+  - Enhanced `.ab-split` with dedicated `.ab-split__list` scroll container and structured workstation item `.ab-split__item` featuring an active indicator bar (`border-inline-start: 3px solid var(--tone)`), header badges, and meta rows.
+  - Structured `.ab-split__pane` with dedicated action toolbar, section cards, and definition list layouts.
+  - Preserved fluid container query collapse (`@container ab-split (width < 48rem)`) with single-pane mobile back button navigation.
+- **Native HTML5 Dialog Transitions & Order Drawer (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
+  - Added 60fps GPU-accelerated dialog and backdrop blur animations using modern CSS `@starting-style` and discrete transition behavior (`allow-discrete`).
+  - Added mobile bottom sheet slide transitions for modals and side drawer modular classes (`.ab-drawer__section`, `.ab-drawer__timeline`, `.ab-drawer__item-list`).
+  - Implemented comprehensive order dossier drawer demo with multi-step timeline, customer card, items breakdown, and postal details.
 
 ---
 

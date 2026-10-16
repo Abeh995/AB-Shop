@@ -1,78 +1,73 @@
 <?php
 /**
- * Slide-over Analytics Drawer for Coupon Performance & Order Attribution.
+ * Slide-over Analytics Drawer for Coupon Performance & Order Attribution (views/admin/coupons_partials/_drawer_stats.php)
+ * Pure presentation: 0 SQL, 0 $_POST (Rule 7).
  */
 ?>
-<div class="cpn-drawer-overlay" id="couponDrawerOverlay" onclick="closeCouponDrawer(event)">
-    <div class="cpn-drawer" onclick="event.stopPropagation()">
-        <!-- Drawer Header -->
-        <div class="cpn-drawer-header">
-            <div>
-                <h3 style="margin:0 0 4px; font-size:1.05rem; font-weight:800; color:#0f172a;">
-                    عملکرد مالی و آمار سفارشات
-                </h3>
-                <span id="drawerCouponCode" style="font-family:monospace; font-weight:700; color:var(--cpn-primary); font-size:.9rem;">
-                    COUPON_CODE
-                </span>
+<dialog class="ab-drawer" id="couponDrawer" data-side="end" data-ab-modal>
+    <!-- Drawer Header -->
+    <header class="ab-modal__header">
+        <div class="ab-stack ab-stack--xs">
+            <h3 class="ab-modal__title">عملکرد مالی و آمار سفارشات</h3>
+            <div class="ab-cluster ab-cluster--xs">
+                <code class="ab-code ab-code--accent ab-num" id="drawerCouponCode" dir="ltr">COUPON_CODE</code>
             </div>
-            <button type="button" class="btn-copy-code" onclick="closeCouponDrawer()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+        </div>
+        <button type="button" class="ab-icon-btn ab-icon-btn--sm ab-modal__close" data-ab-modal-close aria-label="بستن پنل کشویی"></button>
+    </header>
+
+    <!-- Drawer Body -->
+    <div class="ab-modal__body">
+        <!-- Loading Indicator -->
+        <div id="drawerLoading" class="ab-stack ab-stack--sm ab-text-center">
+            <div class="ab-text-muted ab-text-sm">در حال دریافت آمار مالی و سفارشات...</div>
         </div>
 
-        <!-- Drawer Body -->
-        <div class="cpn-drawer-body">
-            <!-- Loading Indicator -->
-            <div id="drawerLoading" style="text-align:center; padding:40px 0; color:#64748b;">
-                <div style="font-weight:600; font-size:.9rem;">در حال دریافت آمار مالی و سفارشات...</div>
+        <!-- Content Area -->
+        <div id="drawerContent" class="ab-stack ab-stack--md" hidden>
+            <!-- 4 Metric Boxes -->
+            <div class="ab-grid ab-grid--sm" style="--grid-min: 11rem;">
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">سفارشات موفق با این کد</span>
+                    <span class="ab-metric-box__value ab-num" id="statOrdersCount">۰</span>
+                </div>
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">درآمد ناخالص حاصله</span>
+                    <span class="ab-metric-box__value ab-num" id="statGrossRevenue">۰ تومان</span>
+                </div>
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">مجموع تخفیف کسر شده</span>
+                    <span class="ab-metric-box__value ab-num" id="statTotalDiscount">۰ تومان</span>
+                </div>
+                <div class="ab-metric-box">
+                    <span class="ab-metric-box__title">میانگین ارزش سفارش (AOV)</span>
+                    <span class="ab-metric-box__value ab-num" id="statAvgOrder">۰ تومان</span>
+                </div>
             </div>
 
-            <!-- Content Area (Hidden while loading) -->
-            <div id="drawerContent" style="display:none; flex-direction:column; gap:20px;">
-                <!-- 1. Four ROI Metric Boxes -->
-                <div class="cpn-roi-grid">
-                    <div class="cpn-roi-box">
-                        <h5>سفارشات موفق با این کد</h5>
-                        <div class="cpn-roi-num" id="statOrdersCount" style="color:var(--cpn-primary);">0</div>
-                    </div>
-                    <div class="cpn-roi-box">
-                        <h5>درآمد ناخالص حاصله</h5>
-                        <div class="cpn-roi-num" id="statGrossRevenue" style="color:var(--cpn-emerald);">0 تومان</div>
-                    </div>
-                    <div class="cpn-roi-box">
-                        <h5>مجموع تخفیف کسر شده</h5>
-                        <div class="cpn-roi-num" id="statTotalDiscount" style="color:var(--cpn-rose);">0 تومان</div>
-                    </div>
-                    <div class="cpn-roi-box">
-                        <h5>میانگین ارزش سفارش (AOV)</h5>
-                        <div class="cpn-roi-num" id="statAvgOrder" style="color:var(--cpn-sky);">0 تومان</div>
-                    </div>
+            <!-- Recent Orders Table -->
+            <div class="ab-stack ab-stack--xs">
+                <h4 class="ab-text-sm ab-font-bold">آخرین سفارش‌های ثبت‌شده با این کد</h4>
+                <div class="ab-table-wrap" data-mode="scroll">
+                    <table class="ab-table" id="drawerOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>سفارش</th>
+                                <th>مشتری</th>
+                                <th>مبلغ کل</th>
+                                <th>تخفیف</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drawerOrdersTbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- 2. Recent Orders Table -->
-                <div>
-                    <h4 style="margin:0 0 10px; font-size:.9rem; font-weight:700; color:#1e293b;">
-                        آخرین سفارش‌های ثبت‌شده با این کد
-                    </h4>
-                    <div style="border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;">
-                        <table class="admin-table" style="font-size:.78rem;">
-                            <thead>
-                                <tr>
-                                    <th>سفارش</th>
-                                    <th>مشتری</th>
-                                    <th>مبلغ کل</th>
-                                    <th>تخفیف</th>
-                                    <th>وضعیت</th>
-                                </tr>
-                            </thead>
-                            <tbody id="drawerOrdersTbody">
-                                <!-- Populated dynamically via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="drawerEmptyOrders" style="display:none; text-align:center; padding:24px; color:#94a3b8; font-size:.84rem;">
-                        تاکنون سفارشی با این کد تخفیف ثبت نشده است.
-                    </div>
+                <div id="drawerEmptyOrders" class="ab-text-center ab-text-muted ab-text-sm" hidden>
+                    تاکنون سفارشی با این کد تخفیف ثبت نشده است.
                 </div>
             </div>
         </div>
     </div>
-</div>
+</dialog>

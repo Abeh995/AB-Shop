@@ -393,6 +393,30 @@ $html = render_component(string $name, array $props = []): string
 
 ---
 
+### 2.18 Monospace Token & Code Badge (`.ab-code`)
+- **CSS**: `.ab-code`, `.ab-code--accent` in `assets/css/admin-components.css`
+- **Description**: Compact inline token badge for coupons, slugs, and identifiers with monospace typography, surface-2 background, and subtle border. Features RTL-safe fallback and `dir="auto"`.
+- **Usage**:
+  ```html
+  <code class="ab-code ab-code--accent" dir="auto">YALDA1403</code>
+  <code class="ab-code" dir="auto">socks-winter</code>
+  ```
+
+---
+
+### 2.19 Metric Tile Box (`.ab-metric-box`)
+- **CSS**: `.ab-metric-box`, `.ab-metric-box__val`, `.ab-metric-box__lbl` in `assets/css/admin-components.css`
+- **Description**: Compact statistic tile designed for drawers, dialogs, and detail inspection grids.
+- **Usage**:
+  ```html
+  <div class="ab-metric-box">
+      <span class="ab-metric-box__val">۴۲</span>
+      <span class="ab-metric-box__lbl">تعداد استفاده</span>
+  </div>
+  ```
+
+---
+
 ## 3. Design Tokens & CSS Architecture
 
 Styles follow strict CSS Cascade Layers (`@layer reset, tokens, base, layout, components, patterns, pages, utilities;`):

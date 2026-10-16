@@ -7,6 +7,39 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.35.0 — 2026-10-16
+
+### Admin UI Migration — coupons.php & tags.php (Phase 3)
+
+- **Coupons Management Full Migration (`views/admin/coupons.php`, `views/admin/coupons_partials/`)**:
+  - Rebuilt coupons workstation to the List Archetype (`.ab-pattern-list`) using AB-Kit v2 tokens and components, inheriting the `purple` domain tone.
+  - Converted KPI statistics to a responsive Bento grid (`_kpis.php`) via `component('kpi_card')` mapped with domain tones (`emerald`, `purple`, `rose`, `sky`).
+  - Implemented modern toolbar (`_toolbar.php`) with live status filter chips (`ab-chip`) and instant client-side table search (`data-ab-filter-target`).
+  - Migrated coupons table (`_table.php`) to `component('data_table')` in `mode => 'stack'` with column priority hierarchy, status badges, custom coupon code styling (`.ab-code`), 1-click clipboard copy, and visual usage meter via `render_component('progress')`.
+  - Converted create/edit coupon modal (`_modal.php`) to native `<dialog id="couponModal" class="ab-modal ab-modal--lg">` with `.ab-form-grid`, random code generator, and full CSRF protection.
+  - Converted coupon usage analytics drawer (`_drawer_stats.php`) to native `<dialog id="couponDrawer" class="ab-drawer">` with `.ab-metric-box` stats grid and AJAX order history table.
+  - Achieved strictly 0 inline styles (`style=""`) and 0 inline scripts.
+- **Tags Management Full Migration (`views/admin/tags.php`)**:
+  - Rebuilt tags view to the List Archetype (`.ab-pattern-list`) with `component('page_header')` and a 3-card KPI grid (`kpi_card`).
+  - Migrated tags table to `component('data_table')` in `mode => 'stack'` with column priorities 1-3, `.ab-code` slug badges (`dir="auto"`), and action button clusters.
+  - Converted tag create/edit modal to native `<dialog id="tagModal" class="ab-modal">` with clean form validation.
+  - Achieved strictly 0 inline styles (`style=""`) and 0 inline scripts.
+- **Page Stylesheet Deletion & CSS Debt Reduction (`assets/css/admin-coupons.css`, `views/admin/layout/header.php`)**:
+  - Completely deleted `assets/css/admin-coupons.css` (-532 lines of legacy CSS, -44 raw hex color codes, and -1 competing `:root` palette block).
+  - Removed `'coupons.php'` and `'tags.php'` entries from `$pageCssMap` in admin header.
+- **Client Script Modularization (`assets/js/admin-coupons.js`, `assets/js/admin-tags.js`)**:
+  - Created standalone `admin-coupons.js` handling discount type toggling (fixed/percent/free_shipping), AJAX random code generator, 1-click copy with `AB.toast`, and AJAX stats drawer loading.
+  - Created standalone `admin-tags.js` handling delegated tag modal opening, form population, and query-string cleanup (`?edit=`).
+- **Shared Component Library & UI Kit Expansion (`assets/css/admin-components.css`, `views/admin/ui-kit.php`)**:
+  - Added `.ab-code` and `.ab-code--accent` monospace token presentation with RTL-safe font fallbacks.
+  - Added `.ab-metric-box` compact tile component for side drawers and modal telemetry.
+  - Added `white-space: nowrap;` to `.ab-badge` to prevent Persian word wrapping in compact table cells.
+  - Added Monospace Tokens and Metric Box showcases to `views/admin/ui-kit.php`.
+- **Quality Gates & Playwright Verification (`tools/ui-test/test-coupons-tags-interaction.mjs`, `tools/verify.php`)**:
+  - Tested HTTP 200 and 0 console errors across all 14 responsive viewports.
+  - Validated 100% interactive pass: coupon modal create/edit, type toggle, AJAX code generation, copy toast, analytics drawer fetch, tag modal create/edit, and search filtering.
+  - Locked 18 ratcheted metric reductions in `tools/verify-baseline.json`.
+
 ## 1.34.6 — 2026-10-16
 
 ### Admin UI Pilot Migration — users.php (Phase 3)
@@ -85,28 +118,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Added Chromium headless launch flags (`--disable-dev-shm-usage`, `--no-sandbox`, `--disable-gpu`) and guarded browser/context lifecycles to prevent crashes on high-resolution viewports (4K / 3840x2160).
   - Resolved false-positive `stickyBarOverlap` check by excluding child elements of fixed/sticky bottom bars (`.ab-savebar`, `.admin-bottom-nav`) from being measured as obscured background content.
   - Added flexible route matching for CLI `--pages` arguments, supporting trailing `.php`, paths, and hyphen/underscore variations.
-
-## 1.34.2 — 2026-10-11
-
-### Admin Mobile Navigation Shell, DataTable Scroll Zoom Fix, Split View Polish & Native Dialog Transitions
-
-- **Admin Responsive Navigation Shell (`assets/css/admin-shell.css`, `assets/js/admin.js`, `views/admin/layout/header.php`, `views/admin/layout/nav_config.php`)**:
-  - Added accessible topbar mobile hamburger toggle button (`#adminMobileMenuBtn`) for viewports below `1024px` (`width < 64rem`).
-  - Implemented off-canvas drawer slide-out with backdrop overlay, keyboard `Escape` handler, and outside click dismiss for the sidebar on mobile and tablet devices.
-  - Resolved mobile isolation bug on subpages and workstation pages where Bottom Navigation Bar (BNB) is omitted.
-- **DataTable Horizontal Scroll & Priority Preservation (`assets/css/admin-components.css`)**:
-  - Scoped column priority suppression (`[data-priority="3"]` and `[data-priority="2"]`) strictly to non-scroll modes (`.ab-table-wrap:not([data-mode="scroll"])`).
-  - Guaranteed `width: max-content; min-width: 100%` and `white-space: nowrap` in `data-mode="scroll"`, preserving all columns (e.g. 12-column matrix tables) with horizontal scrolling under narrow containers and high zoom levels (110% to 200%).
-  - Maintained sticky first column (`inset-inline-start: 0`) in RTL with negative directional border shadow (`-1px 0 0 var(--border)`).
-- **Dual-Pane Workstation Polish (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
-  - Enhanced `.ab-split` with dedicated `.ab-split__list` scroll container and structured workstation item `.ab-split__item` featuring an active indicator bar (`border-inline-start: 3px solid var(--tone)`), header badges, and meta rows.
-  - Structured `.ab-split__pane` with dedicated action toolbar, section cards, and definition list layouts.
-  - Preserved fluid container query collapse (`@container ab-split (width < 48rem)`) with single-pane mobile back button navigation.
-- **Native HTML5 Dialog Transitions & Order Drawer (`assets/css/admin-components.css`, `views/admin/ui-kit.php`, `docs/COMPONENTS.md`)**:
-  - Added 60fps GPU-accelerated dialog and backdrop blur animations using modern CSS `@starting-style` and discrete transition behavior (`allow-discrete`).
-  - Added mobile bottom sheet slide transitions for modals and side drawer modular classes (`.ab-drawer__section`, `.ab-drawer__timeline`, `.ab-drawer__item-list`).
-  - Implemented comprehensive order dossier drawer demo with multi-step timeline, customer card, items breakdown, and postal details.
-
-
-
-
