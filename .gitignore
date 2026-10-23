@@ -110,7 +110,7 @@ Desktop.ini
 # =========================================================
 
 /versions/
-/assets/img/
+/assets/img/*
 *.gitattributes
 *.zip
 *.rar
@@ -142,3 +142,9 @@ tools/ui-test/output/
 tools/ui-test/.auth/
 tools/ui-test/pages.local.json
 
+
+# =========================================================
+# Landing Page Dev Source & Assets Exceptions
+# =========================================================
+/NEW_LandingPage/
+!/assets/img/landing/

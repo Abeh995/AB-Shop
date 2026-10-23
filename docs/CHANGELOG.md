@@ -7,6 +7,31 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.36.0 — 2026-10-23
+
+### Storefront Landing Page Overhaul & Interactive Component Suite
+
+- **Interactive Storefront Architecture (`assets/dist/landing/`, `views/site/home.php`, `app/controllers/site/home.php`)**:
+  - Replaced legacy landing page with high-conversion, motion-rich storefront combining MAX editorial artisanal design and ARGON conversion mechanics without altering production server architecture.
+  - Implemented dev-compiled client island architecture: React 19, Tailwind v4, and Framer Motion compile to lightweight static bundles (`assets/dist/landing/landing.bundle.js` and `.css`) served directly by the web server without requiring Node.js in production.
+  - Rendered complete SSR semantic fallback within `#root` for search engine bots (H1, brand mission, live product list with prices and links, JSON-LD store schema) guaranteeing 100% SEO indexability.
+- **Dynamic Catalog & Live Vector Art Engine (`NEW_LandingPage/src/components/Catalog.tsx`, `ProductArt.tsx`, `ProductCard.tsx`)**:
+  - Main product showcase featuring instant search, live category filter chips synced from MySQL, 4-way sorting, and 3 layout modes (Comfort 2-col, Dense grid, and List view).
+  - Integrated `ProductArt` vector SVG rendering engine allowing live colorway swatch switching directly on product cards without reloading or requesting extra image assets.
+  - Gracefully maps live database products from `window.__AB_INITIAL_DATA__` while providing SVG fallback rendering for custom colorways.
+- **PackBuilder & Custom Gift Box Bundling (`NEW_LandingPage/src/components/PackBuilder.tsx`, `ajax/cart_pack_add.php`)**:
+  - 3-step interactive pack builder allowing customers to choose pack tier (Daily 3-pack 10% off, Week 5-pack 15% off + free shipping, Luxury gift 4-pack 20% off), select custom socks into an interactive live box tray, pick box packaging, and write custom gift card notes.
+  - Created secure AJAX endpoint `ajax/cart_pack_add.php` verifying CSRF, registering selected socks into session cart (`cartAdd`), and persisting custom gift notes and box styles.
+- **Gamification & Engagement Tool Suite (`LuckyWheel.tsx`, `StyleMaker.tsx`, `TrackModal.tsx`, `CartDrawer.tsx`)**:
+  - Integrated 8-slice canvas/CSS Lucky Wheel with weighted spin physics and instant copyable coupon codes.
+  - Integrated 3-tap Smart Stylist Quiz recommending personalized socks based on occasion, color preference, and footwear.
+  - Implemented 5-step delivery timeline order tracking modal.
+  - Slide-out Cart Drawer with dynamic free shipping progress bar, quantity adjustments, and direct checkout redirect.
+- **Quality Gates & Automated Verification**:
+  - Verified 0 console errors and clean responsive layouts across desktop and mobile (390x844) viewports in Playwright harness.
+  - Confirmed 0 PHP syntax errors across all 284 project files.
+  - Verified `php tools/verify.php` quality gate passes with 0 errors.
+
 ## 1.35.1 — 2026-10-16
 
 ### Admin UI Migration — products.php (Phase 4a)
