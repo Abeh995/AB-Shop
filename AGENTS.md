@@ -141,6 +141,11 @@ them silently is worse than asking first.
     - **Declarative Admin Views (`data-ab-*`)**: Admin views must NOT contain heavy inline `<script>` tags (hard limit 20 lines). All interactive behaviors (autocomplete, modals, image uploads, toasts, table filters) are declared via HTML data-attributes (`data-ab-*`) and handled by shared scripts.
     - **CSS Design Token Discipline**: Colors, radiuses, and shadows MUST come from the unified `:root` variables in `admin.css`. Individual page stylesheets must never declare competing `:root` palettes or hardcode raw `#hex` values.
     - **Ratchet Baseline Enforced**: `php tools/verify.php` enforces a strict ratchet baseline (`tools/verify-baseline.json`). Introducing new duplicate functions, inline scripts >20 lines, or un-baselined CSS deviations will immediately FAIL the quality gate.
+12. **Autonomous Complexity Triage & Focus Mode (`/focus`).**
+    - **Triage Threshold (~70% Heuristic)**: Treat any task touching >= 2 files across architectural layers (e.g. migration + service, controller + view), modifying financial/pricing/stock logic, building or refactoring admin workstation pages, or undertaking complex structural refactors as **Level 2/3 (Focus Task)**. Single-file typo or cosmetic tweaks remain **Level 1 (Solo Routine)**.
+    - **Explicit Trigger**: User prompts containing `/focus`, `[focus]`, or `focus:` explicitly mandate Focus Mode regardless of size.
+    - **Sequential Pipeline Mandate**: Complex tasks must NOT be implemented in a single unstructured turn. Decompose into the sequential stage gate: Phase 0 Requirement Snapshot Matrix → Phase 1 Discovery (`DeepInvestigator`) → Phase 2..k Domain Slices (`DeepCoder`) → Phase k+1 Quality Gate (`php tools/verify.php`). Refer to `.agents/skills/ab-socks-focus/SKILL.md` for full execution rules and templates.
+    - **Zero-Collision Parent Hibernation**: Subagents execute strictly sequentially with `Workspace='inherit'`. Parallel agent spawns and concurrent workspace edits are strictly forbidden. The orchestrator must hibernate while a child runs and wait for its completion report before proceeding to the next slice, preventing file overwrite collisions and git race conditions.
 
 
 ## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")
@@ -220,6 +225,7 @@ Documentation must remain compact, modular, and token-efficient for AI agents:
   direction (read before writing any CSS/HTML for the redesign effort).
 - `docs/SEO.md` — SEO standards and what's implemented vs. planned.
 - `docs/AI_SKILLS.md` — recommended Agent Skills for this project's stack.
+- `.agents/skills/` — project skills (`ab-socks-focus`, `ab-socks-admin-page`, `ab-socks-refactor`, `ab-socks-ui-kit`, `ab-socks-workflow`, `backlog`).
 - `SECURITY.md` — security posture, what's covered, what's open.
 - `CONTRIBUTING.md` — commit conventions, branch/PR expectations.
 - `README-DEPLOY.md` — gitignored, deployment runbook for the human owner.

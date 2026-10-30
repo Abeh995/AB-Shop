@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.36.1 — 2026-10-30
+
+### Autonomous Complexity Triage & Sequential Focus Protocol
+
+- **Autonomous Complexity Triage & Focus Invariant (`AGENTS.md`)**:
+  - Enshrined Rule 12: Autonomous Complexity Triage & Focus Mode (`/focus`) establishing the ~70% triage heuristic (touches >= 2 files across architectural layers, schema migrations, finance/pricing/stock logic, admin workstations, or complex refactors).
+  - Enforced sequential single-active pipeline with zero-collision parent hibernation to eliminate concurrent write collisions and git race conditions.
+- **Dedicated Focus Orchestration Skill (`.agents/skills/ab-socks-focus/SKILL.md`)**:
+  - Scaffolding operational runbook for complex tasks with Phase 0 Requirement Snapshot Matrix, Phase 1 Discovery (`DeepInvestigator`), Phase 2..k Domain Slices (`DeepCoder`), and Phase k+1 Quality Gate Verification.
+  - Added slice failure recovery guidelines and 9-point pre-delivery loss prevention checklist.
+
 ## 1.36.0 — 2026-10-23
 
 ### Storefront Landing Page Overhaul & Interactive Component Suite
@@ -165,17 +176,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Refined tap target check to recognize parent `<label>` dimensions for checkboxes and radio switches per WCAG 2.5.5 / 2.5.8.
   - Confirmed 0 critical failures, 0 horizontal scroll overflows, and 0 console errors across all 14 viewports for the UI Kit.
 
-## 1.34.3 — 2026-10-11
 
-### Admin Mobile Touch Targets & Playwright Audit Harness Resiliency
-
-- **Admin Mobile Header Touch Target Refinements (`assets/css/admin-shell.css`)**:
-  - Enlarged mobile hamburger drawer button (`.admin-mobile-menu-btn`) dimensions to `40x40px` (`min-width: 40px; min-height: 40px;`), providing an ergonomic touch target within the 54px header.
-  - Enlarged compact storefront header link (`.btn-dash-store-compact`) on narrow mobile screens (`< 40rem`) to `38x38px` with circular boundary preservation.
-  - Standardized `.admin-search-input-wrap` with `min-height: 38px` and full-height inner input for seamless touch interaction.
-- **Playwright Responsive Audit Harness Polish (`tools/ui-test/audit.mjs`)**:
-  - Scoped authentication session storage states by hostname and username (`state_${host}_${user}.json`), with cookie domain validation to eliminate redirect loops when switching test base URLs.
-  - Implemented automatic re-authentication recovery upon encountering login redirects on authenticated test routes.
-  - Added Chromium headless launch flags (`--disable-dev-shm-usage`, `--no-sandbox`, `--disable-gpu`) and guarded browser/context lifecycles to prevent crashes on high-resolution viewports (4K / 3840x2160).
-  - Resolved false-positive `stickyBarOverlap` check by excluding child elements of fixed/sticky bottom bars (`.ab-savebar`, `.admin-bottom-nav`) from being measured as obscured background content.
-  - Added flexible route matching for CLI `--pages` arguments, supporting trailing `.php`, paths, and hyphen/underscore variations.
