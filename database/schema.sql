@@ -660,3 +660,29 @@ INSERT INTO theme_tokens (theme_id, token_group, token_key, token_value) VALUES
 (4, 'color', 'bg', '#F7EAE0'), (4, 'color', 'surface', '#FFFFFF'), (4, 'color', 'text', '#5C3A2E'),
 (4, 'color', 'muted', '#8A6B5C'), (4, 'color', 'border', '#E2CFC0'), (4, 'color', 'primary', '#331C12'),
 (4, 'color', 'primary-dark', '#1F110B'), (4, 'color', 'primary-light', '#E8D5C7'), (4, 'color', 'accent', '#8B5E4A');
+
+-- ------------------------------------------------------------
+-- Landing Studio (v1.37.0) — published snapshot + working draft
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS landing_config (
+    id TINYINT UNSIGNED NOT NULL,
+    published_json LONGTEXT NULL,
+    draft_json LONGTEXT NULL,
+    published_at DATETIME NULL DEFAULT NULL,
+    published_by INT UNSIGNED NULL DEFAULT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by INT UNSIGNED NULL DEFAULT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS landing_config_revisions (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    config_json LONGTEXT NOT NULL,
+    note VARCHAR(190) NULL DEFAULT NULL,
+    created_by INT UNSIGNED NULL DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_landing_revisions_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO landing_config (id) VALUES (1);

@@ -264,5 +264,14 @@
       "archetype": "list",
       "auth": true
     }
+,
+    {
+      "id": "landing",
+      "name": "استودیو صفحه اصلی",
+      "path": "/admin/landing.php",
+      "archetype": "workstation",
+      "mobileCritical": true,
+      "auth": true
+    }
   ]
 }

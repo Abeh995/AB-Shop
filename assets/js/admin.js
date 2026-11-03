@@ -23,6 +23,14 @@
         var searchInput = document.getElementById('adminGlobalSearch');
         var resultsWrap = document.getElementById('adminSearchResults');
         var searchBox = document.querySelector('.admin-search-box');
+        var topbar = document.querySelector('.dash-topbar');
+
+        // The popover is clamped by the topbar's stacking context, so the topbar
+        // is lifted to --z-dropdown only while results are on screen.
+        function setDropdownOpen(isOpen) {
+            if (!topbar) { return; }
+            topbar.classList.toggle('is-search-open', !!isOpen);
+        }
 
         if (!searchInput || !resultsWrap) {
             return;
@@ -103,6 +111,7 @@
         searchInput.addEventListener('focus', function () {
             if (searchInput.value.trim().length >= 1 && resultsWrap.children.length > 0) {
                 resultsWrap.style.display = 'block';
+                setDropdownOpen(true);
             }
         });
 
@@ -119,6 +128,7 @@
 
         function closeDropdown() {
             resultsWrap.style.display = 'none';
+            setDropdownOpen(false);
             selectedIndex = -1;
             if (currentAbortController) {
                 currentAbortController.abort();
@@ -164,6 +174,7 @@
             if (pages.length === 0 && orders.length === 0 && products.length === 0) {
                 resultsWrap.innerHTML = '<div class="admin-search-empty">نتیجه‌ای برای «' + escapeHtml(query) + '» پیدا نشد.</div>';
                 resultsWrap.style.display = 'block';
+                setDropdownOpen(true);
                 return;
             }
 
@@ -213,6 +224,7 @@
 
             resultsWrap.innerHTML = html;
             resultsWrap.style.display = 'block';
+            setDropdownOpen(true);
         }
     }
 

@@ -146,5 +146,7 @@ tools/ui-test/pages.local.json
 # =========================================================
 # Landing Page Dev Source & Assets Exceptions
 # =========================================================
-/NEW_LandingPage/
+landing_src/**/node_modules/
+landing_src/**/.cfg.mjs
+
 !/assets/img/landing/

@@ -7,6 +7,18 @@
 $siteFavicon = siteFaviconUrl();
 $canonicalUrl = rtrim(SITE_URL, '/') . '/';
 $storeName = SITE_NAME;
+
+// Server-rendered fallback copy — mirrors the published landing config so bots
+// (and no-JS visitors) always see the same headline the Studio published.
+$hero = $hero ?? ($landingConfig['hero'] ?? []);
+$seo = $seo ?? ($landingConfig['seo'] ?? []);
+$heroMain = trim((string) ($hero['headlineMain'] ?? '')) ?: 'هر قدم،';
+$heroHighlight = trim((string) ($hero['headlineHighlight'] ?? '')) ?: 'یه اثر هنریه';
+$heroSubtitle = trim((string) ($hero['subtitle'] ?? '')) ?: 'فروشگاه آنلاین جوراب‌های دست‌باف و خاص؛ بافته‌شده با نخ‌پنبه سوپر شانه‌شده و طرح‌های اصیل کارگاهی.';
+$ogImage = trim((string) ($seo['ogImage'] ?? '')) ?: trim((string) ($hero['productImage'] ?? ''));
+if ($ogImage !== '' && !preg_match('~^https?://~i', $ogImage)) {
+    $ogImage = rtrim(SITE_URL, '/') . '/' . ltrim($ogImage, '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -24,6 +36,11 @@ $storeName = SITE_NAME;
     <meta property="og:description" content="<?= e($metaDescription) ?>">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?= e($canonicalUrl) ?>">
+    <?php if ($ogImage !== ''): ?>
+        <meta property="og:image" content="<?= e($ogImage) ?>">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="<?= e($ogImage) ?>">
+    <?php endif; ?>
 
     <!-- Favicon -->
     <?php if ($siteFavicon): ?>
@@ -69,10 +86,10 @@ $storeName = SITE_NAME;
         <main style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem;">
             <section style="text-align: center; margin-bottom: 3rem;">
                 <h1 style="font-size: 2.5rem; font-weight: 900; color: #221510; margin-bottom: 1rem;">
-                    هر قدم، <span style="color: #e85d1f;">یه اثر هنریه</span>
+                    <?= e($heroMain) ?> <span style="color: <?= e(trim((string) ($hero['underlineColor'] ?? '')) ?: '#e85d1f') ?>;"><?= e($heroHighlight) ?></span>
                 </h1>
                 <p style="font-size: 1.1rem; color: #563c28; max-width: 600px; margin: 0 auto;">
-                    فروشگاه آنلاین جوراب‌های دست‌باف و خاص؛ بافته‌شده با نخ‌پنبه سوپر شانه‌شده و طرح‌های اصیل کارگاهی.
+                    <?= e($heroSubtitle) ?>
                 </p>
             </section>
 

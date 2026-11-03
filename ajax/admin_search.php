@@ -8,7 +8,7 @@
 require_once __DIR__ . '/../app/bootstrap.php';
 
 // Strictly enforce admin authentication
-if (!isAdmin()) {
+if (!isAdminLoggedIn()) {
     jsonResponse(['ok' => false, 'message' => 'دسترسی غیرمجاز.'], 403);
 }
 

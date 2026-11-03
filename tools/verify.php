@@ -380,7 +380,8 @@ if (empty($archMissing)) {
 // -------------------------------------------------------------
 section("6. Git Tag & Release Check");
 
-$gitLatestTag = trim((string) shell_exec('git describe --tags --abbrev=0 2>nul'));
+$gitNullSink = DIRECTORY_SEPARATOR === '\\' ? 'nul' : '/dev/null';
+$gitLatestTag = trim((string) shell_exec('git describe --tags --abbrev=0 2>' . $gitNullSink));
 if ($gitLatestTag) {
     if ($appVersion && $gitLatestTag === 'v' . $appVersion) {
         pass("Git tag '{$gitLatestTag}' matches APP_VERSION.");

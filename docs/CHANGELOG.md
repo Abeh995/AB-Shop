@@ -7,173 +7,133 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## 1.36.1 — 2026-10-30
+## 1.39.1 — 2026-11-02
 
-### Autonomous Complexity Triage & Sequential Focus Protocol
+### Landing Studio — popover stacking, focus mode and resizable panes
 
-- **Autonomous Complexity Triage & Focus Invariant (`AGENTS.md`)**:
-  - Enshrined Rule 12: Autonomous Complexity Triage & Focus Mode (`/focus`) establishing the ~70% triage heuristic (touches >= 2 files across architectural layers, schema migrations, finance/pricing/stock logic, admin workstations, or complex refactors).
-  - Enforced sequential single-active pipeline with zero-collision parent hibernation to eliminate concurrent write collisions and git race conditions.
-- **Dedicated Focus Orchestration Skill (`.agents/skills/ab-socks-focus/SKILL.md`)**:
-  - Scaffolding operational runbook for complex tasks with Phase 0 Requirement Snapshot Matrix, Phase 1 Discovery (`DeepInvestigator`), Phase 2..k Domain Slices (`DeepCoder`), and Phase k+1 Quality Gate Verification.
-  - Added slice failure recovery guidelines and 9-point pre-delivery loss prevention checklist.
+- **Global-search popover was clipped by the admin sidebar (`assets/css/admin.css`, `admin-tokens.css`, `assets/js/admin.js`)**:
+  the results panel declares `z-index: var(--z-overlay)` but lives inside the sticky `.dash-topbar`, whose own stacking
+  context was pinned at `--z-sticky` (20) — below the sidebar (40) and the studio toolbar (40), so the open menu slid
+  under them and looked cut in half. The topbar now lifts itself to a dedicated `--z-dropdown` layer (50) only while the
+  popover is open (`is-search-open`), and the base `.dash-topbar` rule was removed from `admin.css`: it was **unlayered**,
+  and unlayered rules beat every `@layer`, so no layered rule could ever override it. The shell copy in
+  `admin-shell.css` (`@layer layout`) is now the single definition.
+- **`ajax/admin_search.php` returned 500 on every request** — it guarded on `isAdmin()`, a function that does not exist
+  (the helper is `isAdminLoggedIn()`). The endpoint answered 500 with an empty body, so the menu never opened at all.
+- **Focus mode now hides the whole admin chrome** — `.admin-subnav-container` (the topic tabs) joins the topbar, sidebar
+  and bottom nav in `html.lb-focus-mode`, and the shell grows to `100dvh - 1.5rem` so the studio owns the entire window.
+- **Resizable panes** — the two workspace gaps are now real grid tracks that host drag handles
+  (`#lbSplitRail`, `#lbSplitPanel`): drag to resize the rail or the editor, the preview always takes the remaining
+  `1fr`. Pointer capture + `requestAnimationFrame` re-fit keep the emulated device responsive *during* the drag;
+  widths persist in `localStorage`, double-click or `Home` restores the default and arrow keys nudge by 16px
+  (48px with Shift). Handles are hidden in zen mode and below the 52rem tabbed breakpoint.
+- **Slimmer studio toolbar** — 76px → ~42px: tighter padding, 1.75rem mark, `--text-sm` title, 1.85rem icon buttons and
+  1.9rem action buttons, so the panes get the height back.
+- **Suite grown to 29 checks** — slim toolbar height, splitter drag (panel grows / preview shrinks), focus mode hides
+  topbar + tabs + sidebar, focus mode still fills the fold, search popover paints above sidebar and studio.
 
-## 1.36.0 — 2026-10-23
+## 1.39.0 — 2026-11-02
 
-### Storefront Landing Page Overhaul & Interactive Component Suite
+### Landing Studio — Full design control over the footer
 
-- **Interactive Storefront Architecture (`assets/dist/landing/`, `views/site/home.php`, `app/controllers/site/home.php`)**:
-  - Replaced legacy landing page with high-conversion, motion-rich storefront combining MAX editorial artisanal design and ARGON conversion mechanics without altering production server architecture.
-  - Implemented dev-compiled client island architecture: React 19, Tailwind v4, and Framer Motion compile to lightweight static bundles (`assets/dist/landing/landing.bundle.js` and `.css`) served directly by the web server without requiring Node.js in production.
-  - Rendered complete SSR semantic fallback within `#root` for search engine bots (H1, brand mission, live product list with prices and links, JSON-LD store schema) guaranteeing 100% SEO indexability.
-- **Dynamic Catalog & Live Vector Art Engine (`NEW_LandingPage/src/components/Catalog.tsx`, `ProductArt.tsx`, `ProductCard.tsx`)**:
-  - Main product showcase featuring instant search, live category filter chips synced from MySQL, 4-way sorting, and 3 layout modes (Comfort 2-col, Dense grid, and List view).
-  - Integrated `ProductArt` vector SVG rendering engine allowing live colorway swatch switching directly on product cards without reloading or requesting extra image assets.
-  - Gracefully maps live database products from `window.__AB_INITIAL_DATA__` while providing SVG fallback rendering for custom colorways.
-- **PackBuilder & Custom Gift Box Bundling (`NEW_LandingPage/src/components/PackBuilder.tsx`, `ajax/cart_pack_add.php`)**:
-  - 3-step interactive pack builder allowing customers to choose pack tier (Daily 3-pack 10% off, Week 5-pack 15% off + free shipping, Luxury gift 4-pack 20% off), select custom socks into an interactive live box tray, pick box packaging, and write custom gift card notes.
-  - Created secure AJAX endpoint `ajax/cart_pack_add.php` verifying CSRF, registering selected socks into session cart (`cartAdd`), and persisting custom gift notes and box styles.
-- **Gamification & Engagement Tool Suite (`LuckyWheel.tsx`, `StyleMaker.tsx`, `TrackModal.tsx`, `CartDrawer.tsx`)**:
-  - Integrated 8-slice canvas/CSS Lucky Wheel with weighted spin physics and instant copyable coupon codes.
-  - Integrated 3-tap Smart Stylist Quiz recommending personalized socks based on occasion, color preference, and footwear.
-  - Implemented 5-step delivery timeline order tracking modal.
-  - Slide-out Cart Drawer with dynamic free shipping progress bar, quantity adjustments, and direct checkout redirect.
-- **Quality Gates & Automated Verification**:
-  - Verified 0 console errors and clean responsive layouts across desktop and mobile (390x844) viewports in Playwright harness.
-  - Confirmed 0 PHP syntax errors across all 284 project files.
-  - Verified `php tools/verify.php` quality gate passes with 0 errors.
+The footer was the one section the Studio could only *rename*; now the whole section is design-driven.
+`editorial.footer` grew by **51 keys** and the section in the rail went from 4 groups / 21 fields to
+**8 groups / 77 fields**.
 
-## 1.35.1 — 2026-10-16
+- **Layout** — `layoutPreset` (three-column / two-column / stacked), `align` (start / center),
+  `contentWidth`, `columnGap`, `paddingTop`, `paddingBottom`, `showTopDivider`, `bottomAlign`.
+- **Colour & surface** — `backgroundStyle` (solid / gradient / mesh glow), `backgroundFrom`,
+  `backgroundTo`, `textColor`, `mutedOpacity`, `accentColor`, `buttonColor`, `borderColor`,
+  `dividerOpacity`, `cardRadius`, `decorStyle` (none / dot grid / glow). Colours are real colour
+  pickers and every derived tone (muted text, hairlines, hover surfaces) is computed from them.
+- **Block visibility** — `showBrand`, `showSocial`, `showLinks`, `showNewsletter`, `showBadges`,
+  `showSlogan`, `showCopyright`, `showBackToTop`, plus `logoSize`, `socialShape`, `socialSize`,
+  `badgeLayout` (2-col / 1-col / row), `badgeStyle` (soft / solid), `newsletterStyle` (pill / card)
+  and `backToTopText`.
+- **Three editable link columns** — `col1/2/3Enabled`, `col1/2/3Title` and `col1/2/3Links`, where each
+  entry is `برچسب|#مقصد`; an entry with no target renders as plain muted text (that is how
+  «تعویض ۷ روزه بی‌قیدوشرط» and the support-hours line are modelled now). The columns are no longer
+  hardcoded `navItems`.
+- **Four configurable trust badges** — per-badge `badgeNEnabled` + `badgeNIcon` (shield / badge /
+  card / bank) alongside the existing title / subtitle / click-message copy.
+- **`Footer.tsx` rewritten** to read every one of those values: blocks render conditionally, colours
+  are applied through a hex→rgba helper so opacity controls work on any brand colour, and the layout
+  is a real CSS grid (`gridTemplateColumns` from `layoutPreset`) instead of fixed Tailwind
+  `lg:col-span-*` classes — dynamic Tailwind class names never survive the build.
+- Verified live in the preview: switching to two columns + centered + mesh gradient + row badges
+  updates the iframe without a reload; `alignment`, `gridTemplateColumns` and `backgroundImage`
+  were asserted from the preview DOM, and the fixture was reset afterwards.
+- Schema/self-test: 543 / 302 → **599 leaves / 353 fields / 619 assertions OK**; config version and
+  `APP_VERSION` both bumped to `1.39.0`.
 
-### Admin UI Migration — products.php (Phase 4a)
+## 1.38.0 — 2026-11-01
 
-- **Products Catalog Full Migration (`views/admin/products.php`, `views/admin/products_partials/`)**:
-  - Rebuilt master products catalog workstation to the List Archetype (`.ab-pattern-list`) with strictly 0 inline styles (`style=""`) and 0 executable inline scripts.
-  - Decomposed view into 5 presentation-only partials: Bento KPI metrics (`_kpis.php`), filter toolbar and active chips (`_toolbar.php`), data table with stacked responsiveness (`_table.php`), floating bulk actions bar (`_bulk_bar.php`), and side dossier inspect drawer (`_drawer_inspect.php`).
-  - Implemented 4 Bento KPI cards using `component('kpi_card')` mapped with domain tones (`purple`, `amber`, `rose`, `emerald`).
-  - Converted catalog table to `component('data_table')` in `mode => 'stack'` with selectable checkboxes, sticky header, column priority hierarchy (1-3), thumbnail preview button, SKU monospace chip, formatted prices/margins, stock badges, and action clusters.
-  - Replaced legacy drawer with native `<dialog id="prodDrawer" class="ab-drawer" data-side="end" data-ab-modal>` featuring financial telemetry metric boxes, variant stock editor with steppers, and gallery thumbnails.
-  - Replaced legacy bulk action bar with floating pill (`#prodBulkBar`) hidden by default and smoothly revealed upon row selection.
-- **Stylesheet Debt Reduction (`assets/css/admin-products.css`)**:
-  - Shrunk from 1,408 lines to 430 lines (-978 lines of legacy code).
-  - Eliminated 115 raw hex color codes, mapping 100% of styles to CSS design tokens.
-  - Eliminated competing `:root` palette block and page-level `@media` queries.
-  - Wrapped 100% in `@layer pages` using RTL logical properties.
-  - Added horizontal scroll containment for global subnav strip, eliminating `laptop_font200` overflow.
-  - Preserved `.tag-tokenizer-*` classes required by `product_edit.php` until Phase 4c.
-- **Bug Fixes & Architectural Polish**:
-  - **Shared Pagination Helper & Per-Page Normalization (`app/core/functions.php`, `app/controllers/admin/products.php`, `views/admin/products_partials/_table.php`)**:
-    - Root-caused pagination bug where unselected `per_page` evaluated to `0`, triggering service-level clamping to `LIMIT 1` and creating 1 row per page across the catalog.
-    - Extracted SSoT helper `getPaginationParams(array $allowedPerPage, int $defaultPerPage = 20): array` in `app/core/functions.php` to safely parse and sanitize pagination input across controllers.
-    - Preserved `per_page` query parameter in table pagination links to prevent resetting per-page preferences when browsing pages.
-  - **Legacy Card Background & Publication Card Static Flow (`assets/css/admin-components.css`, `views/admin/product_edit.php`)**:
-    - Restored `.admin-card` legacy alias in `assets/css/admin-components.css` (`:is(.ab-card, .admin-card)`) with `background: var(--surface)`, borders, and default padding, eliminating transparency across legacy admin forms.
-    - Removed legacy inline `style="position: sticky; ..."` from the publication card in `views/admin/product_edit.php` so it scrolls naturally in the normal document flow alongside the rest of the form.
-- **Client Script Modernization (`assets/js/admin-products.js`)**:
-  - Modernized drawer interactions to use native `AB.modal.open('prodDrawer')` and `AB.modal.close('prodDrawer')`.
-  - Replaced alert/toast implementations with global `showToast()` and `AB.fmt.faDigits()`.
-  - Preserved all existing JS hooks (`#prodBulkBar`, `.btn-inspect`, `.prod-sku-chip`, steppers, and global `window.openProductDrawer` / `window.closeProductDrawer`).
-- **Quality Gates & Verification (`tools/ui-test/test-products-interaction.mjs`, `tools/verify.php`)**:
-  - Confirmed HTTP 200 and zero console errors across all viewports.
-  - Validated interactive functionality: drawer open/step/close, row selection, bulk bar toggle, filter form submission, SKU clipboard copy with toast.
-  - Playwright visual audit passed on all 14 responsive viewports with zero horizontal overflow.
-  - Locked ratcheted debt reductions in `tools/verify-baseline.json`.
+### Landing Studio — Full Copy Coverage, Collapsible Panes, Scrollable Panel
 
-## 1.35.0 — 2026-10-16
+- **Every storefront string is now editable (item 4).** ~70 strings that were still hardcoded in the React components are now part of the landing config, exposed as Studio fields:
+  - `catalog`: sort labels (`sortPopular`/`sortNewest`/`sortCheap`/`sortExpensive`), card-layout labels (`viewComfortLabel`/`viewDenseLabel`/`viewListLabel`), `clearSearchText`, `productNameTemplate` (the «جوراب {title}» name used on cards, modal and hero).
+  - `cartDrawer`: `closeLabel`, `freeShippingRemaining`, `freeShippingReached`, `colorPrefix`, `sizePrefix`, `increaseLabel`, `decreaseLabel`, `removeLabel`.
+  - `packBuilder`: `capacityText`, `trayText`, `summaryText`, `notePrefix`, `notePlaceholder`, `addButtonText`, `remainingText`, `removeLabel`.
+  - `sizeGuide`: `steps` (the three measuring steps) and `shoeSizeInputLabel`.
+  - `styleMaker`: `reasonTemplate`, `workshopNote`.
+  - `topStrip`: `copyToast`, `codeLabel`, `copyHint`.
+  - `socialStyle`: `tagCopiedToast`, `tagPrompt`, `tagCopyLabel`, `postAlt`.
+  - `luckyWheel`: `copiedToast`, `codeLabel`, `spinningText`, `spinAgainText`.
+  - `header`: `menuLabel`, `menuCloseLabel`, `homeLabel`, `faqLabel`, `deckHomeLabel`, `deckMenuLabel`, `deckShopLabel`, `deckWheelLabel`, `searchLabel`.
+  - `trackModal`: `inputHint`; `editorial.techTrust`: `otherColumnLabel`; `editorial.faq.supportBox`: `chatUnavailableText`.
+  - `editorial.footer`: `legalTitle`/`legalSub`/`legalText`, `gatewayLabel`, `secureTitle`/`secureDesc`, `unionLabel`/`unionSub`/`unionText`, `trustTitle`/`trustSub`/`trustText`, `instagramLabel`, `telegramLabel`, `newsletterNote`, `copyrightText`.
+  - `editorial.story.imageAlt`, `editorial.promiseBox.giftImageAlt`.
+  - Strings with runtime values use `{placeholders}` (`{code}`, `{count}`, `{tier}`, `{note}`, `{handle}`, `{tags}`, `{title}`, `{amount}`); the accepted placeholders are documented in each field's hint.
+  - Schema/self-test grew from 471 leaves / 232 fields to **543 leaves / 302 fields** (`php tools/landing-selftest.php` → 563 assertions OK).
+- **Collapsible panes (item 2).** The section rail and the field panel can now be folded away — `#lbRailToggle` in the rail head and `#lbPanelToggle` in the studio toolbar, backed by `data-rail-collapsed` / `data-panel-collapsed` on `.lb-studio`. Collapsing the rail leaves a 42px icon strip; collapsing the panel removes it entirely and hands the space to the preview. Both states persist in `localStorage` (`togglePane()` / `restorePaneState()` in `landing-studio.js`).
+- **No more overlap with the sticky admin topbar (item 3).** The studio toolbar is no longer `position: sticky` (the shell already fills the fold, so the toolbar is always on screen); the stacking collision with `admin-shell.css`'s sticky bar is gone.
+- **Dead space under the workspace (item 5) — real root cause.** The visually hidden `.lb-switch` checkbox (`position: absolute; opacity: 0`) had no positioned ancestor, so it escaped the panel and stacked five invisible 17px boxes down the document, stretching `docH` from 900px to 2863px and pushing the free white space into the viewport. `.lb-switch` is now `position: relative`, `contain: paint` on the shared `.lb-rail / .lb-panel / .lb-preview` rule keeps any future absolute helper inside its pane, and `.lb-group` plus the shared `flex: 0 0 auto` guard stop flex children from being shrunk and clipped. Verified at 1356×646, 1366×768, 1440×900, 1920×1080, 1280×800 and 1024×768: `documentElement.scrollHeight === innerHeight`, panel body scrollable.
+- **Always-visible panel scrollbar (item 1).** `scrollbar-color` on the rail/panel scroll areas made Chromium ignore the `::-webkit-scrollbar` styling and fall back to overlay scrollbars that only appear while scrolling. Those declarations are gone; the custom 10px bar is back, `scrollbar-gutter: stable` reserves its space so the pane geometry never jumps, and Firefox (which has no `::-webkit-scrollbar`) gets the standard properties behind `@supports not selector(::-webkit-scrollbar)`.
+- **Empty-field chip got its own id (`#lbEmptyFixChip`)** and the collapse-all chip is now `#lbCollapseAllChip`, so the smoke suite can target them unambiguously.
+- **Config version** bumped to `1.38.0` in both `defaultLandingConfig` and `app/data/landing-defaults.json`; existing drafts are merged forward on load, so no migration step is needed.
 
-### Admin UI Migration — coupons.php & tags.php (Phase 3)
+## 1.37.1 — 2026-11-01
 
-- **Coupons Management Full Migration (`views/admin/coupons.php`, `views/admin/coupons_partials/`)**:
-  - Rebuilt coupons workstation to the List Archetype (`.ab-pattern-list`) using AB-Kit v2 tokens and components, inheriting the `purple` domain tone.
-  - Converted KPI statistics to a responsive Bento grid (`_kpis.php`) via `component('kpi_card')` mapped with domain tones (`emerald`, `purple`, `rose`, `sky`).
-  - Implemented modern toolbar (`_toolbar.php`) with live status filter chips (`ab-chip`) and instant client-side table search (`data-ab-filter-target`).
-  - Migrated coupons table (`_table.php`) to `component('data_table')` in `mode => 'stack'` with column priority hierarchy, status badges, custom coupon code styling (`.ab-code`), 1-click clipboard copy, and visual usage meter via `render_component('progress')`.
-  - Converted create/edit coupon modal (`_modal.php`) to native `<dialog id="couponModal" class="ab-modal ab-modal--lg">` with `.ab-form-grid`, random code generator, and full CSRF protection.
-  - Converted coupon usage analytics drawer (`_drawer_stats.php`) to native `<dialog id="couponDrawer" class="ab-drawer">` with `.ab-metric-box` stats grid and AJAX order history table.
-  - Achieved strictly 0 inline styles (`style=""`) and 0 inline scripts.
-- **Tags Management Full Migration (`views/admin/tags.php`)**:
-  - Rebuilt tags view to the List Archetype (`.ab-pattern-list`) with `component('page_header')` and a 3-card KPI grid (`kpi_card`).
-  - Migrated tags table to `component('data_table')` in `mode => 'stack'` with column priorities 1-3, `.ab-code` slug badges (`dir="auto"`), and action button clusters.
-  - Converted tag create/edit modal to native `<dialog id="tagModal" class="ab-modal">` with clean form validation.
-  - Achieved strictly 0 inline styles (`style=""`) and 0 inline scripts.
-- **Page Stylesheet Deletion & CSS Debt Reduction (`assets/css/admin-coupons.css`, `views/admin/layout/header.php`)**:
-  - Completely deleted `assets/css/admin-coupons.css` (-532 lines of legacy CSS, -44 raw hex color codes, and -1 competing `:root` palette block).
-  - Removed `'coupons.php'` and `'tags.php'` entries from `$pageCssMap` in admin header.
-- **Client Script Modularization (`assets/js/admin-coupons.js`, `assets/js/admin-tags.js`)**:
-  - Created standalone `admin-coupons.js` handling discount type toggling (fixed/percent/free_shipping), AJAX random code generator, 1-click copy with `AB.toast`, and AJAX stats drawer loading.
-  - Created standalone `admin-tags.js` handling delegated tag modal opening, form population, and query-string cleanup (`?edit=`).
-- **Shared Component Library & UI Kit Expansion (`assets/css/admin-components.css`, `views/admin/ui-kit.php`)**:
-  - Added `.ab-code` and `.ab-code--accent` monospace token presentation with RTL-safe font fallbacks.
-  - Added `.ab-metric-box` compact tile component for side drawers and modal telemetry.
-  - Added `white-space: nowrap;` to `.ab-badge` to prevent Persian word wrapping in compact table cells.
-  - Added Monospace Tokens and Metric Box showcases to `views/admin/ui-kit.php`.
-- **Quality Gates & Playwright Verification (`tools/ui-test/test-coupons-tags-interaction.mjs`, `tools/verify.php`)**:
-  - Tested HTTP 200 and 0 console errors across all 14 responsive viewports.
-  - Validated 100% interactive pass: coupon modal create/edit, type toggle, AJAX code generation, copy toast, analytics drawer fetch, tag modal create/edit, and search filtering.
-  - Locked 18 ratcheted metric reductions in `tools/verify-baseline.json`.
+### Landing Studio — Layout & Responsiveness Fixes, Editor Affordance Pass
 
-## 1.34.6 — 2026-10-16
+- **Layout correctness (`assets/css/admin-landing.css`, `assets/js/landing-studio.js`, `views/admin/landing.php`)**:
+  - Fixed the dead band under the editor: the shell was capped at `54rem`, so tall windows showed a bare page-canvas strip below the studio. `syncStudioHeight()` now measures the offset under the admin chrome and sizes the shell to the fold (CSS `calc()` fallback retained), so the page never scrolls and the three panes scroll internally.
+  - Fixed container-query dead code: `container-type` lived on `.lb-studio` itself, so every `@container lb-studio` rule that restyled the shell was silently ignored. The query now resolves against a new `.lb-studio-shell` wrapper, which makes all breakpoints work.
+  - Re-tuned the breakpoints so the live preview survives on laptops: three panes down to 52rem (was 78rem, which dropped the preview on a 1366px laptop), tighter rail/panel widths at 84rem and 62rem, tabbed editor/preview only below 52rem, single column below 40rem.
+  - Section rail: the drag handle is now overlaid on hover instead of reserving column width, so long Persian section names no longer collapse to "بخش اصلی (…".
+- **Editor affordance (`assets/css/admin-landing.css`)**:
+  - Inputs, textareas and selects get a visible border (mixed from `--text-muted`), a hover state and a primary focus ring; font size moved to `--text-sm`. Empty-looking field rows were the main readability complaint on high-DPI/low-zoom screens.
+  - Group headers gained a field-count chip; scroll areas (`rail`, `panel`, `stage`) got `overscroll-behavior: contain` and tokenised scrollbars; visible `:focus-visible` outlines added across rail items, chips and icon buttons.
+- **Editor UX (`assets/js/landing-studio.js`)**:
+  - Panel head now shows the section's field count plus two new controls: a **«فقط تغییرات»** filter (fields that differ from the factory default, stable across autosaves) and a **collapse/expand all** toggle; an empty state explains the filter when a section is untouched.
+  - The preview auto-fits the device to the pane (mobile under 430px, tablet under 620px) so the emulated page is never squeezed to an unreadable scale; picking a device manually disables auto-fit.
+  - Switching the mobile editor/preview tab now re-measures the shell and rescales the frame (the preview used to stay collapsed at its hidden size).
+- **Admin shell (`assets/css/admin-shell.css`)**:
+  - Fixed a pre-existing horizontal overflow of the topic-tab strip between 1024px and 1220px. The tabs widened the document, and because the admin is RTL the page opened scrolled sideways, clipping the right-hand pane of the studio (and the classic appearance page). The strip now scrolls inside itself.
+- **Quality gates (`tools/ui-test/test-landing-studio.mjs`)**:
+  - Suite grown to 24 checks: fold-fill assertion, changed-only filter, collapse-all, zen mode, a dedicated 1366×768 laptop pass (preview must stay mounted, no sideways/fold overflow) and a fresh `studio-laptop.png` baseline.
 
-### Admin UI Pilot Migration — users.php (Phase 3)
+## 1.37.0 — 2026-10-31
 
-- **Pilot Page Full Migration (`views/admin/users.php`, `views/admin/users_partials/`)**:
-  - Rebuilt master view into the List Archetype (`.ab-pattern-list`) using AB-Kit v2 design tokens and components.
-  - Replaced legacy KPI cards with Bento `component('kpi_grid')` featuring tone-colored cards (`slate`, `amber`, `emerald`, `sky`) with accent stripes.
-  - Replaced legacy toolbar with `component('toolbar')` featuring quick filter chips (`.ab-chip`) and unified search.
-  - Migrated admin users table to `component('data_table')` in `mode => 'stack'` with column priority hierarchy (`data-priority`), custom avatar bubbles (`.ab-avatar`), semantic badges, and stacked card view at `< 40rem`.
-  - Migrated audit trail table to `component('data_table')` in `mode => 'scroll'` with responsive horizontal scrolling and sticky headers.
-  - Migrated Create Admin, Edit Admin, and Change Password modals to native `<dialog class="ab-modal">` via `component('modal')` and `component('form_field')`.
-  - Achieved strictly 0 inline styles (`style=""`) and 0 inline `<script>` tags across all users views.
-- **Page Stylesheet Deletion & CSS Debt Reduction (`assets/css/admin-users.css`, `views/admin/layout/header.php`)**:
-  - Completely deleted `assets/css/admin-users.css` (-530 lines of CSS, -17 raw hex color codes, and -1 competing `:root` palette).
-  - Removed `'users.php'` entry from `$pageCssMap` in admin header.
-- **Workspace Client Script (`assets/js/admin-users.js`, `app/controllers/admin/users.php`)**:
-  - Encapsulated live table search and role/status filtering into external `assets/js/admin-users.js` passed via `$pageScripts`.
-  - Implemented delegated modal openers with JSON payload parsing and maintained backward-compatible global helpers (`window.openCreateModal`, `window.openEditModal`, `window.openPasswordModal`, `window.closeAllModals`).
-- **Shared Component Library & UI Kit Expansion (`assets/css/admin-components.css`, `views/admin/ui-kit.php`)**:
-  - Added `.ab-avatar` base component with size variants (`.ab-avatar--sm`, `.ab-avatar--lg`) and user initials presentation.
-  - Added `.ab-inline-form` utility for table action forms and `.ab-icon-btn.ab-btn--danger` styling.
-  - Added User Avatars showcase section to `views/admin/ui-kit.php`.
-- **Automated Verification & Quality Gate (`tools/ui-test/test-users-interaction.mjs`, `tools/verify.php`)**:
-  - Validated 0 console errors and 0 page horizontal overflows across all 14 viewports in the Playwright audit.
-  - Verified 100% success on end-to-end interactive suite: modal open/close, field population, non-destructive form submission with flash feedback, quick filter chips, and live search.
-  - Locked 13 ratcheted metric reductions in `tools/verify-baseline.json`.
+### Landing Studio — Full Admin Control Over the Storefront Landing Page
 
-## 1.34.5 — 2026-10-16
-
-### Admin UI Stabilization Gate & Responsive Audit Baseline (Phase 2.5b)
-
-- **Mobile Shell & Nav Regression Resolution (`assets/css/admin.css`)**:
-  - Aligned legacy topbar `.dash-topbar` z-index from unlayered `100` to `var(--z-sticky)`. Previously, `z-index: 100` hovered above the mobile off-canvas drawer (`var(--z-overlay): 60`) and intercepted click and touch interactions on `#adminSidebarCloseBtn`.
-  - Verified mobile hamburger menu drawer toggle (`#adminMobileMenuBtn`), sidebar slide-out animation, backdrop dismiss, and bottom navigation bar (`.admin-bottom-nav`) across mobile viewports.
-- **Full Responsive Audit & Baseline Analysis (`tools/ui-test/baseline/after-phase2.md`, `tools/ui-test/audit.mjs`)**:
-  - Executed automated Playwright audit across all 34 admin pages × 14 viewports (476 total assertions) with 0 HTTP 4xx/5xx errors and 0 navigation timeouts.
-  - Confirmed 4 clean foundation pages with 0 horizontal scroll overflow (`ui_kit`, `dashboard`, `inventory_valuation`, `login`).
-  - Diagnosed and cataloged horizontal scroll overflow across 30 legacy unmigrated pages, establishing the ranked, prioritized migration queue for Phase 3 (Pilot) and Phase 4 (Batch Migrations).
-  - Increased navigation timeout in test harness to 25s for resilient execution across asset-heavy views.
-
-## 1.34.4 — 2026-10-16
-
-### UI Kit Full Audit Matrix & Shared Component Stabilization (Phase 2.5a)
-
-- **UI Kit Master Showcase Expansion (`views/admin/ui-kit.php`, `app/controllers/admin/ui_kit.php`)**:
-  - Added interactive triggers and dialog instances for all 4 modal sizes (`sm`, `md`, `lg`, `xl`) and bilateral drawer directions (`end` left-side and `start` right-side drawer with filter form).
-  - Implemented interactive tab panels (`#pane-all`, `#pane-buttons`, `#pane-tables`, `#pane-overlays`) demonstrating real-time panel switching with zero inline JavaScript.
-  - Implemented non-destructive demo form `#uiKitDemoForm` with CSRF protection, POST validation, success toast flash notification, and clean redirect.
-- **Component Prop Scope Collision Fix (`app/core/functions.php`)**:
-  - Resolved PHP variable collision in `component()` and `render_component()` where local parameter `$name` masked the `$props['name']` passed to components under `EXTR_SKIP`.
-  - Renamed internal variables to `$_componentName`, `$_componentProps`, and `$_componentFile` and applied `EXTR_OVERWRITE`, guaranteeing form inputs receive their specified field names.
-- **KPI Card Look Alignment (`assets/css/admin-components.css`)**:
-  - Added tone-driven top accent stripe (`.ab-kpi-card::before`, 3px height) and subtle hover lift/shadow elevation to match the signature aesthetic of the Expenses workstation cards.
-- **Mobile Touch Target & Legibility Standards (`assets/css/admin-shell.css`, `assets/css/admin-components.css`)**:
-  - Enforced 44x44px minimum tap targets on mobile hamburger trigger (`.admin-mobile-menu-btn`), mobile storefront button (`.btn-dash-store-compact`), and bottom navigation items (`.admin-bottom-nav-item`).
-  - Added `min-height: var(--control-h)` to `.ab-tab-btn` ensuring WCAG compliance across coarse pointer touchscreens.
-  - Upgraded sub-12px dates and separators in topbar to `var(--text-xs)`.
-- **Navigation Tabs Engine Sync (`assets/js/ab-kit.js`, `assets/css/admin-components.css`)**:
-  - Added standard `.ab-tab-pane, [data-tab-pane] { display: none; }` and `.ab-tab-pane.active, [data-tab-pane].active { display: block; }` classes.
-  - Added `.ab-tab-pane` to `AB.tabs.activate` panel query selector.
-- **Playwright Audit Harness Polish (`tools/ui-test/audit.mjs`)**:
-  - Refined tap target check to recognize parent `<label>` dimensions for checkboxes and radio switches per WCAG 2.5.5 / 2.5.8.
-  - Confirmed 0 critical failures, 0 horizontal scroll overflows, and 0 console errors across all 14 viewports for the UI Kit.
-
-
+- **Visual content editor (`admin/landing.php`, `app/controllers/admin/landing.php`, `views/admin/landing.php`, `assets/js/landing-studio.js`, `assets/css/admin-landing.css`)**:
+  - New dedicated Studio workstation that exposes **every** editable node of the storefront landing page: 21 sections, 180+ top-level fields and all repeater items (hero copy, CTAs, trust bar, catalog, pack builder, gallery, story, promise box, tech comparison, FAQ, footer, lucky wheel, stylist quiz, track modal, cart drawer, visual effects, section order, SEO metadata) — every text, icon, colour and image.
+  - Section rail with drag-to-reorder (`sectionOrder`), per-section visibility switches and unsaved-change badges; collapsible field groups; per-field "restore default"; character counters with SEO-suggested lengths; conditional fields; icon/colour pickers; image fields with direct upload; primitive lists and nested repeaters with duplicate/reorder/collapse.
+  - Live preview of the real storefront in an iframe with true device emulation (1440/834/414 viewport scaled to fit), device switcher, full-screen (zen) mode, click-to-edit selection mode and jump-to-field highlighting.
+  - Draft → Publish workflow: debounced autosave of the working draft, explicit publish with note, discard, per-section and global reset, JSON import/export, undo/redo and keyboard shortcuts (`Ctrl+S`, `Ctrl+Z`, `Ctrl+K`, `V`, `F`, `Esc`).
+- **Schema as single source of truth (`app/services/LandingSchemaService.php`, `app/data/landing-defaults.json`)**:
+  - Declarative field registry (path, Persian label, editor type, constraints, icon vocabularies, conditional rules) that drives both the editor UI and a recursive sanitizer (enum/icon/colour whitelisting, number clamping, markup stripping that preserves Persian ZWNJ, URL scheme allow-list, `sectionOrder` normalisation, unknown-key rejection).
+  - Shipped defaults generated from the React `defaultLandingConfig` and normalised to the icon keys the components actually resolve (fixes latent `CreditCard`/`Landmark`/`ShoppingBag` fallbacks).
+- **Persistence, publishing and audit (`app/services/LandingService.php`, `database/migrations/028_v1.37.0_landing_studio.sql`, `ajax/landing_studio.php`)**:
+  - New `landing_config` singleton (`published_json` / `draft_json`) and `landing_config_revisions` archive (newest 25) with attribution; every publish-side action is written to `admin_audit_logs`; the storefront keeps rendering defaults if the migration has not been applied yet.
+  - AJAX endpoint with session + CSRF enforcement for `save_draft`, `publish`, `discard`, `reset_section`, `reset_all`, `restore_revision`, `import`, `upload`, `meta`.
+- **Storefront integration (`app/controllers/site/home.php`, `app/services/StorefrontService.php`, `views/site/home.php`, rebuilt `assets/dist/landing/*`)**:
+  - Published config injected into `window.__AB_INITIAL_DATA__.landingConfig`; the Studio preview iframe receives the draft (`?lb_preview=1`, admin-only) and skips the intro loader.
+  - Server-rendered `<title>`, meta description, OG image and no-JS fallback headline now come from the published config (SEO stays correct without JavaScript).
+  - Extracted catalog query/shaping into `StorefrontService` (`getLandingCatalogPayload()`), removing the last raw SQL from the home controller and dropping it to 49 lines (previously 92).
+  - Bundle rebuilt with `data-lb-section`/`data-lb-field` anchors on hero, section headings, story and footer for click-to-edit highlighting.
+- **Quality gates (`tools/landing-selftest.php`, `tools/ui-test/test-landing-studio.mjs`, `tools/ui-test/pages.json`)**:
+  - Schema coverage/safety self-test (471 leaves, 232 descriptors, 491 assertions) asserting coverage, sanitizer idempotency and XSS/URL rejection.
+  - Fixed the `tools/verify.php` release-tag probe, which shell-redirected `git describe` stderr to `2>nul` (a Windows-ism) and silently created an empty `nul` file in the repo root on Linux; it now targets the platform null device.
+  - Playwright end-to-end suite (18 checks) covering login, editor rendering, autosave, live preview bridge, search, device switching, publish (asserted on the endpoint response and publish timestamp in the status bar, not toast copy), revision history, published-copy delivery, mobile layout and console health.

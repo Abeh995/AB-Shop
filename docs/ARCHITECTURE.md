@@ -1,7 +1,7 @@
 # AB-Socks Architecture Reference
 
 This is the central technical architecture index for the **AB-Socks** platform.
-The architecture is structured modularly across four core domain documents.
+The architecture is structured modularly across focused domain documents.
 
 ---
 
@@ -26,6 +26,7 @@ Detailed system designs, diagrams, and domain explanations are organized into fo
 | **[Finance, Stock & Orders](./architecture/financial-and-stock.md)** | Snapshotting principles, row locking, `PricingService`, `GiftService`, `OrderService`, `AccountingService`, shipping calculation, and 7-day cart price guarantees. |
 | **[Authentication & Security](./architecture/auth-and-security.md)** | Mobile-first customer identity, OTP hashing, WebOTP API, FarazSMS pattern variables, private payment receipts, and admin RBAC. |
 | **[Themes & Media Pipeline](./architecture/theme-and-media.md)** | Browser HTML5 Canvas image optimization, EXIF/GPS stripping, HEIC iPhone decoding, WebP proxy, and database-driven theme engine. |
+| **[Landing Studio](./architecture/landing-studio.md)** | Storefront content model, schema-driven editor, draft/publish snapshots, revision archive, and the postMessage live-preview bridge. |
 
 ---
 

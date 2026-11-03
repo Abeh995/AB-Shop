@@ -959,20 +959,12 @@ input:checked + .switch-slider:before {
 /* Dashboard Components (.dash-*)                                             */
 /* -------------------------------------------------------------------------- */
 
-/* Topbar */
-.dash-topbar {
-    height: 52px;
-    background: rgba(247, 245, 240, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid #E8E1D5;
-    position: sticky;
-    top: 0;
-    z-index: var(--z-sticky);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
+/* Topbar: the base rule lives in admin-shell.css (@layer layout). It used to be
+   duplicated here, unlayered — and unlayered rules beat every layer, so the shell
+   could not hide the topbar in Landing-Studio focus mode and could not lift it
+   while the global-search popover was open. */
+.dash-topbar.is-search-open {
+    z-index: var(--z-dropdown);
 }
 
 .dash-topbar-right {

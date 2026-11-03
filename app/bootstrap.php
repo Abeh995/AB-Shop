@@ -11,7 +11,7 @@
  * 5) Load services (app/services) — payment gateway, SMS, coupons
  */
 
-define('APP_VERSION', '1.36.1');
+define('APP_VERSION', '1.39.1');
 define('APP_ROOT', dirname(__DIR__));
 
 // ---------- Secure session settings, applied before the session starts ----------
@@ -43,6 +43,14 @@ if (!defined('CARD_TO_CARD_UPLOAD_DIR')) {
 }
 if (!defined('CARD_TO_CARD_TMP_DIR')) {
     define('CARD_TO_CARD_TMP_DIR', CARD_TO_CARD_UPLOAD_DIR . 'tmp/');
+}
+
+// Public storage for landing-page media uploaded from the Landing Studio.
+if (!defined('LANDING_UPLOAD_DIR')) {
+    define('LANDING_UPLOAD_DIR', dirname(rtrim(UPLOAD_DIR, '/')) . '/landing/');
+}
+if (!defined('LANDING_UPLOAD_URL')) {
+    define('LANDING_UPLOAD_URL', dirname(rtrim(UPLOAD_URL, '/')) . '/landing/');
 }
 
 // Storage for expense receipt attachments and invoices.
@@ -80,6 +88,9 @@ require_once __DIR__ . '/services/CardToCardReceiptService.php';
 require_once __DIR__ . '/services/MailboxService.php';
 require_once __DIR__ . '/services/ProductService.php';
 require_once __DIR__ . '/services/SettingService.php';
+require_once __DIR__ . '/services/LandingSchemaService.php';
+require_once __DIR__ . '/services/LandingService.php';
+require_once __DIR__ . '/services/StorefrontService.php';
 require_once __DIR__ . '/services/ThemeService.php';
 require_once __DIR__ . '/services/SmsPatternService.php';
 require_once __DIR__ . '/services/AdminUserService.php';

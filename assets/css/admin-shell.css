@@ -895,6 +895,9 @@
   }
 
   /* Global Search Results Dropdown */
+  /* The popover's z-index bump lives in admin.css: unlayered rules beat every
+     @layer, so a rule here could never win against the legacy topbar block. */
+
   .admin-search-results {
     position: absolute;
     inset-block-start: calc(100% + 8px);
@@ -999,6 +1002,22 @@
     gap: var(--space-5);
     max-width: var(--page-max);
     margin-inline: auto;
+    /* The topic tabs must scroll inside the strip; letting them spill widened
+       the document between 1024-1220px, which shifted every admin page
+       sideways (RTL opens scrolled) and clipped the landing studio. */
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .admin-subnav-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .subnav-tab-item {
+    flex: 0 0 auto;
   }
 
   .subnav-tab-item {

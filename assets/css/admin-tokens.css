@@ -125,6 +125,7 @@
     /* ===== Layers / layout ===== */
     --z-sticky: 20;
     --z-nav: 40;
+    --z-dropdown: 50;
     --z-overlay: 60;
     --z-toast: 80;
     --page-max: 1600px;

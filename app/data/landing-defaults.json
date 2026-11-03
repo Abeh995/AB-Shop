@@ -1,0 +1,893 @@
+{
+  "version": "1.39.1",
+  "topStrip": {
+    "enabled": true,
+    "announcement": "ارسال رایگان سفارش‌های بالای ۵۰۰ هزار تومان",
+    "freeShippingThreshold": 500000,
+    "couponBadge": "ABSOCKS20",
+    "giftPackagingText": "بسته‌بندی هدیه رایگان",
+    "trackOrderText": "پیگیری سفارش",
+    "copyToast": "کد تخفیف {code} کپی شد",
+    "codeLabel": "کد تخفیف: {code}",
+    "copyHint": "کلیک برای کپی کد تخفیف"
+  },
+  "seo": {
+    "title": "ای‌بی ساکس | AB SOCKS — هر قدم، یه اثر هنریه",
+    "description": "فروشگاه آنلاین جوراب‌های دست‌باف و خاص ای‌بی ساکس. هر قدم، یه اثر هنریه.",
+    "ogImage": ""
+  },
+  "header": {
+    "logoTitle": "ای‌بی ساکس",
+    "logoSubtitle": "AB SOCKS",
+    "searchEnabled": true,
+    "trackEnabled": true,
+    "cartEnabled": true,
+    "navLinks": [
+      {
+        "id": "catalog",
+        "label": "کاتالوگ",
+        "desc": "گالری محصولات با امکان تغییر رنگ زنده روی کارت هر طرح",
+        "enabled": true
+      },
+      {
+        "id": "pack",
+        "label": "باکس‌ساز",
+        "desc": "پک اختصاصی خودت رو بچین و تا ۲۰٪ تخفیف بگیر",
+        "enabled": true
+      },
+      {
+        "id": "story",
+        "label": "داستان ما",
+        "desc": "از یک کارگاه کوچک بافندگی تا قلب استایل شما",
+        "enabled": true
+      },
+      {
+        "id": "gallery",
+        "label": "گالری حرکت",
+        "desc": "جوراب‌ها در حرکت؛ نگاهی به استایل واقعی مشتری‌ها",
+        "enabled": true
+      },
+      {
+        "id": "size",
+        "label": "راهنمای سایز",
+        "desc": "سایز دقیق پات رو در ۳ ثانیه پیدا کن",
+        "enabled": true
+      }
+    ],
+    "menuLabel": "منو",
+    "menuCloseLabel": "بستن منو",
+    "homeLabel": "صفحه اصلی",
+    "deckHomeLabel": "خانه",
+    "deckMenuLabel": "منو",
+    "searchLabel": "جستجو",
+    "faqLabel": "سوالات متداول",
+    "deckShopLabel": "فروشگاه",
+    "deckWheelLabel": "گردونه شانس"
+  },
+  "hero": {
+    "badgeText": "کالکشن جدید ۲۰۲۵ ای‌بی‌ساکس",
+    "badgeTag": "NEW DROP",
+    "headlineMain": "هر قدم،",
+    "headlineHighlight": "یه اثر هنریه",
+    "underlinePreset": "wavy",
+    "customUnderlinePath": "M4 10 C 70 2 220 2 296 8",
+    "underlineColor": "#f97316",
+    "subtitle": "در کارگاه ای‌بی ساکس هر جفت جوراب با ۸۵٪ نخ‌پنبه‌ی شانه‌شده، پنجه‌ی بدون درز و طرح‌هایی که با نخ رنگی «بافته» شده‌اند به دنیا می‌آید؛ چون باور داریم استایل از قدم اول ساخته می‌شود.",
+    "ctaPrimaryLabel": "دیدن گالری محصولات",
+    "ctaPrimaryLink": "#catalog",
+    "ctaSecondaryLabel": "باکس‌ساز اختصاصی (تا ۲۰٪ تخفیف)",
+    "ctaSecondaryLink": "#pack",
+    "ctaSecondaryEnabled": true,
+    "marqueeText": "AB SOCKS — AB SOCKS",
+    "parallaxEnabled": true,
+    "parallaxIntensity": 1,
+    "dotGridOpacity": 0.6,
+    "trustChips": [
+      "۱۰۰٪ نخ ارگانیک",
+      "بدون پرز و رنگ‌دهی"
+    ],
+    "productBadge": "قلم‌موی نارنجی پرنده",
+    "productTag": "ART PIECE 01",
+    "productImage": "/assets/img/landing/hero-sock.jpg",
+    "productCollection": "مجموعه آثار دست‌باف",
+    "productPrice": 148000,
+    "productButtonText": "افزودن به سبد",
+    "showFeaturedCard": true,
+    "stampText": "AB SOCKS • هر قدم یه اثر هنریه •",
+    "stampEnabled": true,
+    "stampIcon": "feather",
+    "miniTrustStats": [
+      {
+        "icon": "feather",
+        "title": "۸۵٪ نخ‌پنبه",
+        "subtitle": "ضدتعریق وحساسیت"
+      },
+      {
+        "icon": "palette",
+        "title": "طرح بافته‌شده",
+        "subtitle": "تضمین ثبات رنگ"
+      },
+      {
+        "icon": "truck",
+        "title": "ارسال سریع",
+        "subtitle": "پک کادویی + استیکر"
+      }
+    ]
+  },
+  "trustBar": {
+    "enabled": true,
+    "items": [
+      {
+        "id": "tb0",
+        "icon": "feather",
+        "title": "۱۰۰٪ نخ‌پنبه",
+        "desc": "ضدحساسیت و نرم",
+        "active": true
+      },
+      {
+        "id": "tb1",
+        "icon": "refresh",
+        "title": "۷ روز تعویض",
+        "desc": "بدونِ ذره‌ای سؤال",
+        "active": true
+      },
+      {
+        "id": "tb2",
+        "icon": "truck",
+        "title": "ارسالِ سراسری",
+        "desc": "به تمامِ نقاطِ ایران",
+        "active": true
+      },
+      {
+        "id": "tb3",
+        "icon": "gift",
+        "title": "بسته‌بندیِ هدیه",
+        "desc": "آماده‌ی کادو دادن",
+        "active": true
+      },
+      {
+        "id": "tb4",
+        "icon": "shield",
+        "title": "پرداخت امن",
+        "desc": "درگاه رسمی شتاب",
+        "active": true
+      }
+    ],
+    "marqueeText": "ادامه بده، پایین‌تر قشنگ‌تره",
+    "marqueeSubText": "KEEP SCROLLING",
+    "marqueeSpeed": 20
+  },
+  "catalog": {
+    "eyebrow": "گالری محصولات",
+    "title": "کاتالوگ محصولات — رنگش را خودت عوض کن",
+    "desc": "روی هر کارت می‌توانی رنگ‌بندی طرح را به‌صورت زنده تغییر بدهی، جزئیات را با یک کلیک ببینی و مستقیم به سبد یا باکس اضافه کنی.",
+    "searchPlaceholder": "جستجو بین طرح‌ها… مثلا «نئون» یا «اسپرت»",
+    "defaultLayout": "comfort",
+    "showSearch": true,
+    "showSort": true,
+    "discountBadgeThreshold": 10,
+    "defaultColorIndex": 0,
+    "categoryTabsOrder": [
+      "all",
+      "crew",
+      "sport",
+      "neon",
+      "accessory"
+    ],
+    "emptySearchText": "طراحی با این مشخصات پیدا نشد…",
+    "resetSearchText": "نمایش همه‌ی طرح‌ها",
+    "sortPopular": "پرفروش‌ترین",
+    "sortNewest": "جدیدترین",
+    "sortCheap": "ارزان‌ترین",
+    "sortExpensive": "گران‌ترین",
+    "viewComfortLabel": "نمای بزرگ",
+    "viewDenseLabel": "نمای فشرده",
+    "viewListLabel": "نمای لیستی",
+    "clearSearchText": "پاک کردن جستجو",
+    "productNameTemplate": "جوراب {title}"
+  },
+  "visualEffects": {
+    "motionGalleryColors": [
+      "#221510",
+      "#3d2113",
+      "#243022",
+      "#2c1a24",
+      "#221510"
+    ],
+    "motionGallerySpeed": 30,
+    "motionGalleryAngle": -2,
+    "dotGridDensity": "medium",
+    "ambientGlowEnabled": true,
+    "animationStyle": "spring"
+  },
+  "motionGallery": {
+    "eyebrow": "نمایشگاه کوچکِ قدم‌های شما",
+    "title": "گالری حرکت",
+    "desc": "جوراب قرار نیست یکجا بنشیند؛ اسکرول کن تا قطره‌رنگ کارگاه هم با تو حرکت کند و استایل‌های واقعی مشتری‌ها را ببینی.",
+    "marqueeText": "گالری حرکت",
+    "marqueeSubText": "MOTION GALLERY",
+    "ctaStyleQuizText": "استایل‌ساز هوشمند: سلیقه‌ات را کشف کن",
+    "ctaLuckyWheelText": "چرخاندن گردونه شانس",
+    "images": [
+      {
+        "img": "https://images.pexels.com/photos/10535908/pexels-photo-10535908.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "caption": "کنار آب، لبه‌ی تابستان"
+      },
+      {
+        "img": "https://images.pexels.com/photos/8260232/pexels-photo-8260232.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "caption": "سه نفره، سه حال‌وهوا"
+      },
+      {
+        "img": "https://images.pexels.com/photos/4826711/pexels-photo-4826711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "caption": "جمعه‌ی خونه، جورابِ رنگی"
+      },
+      {
+        "img": "https://images.pexels.com/photos/12739960/pexels-photo-12739960.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "caption": "استریت یعنی این"
+      },
+      {
+        "img": "https://images.pexels.com/photos/5741063/pexels-photo-5741063.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "caption": "دو قدم جلوتر از روال"
+      }
+    ]
+  },
+  "packBuilder": {
+    "enabled": true,
+    "eyebrow": "باکس‌ساز اختصاصی",
+    "title": "پک خودت را بچین، تخفیفش را بردار",
+    "desc": "٣ مدل باکس با ۳ سطح تخفیف؛ محصولات را به «باکس انتخابی» بینداز، کارت تبریک دست‌نویس رایگان بنویس و خلاصه‌ی پک اختصاصی‌ات را زنده ببین.",
+    "autoFillLabel": "چیدمان هوشمند تصادفی",
+    "step1Heading": "روی محصولات بزن تا وارد باکس شوند:",
+    "tiers": [
+      {
+        "id": "daily",
+        "title": "پک روزمره",
+        "count": 3,
+        "discount": 10,
+        "tagline": "سه جفت برای آغاز هفته",
+        "perks": [
+          "۱۰٪ تخفیف باندل",
+          "بسته‌بندی کرافت"
+        ]
+      },
+      {
+        "id": "week",
+        "title": "پک هفته",
+        "count": 5,
+        "discount": 15,
+        "tagline": "هر روز هفته، یه حال‌وهوا",
+        "perks": [
+          "۱۵٪ تخفیف باندل",
+          "ارسال رایگان",
+          "استیکر سورپرایز"
+        ],
+        "featured": true
+      },
+      {
+        "id": "gift",
+        "title": "پک هدیه لاکچری",
+        "count": 4,
+        "discount": 20,
+        "tagline": "برای کسی که دوسش داری",
+        "perks": [
+          "۲۰٪ تخفیف باندل",
+          "باکس چوبی + روبان",
+          "کارت تبریک دست‌نویس رایگان"
+        ]
+      }
+    ],
+    "boxOptions": [
+      "باکس کرافت مینیمال + روبان نارنجی",
+      "باکس استریت + پک استیکر",
+      "باکس کادویی تولد + کارت پستال"
+    ],
+    "sizeOptions": [
+      "سایز ۳۶ تا ۴۰",
+      "سایز ۴۱ تا ۴۶",
+      "فری‌سایز مخلوط"
+    ],
+    "capacityText": "باکس {tier} فقط {count} جفت جا دارد",
+    "trayText": "{count} پرفروش داخل باکس چیده شد",
+    "summaryText": "{tier} ({count} جفتی)",
+    "notePrefix": "— کارت: «{note}»",
+    "notePlaceholder": "مثلا: تولدت مبارک رفیق؛ همیشه خوش‌قدم باشی!",
+    "addButtonText": "افزودن پک اختصاصی به سبد خرید",
+    "remainingText": "هنوز {count} جفت دیگر انتخاب کن",
+    "removeLabel": "حذف"
+  },
+  "socialStyle": {
+    "enabled": true,
+    "eyebrow": "کمپین مشتری‌های واقعی",
+    "title": "#ABSOCKS_STYLE",
+    "desc": "استایلت با جوراب ای‌بی ساکس، عضو بعدی دیوار شهرت کارگاهی است.",
+    "boxTitle": "عکس پات رو با جوراب ای‌بی ساکس استوری کن!",
+    "boxDesc": "ما رو تگ کن و یک کد تخفیف ۳۰٪ بدون محدودیت به‌عنوان هدیه در دایرکت دریافت کن. هر جمعه، قشنگ‌ترین استایل روی صفحه‌ی کارگاه بازنشر می‌شود.",
+    "tagButtonLabel": "کپی تگ @absocks.ir",
+    "storyCountNote": "بیش از ۱٬۲۰۰ استوری تا امروز",
+    "joinTileText": "تو هم بیا تو گالری",
+    "posts": [
+      {
+        "img": "https://images.pexels.com/photos/18054296/pexels-photo-18054296.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "handle": "@setareh.wears"
+      },
+      {
+        "img": "https://images.pexels.com/photos/38950161/pexels-photo-38950161.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "handle": "@pooya.st"
+      },
+      {
+        "img": "https://images.pexels.com/photos/11919823/pexels-photo-11919823.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "handle": "@nikan.daily"
+      },
+      {
+        "img": "https://images.pexels.com/photos/12201670/pexels-photo-12201670.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "handle": "@mahsa.fit"
+      },
+      {
+        "img": "https://images.pexels.com/photos/4827260/pexels-photo-4827260.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=940",
+        "handle": "@arta.style"
+      }
+    ],
+    "tagCopiedToast": "تگ @{handle} کپی شد — منتظر استوری‌تیم!",
+    "tagPrompt": "ما را تگ کن: @{handle}",
+    "tagCopyLabel": "کپی تگ @{handle}",
+    "postAlt": "استایل {handle}"
+  },
+  "sizeGuide": {
+    "enabled": true,
+    "eyebrow": "راهنمای هوشمند سایز ای‌بی ساکس",
+    "title": "سایز دقیق پات رو در ۳ ثانیه پیدا کن!",
+    "desc": "شماره‌ی کفش اروپایی (EU) خودت رو با اسلایدر انتخاب کن تا طول کف پا و سایز پیشنهادی ما را لحظه‌ای ببینی.",
+    "smallTip": "با ۳٪ الاستینِ بافت، سایز ۳۶-۴۰ دقیقا قالب پای تو می‌شیند و دور مچ جمع نمی‌شود.",
+    "largeTip": "سایز ۴۱-۴۶ با کشباف نرم خودش را از قوزک تا ساق به فرم پای تو می‌چسباند — بدون اثر کش.",
+    "tableRows": [
+      {
+        "eu": "۳۵ تا ۳۸",
+        "cm": "۲۲ - ۲۴",
+        "ab": "۳۶-۴۰"
+      },
+      {
+        "eu": "۳۹ تا ۴۰",
+        "cm": "۲۴.۵ - ۲۵.۵",
+        "ab": "۳۶-۴۰"
+      },
+      {
+        "eu": "۴۱ تا ۴۳",
+        "cm": "۲۶ - ۲۷.۵",
+        "ab": "۴۱-۴۶"
+      },
+      {
+        "eu": "۴۴ تا ۴۶",
+        "cm": "۲۸ - ۲۹.۵",
+        "ab": "۴۱-۴۶"
+      }
+    ],
+    "steps": [
+      "پات را روی کاغذ بگذار و دور آن خط بکش",
+      "فاصله‌ی پاشنه تا نوک بزرگ‌ترین انگشت را اندازه بگیر",
+      "عدد سانتی‌متر را با جدول نتیجه مقایسه کن"
+    ],
+    "shoeSizeInputLabel": "شماره کفش"
+  },
+  "luckyWheel": {
+    "enabled": true,
+    "title": "گردونه شانس ای‌بی‌ساکس",
+    "subtitle": "بچرخون و روی سفارش امروزت تخفیف یا جایزه بگیر!",
+    "slices": [
+      {
+        "label": "۱۰٪ تخفیف",
+        "code": "ABSPIN10",
+        "color": "#e85d1f",
+        "weight": 4
+      },
+      {
+        "label": "پوچ! دوباره شانست رو امتحان کن فردا",
+        "code": null,
+        "color": "#f6efe0",
+        "weight": 2
+      },
+      {
+        "label": "ارسال رایگان",
+        "code": "ABFREEPOST",
+        "color": "#412c1d",
+        "weight": 4
+      },
+      {
+        "label": "۱۵٪ تخفیف",
+        "code": "ABSPIN15",
+        "color": "#fbdcc3",
+        "weight": 4
+      },
+      {
+        "label": "جوراب رایگان با پک هدیه",
+        "code": "ABGIFT1",
+        "color": "#e85d1f",
+        "weight": 2
+      },
+      {
+        "label": "۵٪ تخفیف",
+        "code": "ABSPIN5",
+        "color": "#f6efe0",
+        "weight": 4
+      },
+      {
+        "label": "کارت هدیه ۵۰ هزارتایی",
+        "code": "ABCARD50",
+        "color": "#412c1d",
+        "weight": 1
+      },
+      {
+        "label": "۲۵٪ تخفیف شگفت‌انگیز",
+        "code": "ABSPIN25",
+        "color": "#fbdcc3",
+        "weight": 1
+      }
+    ],
+    "spinButtonLabel": "گردونه شانس رو بچرخون!",
+    "cooldownHours": 24,
+    "winTitle": "مبارکه!",
+    "winCopyBtn": "کپی کد تخفیف",
+    "copiedToast": "کد جایزه کپی شد — موقع پرداخت واردش کن",
+    "codeLabel": "کد جایزه: {code}",
+    "spinningText": "در حال چرخش…",
+    "spinAgainText": "چرخاندن دوباره"
+  },
+  "styleMaker": {
+    "enabled": true,
+    "title": "استایل‌ساز هوشمند",
+    "subtitle": "در ۳ سوال سلیقه‌ات را کشف کن و جوراب پیشنهادی‌ات را ببین",
+    "resultTitle": "طرح پیشنهادی هوش کارگاه برای استایل تو:",
+    "resultAddToCart": "افزودن به سبد",
+    "steps": [
+      {
+        "title": "بیشتر کجا می‌پوشی؟",
+        "options": [
+          {
+            "label": "هرروزه و دانشگاه",
+            "tag": "روزمره",
+            "icon": "Sun"
+          },
+          {
+            "label": "ورزش و باشگاه",
+            "tag": "ورزش",
+            "icon": "Dumbbell"
+          },
+          {
+            "label": "مهمانی و شب",
+            "tag": "شب",
+            "icon": "Moon"
+          },
+          {
+            "label": "استایل خیابانی",
+            "tag": "استریت",
+            "icon": "Zap"
+          }
+        ]
+      },
+      {
+        "title": "حال‌وهوای رنگی‌ات؟",
+        "options": [
+          {
+            "label": "خنثی و مینیمال",
+            "tag": "مینیمال",
+            "icon": "Sparkles"
+          },
+          {
+            "label": "تیره و کلاسیک",
+            "tag": "تیره",
+            "icon": "Moon"
+          },
+          {
+            "label": "رنگی و شاد",
+            "tag": "رنگی",
+            "icon": "Palette"
+          },
+          {
+            "label": "سورپرایزم کن",
+            "tag": "",
+            "icon": "Shuffle"
+          }
+        ]
+      },
+      {
+        "title": "کفشت معمولاً چیه؟",
+        "options": [
+          {
+            "label": "کتونی سفید",
+            "tag": "کتونی",
+            "icon": "Footprints"
+          },
+          {
+            "label": "رانینگ",
+            "tag": "دویدن",
+            "icon": "Dumbbell"
+          },
+          {
+            "label": "بوت",
+            "tag": "بوت",
+            "icon": "Footprints"
+          },
+          {
+            "label": "اسنیکرز خاص",
+            "tag": "اسنیکرز",
+            "icon": "Zap"
+          }
+        ]
+      }
+    ],
+    "reasonTemplate": "چون گفتی «{tags}» — و این دقیقا حال‌وهوای «{title}» است.",
+    "workshopNote": "انتخاب سرهماهنگی کارگاه برای استایل تو."
+  },
+  "trackModal": {
+    "title": "پیگیری سفارش",
+    "subtitle": "کدی که پیامک شده را این‌جا وارد کن",
+    "inputPlaceholder": "مثلا: AB-۸۴۲۱",
+    "searchButtonText": "استعلام وضعیت",
+    "timelineSteps": [
+      {
+        "label": "ثبت سفارش",
+        "desc": "سفارش‌ات در کارگاه ثبت شد",
+        "icon": "bag",
+        "state": "done"
+      },
+      {
+        "label": "بسته‌بندی هنری",
+        "desc": "کارت دست‌نویس نوشته شد و باکس چیده شد",
+        "icon": "scissors",
+        "state": "done"
+      },
+      {
+        "label": "تحویل به پست",
+        "desc": "مرسوله به پست پیشتاز تحویل داده شد",
+        "icon": "send",
+        "state": "active"
+      },
+      {
+        "label": "در راهِ شهر تو",
+        "desc": "مرسوله در مسیر است",
+        "icon": "truck",
+        "state": "next"
+      },
+      {
+        "label": "تحویل و لبخند",
+        "desc": "به دستت می‌رسد",
+        "icon": "check",
+        "state": "next"
+      }
+    ],
+    "supportPhone": "۰۲۱-۹۱۰۰۸۴۲۰",
+    "inputHint": "شماره‌ی پیگیری را وارد کن"
+  },
+  "cartDrawer": {
+    "title": "سبد خرید",
+    "freeShippingThreshold": 500000,
+    "announcementText": "ارسال رایگان برای خریدهای بالای ۵۰۰ هزار تومان",
+    "discountCode": "ABSOCKS20",
+    "emptyTitle": "سبدت فعلا خالیه…",
+    "emptyButtonText": "بریم گالری محصولات",
+    "checkoutButtonText": "تکمیل خرید و پرداخت",
+    "closeLabel": "بستن",
+    "freeShippingRemaining": "{amount} تومان تا ارسال رایگان!",
+    "freeShippingReached": "ارسال سفارش شما رایگان شد!",
+    "colorPrefix": "رنگ",
+    "sizePrefix": "سایز",
+    "increaseLabel": "افزایش",
+    "decreaseLabel": "کاهش",
+    "removeLabel": "حذف"
+  },
+  "editorial": {
+    "story": {
+      "marquee": "با عشق بافته شده",
+      "marqueeSub": "HAND-KNITTED WITH LOVE",
+      "eyebrow": "داستان ما",
+      "title": "از یک دستگاهِ بافتِ قدیمی\nتا قلبِ استایلِ شما",
+      "image": "/assets/img/landing/story.jpg",
+      "locationTitle": "کارگاه ای‌بی — تهران، بازار بزرگ",
+      "locationSubtitle": "از پاییز ۱۳۹۸، قدم به قدم با شما",
+      "craftTitle": "دوخت نهایی با دست",
+      "ctaLabel": "دیدن جوراب‌ها در حرکت",
+      "ctaLink": "#gallery",
+      "paragraphs": [
+        "ای‌بی ساکس با یک دستگاه بافت دست‌دوم و یک باور ساده شروع شد: «جوراب، مچاله‌شده‌ترین تکه‌ی استایل نباید باشد.» اولین جفت قلم‌موی نارنجی را در یک اتاقِ هشت‌متری با نخ‌های رنگیِ بازار بافتیم و همان روز فهمیدیم چه بازی‌ای شروع شده.",
+        "امروز، کنار هر دستگاه، هنوز یک جفت چشم و یک جفت دست هست که تک‌تک جفت‌ها را ور می‌دارد؛ پنجه‌ها را با دست می‌دوزد و رنگ‌ها را زیر نور آفتاب چک می‌کند. این کُندی، عیب نیست — امضای ماست."
+      ],
+      "stats": [
+        {
+          "value": "۹",
+          "label": "رنگ طبیعیِ ثابت"
+        },
+        {
+          "value": "۱۲",
+          "label": "مرحله‌ی کنترل کیفیت"
+        },
+        {
+          "value": "۴٬۸۰۰+",
+          "label": "پای خوشحال تا امروز"
+        }
+      ],
+      "imageAlt": "کارگاه بافندگی ای‌بی ساکس"
+    },
+    "promiseBox": {
+      "eyebrow": "ضمانتِ امضاشده‌ی ای‌بی ساکس",
+      "enabled": true,
+      "title": "قولِ دوست‌داشتن، تضمینی",
+      "body": "ما اینقدر به بافتمون مطمئنیم که قسمت ماجراجوییش با ماست: جوراب‌ها رو بپوش، بشور، قدم بزن… اگر حس نکردی بهترین جورابیه که تا حالا داشتی، بدون حتی یه سؤال پسش می‌گیریم.",
+      "bullets": [
+        "۷ روز تعویض یا بازگشت وجه، بدون هیچ سؤالی",
+        "هزینه‌ی ارسال مرجوعی هم با ما",
+        "ضمانت دوام بافت تا ۱۲ ماه"
+      ],
+      "stampText": "۷ روز ضمانت تعویض • بدون سؤال •",
+      "stampIcon": "RefreshCcw",
+      "image": "/assets/img/landing/gift-box.jpg",
+      "ctaLabel": "خرید با خیال راحت",
+      "ctaLink": "#catalog",
+      "bottomMarquee": "تعویض آسان ✺ بازگشت وجه کامل ✺ ضمانت دوام بافت",
+      "giftImageAlt": "باکس هدیه ای‌بی ساکس"
+    },
+    "techTrust": {
+      "eyebrow": "تفاوت در جزئیات فنی",
+      "enabled": true,
+      "title": "چرا ای‌بی ساکس انتخاب اول استریت‌پوش‌هاست؟",
+      "desc": "همه‌چیز به چیزی برمی‌گردد که با چشم دیده نمی‌شود: نخ، دوخت و وسواس کارگاه.",
+      "tableHeaders": {
+        "label": "جزئیات فنی",
+        "ab": "جوراب ای‌بی ساکس",
+        "other": "سایر جوراب‌های بازار"
+      },
+      "techCards": [
+        {
+          "icon": "leaf",
+          "title": "۸۵٪ نخ‌پنبه سوپر شانه‌شده",
+          "desc": "الیاف طبیعی تنفس‌پذیر که مانع تعریق و بوی نامطبوع در استفاده طولانی روزانه و ورزشی می‌شود."
+        },
+        {
+          "icon": "foot",
+          "title": "پنجه بدون درز (Seamless Toe)",
+          "desc": "حذف دوخت برجسته روی انگشتان برای راحتی صددرصدی داخل کتانی‌های تنگ و کفش‌های روزمره."
+        },
+        {
+          "icon": "palette",
+          "title": "طرح‌های بافته‌شده ماندگار",
+          "desc": "برخلاف جوراب‌های چاپی که با کش آمدن سفید می‌شوند، تمام طرح‌های ما با نخ رنگی بافته شده‌اند."
+        }
+      ],
+      "comparisonRows": [
+        {
+          "label": "پنجه‌ی جوراب",
+          "ab": "دوخت دستی بدون درز",
+          "other": "دوخت برجسته‌ی صنعتی"
+        },
+        {
+          "label": "الیاف",
+          "ab": "۸۵٪ پنبه شانه‌شده + ۳٪ الاستین",
+          "other": "پلی‌استر ارزان"
+        },
+        {
+          "label": "ثبات رنگ",
+          "ab": "نخ رنگی بافته‌شده",
+          "other": "چاپ سطحی پاک‌شونده"
+        },
+        {
+          "label": "مچ",
+          "ab": "کشباف نرم بدون اثر",
+          "other": "کش تنگ و آزاردهنده"
+        },
+        {
+          "label": "ضمانت",
+          "ab": "۷ روز تعویض بی‌قیدوشرط",
+          "other": "بدون ضمانت"
+        }
+      ],
+      "trustBadges": [
+        {
+          "icon": "shield",
+          "title": "اینماد رسمی",
+          "sub": "دو ستاره — مركز توسعه تجارت الكترونیكی",
+          "msg": "نماد اعتماد الکترونیکی (اینماد) فروشگاه ای‌بی ساکس فعال و معتبر است."
+        },
+        {
+          "icon": "badge",
+          "title": "ساماندهی",
+          "sub": "نشان ملی ثبت رسانه‌های دیجیتال",
+          "msg": "نشان ملی ثبت رسانه‌های دیجیتال ثبت و تایید شده است."
+        },
+        {
+          "icon": "card",
+          "title": "درگاه امن شتاب",
+          "sub": "پرداخت رمزنگاری‌شده بانکی",
+          "msg": "پرداخت‌ها فقط از طریق درگاه رسمی شتاب انجام می‌شود؛ هیچ شماره‌کارتی ذخیره نمی‌کنیم."
+        },
+        {
+          "icon": "bank",
+          "title": "عضو اتحادیه",
+          "sub": "تولیدکنندگان منسوجات و پوشاک",
+          "msg": "ای‌بی ساکس عضو رسمی اتحادیه‌ی تولیدکنندگان منسوجات است."
+        }
+      ],
+      "otherColumnLabel": "جوراب‌های معمولی"
+    },
+    "faq": {
+      "eyebrow": "سوالات متداول خریداران",
+      "title": "هر چیزی که لازمه قبل از خرید بدونی",
+      "items": [
+        {
+          "q": "جوراب‌ها بعد از شستشو آب می‌روند یا پرز می‌دهند؟",
+          "a": "خیر؛ به دلیل استفاده از نخ‌پنبه شانه‌شده (Combed Cotton) و شستشوی اولیه صنعتی، در صورت شستشو با آب ۳۰ درجه هیچ آب‌رفت یا پرزدهی نخواهید دید. خشک کردن در سایه توصیه می‌شود."
+        },
+        {
+          "q": "چطور از تخفیف باکس‌ساز استفاده کنم؟",
+          "a": "کافی‌ست نوع پک را انتخاب کنید و محصولات دلخواه را به باکس اضافه کنید؛ تخفیف به‌صورت خودکار روی مبلغ نهایی اعمال می‌شود و نیازی به کد نیست."
+        },
+        {
+          "q": "شرایط تعویض ۷ روزه چیست؟",
+          "a": "تا ۷ روز پس از تحویل، اگر جوراب را استفاده نکرده باشید، بدون هیچ سؤالی تعویض یا مرجوع می‌شود. هزینه ارسال مرجوعی با ماست."
+        },
+        {
+          "q": "ارسال به شهرستان چقدر طول می‌کشد؟",
+          "a": "سفارش‌های تهران معمولاً همان روز تا ۲۴ ساعت و سفارش‌های شهرستان با پست پیشتاز ۲ تا ۴ روز کاری می‌رسند. کد رهگیری بلافاصله برایتان پیامک می‌شود."
+        },
+        {
+          "q": "بین سایز ۳۶-۴۰ و ۴۱-۴۶ کدام را انتخاب کنم؟",
+          "a": "از «راهنمای هوشمند سایز» بالای صفحه استفاده کنید؛ با وارد کردن شماره کفش اروپایی‌تان، سایز دقیق پیشنهاد می‌شود. ۳٪ الاستین بافت باعث می‌شود جوراب کاملاً قالب پا بگیرد."
+        }
+      ],
+      "supportBox": {
+        "title": "پاسخ سوالتان را پیدا نکردید؟",
+        "enabled": true,
+        "hours": "شنبه تا پنجشنبه، ۹ صبح تا ۶ عصر",
+        "responseTime": "میانگین پاسخ‌گویی: زیر ۱۰ دقیقه",
+        "chatBtnText": "چت آنلاین",
+        "phone": "۰۲۱-۹۱۰۰۸۴۲۰",
+        "chatUnavailableText": "چت آنلاین به‌زودی فعال می‌شود؛ فعلا در اینستاگرام در خدمتیم"
+      }
+    },
+    "footer": {
+      "tagline": "کارگاه بافندگی و فروشگاه آنلاین جوراب‌های طرح‌دار، اسپرت و اکسسوری استریت‌استایل؛ جایی که هر جفت، یک اثر کوچکِ قابل پوشیدن است. ارسال سریع به سراسر ایران با ضمانت دوام بافت.",
+      "brandTitle": "ای‌بی ساکس",
+      "brandSubtitle": "AB SOCKS",
+      "socialLinks": {
+        "instagram": "absocks.ir",
+        "telegram": "absocks_ir"
+      },
+      "copyright": "تمامی حقوق برای فروشگاه و کارگاه بافندگی ای‌بی ساکس محفوظ است.",
+      "sloganEnglish": "EVERY STEP IS A PIECE OF ART",
+      "newsletterTitle": "خبرنامه‌ی قدم‌به‌قدم",
+      "newsletterPlaceholder": "شماره موبایل یا ایمیل",
+      "newsletterBtnText": "عضویت",
+      "legalTitle": "ساماندهی",
+      "legalSub": "نشان ملی ثبت",
+      "legalText": "نشان ملی ثبت رسانه‌های دیجیتال (ساماندهی) ثبت و تایید شده است.",
+      "gatewayLabel": "درگاه شتاب",
+      "secureTitle": "پرداخت ۱۰۰٪ امن",
+      "secureDesc": "پرداخت‌ها از طریق درگاه امن بانکی شتاب انجام می‌شوند.",
+      "unionLabel": "اتحادیه‌ی منسوجات",
+      "unionSub": "عضو رسمی",
+      "unionText": "ای‌بی ساکس عضو رسمی اتحادیه‌ی تولیدکنندگان منسوجات است.",
+      "instagramLabel": "اینستاگرام",
+      "telegramLabel": "تلگرام",
+      "newsletterNote": "به خبرنامه‌ی ای‌بی ساکس پیوستی! کد هدیه‌ی عضویت برات پیامک می‌شه.",
+      "trustTitle": "اینماد رسمی",
+      "trustSub": "اعتماد الکترونیکی",
+      "trustText": "نماد اعتماد الکترونیکی (اینماد) فروشگاه ای‌بی ساکس فعال و معتبر است.",
+      "copyrightText": "© ۱۴۰۴ ای‌بی ساکس ({handle}) — تمامی حقوق محفوظ است.",
+      "layoutPreset": "three",
+      "contentWidth": 1280,
+      "align": "start",
+      "columnGap": 40,
+      "paddingTop": 56,
+      "paddingBottom": 32,
+      "showTopDivider": true,
+      "bottomAlign": "split",
+      "backgroundStyle": "solid",
+      "backgroundFrom": "#180f09",
+      "backgroundTo": "#221510",
+      "textColor": "#f6efe0",
+      "mutedOpacity": 62,
+      "accentColor": "#ee7634",
+      "buttonColor": "#e85d1f",
+      "borderColor": "#f6efe0",
+      "dividerOpacity": 12,
+      "cardRadius": 16,
+      "decorStyle": "none",
+      "showBrand": true,
+      "showSocial": true,
+      "showLinks": true,
+      "showNewsletter": true,
+      "showBadges": true,
+      "showSlogan": true,
+      "showCopyright": true,
+      "showBackToTop": true,
+      "logoSize": 40,
+      "socialShape": "circle",
+      "socialSize": 40,
+      "badgeLayout": "grid-2",
+      "badgeStyle": "soft",
+      "newsletterStyle": "pill",
+      "col1Enabled": true,
+      "col1Title": "بخش‌های فروشگاه",
+      "col1Links": [
+        "کاتالوگ|#catalog",
+        "باکس‌ساز|#pack",
+        "داستان ما|#story",
+        "گالری حرکت|#gallery"
+      ],
+      "col2Enabled": true,
+      "col2Title": "خدمات مشتریان",
+      "col2Links": [
+        "راهنمای هوشمند سایز|#size",
+        "سوالات متداول|#faq",
+        "تعویض ۷ روزه بی‌قیدوشرط|",
+        "ساعت پاسخگویی: ۹ صبح تا ۶ عصر|"
+      ],
+      "col3Enabled": false,
+      "col3Title": "شبکه‌های اجتماعی",
+      "col3Links": [],
+      "badge1Enabled": true,
+      "badge1Icon": "shield",
+      "badge2Enabled": true,
+      "badge2Icon": "badge",
+      "badge3Enabled": true,
+      "badge3Icon": "card",
+      "badge4Enabled": true,
+      "badge4Icon": "bank",
+      "backToTopText": "برگرد بالا"
+    }
+  },
+  "sectionOrder": [
+    {
+      "id": "hero",
+      "label": "بخش اصلی (Hero)",
+      "enabled": true
+    },
+    {
+      "id": "trustBar",
+      "label": "نوار اعتماد و مزایا (Trust Bar)",
+      "enabled": true
+    },
+    {
+      "id": "catalog",
+      "label": "کاتالوگ و گالری محصولات",
+      "enabled": true
+    },
+    {
+      "id": "promiseBox",
+      "label": "باکس ضمانت و بازگشت (Promise)",
+      "enabled": true
+    },
+    {
+      "id": "motionGallery",
+      "label": "گالری حرکت (Motion Gallery)",
+      "enabled": true
+    },
+    {
+      "id": "story",
+      "label": "داستان کارگاه (Story)",
+      "enabled": true
+    },
+    {
+      "id": "packBuilder",
+      "label": "باکس‌ساز هوشمند (Pack Builder)",
+      "enabled": true
+    },
+    {
+      "id": "socialStyle",
+      "label": "دیوار استایل و شبکه‌ها (Social)",
+      "enabled": true
+    },
+    {
+      "id": "sizeGuide",
+      "label": "راهنمای سایز هوشمند",
+      "enabled": true
+    },
+    {
+      "id": "techTrust",
+      "label": "جزئیات فنی و مقایسه (Tech Trust)",
+      "enabled": true
+    },
+    {
+      "id": "faq",
+      "label": "سوالات متداول (FAQ)",
+      "enabled": true
+    }
+  ]
+}
