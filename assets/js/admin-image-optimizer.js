@@ -88,7 +88,9 @@
                         <div class="aio-inspector-actions">
                             <div class="aio-inspector-slider-wrap">
                                 <span>کیفیت: <strong class="aio-inspector-qval">۸۵٪</strong></span>
-                                <input type="range" class="aio-inspector-slider" min="10" max="95" step="5" value="85">
+                                <button type="button" class="aio-step-btn aio-inspector-step-minus" title="کاهش ۱٪ کیفیت">−</button>
+                                <input type="range" class="aio-inspector-slider" min="1" max="100" step="1" value="85">
+                                <button type="button" class="aio-step-btn aio-inspector-step-plus" title="افزایش ۱٪ کیفیت">+</button>
                             </div>
 
                             <button type="button" class="aio-inspector-btn aio-inspector-compare-btn" title="نگه دارید تا عکس خام نمایش یابد">
@@ -102,6 +104,10 @@
                                 <button type="button" class="aio-zoom-btn aio-zoom-fit" title="انطباق با پنجره">Fit</button>
                                 <button type="button" class="aio-zoom-btn aio-zoom-100" title="اندازه واقعی">1:1</button>
                             </div>
+
+                            <button type="button" class="aio-inspector-btn aio-inspector-confirm-btn" title="تایید یا لغو تصویر">
+                                <span class="aio-inspector-confirm-label">✓ تایید کیفیت تصویر</span>
+                            </button>
 
                             <button type="button" class="aio-inspector-btn-close" title="بستن (Esc)">✕</button>
                         </div>
@@ -129,8 +135,12 @@
             this.modeBadge = this.modal.querySelector('.aio-inspector-mode-badge');
             this.slider = this.modal.querySelector('.aio-inspector-slider');
             this.qval = this.modal.querySelector('.aio-inspector-qval');
+            this.stepMinus = this.modal.querySelector('.aio-inspector-step-minus');
+            this.stepPlus = this.modal.querySelector('.aio-inspector-step-plus');
             this.zoomVal = this.modal.querySelector('.aio-zoom-val');
             this.compareBtn = this.modal.querySelector('.aio-inspector-compare-btn');
+            this.confirmBtn = this.modal.querySelector('.aio-inspector-confirm-btn');
+            this.confirmLabel = this.modal.querySelector('.aio-inspector-confirm-label');
             this.closeBtn = this.modal.querySelector('.aio-inspector-btn-close');
             this.backdrop = this.modal.querySelector('.aio-inspector-backdrop');
         }
@@ -236,6 +246,24 @@
                 }, 120);
             });
 
+            // 1% Step Buttons in Inspector
+            if (this.stepMinus) {
+                this.stepMinus.addEventListener('click', function () {
+                    const currentVal = parseInt(self.slider.value, 10) || 85;
+                    const newVal = Math.max(1, currentVal - 1);
+                    self.slider.value = newVal;
+                    self.slider.dispatchEvent(new Event('input'));
+                });
+            }
+            if (this.stepPlus) {
+                this.stepPlus.addEventListener('click', function () {
+                    const currentVal = parseInt(self.slider.value, 10) || 85;
+                    const newVal = Math.min(100, currentVal + 1);
+                    self.slider.value = newVal;
+                    self.slider.dispatchEvent(new Event('input'));
+                });
+            }
+
             // Compare with Original: Hold or Click
             const startCompare = function () {
                 if (!self.activeItem || self.activeItem.isSvg) return;
@@ -261,6 +289,15 @@
             this.compareBtn.addEventListener('mouseleave', endCompare);
             this.compareBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCompare(); });
             this.compareBtn.addEventListener('touchend', endCompare);
+
+            // Confirm toggle inside inspector
+            if (this.confirmBtn) {
+                this.confirmBtn.addEventListener('click', function () {
+                    if (!self.activeItem || !self.activeWidget) return;
+                    self.activeWidget.toggleConfirmItem(self.activeItem.id);
+                    self.refreshItemData();
+                });
+            }
         }
 
         open(item, widget) {
@@ -291,6 +328,16 @@
                 this.sizesEl.textContent = formatBytes(item.origSize);
                 this.slider.parentElement.style.display = 'none';
                 this.compareBtn.style.display = 'none';
+            } else if (item.isOriginal || Math.round(item.quality * 100) >= 100) {
+                this.savingsBadge.textContent = 'فایل اصلی دست‌نخورده (۱۰۰٪)';
+                this.dimsEl.textContent = toPersianDigits(item.origW) + '×' + toPersianDigits(item.origH) + ' پیکسل';
+                this.sizesEl.innerHTML = `حجم اصلی: <strong class="aio-stat-new">${formatBytes(item.origSize)}</strong>`;
+                this.slider.parentElement.style.display = 'flex';
+                this.compareBtn.style.display = 'none';
+                this.slider.value = 100;
+                this.qval.textContent = '۱۰۰٪';
+                this.modeBadge.textContent = 'در حال نمایش: تصویر اصلی خام';
+                this.modeBadge.className = 'aio-inspector-mode-badge aio-mode-original';
             } else {
                 const savingsPercent = Math.max(0, Math.round(((item.origSize - item.compressedSize) / item.origSize) * 100));
                 const qualityPercent = Math.round(item.quality * 100);
@@ -305,6 +352,16 @@
                 this.qval.textContent = toPersianDigits(qualityPercent) + '٪';
                 this.modeBadge.textContent = 'در حال نمایش: نسخه بهینه‌شده WebP';
                 this.modeBadge.className = 'aio-inspector-mode-badge';
+            }
+
+            if (this.confirmBtn && this.confirmLabel) {
+                if (item.confirmed) {
+                    this.confirmBtn.className = 'aio-inspector-btn aio-inspector-cancel-btn';
+                    this.confirmLabel.textContent = 'لغو تایید ❌';
+                } else {
+                    this.confirmBtn.className = 'aio-inspector-btn aio-inspector-confirm-btn';
+                    this.confirmLabel.textContent = '✓ تایید کیفیت تصویر';
+                }
             }
         }
 
@@ -369,6 +426,7 @@
 
             this.items = [];
             this.isProcessing = false;
+            this._isInternalSync = false;
 
             this.initUI();
             this.bindEvents();
@@ -406,11 +464,20 @@
                 <div class="aio-progress-text">در حال بهینه‌سازی تصویر...</div>
             `;
 
+            if (this.isMultiple) {
+                this.batchToolbar = document.createElement('div');
+                this.batchToolbar.className = 'aio-batch-toolbar';
+                this.batchToolbar.style.display = 'none';
+            }
+
             this.previewContainer = document.createElement('div');
             this.previewContainer.className = this.isMultiple ? 'aio-previews-grid' : 'aio-preview-single';
 
             this.wrapper.appendChild(this.dropzone);
             this.wrapper.appendChild(this.progressBox);
+            if (this.batchToolbar) {
+                this.wrapper.appendChild(this.batchToolbar);
+            }
             this.wrapper.appendChild(this.previewContainer);
 
             this.input.parentNode.insertBefore(this.wrapper, this.input.nextSibling);
@@ -446,7 +513,9 @@
                 }
             });
 
+            // Prevent recursive loop: ignore changes triggered programmatically via syncFilesToInput
             this.input.addEventListener('change', function () {
+                if (self._isInternalSync) return;
                 if (self.input.files && self.input.files.length) {
                     self.handleFiles(Array.from(self.input.files));
                 }
@@ -457,6 +526,36 @@
                     if (self.isProcessing) {
                         e.preventDefault();
                         alert('لطفاً تا اتمام پردازش و فشرده‌سازی تصاویر صبر کنید.');
+                        return;
+                    }
+
+                    // For gallery with unconfirmed images: prompt admin before form submission
+                    if (self.isMultiple && self.items.length > 0) {
+                        const confirmed = self.items.filter(function (it) { return it.confirmed; });
+                        const unconfirmed = self.items.filter(function (it) { return !it.confirmed; });
+
+                        if (unconfirmed.length > 0) {
+                            if (confirmed.length > 0) {
+                                const ok = confirm(
+                                    'تعداد ' + toPersianDigits(unconfirmed.length) + ' تصویر در گالری تایید نشده‌اند و بارگذاری نخواهند شد.\n\n' +
+                                    'آیا مایلید فقط ' + toPersianDigits(confirmed.length) + ' تصویر تایید‌شده ذخیره شوند؟'
+                                );
+                                if (!ok) {
+                                    e.preventDefault();
+                                    return;
+                                }
+                                // User confirmed saving only approved images; do NOT call confirmAll().
+                            } else {
+                                const ok = confirm(
+                                    'هیچ تصویری در گالری تایید نشده است و هیچ تصویری بارگذاری نخواهد شد.\n\n' +
+                                    'آیا مایلید بدون افزودن تصویر جدید به گالری ذخیره انجام شود؟'
+                                );
+                                if (!ok) {
+                                    e.preventDefault();
+                                    return;
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -515,6 +614,7 @@
             const itemId = 'aio-' + Math.random().toString(36).substr(2, 9);
             const isHeic = file.name.match(/\.(heic|heif)$/i) || file.type.includes('heic');
             const isSvg = self.allowSvg && (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg'));
+            const isConfirmedByDefault = !self.isMultiple; // Single cover image auto-confirms; gallery requires review
 
             if (isSvg) {
                 const url = URL.createObjectURL(file);
@@ -527,7 +627,8 @@
                     previewUrl: url,
                     origSize: file.size,
                     compressedSize: file.size,
-                    quality: 1
+                    quality: 1,
+                    confirmed: isConfirmedByDefault
                 });
                 return;
             }
@@ -571,7 +672,7 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, targetW, targetH);
 
-            const quality = self.defaultQuality;
+            const quality = Math.max(0.01, Math.min(1.0, self.defaultQuality));
             const blob = await this.canvasToWebpBlob(canvas, quality);
 
             const rawBaseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-\.]/g, '_');
@@ -593,7 +694,8 @@
                 origSize: file.size,
                 compressedSize: blob.size,
                 isSvg: false,
-                previewUrl: previewUrl
+                previewUrl: previewUrl,
+                confirmed: isConfirmedByDefault
             });
         }
 
@@ -615,46 +717,182 @@
 
         canvasToWebpBlob(canvas, quality) {
             return new Promise(function (resolve) {
+                const q = Math.max(0.01, Math.min(1.0, quality));
                 canvas.toBlob(function (blob) {
                     if (blob && blob.size > 0) {
                         resolve(blob);
                     } else {
                         canvas.toBlob(function (fallbackBlob) {
                             resolve(fallbackBlob);
-                        }, 'image/jpeg', quality);
+                        }, 'image/jpeg', q);
                     }
-                }, 'image/webp', quality);
+                }, 'image/webp', q);
             });
         }
 
         async recompressItem(item, newQuality) {
-            item.quality = newQuality;
-            const newBlob = await this.canvasToWebpBlob(item.canvas, newQuality);
-            item.compressedBlob = newBlob;
-            item.compressedSize = newBlob.size;
-            item.compressedFile = new File([newBlob], item.compressedFile.name, { type: newBlob.type, lastModified: Date.now() });
+            const q = Math.max(0.01, Math.min(1.0, newQuality));
+            item.quality = q;
 
-            if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-            item.previewUrl = URL.createObjectURL(newBlob);
+            if (q >= 0.999) {
+                // 100% Quality: bypass compression completely, use raw original file
+                item.isOriginal = true;
+                item.compressedFile = item.originalFile;
+                item.compressedBlob = item.originalFile;
+                item.compressedSize = item.origSize;
+                item.targetW = item.origW;
+                item.targetH = item.origH;
+
+                if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+                item.previewUrl = URL.createObjectURL(item.originalFile);
+            } else {
+                item.isOriginal = false;
+                const newBlob = await this.canvasToWebpBlob(item.canvas, q);
+                item.compressedBlob = newBlob;
+                item.compressedSize = newBlob.size;
+                const rawBaseName = item.originalFile.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+                const cleanName = (rawBaseName || 'image') + '.webp';
+                item.compressedFile = new File([newBlob], cleanName, { type: newBlob.type, lastModified: Date.now() });
+
+                if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+                item.previewUrl = URL.createObjectURL(newBlob);
+            }
 
             // Update card DOM
             const card = document.getElementById(item.id);
             if (card) {
-                card.querySelector('.aio-card-thumb img').src = item.previewUrl;
-                card.querySelector('.aio-stat-new').textContent = formatBytes(newBlob.size);
-                const newSavings = Math.max(0, Math.round(((item.origSize - newBlob.size) / item.origSize) * 100));
-                card.querySelector('.aio-badge-primary').textContent = toPersianDigits(newSavings) + '٪ کاهش حجم';
+                const thumbImg = card.querySelector('.aio-card-thumb img');
+                if (thumbImg) thumbImg.src = item.previewUrl;
+
+                const thumbBadge = card.querySelector('.aio-thumb-badge');
+                if (thumbBadge) thumbBadge.textContent = item.isOriginal ? 'Original' : 'WebP';
+
+                const filenameEl = card.querySelector('.aio-card-filename');
+                if (filenameEl) {
+                    filenameEl.textContent = item.compressedFile.name;
+                    filenameEl.title = item.compressedFile.name;
+                }
+
+                const statsRow = card.querySelector('.aio-stats-row');
+                if (statsRow) {
+                    statsRow.innerHTML = `
+                        <div class="aio-stat">
+                            <span class="aio-stat-label">حجم:</span>
+                            <span class="aio-stat-values">
+                                ${item.isOriginal ? `<strong class="aio-stat-new">${formatBytes(item.origSize)}</strong>` : `
+                                    <span class="aio-stat-old">${formatBytes(item.origSize)}</span>
+                                    <span class="aio-stat-arrow">←</span>
+                                    <strong class="aio-stat-new">${formatBytes(item.compressedSize)}</strong>
+                                `}
+                            </span>
+                        </div>
+                        <div class="aio-stat">
+                            <span class="aio-stat-label">ابعاد:</span>
+                            <span class="aio-stat-values">
+                                ${item.isOriginal ? `<strong class="aio-stat-new aio-dims-new">${toPersianDigits(item.origW)}×${toPersianDigits(item.origH)}</strong>` : `
+                                    <span class="aio-stat-old">${toPersianDigits(item.origW)}×${toPersianDigits(item.origH)}</span>
+                                    <span class="aio-stat-arrow">←</span>
+                                    <strong class="aio-stat-new aio-dims-new">${toPersianDigits(item.targetW)}×${toPersianDigits(item.targetH)}</strong>
+                                `}
+                            </span>
+                        </div>
+                    `;
+                }
+
+                const savingsEl = card.querySelector('.aio-badge-primary');
+                if (savingsEl) {
+                    if (item.isOriginal) {
+                        savingsEl.textContent = 'فایل اصلی (۱۰۰٪)';
+                    } else {
+                        const newSavings = Math.max(0, Math.round(((item.origSize - item.compressedSize) / item.origSize) * 100));
+                        savingsEl.textContent = toPersianDigits(newSavings) + '٪ کاهش حجم';
+                    }
+                }
+
                 const slider = card.querySelector('.aio-quality-slider');
-                if (slider) slider.value = Math.round(newQuality * 100);
+                if (slider) slider.value = Math.round(q * 100);
                 const qval = card.querySelector('.aio-quality-val');
-                if (qval) qval.textContent = toPersianDigits(Math.round(newQuality * 100)) + '٪';
+                if (qval) qval.textContent = toPersianDigits(Math.round(q * 100)) + '٪';
             }
 
             this.syncFilesToInput();
         }
 
+        toggleConfirmItem(itemId) {
+            const item = this.items.find(function (it) { return it.id === itemId; });
+            if (!item) return;
+            item.confirmed = !item.confirmed;
+            this.syncFilesToInput();
+            this.renderPreviews();
+            if (globalInspector && globalInspector.isOpen() && globalInspector.activeItem && globalInspector.activeItem.id === itemId) {
+                globalInspector.refreshItemData();
+            }
+        }
+
+        confirmAll() {
+            this.items.forEach(function (item) {
+                item.confirmed = true;
+            });
+            this.syncFilesToInput();
+            this.renderPreviews();
+            if (globalInspector && globalInspector.isOpen() && globalInspector.activeWidget === this) {
+                globalInspector.refreshItemData();
+            }
+        }
+
+        removeAll() {
+            if (!this.items.length) return;
+            if (confirm('آیا مطمئن هستید که می‌خواهید تمام تصاویر انتخاب‌شده این بخش را حذف کنید؟')) {
+                this.clearItems();
+                this.syncFilesToInput();
+                this.renderPreviews();
+                if (globalInspector && globalInspector.isOpen() && globalInspector.activeWidget === this) {
+                    globalInspector.close();
+                }
+            }
+        }
+
         renderPreviews() {
             const self = this;
+
+            // Render/Update batch toolbar for multiple uploads
+            if (this.batchToolbar) {
+                if (!this.items.length) {
+                    this.batchToolbar.style.display = 'none';
+                    this.batchToolbar.innerHTML = '';
+                } else {
+                    this.batchToolbar.style.display = 'flex';
+                    const confirmedCount = this.items.filter(function (it) { return it.confirmed; }).length;
+                    const totalCount = this.items.length;
+                    const allConfirmed = confirmedCount === totalCount;
+
+                    this.batchToolbar.innerHTML = `
+                        <div class="aio-batch-status-text">
+                            <strong>تصاویر جدید گالری (${toPersianDigits(totalCount)} تصویر):</strong>
+                            <span class="aio-badge ${allConfirmed ? 'aio-badge-success' : 'aio-badge-warning'}">
+                                ${allConfirmed ? '✓ همه تصاویر تایید شده‌اند' : (toPersianDigits(confirmedCount) + ' از ' + toPersianDigits(totalCount) + ' تصویر تایید شده')}
+                            </span>
+                        </div>
+                        <div class="aio-batch-actions">
+                            <button type="button" class="btn btn-sm ${allConfirmed ? 'btn-outline' : 'btn-primary'} aio-btn-confirm-all">
+                                ${allConfirmed ? '✓ همه تایید شده‌اند' : '✓ تایید همه تصاویر'}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline aio-btn-remove-all" style="color: var(--color-danger); border-color: var(--color-danger);">
+                                ✕ حذف همه
+                            </button>
+                        </div>
+                    `;
+
+                    this.batchToolbar.querySelector('.aio-btn-confirm-all').addEventListener('click', function () {
+                        self.confirmAll();
+                    });
+
+                    this.batchToolbar.querySelector('.aio-btn-remove-all').addEventListener('click', function () {
+                        self.removeAll();
+                    });
+                }
+            }
+
             this.previewContainer.innerHTML = '';
 
             if (!this.items.length) {
@@ -663,7 +901,7 @@
 
             this.items.forEach(function (item) {
                 const card = document.createElement('div');
-                card.className = 'aio-card';
+                card.className = 'aio-card' + (item.confirmed ? ' aio-card-confirmed' : ' aio-card-pending');
                 card.id = item.id;
 
                 if (item.isSvg) {
@@ -672,49 +910,98 @@
                             <img src="${item.previewUrl}" alt="SVG Logo" style="object-fit:contain;">
                         </div>
                         <div class="aio-card-info">
-                            <div class="aio-card-title">${item.originalFile.name}</div>
-                            <div class="aio-badge aio-badge-success">فایل وکتور SVG • کیفیت بی‌نهایت • ${formatBytes(item.origSize)}</div>
+                            <div class="aio-card-header">
+                                <span class="aio-card-filename" title="${item.originalFile.name}">${item.originalFile.name}</span>
+                                <button type="button" class="aio-btn-remove" title="حذف این فایل">✕</button>
+                            </div>
+                            <div class="aio-card-badges">
+                                <span class="aio-badge aio-badge-success">فایل وکتور SVG • کیفیت بی‌نهایت • ${formatBytes(item.origSize)}</span>
+                                <span class="aio-badge ${item.confirmed ? 'aio-badge-success' : 'aio-badge-warning'}">
+                                    ${item.confirmed ? '✓ تایید شد • آماده ارسال' : 'در انتظار تایید'}
+                                </span>
+                            </div>
+                            <div class="aio-card-actions">
+                                ${item.confirmed ? `
+                                    <button type="button" class="aio-btn-cancel" title="لغو تایید این تصویر">
+                                        لغو تایید ❌
+                                    </button>
+                                ` : `
+                                    <button type="button" class="aio-btn-confirm" title="تایید و افزودن به لیست بارگذاری">
+                                        ✓ تایید این تصویر
+                                    </button>
+                                `}
+                            </div>
                         </div>
-                        <button type="button" class="aio-btn-remove" title="حذف">✕</button>
                     `;
                 } else {
+                    const isOrig = item.isOriginal || Math.round(item.quality * 100) >= 100;
                     const savingsPercent = Math.max(0, Math.round(((item.origSize - item.compressedSize) / item.origSize) * 100));
                     const qualityPercent = Math.round(item.quality * 100);
 
                     card.innerHTML = `
                         <div class="aio-card-thumb" title="برای مشاهده بزرگ‌نمایی و بررسی کیفیت کلیک کنید">
                             <img src="${item.previewUrl}" alt="Preview">
-                            <span class="aio-thumb-badge">WebP</span>
+                            <span class="aio-thumb-badge">${isOrig ? 'Original' : 'WebP'}</span>
                             <div class="aio-thumb-zoom-overlay">🔍 تمام‌صفحه</div>
                         </div>
                         <div class="aio-card-info">
                             <div class="aio-card-header">
-                                <span class="aio-card-filename">${item.compressedFile.name}</span>
-                                <span class="aio-badge aio-badge-primary">${toPersianDigits(savingsPercent)}٪ کاهش حجم</span>
+                                <span class="aio-card-filename" title="${item.compressedFile.name}">${item.compressedFile.name}</span>
+                                <button type="button" class="aio-btn-remove" title="حذف این تصویر">✕</button>
+                            </div>
+                            <div class="aio-card-badges">
+                                <span class="aio-badge aio-badge-primary">
+                                    ${isOrig ? 'فایل اصلی (۱۰۰٪)' : toPersianDigits(savingsPercent) + '٪ کاهش حجم'}
+                                </span>
+                                <span class="aio-badge ${item.confirmed ? 'aio-badge-success' : 'aio-badge-warning'}">
+                                    ${item.confirmed ? '✓ تایید شد • آماده ارسال' : 'در انتظار تایید'}
+                                </span>
                             </div>
                             <div class="aio-stats-row">
-                                <span class="aio-stat">
+                                <div class="aio-stat">
                                     <span class="aio-stat-label">حجم:</span>
-                                    <span class="aio-stat-old">${formatBytes(item.origSize)}</span>
-                                    <span class="aio-stat-arrow">←</span>
-                                    <strong class="aio-stat-new">${formatBytes(item.compressedSize)}</strong>
-                                </span>
-                                <span class="aio-stat">
+                                    <span class="aio-stat-values">
+                                        ${isOrig ? `<strong class="aio-stat-new">${formatBytes(item.origSize)}</strong>` : `
+                                            <span class="aio-stat-old">${formatBytes(item.origSize)}</span>
+                                            <span class="aio-stat-arrow">←</span>
+                                            <strong class="aio-stat-new">${formatBytes(item.compressedSize)}</strong>
+                                        `}
+                                    </span>
+                                </div>
+                                <div class="aio-stat">
                                     <span class="aio-stat-label">ابعاد:</span>
-                                    <span class="aio-stat-old">${toPersianDigits(item.origW)}×${toPersianDigits(item.origH)}</span>
-                                    <span class="aio-stat-arrow">←</span>
-                                    <strong class="aio-stat-new">${toPersianDigits(item.targetW)}×${toPersianDigits(item.targetH)}</strong>
-                                </span>
+                                    <span class="aio-stat-values">
+                                        ${isOrig ? `<strong class="aio-stat-new aio-dims-new">${toPersianDigits(item.origW)}×${toPersianDigits(item.origH)}</strong>` : `
+                                            <span class="aio-stat-old">${toPersianDigits(item.origW)}×${toPersianDigits(item.origH)}</span>
+                                            <span class="aio-stat-arrow">←</span>
+                                            <strong class="aio-stat-new aio-dims-new">${toPersianDigits(item.targetW)}×${toPersianDigits(item.targetH)}</strong>
+                                        `}
+                                    </span>
+                                </div>
                             </div>
                             <div class="aio-slider-wrap">
                                 <div class="aio-slider-header">
                                     <span>کیفیت تصویر: <strong class="aio-quality-val">${toPersianDigits(qualityPercent)}٪</strong></span>
                                     <button type="button" class="aio-btn-link aio-open-inspector-btn">🔍 باز کردن در اندازه بزرگ</button>
                                 </div>
-                                <input type="range" class="aio-quality-slider" min="10" max="95" step="5" value="${qualityPercent}">
+                                <div class="aio-slider-control-row">
+                                    <button type="button" class="aio-step-btn aio-step-minus" title="کاهش ۱٪ کیفیت">−</button>
+                                    <input type="range" class="aio-quality-slider" min="1" max="100" step="1" value="${qualityPercent}">
+                                    <button type="button" class="aio-step-btn aio-step-plus" title="افزایش ۱٪ کیفیت">+</button>
+                                </div>
+                            </div>
+                            <div class="aio-card-actions">
+                                ${item.confirmed ? `
+                                    <button type="button" class="aio-btn-cancel" title="لغو تایید این تصویر">
+                                        لغو تایید ❌
+                                    </button>
+                                ` : `
+                                    <button type="button" class="aio-btn-confirm" title="تایید و افزودن به لیست بارگذاری">
+                                        ✓ تایید این تصویر
+                                    </button>
+                                `}
                             </div>
                         </div>
-                        <button type="button" class="aio-btn-remove" title="حذف این تصویر">✕</button>
                     `;
 
                     // Bind zoom click
@@ -725,9 +1012,11 @@
                         getInspector().open(item, self);
                     });
 
-                    // Bind quality slider on card
+                    // Bind quality slider and +/- step buttons on card
                     const slider = card.querySelector('.aio-quality-slider');
                     const qualityVal = card.querySelector('.aio-quality-val');
+                    const stepMinus = card.querySelector('.aio-step-minus');
+                    const stepPlus = card.querySelector('.aio-step-plus');
                     let debounceTimer = null;
 
                     slider.addEventListener('input', function (e) {
@@ -738,12 +1027,41 @@
                             await self.recompressItem(item, newQVal / 100);
                         }, 120);
                     });
+
+                    if (stepMinus) {
+                        stepMinus.addEventListener('click', function () {
+                            const currentVal = parseInt(slider.value, 10) || 85;
+                            const newVal = Math.max(1, currentVal - 1);
+                            slider.value = newVal;
+                            slider.dispatchEvent(new Event('input'));
+                        });
+                    }
+
+                    if (stepPlus) {
+                        stepPlus.addEventListener('click', function () {
+                            const currentVal = parseInt(slider.value, 10) || 85;
+                            const newVal = Math.min(100, currentVal + 1);
+                            slider.value = newVal;
+                            slider.dispatchEvent(new Event('input'));
+                        });
+                    }
+                }
+
+                // Bind confirm/cancel button
+                const actionBtn = card.querySelector('.aio-btn-confirm, .aio-btn-cancel');
+                if (actionBtn) {
+                    actionBtn.addEventListener('click', function () {
+                        self.toggleConfirmItem(item.id);
+                    });
                 }
 
                 // Bind remove button
-                card.querySelector('.aio-btn-remove').addEventListener('click', function () {
-                    self.removeItem(item.id);
-                });
+                const removeBtn = card.querySelector('.aio-btn-remove');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function () {
+                        self.removeItem(item.id);
+                    });
+                }
 
                 self.previewContainer.appendChild(card);
             });
@@ -756,17 +1074,37 @@
                 this.items.splice(idx, 1);
                 this.syncFilesToInput();
                 this.renderPreviews();
+                if (globalInspector && globalInspector.isOpen() && globalInspector.activeItem && globalInspector.activeItem.id === itemId) {
+                    globalInspector.close();
+                }
             }
         }
 
         syncFilesToInput() {
             try {
                 const dt = new DataTransfer();
+                let confirmedCount = 0;
                 this.items.forEach(function (item) {
-                    dt.items.add(item.compressedFile);
+                    if (item.confirmed) {
+                        dt.items.add(item.compressedFile);
+                        confirmedCount++;
+                    }
                 });
+
+                // Programmatically update files without triggering recursive native change handler
+                this._isInternalSync = true;
                 this.input.files = dt.files;
-                this.input.dispatchEvent(new Event('change', { bubbles: true }));
+                this._isInternalSync = false;
+
+                // Dispatch custom non-recursive notification for external observers if needed
+                this.input.dispatchEvent(new CustomEvent('aio:synced', {
+                    bubbles: true,
+                    detail: {
+                        role: this.role,
+                        totalCount: this.items.length,
+                        confirmedCount: confirmedCount
+                    }
+                }));
             } catch (err) {
                 console.warn('DataTransfer could not be set directly:', err);
             }
@@ -774,10 +1112,15 @@
 
         updateSubmitButtons(enabled) {
             if (!this.form) return;
-            const buttons = this.form.querySelectorAll('button[type="submit"]');
+            const form = this.form;
+            form._aioProcessing = (form._aioProcessing || 0) + (enabled ? -1 : 1);
+            if (form._aioProcessing < 0) form._aioProcessing = 0;
+
+            const isProcessing = form._aioProcessing > 0;
+            const buttons = form.querySelectorAll('button[type="submit"]');
             buttons.forEach(function (btn) {
-                btn.disabled = !enabled;
-                if (!enabled) {
+                btn.disabled = isProcessing;
+                if (isProcessing) {
                     btn.dataset.origText = btn.dataset.origText || btn.textContent;
                     btn.textContent = 'در حال فشرده‌سازی تصویر...';
                 } else if (btn.dataset.origText) {

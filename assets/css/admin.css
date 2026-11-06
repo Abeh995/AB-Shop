@@ -297,31 +297,39 @@ input:checked + .switch-slider:before {
 
 .aio-previews-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
     gap: 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .aio-card {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
-    background: #FFFFFF;
-    border: 1px solid #E2D9CC;
-    border-radius: 12px;
-    padding: 14px;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     position: relative;
-    transition: border-color 0.2s;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
 }
 
 .aio-card:hover {
-    border-color: #B8A895;
+    border-color: var(--text-muted);
 }
 
 .aio-card-thumb {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 84px;
+    height: 84px;
     flex-shrink: 0;
     border-radius: 8px;
     overflow: hidden;
@@ -355,6 +363,7 @@ input:checked + .switch-slider:before {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    overflow: hidden;
 }
 
 .aio-card-header {
@@ -362,19 +371,28 @@ input:checked + .switch-slider:before {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    flex-wrap: wrap;
+    width: 100%;
 }
 
 .aio-card-filename {
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 700;
     color: #221912;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 220px;
     direction: ltr;
     text-align: left;
+    flex: 1;
+    min-width: 0;
+}
+
+.aio-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .aio-badge {
@@ -397,16 +415,27 @@ input:checked + .switch-slider:before {
 
 .aio-stats-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 0.78rem;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.76rem;
     color: #55483C;
     background: #FAF8F5;
     padding: 6px 10px;
     border-radius: 6px;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
 }
 
 .aio-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.aio-stat-values {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -452,13 +481,47 @@ input:checked + .switch-slider:before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: #55483C;
     margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.aio-slider-control-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.aio-step-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    user-select: none;
+    line-height: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.aio-step-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--text-muted);
 }
 
 .aio-quality-slider {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     height: 6px;
     border-radius: 4px;
     background: #E2D9CC;
@@ -483,28 +546,26 @@ input:checked + .switch-slider:before {
 }
 
 .aio-btn-remove {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #FEE2E2;
-    color: #991B1B;
-    border: none;
+    position: static;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid var(--danger);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     cursor: pointer;
-    transition: all 0.15s;
+    flex-shrink: 0;
     line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .aio-btn-remove:hover {
-    background: #EF4444;
+    background: var(--danger);
     color: #FFF;
-    transform: scale(1.1);
 }
 
 
@@ -542,11 +603,9 @@ input:checked + .switch-slider:before {
     }
 
     .aio-btn-remove {
-        top: 8px;
-        left: 8px;
-        width: 28px;
-        height: 28px;
-        font-size: 0.9rem;
+        width: 24px;
+        height: 24px;
+        font-size: 0.85rem;
     }
 
     .aio-stats-row {
@@ -607,6 +666,108 @@ input:checked + .switch-slider:before {
 
 .aio-btn-link:hover {
     color: #1D4ED8;
+}
+
+.aio-batch-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.aio-batch-status-text {
+    font-size: 0.85rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.aio-batch-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.aio-batch-actions .btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+}
+
+.aio-card.aio-card-confirmed {
+    border: 2px solid var(--success);
+    background: var(--success-soft);
+}
+
+.aio-card.aio-card-pending {
+    border: 1.5px solid var(--warning);
+    background: var(--warning-soft);
+}
+
+.aio-badge-warning {
+    background: var(--warning-soft);
+    color: var(--warning-ink);
+}
+
+.aio-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.aio-btn-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--success);
+    background: var(--success);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.aio-btn-confirm:hover {
+    background: var(--success-strong);
+    border-color: var(--success-strong);
+}
+
+.aio-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--danger);
+    background: var(--surface);
+    color: var(--danger);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.aio-btn-cancel:hover {
+    background: var(--danger-soft);
+    border-color: var(--danger-strong);
 }
 
 .aio-inspector-modal {
@@ -764,7 +925,7 @@ input:checked + .switch-slider:before {
     font-weight: 500;
     cursor: pointer;
     user-select: none;
-    transition: all 0.15s;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .aio-inspector-btn:hover {
@@ -772,11 +933,51 @@ input:checked + .switch-slider:before {
     color: #FFF;
 }
 
+.aio-inspector-slider-wrap .aio-step-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.85rem;
+    padding: 0;
+}
+
+.aio-inspector-slider-wrap .aio-step-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
 .aio-inspector-compare-btn:active {
     background: #F59E0B;
     color: #0F172A;
     border-color: #D97706;
     font-weight: 700;
+}
+
+.aio-inspector-confirm-btn {
+    background: var(--success);
+    border: 1px solid var(--success-strong);
+    color: white;
+    font-weight: 600;
+}
+
+.aio-inspector-confirm-btn:hover {
+    background: var(--success-strong);
+    color: white;
+}
+
+.aio-inspector-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.aio-inspector-cancel-btn:hover {
+    background: var(--danger-soft);
+    border-color: var(--danger-strong);
 }
 
 .aio-inspector-zoom-group {

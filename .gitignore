@@ -77,6 +77,7 @@ favicon-48x48.png
 .DS_Store
 Thumbs.db
 Desktop.ini
+folder.ico
 
 
 # =========================================================
@@ -134,7 +135,7 @@ showing_table_*.png
 tools/.reports/
 
 # =========================================================
-# Playwright UI Test Harness (tools/ui-test) — dev-only
+# Playwright UI Test Harness (tools/ui-test) - dev-only
 # =========================================================
 
 tools/ui-test/node_modules/

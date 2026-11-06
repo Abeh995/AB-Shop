@@ -1,9 +1,34 @@
-# Changelog Archive (v1.0.0 — v1.36.0)
+# Changelog Archive (v1.0.0 — v1.37.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.36.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.37.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.37.0 — 2026-10-31
+
+### Landing Studio — Full Admin Control Over the Storefront Landing Page
+
+- **Visual content editor (`admin/landing.php`, `app/controllers/admin/landing.php`, `views/admin/landing.php`, `assets/js/landing-studio.js`, `assets/css/admin-landing.css`)**:
+  - New dedicated Studio workstation that exposes **every** editable node of the storefront landing page: 21 sections, 180+ top-level fields and all repeater items (hero copy, CTAs, trust bar, catalog, pack builder, gallery, story, promise box, tech comparison, FAQ, footer, lucky wheel, stylist quiz, track modal, cart drawer, visual effects, section order, SEO metadata) — every text, icon, colour and image.
+  - Section rail with drag-to-reorder (`sectionOrder`), per-section visibility switches and unsaved-change badges; collapsible field groups; per-field "restore default"; character counters with SEO-suggested lengths; conditional fields; icon/colour pickers; image fields with direct upload; primitive lists and nested repeaters with duplicate/reorder/collapse.
+  - Live preview of the real storefront in an iframe with true device emulation (1440/834/414 viewport scaled to fit), device switcher, full-screen (zen) mode, click-to-edit selection mode and jump-to-field highlighting.
+  - Draft → Publish workflow: debounced autosave of the working draft, explicit publish with note, discard, per-section and global reset, JSON import/export, undo/redo and keyboard shortcuts (`Ctrl+S`, `Ctrl+Z`, `Ctrl+K`, `V`, `F`, `Esc`).
+- **Schema as single source of truth (`app/services/LandingSchemaService.php`, `app/data/landing-defaults.json`)**:
+  - Declarative field registry (path, Persian label, editor type, constraints, icon vocabularies, conditional rules) that drives both the editor UI and a recursive sanitizer (enum/icon/colour whitelisting, number clamping, markup stripping that preserves Persian ZWNJ, URL scheme allow-list, `sectionOrder` normalisation, unknown-key rejection).
+  - Shipped defaults generated from the React `defaultLandingConfig` and normalised to the icon keys the components actually resolve (fixes latent `CreditCard`/`Landmark`/`ShoppingBag` fallbacks).
+- **Persistence, publishing and audit (`app/services/LandingService.php`, `database/migrations/028_v1.37.0_landing_studio.sql`, `ajax/landing_studio.php`)**:
+  - New `landing_config` singleton (`published_json` / `draft_json`) and `landing_config_revisions` archive (newest 25) with attribution; every publish-side action is written to `admin_audit_logs`; the storefront keeps rendering defaults if the migration has not been applied yet.
+  - AJAX endpoint with session + CSRF enforcement for `save_draft`, `publish`, `discard`, `reset_section`, `reset_all`, `restore_revision`, `import`, `upload`, `meta`.
+- **Storefront integration (`app/controllers/site/home.php`, `app/services/StorefrontService.php`, `views/site/home.php`, rebuilt `assets/dist/landing/*`)**:
+  - Published config injected into `window.__AB_INITIAL_DATA__.landingConfig`; the Studio preview iframe receives the draft (`?lb_preview=1`, admin-only) and skips the intro loader.
+  - Server-rendered `<title>`, meta description, OG image and no-JS fallback headline now come from the published config (SEO stays correct without JavaScript).
+  - Extracted catalog query/shaping into `StorefrontService` (`getLandingCatalogPayload()`), removing the last raw SQL from the home controller and dropping it to 49 lines (previously 92).
+  - Bundle rebuilt with `data-lb-section`/`data-lb-field` anchors on hero, section headings, story and footer for click-to-edit highlighting.
+- **Quality gates (`tools/landing-selftest.php`, `tools/ui-test/test-landing-studio.mjs`, `tools/ui-test/pages.json`)**:
+  - Schema coverage/safety self-test (471 leaves, 232 descriptors, 491 assertions) asserting coverage, sanitizer idempotency and XSS/URL rejection.
+  - Fixed the `tools/verify.php` release-tag probe, which shell-redirected `git describe` stderr to `2>nul` (a Windows-ism) and silently created an empty `nul` file in the repo root on Linux; it now targets the platform null device.
+  - Playwright end-to-end suite (18 checks) covering login, editor rendering, autosave, live preview bridge, search, device switching, publish (asserted on the endpoint response and publish timestamp in the status bar, not toast copy), revision history, published-copy delivery, mobile layout and console health.
 
 ## 1.36.1 — 2026-10-30
 
