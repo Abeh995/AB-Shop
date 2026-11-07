@@ -250,59 +250,292 @@
                     <div class="serp-preview-content">
                         <div class="serp-url">
                             <span>ab-socks.ir</span>
-                            <span class="serp-url-sub">› product › <?= e($product['slug'] ?? 'sock-slug') ?></span>
+                            <span class="serp-url-sub">› product › <span id="serpPreviewSlug"><?= e($product['slug'] ?? 'sock-slug') ?></span></span>
                         </div>
-                        <div class="serp-title">
+                        <div class="serp-title" id="serpPreviewTitle">
                             <?= e(!empty($product['seo_title']) ? $product['seo_title'] : (($product['name'] ?? 'نام محصول') . ' | ' . SITE_NAME)) ?>
                         </div>
-                        <div class="serp-desc">
+                        <div class="serp-desc" id="serpPreviewDesc">
                             <?= e(!empty($product['seo_description']) ? $product['seo_description'] : seoCleanText($product['description'] ?? '', 140)) ?>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group seo-field-mb">
-                    <label for="seoTitleInput" class="cat-label">عنوان اختصاصی سئو (SEO Title):</label>
-                    <input type="text" id="seoTitleInput" name="seo_title" class="form-control" value="<?= e($product['seo_title'] ?? '') ?>" placeholder="<?= e($product['name'] ?? '') ?> | <?= e(SITE_NAME) ?>">
-                    <small class="seo-hint">طول بهینه بین ۵۰ تا ۶۰ کاراکتر (در صورت خالی بودن، از نام محصول استفاده می‌شود).</small>
+                <!-- SEO Title Field -->
+                <div class="ab-seo-field-wrap">
+                    <div class="ab-seo-field-header">
+                        <label for="seoTitleInput" class="cat-label">عنوان اختصاصی سئو (SEO Title):</label>
+                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpSeoTitle" aria-expanded="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>راهنما و نمونه</span>
+                        </button>
+                    </div>
+
+                    <input type="text" id="seoTitleInput" name="seo_title" class="form-control"
+                           value="<?= e($product['seo_title'] ?? '') ?>"
+                           placeholder="<?= e($product['name'] ?? '') ?> | <?= e(SITE_NAME) ?>"
+                           data-ab-seo-counter
+                           data-ab-min="30"
+                           data-ab-optimal-min="45"
+                           data-ab-optimal-max="60"
+                           data-ab-max="70"
+                           data-ab-sync-target="#serpPreviewTitle"
+                           data-ab-sync-fallback="<?= e(($product['name'] ?? 'نام محصول') . ' | ' . SITE_NAME) ?>">
+
+                    <div class="ab-seo-counter-bar">
+                        <div class="ab-seo-counter"></div>
+                        <small class="seo-hint">طول بهینه در سرپ گوگل: ۴۵ تا ۶۰ کاراکتر (در صورت خالی بودن، نام محصول استفاده می‌شود).</small>
+                    </div>
+
+                    <!-- Collapsible Help Card -->
+                    <div class="ab-seo-help-card" id="helpSeoTitle" hidden>
+                        <div class="ab-seo-help-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            چرا عنوان سئو کلیدی‌ترین فاکتور رتبه‌بندی است؟
+                        </div>
+                        <div class="ab-seo-help-desc">
+                            عنوان سئو همان تیتر آبی‌رنگ لینک اول در نتایج گوگل است و سنگین‌ترین وزن کلمات کلیدی را برای موتورهای جستجو و هوش مصنوعی دارد.
+                        </div>
+                        <div class="ab-seo-help-formula">
+                            💡 فرمول استاندارد: [نام محصول و مدل] + [جنس و کاربرد کلیدی] + [نام برند یا سایت]
+                        </div>
+                        <div class="ab-seo-help-example">
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge good">✓ نمونه عالی (۵۲ حرف)</span>
+                                <span>جوراب ساقدار نخی طرح گوزن | پنبه سوپر شانه شده | ای‌بی‌ساکس</span>
+                            </div>
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge bad">✕ نمونه نامناسب (اسپم)</span>
+                                <span>جوراب جوراب جوراب خرید جوراب ارزان ساق دار بافتنی</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group seo-field-mb">
-                    <label for="productSlugInput" class="cat-label">نامک صفحه (URL Slug):</label>
-                    <input type="text" id="productSlugInput" name="slug" class="form-control" dir="ltr" value="<?= e($product['slug'] ?? '') ?>" placeholder="socks-crew-cotton">
-                    <small class="seo-hint">💡 در صورت ویرایش نامک، سیستم به صورت خودکار یک <strong>ریدایرکت ۳۰۱</strong> از آدرس قبلی به آدرس جدید ثبت می‌کند تا رتبه گوگل حفظ شود.</small>
+                <!-- URL Slug Field -->
+                <div class="ab-seo-field-wrap">
+                    <div class="ab-seo-field-header">
+                        <label for="productSlugInput" class="cat-label">نامک صفحه (URL Slug):</label>
+                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpProductSlug" aria-expanded="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>راهنما و نمونه</span>
+                        </button>
+                    </div>
+
+                    <input type="text" id="productSlugInput" name="slug" class="form-control" dir="ltr"
+                           value="<?= e($product['slug'] ?? '') ?>"
+                           placeholder="socks-crew-cotton"
+                           data-ab-seo-counter
+                           data-ab-min="3"
+                           data-ab-optimal-min="5"
+                           data-ab-optimal-max="50"
+                           data-ab-max="75"
+                           data-ab-sync-target="#serpPreviewSlug"
+                           data-ab-sync-fallback="sock-slug">
+
+                    <div class="ab-seo-counter-bar">
+                        <div class="ab-seo-counter"></div>
+                        <small class="seo-hint">💡 در صورت ویرایش نامک، سیستم خودکار <strong>ریدایرکت ۳۰۱</strong> ثبت می‌کند تا رتبه گوگل حفظ شود.</small>
+                    </div>
+
+                    <!-- Collapsible Help Card -->
+                    <div class="ab-seo-help-card" id="helpProductSlug" hidden>
+                        <div class="ab-seo-help-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            چرا اسلاگ انگلیسی برای سئو ارجحیت مطلق دارد؟
+                        </div>
+                        <div class="ab-seo-help-desc">
+                            اسلاگ‌های فارسی هنگام کپی شدن در تلگرام و واتساپ به رشته‌های کدهای درصدی (%D8...) نامفهوم و چندصدکاراکتری تبدیل می‌شوند. استفاده از حروف کوچک انگلیسی و خط تیره ساختار لینک را خوانا و پرسرعت نگه می‌دارد.
+                        </div>
+                        <div class="ab-seo-help-formula">
+                            💡 فرمول استاندارد: حروف کوچک انگلیسی + خط تیره (kebab-case)
+                        </div>
+                        <div class="ab-seo-help-example">
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge good">✓ نمونه عالی</span>
+                                <code>cotton-crew-socks-deer-navy</code>
+                            </div>
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge bad">✕ نمونه نامناسب</span>
+                                <code>جوراب_ساقدار_طرح_گوزن_123</code>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group seo-field-mb">
-                    <label for="seoDescInput" class="cat-label">توضیحات متا (Meta Description):</label>
-                    <textarea id="seoDescInput" name="seo_description" class="form-control" rows="2" placeholder="توضیحات جذاب و خلاصه برای جذب کلیک در گوگل و بینگ (۱۲-۱۶۰ حرف)..."><?= e($product['seo_description'] ?? '') ?></textarea>
-                    <small class="seo-hint">طول بهینه ۱۲۰ تا ۱۶۰ کاراکتر.</small>
+                <!-- Meta Description Field -->
+                <div class="ab-seo-field-wrap">
+                    <div class="ab-seo-field-header">
+                        <label for="seoDescInput" class="cat-label">توضیحات متا (Meta Description):</label>
+                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpSeoDesc" aria-expanded="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>راهنما و نمونه</span>
+                        </button>
+                    </div>
+
+                    <textarea id="seoDescInput" name="seo_description" class="form-control" rows="2"
+                              placeholder="توضیحات جذاب و خلاصه برای جذب کلیک در گوگل و بینگ (۱۲۰-۱۶۰ حرف)..."
+                              data-ab-seo-counter
+                              data-ab-min="70"
+                              data-ab-optimal-min="120"
+                              data-ab-optimal-max="160"
+                              data-ab-max="175"
+                              data-ab-sync-target="#serpPreviewDesc"
+                              data-ab-sync-fallback="<?= e(seoCleanText($product['description'] ?? '', 140)) ?>"><?= e($product['seo_description'] ?? '') ?></textarea>
+
+                    <div class="ab-seo-counter-bar">
+                        <div class="ab-seo-counter"></div>
+                        <small class="seo-hint">طول بهینه در سرپ گوگل: ۱۲۰ تا ۱۶۰ کاراکتر (پاراگراف متقاعدکننده برای افزایش نرخ کلیک).</small>
+                    </div>
+
+                    <!-- Collapsible Help Card -->
+                    <div class="ab-seo-help-card" id="helpSeoDesc" hidden>
+                        <div class="ab-seo-help-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            راز نوشتن توضیحات متای برنده در نتایج جستجو
+                        </div>
+                        <div class="ab-seo-help-desc">
+                            اگر توضیحات متا کمتر از ۱۲۰ کاراکتر باشد، گوگل آن را رد کرده و بخشی از متن تصادفی صفحه را نمایش می‌دهد. اگر بیشتر از ۱۶۰ کاراکتر باشد با «...» بریده می‌شود.
+                        </div>
+                        <div class="ab-seo-help-formula">
+                            💡 فرمول استاندارد: [معرفی مزیت و کاربرد] + [الیاف و ویژگی متمایز] + [دعوت به خرید/ارسال سریع]
+                        </div>
+                        <div class="ab-seo-help-example">
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge good">✓ نمونه عالی (۱۴۳ حرف)</span>
+                                <span>خرید جوراب ساقدار زنانه و مردانه با بافت پنبه ارگانیک و کش ضد حساسیت. ضد تعریق با دوام بالا، ارسال فوری به سراسر کشور از ای‌بی‌ساکس.</span>
+                            </div>
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge bad">✕ نمونه نامناسب (بسیار کوتاه - ۳۵ حرف)</span>
+                                <span>فروش انواع جوراب های مرغوب و شیک در فروشگاه ما.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group seo-field-mb">
-                    <label for="canonicalUrlInput" class="cat-label">آدرس کنونیکال اختصاصی (Canonical URL - اختیاری):</label>
+                <!-- Canonical URL Field -->
+                <div class="ab-seo-field-wrap">
+                    <div class="ab-seo-field-header">
+                        <label for="canonicalUrlInput" class="cat-label">آدرس کنونیکال اختصاصی (Canonical URL - اختیاری):</label>
+                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpCanonicalUrl" aria-expanded="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>راهنما</span>
+                        </button>
+                    </div>
+
                     <input type="text" id="canonicalUrlInput" name="canonical_url" class="form-control" dir="ltr" value="<?= e($product['canonical_url'] ?? '') ?>" placeholder="https://ab-socks.ir/product/main-color">
+                    <small class="seo-hint">در صورت خالی بودن، به طور پیش‌فرض آدرس همین صفحه به عنوان کنونیکال ارسال می‌شود.</small>
+
+                    <!-- Collapsible Help Card -->
+                    <div class="ab-seo-help-card" id="helpCanonicalUrl" hidden>
+                        <div class="ab-seo-help-title">آدرس کنونیکال چیست و چه زمانی پر شود؟</div>
+                        <div class="ab-seo-help-desc">
+                            کنونیکال به گوگل می‌گوید نسخه اصلی و مرجع این کالا کدام است. فقط در صورتی پر کنید که چند رنگ/مدل مختلف از این جوراب در صفحات مجزا ساخته شده و می‌خواهید اعتبار سرپ همگی روی یک صفحه خاص متمرکز شود.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Structured Facts for AI Grounding -->
                 <div class="seo-specs-box">
-                    <span class="seo-specs-title">🤖 مشخصات ساختاریافته الیاف و مدل (سیگنال‌های قطعی هوش مصنوعی):</span>
+                    <div class="ab-seo-field-header seo-specs-header">
+                        <span class="seo-specs-title">🤖 مشخصات ساختاریافته الیاف و مدل (سیگنال‌های قطعی هوش مصنوعی):</span>
+                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpAiSpecs" aria-expanded="false">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>راهنمای فکت‌های AI</span>
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Help Card for AI Specs -->
+                    <div class="ab-seo-help-card" id="helpAiSpecs" hidden>
+                        <div class="ab-seo-help-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            چرا مدل‌های هوش مصنوعی (ChatGPT, Perplexity, Gemini, Claude) به این فیلدها وابسته‌اند؟
+                        </div>
+                        <div class="ab-seo-help-desc">
+                            موتورهای پاسخ هوش مصنوعی بر خلاف سرچ‌های سنتی، متن‌های تبلیغاتی کلیشه‌ای را نادیده گرفته و به دنبال «فکت‌های فنی قطعی» درباره جوراب هستند. مقادیر این بخش مستقیماً در فید <code>/llms.txt</code> و اسکیماهای گوگل مرچنت تزریق می‌شوند تا وقتی خریدار می‌پرسد <em>«جوراب ۱۰۰٪ نخی ضد حساسیت بدون درز پنجه»</em>، این محصول پیشنهاد اول چت‌بات باشد.
+                        </div>
+                        <div class="ab-seo-help-formula">
+                            💡 راهنما: می‌توانید مقادیر را دستی بنویسید یا برای راحتی و یکدستی، روی چیپ‌های آماده زیر هر کادر کلیک کنید تا خودکار درج شوند.
+                        </div>
+                    </div>
+
                     <div class="seo-specs-grid">
+                        <!-- 1. Fiber Composition -->
                         <div>
-                            <label class="seo-specs-label">درصد پنبه / الیاف:</label>
-                            <input type="text" name="material_specs[درصد پنبه]" class="form-control form-control-sm" value="<?= e($pSpecs['درصد پنبه'] ?? '۱۰۰٪ نخ‌پنبه سوپر شانه شده') ?>">
+                            <label class="seo-specs-label" for="specCotton">درصد پنبه / الیاف:</label>
+                            <input type="text" id="specCotton" name="material_specs[درصد پنبه]" class="form-control form-control-sm" value="<?= e($pSpecs['درصد پنبه'] ?? '۱۰۰٪ نخ‌پنبه سوپر شانه شده') ?>">
+                            <?php if (!empty($specPresets['درصد پنبه'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['درصد پنبه'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specCotton" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- 2. Cuff Height -->
                         <div>
-                            <label class="seo-specs-label">ارتفاع ساق جوراب:</label>
-                            <input type="text" name="material_specs[ارتفاع ساق]" class="form-control form-control-sm" value="<?= e($pSpecs['ارتفاع ساق'] ?? 'ساق‌دار') ?>" placeholder="ساق‌دار / نیم‌ساق / مچی / کالج">
+                            <label class="seo-specs-label" for="specHeight">ارتفاع ساق جوراب:</label>
+                            <input type="text" id="specHeight" name="material_specs[ارتفاع ساق]" class="form-control form-control-sm" value="<?= e($pSpecs['ارتفاع ساق'] ?? 'ساق‌دار') ?>" placeholder="ساق‌دار / نیم‌ساق / مچی / کالج">
+                            <?php if (!empty($specPresets['ارتفاع ساق'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['ارتفاع ساق'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specHeight" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- 3. Thickness & Season -->
                         <div>
-                            <label class="seo-specs-label">ضخامت و فصل مناسب:</label>
-                            <input type="text" name="material_specs[فصل و ضخامت]" class="form-control form-control-sm" value="<?= e($pSpecs['فصل و ضخامت'] ?? 'چهارفصل') ?>">
+                            <label class="seo-specs-label" for="specSeason">ضخامت و فصل مناسب:</label>
+                            <input type="text" id="specSeason" name="material_specs[فصل و ضخامت]" class="form-control form-control-sm" value="<?= e($pSpecs['فصل و ضخامت'] ?? 'چهارفصل') ?>">
+                            <?php if (!empty($specPresets['فصل و ضخامت'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['فصل و ضخامت'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specSeason" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- 4. Usage & Style -->
                         <div>
-                            <label class="seo-specs-label">کاربرد و استایل:</label>
-                            <input type="text" name="material_specs[کاربرد]" class="form-control form-control-sm" value="<?= e($pSpecs['کاربرد'] ?? 'روزمره و رسمی') ?>">
+                            <label class="seo-specs-label" for="specUsage">کاربرد و استایل:</label>
+                            <input type="text" id="specUsage" name="material_specs[کاربرد]" class="form-control form-control-sm" value="<?= e($pSpecs['کاربرد'] ?? 'روزمره و رسمی') ?>">
+                            <?php if (!empty($specPresets['کاربرد'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['کاربرد'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specUsage" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- 5. Toe Seam -->
+                        <div>
+                            <label class="seo-specs-label" for="specToe">نوع دوخت و پنجه‌گیری:</label>
+                            <input type="text" id="specToe" name="material_specs[نوع دوخت پنجه]" class="form-control form-control-sm" value="<?= e($pSpecs['نوع دوخت پنجه'] ?? 'پنجه‌گیری بدون درز (Seamless)') ?>">
+                            <?php if (!empty($specPresets['نوع دوخت پنجه'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['نوع دوخت پنجه'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specToe" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- 6. Wash & Care -->
+                        <div>
+                            <label class="seo-specs-label" for="specWash">دستور شستشو و نگهداری:</label>
+                            <input type="text" id="specWash" name="material_specs[دستور شستشو]" class="form-control form-control-sm" value="<?= e($pSpecs['دستور شستشو'] ?? 'آب سرد ۳۰ درجه، بدون سفیدکننده') ?>">
+                            <?php if (!empty($specPresets['دستور شستشو'])): ?>
+                            <div class="ab-quick-chips">
+                                <?php foreach ($specPresets['دستور شستشو'] as $preset): ?>
+                                <button type="button" class="ab-quick-chip" data-ab-quick-chip data-ab-target="#specWash" data-ab-val="<?= e($preset['spec_value']) ?>"><?= e($preset['label']) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

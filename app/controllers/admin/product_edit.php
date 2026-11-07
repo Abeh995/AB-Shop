@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = $product && !empty($product['id']) ? 'ویرایش محصول: ' . $product['name'] : 'محصول جدید';
 $categories = getCategoriesForDropdown();
 $allTags = getAllTags();
+$specPresets = getProductSpecPresets();
 
 renderView('admin/product_edit', compact(
     'pageTitle',
@@ -71,5 +72,6 @@ renderView('admin/product_edit', compact(
     'productTagIds',
     'priceHistory',
     'hasVariantsInitial',
+    'specPresets',
     'errors'
 ));

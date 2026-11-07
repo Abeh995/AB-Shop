@@ -2264,6 +2264,12 @@ input:checked + .switch-slider:before {
     display: block;
     margin-bottom: 8px;
 }
+.seo-ai-card .seo-specs-header {
+    margin-bottom: 8px;
+}
+.seo-ai-card .seo-specs-header .seo-specs-title {
+    margin-bottom: 0;
+}
 .seo-ai-card .seo-specs-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2399,6 +2405,271 @@ input:checked + .switch-slider:before {
     font-size: 0.82rem;
     font-weight: 700;
 }
+
+/* ============================================================
+   SEO Guidance, Tooltips & Real-Time Character Counters
+   ============================================================ */
+.ab-seo-field-wrap {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.ab-seo-field-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 8px;
+}
+
+.ab-seo-field-header label {
+    margin-bottom: 0;
+}
+
+.ab-seo-help-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: var(--c-mocha-700);
+    background: var(--c-sand-100);
+    border: 1px solid var(--c-line-200);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.ab-seo-help-btn:hover,
+.ab-seo-help-btn.is-active {
+    background: var(--c-mocha-500);
+    color: var(--c-neutral-0);
+    border-color: var(--c-mocha-700);
+}
+
+.ab-seo-help-card {
+    background: var(--surface-2);
+    border: 1px solid var(--c-line-200);
+    border-inline-start: 3px solid var(--c-mocha-500);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    animation: abSeoFadeIn 0.2s ease-out;
+}
+
+@keyframes abSeoFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ab-seo-help-card[hidden] {
+    display: none;
+}
+
+.ab-seo-help-title {
+    font-weight: 700;
+    font-size: 0.83rem;
+    color: var(--c-ink-900);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ab-seo-help-desc {
+    color: var(--c-ink-500);
+    margin-bottom: 8px;
+}
+
+.ab-seo-help-formula {
+    background: var(--surface);
+    border: 1px dashed var(--c-line-200);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    color: var(--c-ink-900);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.ab-seo-help-example {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.ab-seo-example-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.76rem;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    border: 1px solid var(--c-line-100);
+}
+
+.ab-seo-example-badge {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.ab-seo-example-badge.good {
+    background: var(--success-soft);
+    color: var(--success-ink);
+}
+
+.ab-seo-example-badge.bad {
+    background: var(--danger-soft);
+    color: var(--danger-ink);
+}
+
+/* Character Counter Bar */
+.ab-seo-counter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 0.74rem;
+    color: var(--c-ink-500);
+}
+
+.ab-seo-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ab-seo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 0.69rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ab-seo-badge--empty {
+    background: var(--surface-2);
+    color: var(--c-ink-500);
+    border: 1px solid var(--c-line-200);
+}
+
+.ab-seo-badge--short {
+    background: var(--warning-soft);
+    color: var(--warning-ink);
+    border: 1px solid var(--warning);
+}
+
+.ab-seo-badge--optimal {
+    background: var(--success-soft);
+    color: var(--success-ink);
+    border: 1px solid var(--success);
+}
+
+.ab-seo-badge--long {
+    background: color-mix(in srgb, var(--c-amber-500) 15%, var(--surface));
+    color: color-mix(in srgb, var(--c-amber-500) 80%, black);
+    border: 1px solid var(--c-amber-500);
+}
+
+.ab-seo-badge--excessive {
+    background: var(--danger-soft);
+    color: var(--danger-ink);
+    border: 1px solid var(--danger);
+}
+
+/* Dynamic Field Border Feedback */
+.form-control.is-short,
+.cat-input.is-short,
+.cat-textarea.is-short {
+    border-color: var(--warning);
+}
+
+.form-control.is-short:focus,
+.cat-input.is-short:focus,
+.cat-textarea.is-short:focus {
+    border-color: var(--warning);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 25%, transparent);
+}
+
+.form-control.is-optimal,
+.cat-input.is-optimal,
+.cat-textarea.is-optimal {
+    border-color: var(--success);
+}
+
+.form-control.is-optimal:focus,
+.cat-input.is-optimal:focus,
+.cat-textarea.is-optimal:focus {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.form-control.is-long,
+.cat-input.is-long,
+.cat-textarea.is-long {
+    border-color: var(--c-amber-500);
+}
+
+.form-control.is-long:focus,
+.cat-input.is-long:focus,
+.cat-textarea.is-long:focus {
+    border-color: var(--c-amber-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-amber-500) 25%, transparent);
+}
+
+.form-control.is-excessive,
+.cat-input.is-excessive,
+.cat-textarea.is-excessive {
+    border-color: var(--danger);
+}
+
+.form-control.is-excessive:focus,
+.cat-input.is-excessive:focus,
+.cat-textarea.is-excessive:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+/* AI Material Specs & Quick Preset Chips */
+.ab-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+}
+
+.ab-quick-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    font-size: 0.69rem;
+    font-weight: 500;
+    color: var(--c-mocha-700);
+    background: var(--c-sand-100);
+    border: 1px solid var(--c-line-200);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ab-quick-chip:hover {
+    background: var(--c-mocha-500);
+    color: var(--c-neutral-0);
+    border-color: var(--c-mocha-700);
+}
+
+
 
 
 

@@ -2200,6 +2200,177 @@ body.admin-page-orders {
     opacity: 1;
 }
 
+.od-receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.od-receipt-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--warning-ink);
+}
+
+.od-receipt-amount {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.od-receipt-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.od-receipt-details {
+    flex: 1;
+}
+
+.receipt-modal-code {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.od-receipt-missing-notice {
+    background: var(--warning-soft);
+    border: 1px dashed var(--warning);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    font-size: 0.78rem;
+    color: var(--warning-ink);
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.od-receipt-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.receipt-modal-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.od-print-tracking {
+    margin-top: 8px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.od-receipt-reviewed-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+    border: 1px solid var(--border-card);
+    background: var(--bg-card);
+}
+
+.od-receipt-reviewed-bar.is-approved {
+    background: var(--emerald-bg);
+    border-color: var(--emerald-border);
+}
+
+.od-receipt-reviewed-bar.is-rejected {
+    background: var(--rose-bg);
+    border-color: var(--rose-border);
+}
+
+.od-receipt-reviewed-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.od-receipt-reviewed-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.od-receipt-reviewed-bar.is-approved .od-receipt-reviewed-title {
+    color: var(--emerald-text);
+}
+
+.od-receipt-reviewed-bar.is-rejected .od-receipt-reviewed-title {
+    color: var(--rose-text);
+}
+
+.od-receipt-reviewed-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.od-reject-dialog-body {
+    padding: 16px;
+}
+
+.od-reject-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.od-reject-field {
+    margin-bottom: 12px;
+}
+
+.od-reject-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.od-reject-input {
+    width: 100%;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    background: var(--surface);
+}
+
+.od-reject-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.od-ship-toggle-wrap {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-secondary);
+}
+
+.od-ship-toggle-wrap input[type="checkbox"] {
+    accent-color: var(--brand-primary);
+    cursor: pointer;
+}
+
+.od-ship-toggle-wrap label {
+    cursor: pointer;
+    user-select: none;
+}
+
 .od-customer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2651,8 +2822,9 @@ body.admin-page-orders {
         box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
     }
 
+    .od-wrapper,
     body.admin-page-orders {
-        padding-bottom: 78px !important;
+        padding-bottom: 84px !important;
     }
 
     .od-dock-info {
@@ -3049,8 +3221,14 @@ body.admin-page-orders {
     .drawer-backdrop,
     .receipt-modal-backdrop,
     .product-gallery-modal-backdrop,
-    .od-mobile-dock {
+    .od-mobile-dock,
+    .no-print,
+    .od-profitability-card {
         display: none !important;
+    }
+
+    .print-only-tracking {
+        display: block;
     }
 
     .admin-wrap {
@@ -3101,6 +3279,7 @@ body.admin-page-orders {
 }
 
 .print-only-header,
-.print-only-footer {
+.print-only-footer,
+.print-only-tracking {
     display: none;
 }

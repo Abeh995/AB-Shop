@@ -3,9 +3,22 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.38.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.39.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.40.1 — 2026-11-07
+
+### Dynamic Technical Product Specification Presets & Taxonomy (`product_spec_presets`)
+
+- **Database-Driven Attribute Taxonomy (`database/migrations/030_v1.40.1_product_spec_presets.sql`, `database/schema.sql`)**:
+  - Replaced static view hardcoding with a dedicated relational preset table `product_spec_presets` for managing technical sock specifications (cuff heights, fiber compositions, seasons/thickness, usage/style, toe seam construction, wash care instructions).
+  - Seeded initial dictionary covering comprehensive industry taxonomy: 8 cuff heights, 6 fiber compositions, 4 seasonality grades, 6 usage types, 3 toe seam types, and 3 wash care instructions.
+- **Service Layer & Process Caching (`app/services/ProductService.php`)**:
+  - Implemented `getProductSpecPresets(?string $specKey = null)` with in-memory static process caching and fallback defaults ensuring high performance and zero chance of fatal errors on unmigrated databases.
+- **Admin Product Workstation Integration (`app/controllers/admin/product_edit.php`, `views/admin/product_edit.php`)**:
+  - Replaced hardcoded chip HTML in the AI Grounding card with dynamic database-driven loops.
+  - Connected 1-click quick-fill buttons via declarative `data-ab-quick-chip` allowing effortless administration and future storefront faceted filtering.
 
 ## 1.40.0 — 2026-11-07
 
@@ -120,31 +133,6 @@ The footer was the one section the Studio could only *rename*; now the whole sec
 - Schema/self-test: 543 / 302 → **599 leaves / 353 fields / 619 assertions OK**; config version and
   `APP_VERSION` both bumped to `1.39.0`.
 
-## 1.38.0 — 2026-11-01
-
-### Landing Studio — Full Copy Coverage, Collapsible Panes, Scrollable Panel
-
-- **Every storefront string is now editable (item 4).** ~70 strings that were still hardcoded in the React components are now part of the landing config, exposed as Studio fields:
-  - `catalog`: sort labels (`sortPopular`/`sortNewest`/`sortCheap`/`sortExpensive`), card-layout labels (`viewComfortLabel`/`viewDenseLabel`/`viewListLabel`), `clearSearchText`, `productNameTemplate` (the «جوراب {title}» name used on cards, modal and hero).
-  - `cartDrawer`: `closeLabel`, `freeShippingRemaining`, `freeShippingReached`, `colorPrefix`, `sizePrefix`, `increaseLabel`, `decreaseLabel`, `removeLabel`.
-  - `packBuilder`: `capacityText`, `trayText`, `summaryText`, `notePrefix`, `notePlaceholder`, `addButtonText`, `remainingText`, `removeLabel`.
-  - `sizeGuide`: `steps` (the three measuring steps) and `shoeSizeInputLabel`.
-  - `styleMaker`: `reasonTemplate`, `workshopNote`.
-  - `topStrip`: `copyToast`, `codeLabel`, `copyHint`.
-  - `socialStyle`: `tagCopiedToast`, `tagPrompt`, `tagCopyLabel`, `postAlt`.
-  - `luckyWheel`: `copiedToast`, `codeLabel`, `spinningText`, `spinAgainText`.
-  - `header`: `menuLabel`, `menuCloseLabel`, `homeLabel`, `faqLabel`, `deckHomeLabel`, `deckMenuLabel`, `deckShopLabel`, `deckWheelLabel`, `searchLabel`.
-  - `trackModal`: `inputHint`; `editorial.techTrust`: `otherColumnLabel`; `editorial.faq.supportBox`: `chatUnavailableText`.
-  - `editorial.footer`: `legalTitle`/`legalSub`/`legalText`, `gatewayLabel`, `secureTitle`/`secureDesc`, `unionLabel`/`unionSub`/`unionText`, `trustTitle`/`trustSub`/`trustText`, `instagramLabel`, `telegramLabel`, `newsletterNote`, `copyrightText`.
-  - `editorial.story.imageAlt`, `editorial.promiseBox.giftImageAlt`.
-  - Strings with runtime values use `{placeholders}` (`{code}`, `{count}`, `{tier}`, `{note}`, `{handle}`, `{tags}`, `{title}`, `{amount}`); the accepted placeholders are documented in each field's hint.
-  - Schema/self-test grew from 471 leaves / 232 fields to **543 leaves / 302 fields** (`php tools/landing-selftest.php` → 563 assertions OK).
-- **Collapsible panes (item 2).** The section rail and the field panel can now be folded away — `#lbRailToggle` in the rail head and `#lbPanelToggle` in the studio toolbar, backed by `data-rail-collapsed` / `data-panel-collapsed` on `.lb-studio`. Collapsing the rail leaves a 42px icon strip; collapsing the panel removes it entirely and hands the space to the preview. Both states persist in `localStorage` (`togglePane()` / `restorePaneState()` in `landing-studio.js`).
-- **No more overlap with the sticky admin topbar (item 3).** The studio toolbar is no longer `position: sticky` (the shell already fills the fold, so the toolbar is always on screen); the stacking collision with `admin-shell.css`'s sticky bar is gone.
-- **Dead space under the workspace (item 5) — real root cause.** The visually hidden `.lb-switch` checkbox (`position: absolute; opacity: 0`) had no positioned ancestor, so it escaped the panel and stacked five invisible 17px boxes down the document, stretching `docH` from 900px to 2863px and pushing the free white space into the viewport. `.lb-switch` is now `position: relative`, `contain: paint` on the shared `.lb-rail / .lb-panel / .lb-preview` rule keeps any future absolute helper inside its pane, and `.lb-group` plus the shared `flex: 0 0 auto` guard stop flex children from being shrunk and clipped. Verified at 1356×646, 1366×768, 1440×900, 1920×1080, 1280×800 and 1024×768: `documentElement.scrollHeight === innerHeight`, panel body scrollable.
-- **Always-visible panel scrollbar (item 1).** `scrollbar-color` on the rail/panel scroll areas made Chromium ignore the `::-webkit-scrollbar` styling and fall back to overlay scrollbars that only appear while scrolling. Those declarations are gone; the custom 10px bar is back, `scrollbar-gutter: stable` reserves its space so the pane geometry never jumps, and Firefox (which has no `::-webkit-scrollbar`) gets the standard properties behind `@supports not selector(::-webkit-scrollbar)`.
-- **Empty-field chip got its own id (`#lbEmptyFixChip`)** and the collapse-all chip is now `#lbCollapseAllChip`, so the smoke suite can target them unambiguously.
-- **Config version** bumped to `1.38.0` in both `defaultLandingConfig` and `app/data/landing-defaults.json`; existing drafts are merged forward on load, so no migration step is needed.
 
 
 

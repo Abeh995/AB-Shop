@@ -955,15 +955,193 @@
         }
     });
 
+    // =========================================================================
+    // 7. SEO Field Guidance & Character Counter (AB.seoFieldHelper)
+    // =========================================================================
+    AB.seoFieldHelper = {
+        /**
+         * Evaluates character count against bounds and assigns status and badge.
+         * @param {number} len
+         * @param {{ min?: number, optimalMin?: number, optimalMax?: number, max?: number }} bounds
+         * @returns {{ status: string, badgeText: string, badgeClass: string }}
+         */
+        evaluateStatus: function (len, bounds) {
+            if (len === 0) {
+                return {
+                    status: 'empty',
+                    badgeText: 'خالی',
+                    badgeClass: 'ab-seo-badge--empty'
+                };
+            }
+            if (bounds.optimalMin && len < bounds.optimalMin) {
+                return {
+                    status: 'short',
+                    badgeText: 'کوتاه',
+                    badgeClass: 'ab-seo-badge--short'
+                };
+            }
+            if (bounds.optimalMax && len <= bounds.optimalMax) {
+                return {
+                    status: 'optimal',
+                    badgeText: '✓ ایده‌آل',
+                    badgeClass: 'ab-seo-badge--optimal'
+                };
+            }
+            if (bounds.max && len <= bounds.max) {
+                return {
+                    status: 'long',
+                    badgeText: 'طولانی',
+                    badgeClass: 'ab-seo-badge--long'
+                };
+            }
+            return {
+                status: 'excessive',
+                badgeText: 'بسیار طولانی',
+                badgeClass: 'ab-seo-badge--excessive'
+            };
+        },
+
+        /**
+         * Updates counter display and border classes for an input/textarea.
+         * @param {HTMLElement} el
+         */
+        updateField: function (el) {
+            const val = el.value || '';
+            const len = val.length;
+
+            const bounds = {
+                min: parseInt(el.getAttribute('data-ab-min') || '0', 10),
+                optimalMin: parseInt(el.getAttribute('data-ab-optimal-min') || '0', 10),
+                optimalMax: parseInt(el.getAttribute('data-ab-optimal-max') || '0', 10),
+                max: parseInt(el.getAttribute('data-ab-max') || '0', 10),
+            };
+
+            const evalResult = AB.seoFieldHelper.evaluateStatus(len, bounds);
+
+            el.classList.remove('is-empty', 'is-short', 'is-optimal', 'is-long', 'is-excessive');
+            el.classList.add('is-' + evalResult.status);
+
+            const wrap = el.closest('.ab-seo-field-wrap') || el.parentElement;
+            let counterEl = null;
+            const targetSelector = el.getAttribute('data-ab-counter-target');
+            if (targetSelector) {
+                counterEl = document.querySelector(targetSelector);
+            }
+            if (!counterEl && wrap) {
+                counterEl = wrap.querySelector('[data-ab-seo-counter-display], .ab-seo-counter');
+            }
+
+            if (counterEl) {
+                const faCount = AB.fmt.faDigits(len);
+                const targetMax = bounds.optimalMax || bounds.max;
+                let textDesc = '';
+
+                if (targetMax > 0) {
+                    textDesc = faCount + ' / ' + AB.fmt.faDigits(targetMax) + ' کاراکتر';
+                } else {
+                    textDesc = faCount + ' کاراکتر';
+                }
+
+                counterEl.innerHTML = '<span class="ab-seo-badge ' + evalResult.badgeClass + '">' +
+                    evalResult.badgeText + '</span> ' +
+                    '<span class="ab-seo-count-num">' + textDesc + '</span>';
+            }
+
+            // Sync with SERP live preview element if bound
+            const syncSelector = el.getAttribute('data-ab-sync-target');
+            if (syncSelector) {
+                const syncEl = document.querySelector(syncSelector);
+                if (syncEl) {
+                    const fallback = el.getAttribute('data-ab-sync-fallback') || '';
+                    syncEl.textContent = val.trim() || fallback;
+                }
+            }
+        },
+
+        /**
+         * Auto-initializes all inputs and textareas having [data-ab-seo-counter].
+         * @param {HTMLElement|Document} [root=document]
+         */
+        autoInit: function (root = document) {
+            const inputs = root.querySelectorAll('input[data-ab-seo-counter], textarea[data-ab-seo-counter]');
+            inputs.forEach(function (input) {
+                AB.seoFieldHelper.updateField(input);
+
+                if (!input._abSeoBound) {
+                    input._abSeoBound = true;
+                    input.addEventListener('input', function () {
+                        AB.seoFieldHelper.updateField(input);
+                    });
+                }
+            });
+        }
+    };
+
+    // Delegated click handler for SEO Help Toggles [data-ab-seo-help-toggle]
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-ab-seo-help-toggle]');
+        if (!btn) return;
+        e.preventDefault();
+
+        const targetId = btn.getAttribute('data-ab-seo-help-toggle');
+        let card = null;
+
+        if (targetId) {
+            card = document.getElementById(targetId);
+        }
+        if (!card) {
+            const wrap = btn.closest('.ab-seo-field-wrap');
+            if (wrap) {
+                card = wrap.querySelector('[data-ab-seo-help-card]');
+            }
+        }
+
+        if (card) {
+            const isHidden = card.hasAttribute('hidden') || card.style.display === 'none';
+            if (isHidden) {
+                card.removeAttribute('hidden');
+                card.style.display = 'block';
+                btn.setAttribute('aria-expanded', 'true');
+                btn.classList.add('is-active');
+            } else {
+                card.setAttribute('hidden', '');
+                card.style.display = 'none';
+                btn.setAttribute('aria-expanded', 'false');
+                btn.classList.remove('is-active');
+            }
+        }
+    });
+
+    // Delegated click handler for Quick Fill Chips [data-ab-quick-chip]
+    document.addEventListener('click', function (e) {
+        const chip = e.target.closest('[data-ab-quick-chip]');
+        if (!chip) return;
+        e.preventDefault();
+
+        const targetSelector = chip.getAttribute('data-ab-target');
+        const val = chip.getAttribute('data-ab-val') || chip.textContent.trim();
+
+        if (targetSelector) {
+            const targetInput = document.querySelector(targetSelector);
+            if (targetInput) {
+                targetInput.value = val;
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInput.focus();
+            }
+        }
+    });
+
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             AB.autocomplete.autoInit();
             AB.tabs.autoInit();
+            AB.seoFieldHelper.autoInit();
         });
     } else {
         AB.autocomplete.autoInit();
         AB.tabs.autoInit();
+        AB.seoFieldHelper.autoInit();
     }
 
     // Register into global scope

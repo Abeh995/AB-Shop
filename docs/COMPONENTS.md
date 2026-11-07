@@ -160,6 +160,43 @@ Single source of truth constants mirrored in `assets/css/admin-tokens.css`:
 
 ---
 
+### 1.9 SEO Field Guidance & Real-Time Character Counter (`AB.seoFieldHelper`)
+
+Provides live character counting with Persian numerals, optimal range border state feedback, and interactive collapsible guidance with examples for SEO/GEO workstation inputs:
+
+```html
+<div class="ab-seo-field-wrap">
+    <div class="ab-seo-field-header">
+        <label for="seoTitle" class="cat-label">عنوان سئو:</label>
+        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpSeoTitle" aria-expanded="false">
+            <span>راهنما و نمونه</span>
+        </button>
+    </div>
+
+    <input type="text" id="seoTitle" name="seo_title" class="form-control"
+           data-ab-seo-counter
+           data-ab-min="30"
+           data-ab-optimal-min="45"
+           data-ab-optimal-max="60"
+           data-ab-max="70"
+           data-ab-sync-target="#serpPreviewTitle">
+
+    <div class="ab-seo-counter-bar">
+        <div class="ab-seo-counter"></div>
+        <small class="seo-hint">طول بهینه ۴۵ تا ۶۰ کاراکتر</small>
+    </div>
+
+    <div class="ab-seo-help-card" id="helpSeoTitle" hidden>
+        <!-- Guidance and examples -->
+    </div>
+</div>
+```
+- **Declarative States**: `.is-empty`, `.is-short` (amber), `.is-optimal` (emerald), `.is-long` (orange), `.is-excessive` (rose).
+- **Auto-initialization**: Runs on `DOMContentLoaded` and callable on-demand via `AB.seoFieldHelper.autoInit(root)`.
+
+
+---
+
 ## 2. Server-side / PHP Presentation Components (`component()` & `render_component()`)
 
 All reusable UI presentation components reside in `views/admin/components/` and are rendered using:

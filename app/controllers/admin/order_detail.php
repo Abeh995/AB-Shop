@@ -38,23 +38,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update_tracking') {
         $code = trim($_POST['tracking_code'] ?? '');
-        $res = OrderService::updateTrackingCode($id, $code);
-        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'کد رهگیری پستی ذخیره شد.' : $res['error']);
+        $setShipped = !empty($_POST['set_shipped']) && in_array($order['status'], ['pending', 'confirmed', 'processing'], true);
+        if ($setShipped && $code !== '') {
+            $res = OrderService::updateOrderStatus($id, 'shipped', $code);
+            setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'کد رهگیری ذخیره شد و وضعیت سفارش به «ارسال شده» تغییر یافت.' : $res['error']);
+        } else {
+            $res = OrderService::updateTrackingCode($id, $code);
+            setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'کد رهگیری پستی ذخیره شد.' : $res['error']);
+        }
         redirect('order_detail.php?id=' . $id);
     }
 
     if ($action === 'verify_c2c') {
         $decision = ($_POST['decision'] ?? '') === 'approved';
-        $res = OrderService::verifyCardToCardReceipt($id, $decision);
+        $reason = trim((string) ($_POST['reason'] ?? ''));
+        if (!$decision && $reason !== '') {
+            $res = OrderService::rejectCardToCardReceiptWithReason($id, $reason);
+        } else {
+            $res = OrderService::verifyCardToCardReceipt($id, $decision);
+        }
         setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? ($decision ? 'فیش کارت‌به‌کارت تأیید شد.' : 'فیش کارت‌به‌کارت رد شد.') : $res['error']);
         redirect('order_detail.php?id=' . $id);
     }
 
-    $newStatus = trim($_POST['status'] ?? '');
-    if (isset($statusLabels[$newStatus]) && $newStatus !== $order['status']) {
-        $tracking = isset($_POST['tracking_code']) ? trim($_POST['tracking_code']) : null;
-        $res = OrderService::updateOrderStatus($id, $newStatus, $tracking);
-        setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'وضعیت سفارش به‌روزرسانی شد.' : $res['error']);
+    if ($action === 'update_status' || isset($_POST['status'])) {
+        $newStatus = trim($_POST['status'] ?? '');
+        if (isset($statusLabels[$newStatus])) {
+            if ($newStatus !== $order['status']) {
+                $tracking = isset($_POST['tracking_code']) ? trim($_POST['tracking_code']) : null;
+                $res = OrderService::updateOrderStatus($id, $newStatus, $tracking);
+                setFlash($res['ok'] ? 'success' : 'error', $res['ok'] ? 'وضعیت سفارش به‌روزرسانی شد.' : $res['error']);
+            } else {
+                setFlash('info', 'وضعیت سفارش تغییری نکرد.');
+            }
+        }
         redirect('order_detail.php?id=' . $id);
     }
 }

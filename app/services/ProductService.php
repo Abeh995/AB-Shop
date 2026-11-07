@@ -1093,3 +1093,89 @@ function resolveDefaultProductVariant(array $variants, bool $useGlobalStrategy =
     // All out of stock
     return $variants[0];
 }
+
+/**
+ * Retrieves technical product specification presets (taxonomy dictionary).
+ * Uses static in-memory caching and safe fallback defaults if unmigrated.
+ *
+ * @param string|null $specKey Optional filter by category (e.g. 'ارتفاع ساق')
+ * @return array Grouped by spec_key if $specKey is null, or list of presets for that key
+ */
+function getProductSpecPresets(?string $specKey = null): array {
+    static $cache = null;
+
+    if ($cache === null) {
+        $cache = [];
+        try {
+            $stmt = db()->query("
+                SELECT id, spec_key, spec_value, label, sort_order, is_active
+                FROM product_spec_presets
+                WHERE is_active = 1
+                ORDER BY sort_order ASC, id ASC
+            ");
+            $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            foreach ($rows as $row) {
+                $cache[$row['spec_key']][] = [
+                    'id'         => (int) $row['id'],
+                    'spec_value' => $row['spec_value'],
+                    'label'      => $row['label'] ?: $row['spec_value'],
+                ];
+            }
+        } catch (Throwable $e) {
+            // Safe fallback if table does not exist yet
+            $cache = [];
+        }
+
+        // Fallback default dictionary if database table has 0 rows
+        if (empty($cache)) {
+            $cache = [
+                'ارتفاع ساق' => [
+                    ['spec_value' => 'ساق‌دار (Crew)', 'label' => 'ساق‌دار'],
+                    ['spec_value' => 'نیم‌ساق (Quarter)', 'label' => 'نیم‌ساق'],
+                    ['spec_value' => 'مچی (Ankle)', 'label' => 'مچی'],
+                    ['spec_value' => 'کالج (No-show)', 'label' => 'کالج'],
+                    ['spec_value' => 'بالای زانو (Over-Knee)', 'label' => 'بالای زانو'],
+                    ['spec_value' => 'ساق‌بلند ورزشی (Compression)', 'label' => 'ساق‌بلند ورزشی'],
+                    ['spec_value' => 'پاپوش روفرشی (Slipper)', 'label' => 'پاپوش روفرشی'],
+                ],
+                'درصد پنبه' => [
+                    ['spec_value' => '۱۰۰٪ نخ‌پنبه سوپر شانه شده', 'label' => '۱۰۰٪ پنبه سوپر'],
+                    ['spec_value' => '۸۵٪ پنبه، ۱۲٪ پلی‌آمید، ۳٪ الاستین', 'label' => '۸۵٪ پنبه ترکیبی'],
+                    ['spec_value' => '۸۰٪ پشم مرینوس، ۲۰٪ پلی‌آمید', 'label' => '۸۰٪ پشم مرینوس'],
+                    ['spec_value' => '۷۵٪ الیاف بامبو طبیعی، ۲۰٪ پلی‌آمید، ۵٪ اسپندکس', 'label' => '۷۵٪ الیاف بامبو'],
+                    ['spec_value' => '۹۵٪ پنبه، ۵٪ کش اسپندکس', 'label' => '۹۵٪ پنبه، ۵٪ کش'],
+                ],
+                'فصل و ضخامت' => [
+                    ['spec_value' => 'چهارفصل', 'label' => 'چهارفصل'],
+                    ['spec_value' => 'تابستانه و خنک (نازک)', 'label' => 'تابستانه (خنک)'],
+                    ['spec_value' => 'زمستانه و گرم (حوله‌ای/ضخیم)', 'label' => 'زمستانه (گرم/حوله‌ای)'],
+                    ['spec_value' => 'پاییزه و بهاره (متوسط)', 'label' => 'پاییزه و بهاره'],
+                ],
+                'کاربرد' => [
+                    ['spec_value' => 'روزمره و رسمی', 'label' => 'روزمره و رسمی'],
+                    ['spec_value' => 'اسپرت و ورزشی', 'label' => 'اسپرت و ورزشی'],
+                    ['spec_value' => 'فانتزی و مهمانی', 'label' => 'فانتزی و مهمانی'],
+                    ['spec_value' => 'راحتی و خانگی', 'label' => 'راحتی و خانگی'],
+                    ['spec_value' => 'رسمی و اداری', 'label' => 'رسمی و اداری'],
+                ],
+                'نوع دوخت پنجه' => [
+                    ['spec_value' => 'پنجه‌گیری بدون درز (Seamless / روسو)', 'label' => 'بدون درز (Seamless)'],
+                    ['spec_value' => 'دوخت تخت و بدون برجستگی', 'label' => 'دوخت تخت و راحت'],
+                    ['spec_value' => 'دوخت استاندارد کارگاهی', 'label' => 'دوخت استاندارد'],
+                ],
+                'دستور شستشو' => [
+                    ['spec_value' => 'شستشو با آب سرد ۳۰ درجه، بدون سفیدکننده، اتوکشی نشود', 'label' => 'آب سرد ۳۰ درجه'],
+                    ['spec_value' => 'شستشوی ملایم ماشینی با مایع لباسشویی، بدون خشک‌کن چرخشی', 'label' => 'شستشوی ملایم ماشینی'],
+                    ['spec_value' => 'شستشوی دستی با شوینده ملایم، خشک کردن روی سطح افقی', 'label' => 'شستشوی دستی'],
+                ],
+            ];
+        }
+    }
+
+    if ($specKey !== null) {
+        return $cache[$specKey] ?? [];
+    }
+
+    return $cache;
+}
+

@@ -1,9 +1,20 @@
-# Changelog Archive (v1.0.0 — v1.37.1)
+# Changelog Archive (v1.0.0 — v1.38.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.37.1.
+Historical release notes for AB-Socks versions 1.0.0 through 1.38.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.38.0 — 2026-11-01
+
+### Landing Studio — Full Copy Coverage, Collapsible Panes, Scrollable Panel
+
+- **Every storefront string is now editable (item 4).** ~70 strings that were still hardcoded in the React components are now part of the landing config, exposed as Studio fields.
+- **Collapsible panes (item 2).** The section rail and the field panel can now be folded away via `#lbRailToggle` and `#lbPanelToggle`.
+- **No more overlap with the sticky admin topbar (item 3).**
+- **Dead space under the workspace (item 5) resolved.**
+- **Always-visible panel scrollbar (item 1).**
+- **Config version** bumped to `1.38.0`.
 
 ## 1.37.1 — 2026-11-01
 

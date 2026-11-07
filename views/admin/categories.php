@@ -201,24 +201,121 @@ foreach ($categories as $c) {
                 <div class="cat-seo-box">
                     <span class="cat-seo-title">🌐 سئو، رتبه‌بندی و راهنمای خرید دسته:</span>
                     
-                    <div class="cat-form-group cat-seo-group">
-                        <label class="cat-label cat-seo-label" for="catInputSeoTitle">عنوان سئو (SEO Title):</label>
-                        <input class="cat-input" type="text" name="seo_title" id="catInputSeoTitle" placeholder="جوراب مچی مردانه | خرید آنلاین با تخفیف">
+                    <!-- Category SEO Title -->
+                    <div class="ab-seo-field-wrap">
+                        <div class="ab-seo-field-header">
+                            <label class="cat-label cat-seo-label" for="catInputSeoTitle">عنوان سئو (SEO Title):</label>
+                            <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpCatSeoTitle" aria-expanded="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>راهنما</span>
+                            </button>
+                        </div>
+                        <input class="cat-input" type="text" name="seo_title" id="catInputSeoTitle"
+                               placeholder="جوراب ساقدار مردانه | خرید آنلاین با تضمین کیفیت"
+                               data-ab-seo-counter
+                               data-ab-min="30"
+                               data-ab-optimal-min="45"
+                               data-ab-optimal-max="60"
+                               data-ab-max="70">
+                        <div class="ab-seo-counter-bar">
+                            <div class="ab-seo-counter"></div>
+                            <small class="seo-hint">طول بهینه در سرپ گوگل: ۴۵ تا ۶۰ کاراکتر</small>
+                        </div>
+
+                        <div class="ab-seo-help-card" id="helpCatSeoTitle" hidden>
+                            <div class="ab-seo-help-title">فرمول عنوان سئو دسته‌بندی</div>
+                            <div class="ab-seo-help-desc">عنوان دسته باید دقیقاً نام دسته‌بندی و نیت خرید جستجوکننده را هدف بگیرد.</div>
+                            <div class="ab-seo-help-formula">💡 فرمول: [خرید یا قیمت انواع] + [نام دسته] + [ویژگی/تخفیف] + [برند]</div>
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge good">✓ نمونه</span>
+                                <span>خرید جوراب ساقدار زنانه و دخترانه | نخ‌پنبه اصل | ای‌بی‌ساکس</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="cat-form-group cat-seo-group">
-                        <label class="cat-label cat-seo-label" for="catInputSeoDesc">توضیحات متا (Meta Description):</label>
-                        <input class="cat-input" type="text" name="seo_description" id="catInputSeoDesc" placeholder="توضیحات جذاب سرپ گوگل (۱۲۰-۱۶۰ حرف)...">
+                    <!-- Category Meta Description -->
+                    <div class="ab-seo-field-wrap">
+                        <div class="ab-seo-field-header">
+                            <label class="cat-label cat-seo-label" for="catInputSeoDesc">توضیحات متا (Meta Description):</label>
+                            <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpCatSeoDesc" aria-expanded="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>راهنما</span>
+                            </button>
+                        </div>
+                        <input class="cat-input" type="text" name="seo_description" id="catInputSeoDesc"
+                               placeholder="توضیحات جذاب سرپ گوگل برای این دسته (۱۲۰-۱۶۰ حرف)..."
+                               data-ab-seo-counter
+                               data-ab-min="70"
+                               data-ab-optimal-min="120"
+                               data-ab-optimal-max="160"
+                               data-ab-max="175">
+                        <div class="ab-seo-counter-bar">
+                            <div class="ab-seo-counter"></div>
+                            <small class="seo-hint">طول بهینه در سرپ گوگل: ۱۲۰ تا ۱۶۰ کاراکتر</small>
+                        </div>
+
+                        <div class="ab-seo-help-card" id="helpCatSeoDesc" hidden>
+                            <div class="ab-seo-help-title">نکات توضیحات متای دسته‌بندی</div>
+                            <div class="ab-seo-help-desc">کاربر را ترغیب کنید که با کلیک روی لینک، کامل‌ترین تنوع طرح‌ها و ارسال سریع را دریافت می‌کند.</div>
+                            <div class="ab-seo-example-item">
+                                <span class="ab-seo-example-badge good">✓ نمونه</span>
+                                <span>انواع جوراب ساقدار بافته شده با پنبه سوپر شانه شده، ضد بو و ضد حساسیت. مشاهده طرح‌های فانتزی و رسمی با ارسال فوری از ای‌بی‌ساکس.</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="cat-form-group cat-seo-group">
-                        <label class="cat-label cat-seo-label" for="catTextareaIntro">متن مقدمه سربرگ (بالای محصولات):</label>
-                        <textarea class="cat-textarea" name="seo_intro" id="catTextareaIntro" rows="2" placeholder="متن معرفی کوتاه که دقیقا بالای گرید محصولات نمایش داده می‌شود..."></textarea>
+                    <!-- Category Header Intro (Above Grid) -->
+                    <div class="ab-seo-field-wrap">
+                        <div class="ab-seo-field-header">
+                            <label class="cat-label cat-seo-label" for="catTextareaIntro">متن مقدمه سربرگ (بالای محصولات):</label>
+                            <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpCatIntro" aria-expanded="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>راهنما</span>
+                            </button>
+                        </div>
+                        <textarea class="cat-textarea" name="seo_intro" id="catTextareaIntro" rows="2"
+                                  placeholder="متن معرفی کوتاه که دقیقا بالای گرید محصولات نمایش داده می‌شود..."
+                                  data-ab-seo-counter
+                                  data-ab-min="50"
+                                  data-ab-optimal-min="100"
+                                  data-ab-optimal-max="250"
+                                  data-ab-max="350"></textarea>
+                        <div class="ab-seo-counter-bar">
+                            <div class="ab-seo-counter"></div>
+                            <small class="seo-hint">پیشنهادی: ۱۰۰ تا ۲۵۰ کاراکتر (موجز تا محصولات به پایین رانده نشوند).</small>
+                        </div>
+
+                        <div class="ab-seo-help-card" id="helpCatIntro" hidden>
+                            <div class="ab-seo-help-title">مقدمه بالای صفحه دسته‌بندی</div>
+                            <div class="ab-seo-help-desc">این متن دقیقاً زیر عنوان صفحه و بالای کارت‌های محصول قرار می‌گیرد. به موتورهای هوش مصنوعی و گوگل زمینه موضوعی می‌دهد و نباید خیلی طولانی باشد تا کاربر بلافاصله محصولات را ببیند.</div>
+                        </div>
                     </div>
 
-                    <div class="cat-form-group cat-seo-group-last">
-                        <label class="cat-label cat-seo-label" for="catTextareaGuide">راهنمای جامع خرید و سئو (پایین صفحه):</label>
-                        <textarea class="cat-textarea" name="seo_guide" id="catTextareaGuide" rows="3" placeholder="متن راهنمای جامع انتخاب جوراب، الیاف و استایل برای انتهای صفحه دسته..."></textarea>
+                    <!-- Category Bottom Buyer Guide & FAQ (Below Grid) -->
+                    <div class="ab-seo-field-wrap">
+                        <div class="ab-seo-field-header">
+                            <label class="cat-label cat-seo-label" for="catTextareaGuide">راهنمای جامع خرید و سئو (پایین صفحه):</label>
+                            <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpCatGuide" aria-expanded="false">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>راهنما</span>
+                            </button>
+                        </div>
+                        <textarea class="cat-textarea" name="seo_guide" id="catTextareaGuide" rows="3"
+                                  placeholder="متن راهنمای جامع انتخاب جوراب، الیاف و استایل برای انتهای صفحه دسته..."
+                                  data-ab-seo-counter
+                                  data-ab-min="150"
+                                  data-ab-optimal-min="300"
+                                  data-ab-optimal-max="1200"
+                                  data-ab-max="2500"></textarea>
+                        <div class="ab-seo-counter-bar">
+                            <div class="ab-seo-counter"></div>
+                            <small class="seo-hint">پیشنهادی: ۳۰۰ تا ۱۲۰۰ کاراکتر برای ایجاد اعتبار موضوعی عمیق (Topical Authority).</small>
+                        </div>
+
+                        <div class="ab-seo-help-card" id="helpCatGuide" hidden>
+                            <div class="ab-seo-help-title">نقش راهنمای جامع خرید در انتهای صفحه</div>
+                            <div class="ab-seo-help-desc">این محتوا در انتهای صفحه و پس از لیست محصولات نمایش داده می‌شود. شامل راهنمای انتخاب سایز، مشخصات الیاف و نکات استایل است که بدون ایجاد مزاحمت برای خرید کاربر، سیگنال‌های محتوایی عمیق به موتورهای جستجو مخابره می‌کند.</div>
+                        </div>
                     </div>
                 </div>
 

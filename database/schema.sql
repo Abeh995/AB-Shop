@@ -716,3 +716,18 @@ CREATE TABLE IF NOT EXISTS url_redirects (
     INDEX idx_source (source_url)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------
+-- Technical Product Specification Presets & Taxonomy (v1.41.0)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS product_spec_presets (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    spec_key VARCHAR(64) NOT NULL,
+    spec_value VARCHAR(191) NOT NULL,
+    label VARCHAR(191) NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_spec_key_active_sort (spec_key, is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+

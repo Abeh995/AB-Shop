@@ -31,10 +31,18 @@ $payLabels = [
 $curStatus = $order['status'];
 $isPaid = ($order['payment_status'] === 'paid');
 $step1Class = 'completed';
-$step2Class = $isPaid ? 'completed' : ($curStatus === 'pending' ? 'current' : '');
+$step2Class = ($isPaid || in_array($curStatus, ['confirmed', 'processing', 'shipped', 'delivered'], true)) ? 'completed' : ($curStatus === 'pending' ? 'current' : '');
 $step3Class = in_array($curStatus, ['shipped', 'delivered'], true) ? 'completed' : (in_array($curStatus, ['processing', 'confirmed'], true) ? 'current' : '');
 $step4Class = ($curStatus === 'delivered') ? 'completed' : ($curStatus === 'shipped' ? 'current' : '');
 $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
+
+// Precompute clean postal label string for one-click copy
+$cleanPostalLabel = "گیرنده: " . trim((string)$order['customer_name']) . "\n"
+    . "همراه: " . trim((string)$order['phone']) . "\n"
+    . "نشانی: " . trim((string)$order['province']) . "، " . trim((string)$order['city']) . "، " . trim((string)$order['address']);
+if (!empty($order['postal_code'])) {
+    $cleanPostalLabel .= "\nکد پستی: " . trim((string)$order['postal_code']);
+}
 ?>
 
 <div class="od-wrapper">
@@ -247,7 +255,7 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
                         <span>👤</span>
                         <span>مشخصات خریدار و نشانی تحویل گیرنده</span>
                     </span>
-                    <button type="button" class="btn-copy-address" onclick="copyPostalLabel()" title="کپی اطلاعات جهت برچسب پستی">
+                    <button type="button" class="btn-copy-address no-print" onclick="copyPostalLabel(this)" data-postal-label="<?= e($cleanPostalLabel) ?>" title="کپی اطلاعات جهت برچسب پستی">
                         <span>📋</span>
                         <span>کپی برای برچسب پستی</span>
                     </button>
@@ -285,6 +293,11 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
                     <div style="margin-top:6px; font-family:monospace; font-size:0.85rem; color:var(--text-secondary);">
                         کد پستی ۱۰ رقمی: <strong id="custPostal"><?= e($order['postal_code'] ?: '—') ?></strong>
                     </div>
+                    <?php if (!empty($order['tracking_code'])): ?>
+                    <div class="print-only-tracking od-print-tracking">
+                        کد رهگیری پیشتاز: <strong><?= e($order['tracking_code']) ?></strong>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <?php if (!empty($order['notes'])): ?>
@@ -296,7 +309,7 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
             </div>
 
             <!-- 3. Postal Tracking Barcode -->
-            <div class="od-card">
+            <div class="od-card no-print">
                 <div class="od-card-title">
                     <span class="title-text">
                         <span>🚚</span>
@@ -312,13 +325,19 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
                            class="od-tracking-input" 
                            placeholder="کد رهگیری ۲۴ رقمی پست پیشتاز...">
                     <div class="od-tracking-actions">
-                        <button type="submit" class="btn-verify-receipt" style="background:#1D4ED8; padding:9px 18px;">ثبت و ذخیره کد</button>
+                        <button type="submit" class="ab-btn ab-btn--primary">ثبت و ذخیره کد</button>
                         <?php if (!empty($order['tracking_code'])): ?>
-                            <a href="https://tracking.post.ir/?id=<?= rawurlencode(trim($order['tracking_code'])) ?>" target="_blank" rel="noopener" class="btn-dash-action" style="padding:9px 14px;">
+                            <a href="https://tracking.post.ir/?id=<?= rawurlencode(trim($order['tracking_code'])) ?>" target="_blank" rel="noopener" class="ab-btn ab-btn--secondary">
                                 <span>رهگیری در سامانه پست ↗</span>
                             </a>
                         <?php endif; ?>
                     </div>
+                    <?php if (in_array($order['status'], ['pending', 'confirmed', 'processing'], true)): ?>
+                    <div class="od-ship-toggle-wrap">
+                        <input type="checkbox" name="set_shipped" id="chkSetShipped" value="1" checked>
+                        <label for="chkSetShipped">همزمان وضعیت سفارش به «ارسال شده» تغییر یافته و پیامک رهگیری به خریدار ارسال شود</label>
+                    </div>
+                    <?php endif; ?>
                 </form>
             </div>
 
@@ -376,8 +395,8 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
             <?php endif; ?>
 
             <!-- 5. Assign Gift to Order Form -->
-            <?php if (!empty($giftableItems)): ?>
-            <div class="od-card">
+            <?php if (!empty($giftableItems) && $order['status'] !== 'cancelled'): ?>
+            <div class="od-card no-print">
                 <div class="od-card-title">
                     <span class="title-text">
                         <span>🎀</span>
@@ -416,7 +435,7 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
 
             <!-- 6. Profitability & Business Intelligence -->
             <?php if (!empty($profitability['ok'])): ?>
-            <div class="od-card">
+            <div class="od-card od-profitability-card no-print">
                 <div class="od-card-title">
                     <span class="title-text">
                         <span>📈</span>
@@ -474,6 +493,7 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
 
                 <form method="post">
                     <?= csrfField() ?>
+                    <input type="hidden" name="action" value="update_status">
                     <div style="margin-bottom:12px;">
                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">تغییر مرحله سفارش:</label>
                         <select class="form-control" name="status" style="width:100%; border:1px solid var(--border-card); border-radius:8px; padding:9px 12px; background:#FFF; font-weight:600;">
@@ -519,40 +539,58 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
                     <?php endif; ?>
                 </div>
 
-                <!-- C2C Receipt Preview & Verification Action Buttons -->
+                <!-- C2C Receipt Preview & Verification Section -->
                 <?php if ($order['payment_method'] === 'card_to_card'): ?>
                     <?php if (!empty($order['card_to_card_receipt'])): ?>
-                        <div class="od-receipt-box">
-                            <div style="font-size:0.75rem; font-weight:700; color:#B45309; margin-bottom:8px;">تصویر فیش واریز مشتری:</div>
-                            <div class="od-receipt-preview">
-                                <div class="od-receipt-thumb" onclick="openReceiptModal()" title="کلیک برای مشاهده بزرگنمایی">
-                                    <img id="receiptThumbImg" src="/admin/order_receipt.php?id=<?= (int)$order['id'] ?>" alt="رسید کارت‌به‌کارت">
-                                    <div class="od-receipt-overlay">🔍 بزرگنمایی</div>
+                        <?php if ($order['payment_status'] === 'unpaid'): ?>
+                            <!-- Active Review Box (Awaiting Admin Review) -->
+                            <div class="od-receipt-box">
+                                <div class="od-receipt-header">
+                                    <span class="od-receipt-title">تصویر فیش واریز مشتری:</span>
+                                    <span class="dash-status-pill amber">در انتظار بررسی</span>
                                 </div>
-                                <div style="flex:1;">
-                                    <div style="font-size:0.85rem; font-weight:700;"><?= formatPrice($order['total']) ?></div>
-                                    <div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">
-                                        <?= !empty($order['card_to_card_submitted_at']) ? appDateTime($order['card_to_card_submitted_at'], 'full_shamsi') : 'تاریخ نامشخص' ?>
+                                <div class="od-receipt-preview">
+                                    <div class="od-receipt-thumb" onclick="openReceiptModal()" title="کلیک برای مشاهده بزرگنمایی">
+                                        <img id="receiptThumbImg" src="/admin/order_receipt.php?id=<?= (int)$order['id'] ?>" alt="رسید کارت‌به‌کارت">
+                                        <div class="od-receipt-overlay">🔍 بزرگنمایی</div>
                                     </div>
-                                    <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-                                        <form method="post" style="display:inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="action" value="verify_c2c">
-                                            <input type="hidden" name="decision" value="approved">
-                                            <button type="submit" class="btn-verify-receipt" style="padding:6px 10px; font-size:0.75rem;">تایید فیش ✓</button>
-                                        </form>
-                                        <form method="post" style="display:inline;">
-                                            <?= csrfField() ?>
-                                            <input type="hidden" name="action" value="verify_c2c">
-                                            <input type="hidden" name="decision" value="rejected">
-                                            <button type="submit" class="btn-reject-receipt" style="padding:6px 10px; font-size:0.75rem;" onclick="return confirm('آیا از رد فیش کارت‌به‌کارت مطمئن هستید؟');">رد فیش ✕</button>
-                                        </form>
+                                    <div class="od-receipt-details">
+                                        <div class="od-receipt-amount"><?= formatPrice($order['total']) ?></div>
+                                        <div class="od-receipt-date">
+                                            ارسال: <?= !empty($order['card_to_card_submitted_at']) ? appDateTime($order['card_to_card_submitted_at'], 'full_shamsi') : 'تاریخ نامشخص' ?>
+                                        </div>
+                                        <div class="od-receipt-actions">
+                                            <form method="post">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="action" value="verify_c2c">
+                                                <input type="hidden" name="decision" value="approved">
+                                                <button type="submit" class="ab-btn ab-btn--success ab-btn--sm">تأیید فیش ✓</button>
+                                            </form>
+                                            <button type="button" class="ab-btn ab-btn--danger ab-btn--sm" onclick="promptRejectReceipt()">رد فیش ✕</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        <?php else: ?>
+                            <!-- Compact Reviewed Bar (Already Approved or Rejected) -->
+                            <div class="od-receipt-reviewed-bar <?= $order['payment_status'] === 'paid' ? 'is-approved' : 'is-rejected' ?>">
+                                <div class="od-receipt-reviewed-info">
+                                    <div class="od-receipt-reviewed-title">
+                                        <span><?= $order['payment_status'] === 'paid' ? '✅' : '❌' ?></span>
+                                        <span><?= $order['payment_status'] === 'paid' ? 'فیش واریز تأیید شده است' : 'فیش واریز رد شده است' ?></span>
+                                    </div>
+                                    <div class="od-receipt-reviewed-date">
+                                        ثبت: <?= !empty($order['card_to_card_submitted_at']) ? appDateTime($order['card_to_card_submitted_at'], 'full_shamsi') : '—' ?>
+                                    </div>
+                                </div>
+                                <button type="button" class="ab-btn ab-btn--secondary ab-btn--sm" onclick="openReceiptModal()" title="مشاهده تصویر فیش">
+                                    <span>🔍</span>
+                                    <span>مشاهده فیش</span>
+                                </button>
+                            </div>
+                        <?php endif; ?>
                     <?php else: ?>
-                        <div style="background:#FFFBEB; border:1px dashed #FCD34D; border-radius:8px; padding:10px; font-size:0.78rem; color:#B45309; margin-bottom:14px; text-align:center;">
+                        <div class="od-receipt-missing-notice">
                             ⚠️ فیش واریز هنوز توسط مشتری بارگذاری نشده است.
                         </div>
                     <?php endif; ?>
@@ -639,20 +677,64 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
             <img src="/admin/order_receipt.php?id=<?= (int)$order['id'] ?>" id="receiptModalImg" class="receipt-modal-img" alt="تصویر کامل فیش کارت‌به‌کارت">
         </div>
         <div class="receipt-modal-footer">
-            <div style="font-size:0.8rem; color:var(--text-muted);">
+            <div class="receipt-modal-code">
                 فیش واریزی سفارش <span dir="ltr"><?= e($order['order_code']) ?></span>
             </div>
-            <div style="display:flex; gap:8px;">
-                <a href="/admin/order_receipt.php?id=<?= (int)$order['id'] ?>" target="_blank" rel="noopener" class="btn-dash-action" style="padding:6px 12px; font-size:0.75rem;">
+            <div class="receipt-modal-actions">
+                <?php if ($order['payment_method'] === 'card_to_card' && !empty($order['card_to_card_receipt']) && $order['payment_status'] === 'unpaid'): ?>
+                <form method="post">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="verify_c2c">
+                    <input type="hidden" name="decision" value="approved">
+                    <button type="submit" class="ab-btn ab-btn--success ab-btn--sm">تأیید فیش ✓</button>
+                </form>
+                <button type="button" class="ab-btn ab-btn--danger ab-btn--sm" onclick="closeReceiptModal(); promptRejectReceipt();">رد فیش ✕</button>
+                <?php endif; ?>
+                <a href="/admin/order_receipt.php?id=<?= (int)$order['id'] ?>" target="_blank" rel="noopener" class="ab-btn ab-btn--secondary ab-btn--sm">
                     مشاهده در برگه جدید ↗
                 </a>
-                <button type="button" class="btn-dash-action" onclick="closeReceiptModal()" style="padding:6px 12px; font-size:0.75rem;">
+                <button type="button" class="ab-btn ab-btn--ghost ab-btn--sm" onclick="closeReceiptModal()">
                     بستن تصویر ✕
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- C2C Receipt Rejection Dialog -->
+<dialog id="rejectReceiptDialog" class="ab-modal" data-ab-modal>
+    <header class="ab-modal__header">
+        <h3 class="ab-modal__title">رد فیش کارت‌به‌کارت</h3>
+        <button type="button" class="ab-icon-btn ab-icon-btn--sm" data-ab-modal-close aria-label="بستن"></button>
+    </header>
+    <form method="post" class="od-reject-dialog-body">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="verify_c2c">
+        <input type="hidden" name="decision" value="rejected">
+        <p class="od-reject-desc">
+            لطفاً دلیل رد فیش را مشخص کنید. این پیام در صورت فعال بودن سامانه پیامک برای مشتری ارسال خواهد شد:
+        </p>
+        <div class="od-reject-field">
+            <label class="od-reject-label" for="rejectReasonPreset">دلیل متداول:</label>
+            <select class="form-control od-reject-input" id="rejectReasonPreset" onchange="onRejectPresetChange(this)">
+                <option value="">-- انتخاب دلیل متداول --</option>
+                <option value="تصویر ارسالی ناخوانا یا ناقص است">تصویر ارسالی ناخوانا یا ناقص است</option>
+                <option value="مبلغ واریزی کمتر از مبلغ سفارش است">مبلغ واریزی کمتر از مبلغ سفارش است</option>
+                <option value="تراکنش در صورتحساب بانکی یافت نشد">تراکنش در صورتحساب بانکی یافت نشد</option>
+                <option value="رسید نامعتبر یا جعلی است">رسید نامعتبر یا جعلی است</option>
+                <option value="other">سایر دلایل (ورود متن دلخواه)</option>
+            </select>
+        </div>
+        <div class="od-reject-field">
+            <label class="od-reject-label" for="rejectReasonInput">متن نهایی ارسال به مشتری:</label>
+            <textarea class="form-control od-reject-input" name="reason" id="rejectReasonInput" rows="3" placeholder="دلیل رد فیش را بنویسید..."></textarea>
+        </div>
+        <div class="od-reject-actions">
+            <button type="button" class="ab-btn ab-btn--secondary ab-btn--sm" data-ab-modal-close>انصراف</button>
+            <button type="submit" class="ab-btn ab-btn--danger ab-btn--sm">تأیید و رد فیش ✕</button>
+        </div>
+    </form>
+</dialog>
 
 <!-- Product Image Gallery Lightbox Modal (Large Floating Window) -->
 <div class="product-gallery-modal-backdrop" id="productGalleryModal" onclick="closeProductGallery(event)">
@@ -689,11 +771,7 @@ $step5Class = ($curStatus === 'delivered') ? 'completed' : '';
     </div>
 </div>
 
-<!-- Global Toast Notification -->
-<div class="dash-toast" id="dashToast">
-    <span>📋</span>
-    <span id="dashToastMsg">متن با موفقیت کپی شد!</span>
-</div>
+
 
 <script src="<?= e(asset('/assets/js/admin-order-detail.js')) ?>"></script>
 

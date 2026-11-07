@@ -113,6 +113,10 @@
             r.classList.toggle('is-active-editing', r.getAttribute('data-id') == id);
         });
 
+        if (window.AB && window.AB.seoFieldHelper && editorCard) {
+            window.AB.seoFieldHelper.autoInit(editorCard);
+        }
+
         // Focus input
         if (inputName) {
             inputName.focus();
@@ -136,6 +140,10 @@
         if (textareaIntro) textareaIntro.value = '';
         if (textareaGuide) textareaGuide.value = '';
         if (checkboxActive) checkboxActive.checked = true;
+
+        if (window.AB && window.AB.seoFieldHelper && editorCard) {
+            window.AB.seoFieldHelper.autoInit(editorCard);
+        }
 
         // Reset image
         if (inputRemoveImage) inputRemoveImage.value = '0';

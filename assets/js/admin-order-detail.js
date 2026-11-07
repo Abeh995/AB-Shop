@@ -17,7 +17,7 @@
         if (window.AB && AB.fmt && typeof AB.fmt.faDigits === 'function') {
             return AB.fmt.faDigits(n);
         }
-        return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+        return String(n);
     }
 
     function openProductGallery(el) {
@@ -170,14 +170,24 @@
         }
     });
 
-    function copyPostalLabel() {
-        const name = document.getElementById('custName')?.textContent?.trim() || '';
-        const phone = document.getElementById('custPhone')?.textContent?.trim() || '';
-        const city = document.getElementById('custCity')?.textContent?.trim() || '';
-        const address = document.getElementById('custAddress')?.textContent?.trim() || '';
-        const postal = document.getElementById('custPostal')?.textContent?.trim() || '';
-
-        const labelText = `گیرنده: ${name}\nهمراه: ${phone}\nنشانی: ${city}، ${address}\nکد پستی: ${postal}`;
+    function copyPostalLabel(btn) {
+        let labelText = '';
+        if (btn && btn.getAttribute('data-postal-label')) {
+            labelText = btn.getAttribute('data-postal-label');
+        } else {
+            const copyBtn = document.querySelector('.btn-copy-address');
+            if (copyBtn && copyBtn.getAttribute('data-postal-label')) {
+                labelText = copyBtn.getAttribute('data-postal-label');
+            } else {
+                const name = document.getElementById('custName')?.textContent?.trim() || '';
+                const phone = document.getElementById('custPhone')?.textContent?.trim() || '';
+                const city = document.getElementById('custCity')?.textContent?.trim() || '';
+                const address = document.getElementById('custAddress')?.textContent?.trim() || '';
+                const postal = document.getElementById('custPostal')?.textContent?.trim() || '';
+                const postalLine = (postal && postal !== '—') ? `\nکد پستی: ${postal}` : '';
+                labelText = `گیرنده: ${name}\nهمراه: ${phone}\nنشانی: ${city}، ${address}${postalLine}`;
+            }
+        }
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(labelText).then(() => {
@@ -191,6 +201,65 @@
             });
         } else {
             fallbackCopy(labelText);
+        }
+    }
+
+    function promptRejectReceipt() {
+        const dialog = document.getElementById('rejectReceiptDialog');
+        if (dialog) {
+            if (window.AB && AB.modal && typeof AB.modal.open === 'function') {
+                AB.modal.open(dialog);
+            } else if (typeof dialog.showModal === 'function') {
+                dialog.showModal();
+            } else {
+                dialog.setAttribute('open', '');
+            }
+            const preset = document.getElementById('rejectReasonPreset');
+            if (preset) preset.selectedIndex = 0;
+            const input = document.getElementById('rejectReasonInput');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        } else {
+            const reason = prompt('لطفاً دلیل رد فیش را جهت ارسال پیامک به مشتری وارد کنید:');
+            if (reason !== null) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                const csrfInput = document.querySelector('input[name="csrf_token"]');
+                if (csrfInput) {
+                    const c = csrfInput.cloneNode(true);
+                    form.appendChild(c);
+                }
+                const act = document.createElement('input');
+                act.type = 'hidden';
+                act.name = 'action';
+                act.value = 'verify_c2c';
+                form.appendChild(act);
+                const dec = document.createElement('input');
+                dec.type = 'hidden';
+                dec.name = 'decision';
+                dec.value = 'rejected';
+                form.appendChild(dec);
+                const r = document.createElement('input');
+                r.type = 'hidden';
+                r.name = 'reason';
+                r.value = reason;
+                form.appendChild(r);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    }
+
+    function onRejectPresetChange(sel) {
+        const input = document.getElementById('rejectReasonInput');
+        if (!input || !sel) return;
+        if (sel.value && sel.value !== 'other') {
+            input.value = sel.value;
+        } else if (sel.value === 'other') {
+            input.value = '';
+            input.focus();
         }
     }
 
@@ -239,6 +308,8 @@
     window.openReceiptModal = openReceiptModal;
     window.closeReceiptModal = closeReceiptModal;
     window.copyPostalLabel = copyPostalLabel;
+    window.promptRejectReceipt = promptRejectReceipt;
+    window.onRejectPresetChange = onRejectPresetChange;
     window.fallbackCopy = fallbackCopy;
     window.scrollToStatusCard = scrollToStatusCard;
 })();
