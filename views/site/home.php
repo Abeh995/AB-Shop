@@ -7,6 +7,9 @@
 $siteFavicon = siteFaviconUrl();
 $canonicalUrl = rtrim(SITE_URL, '/') . '/';
 $storeName = SITE_NAME;
+$seoIndexingEnabled = getSetting('seo_indexing_enabled', '0') === '1';
+$googleVerification = getSetting('google_site_verification', '');
+$bingVerification = getSetting('bing_site_verification', '');
 
 // Server-rendered fallback copy — mirrors the published landing config so bots
 // (and no-JS visitors) always see the same headline the Studio published.
@@ -27,8 +30,18 @@ if ($ogImage !== '' && !preg_match('~^https?://~i', $ogImage)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle) ?></title>
     <meta name="description" content="<?= e($metaDescription) ?>">
+<?php if ($seoIndexingEnabled): ?>
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <link rel="canonical" href="<?= e($canonicalUrl) ?>">
-    <meta name="robots" content="index, follow">
+<?php else: ?>
+    <meta name="robots" content="noindex, nofollow">
+<?php endif; ?>
+<?php if ($googleVerification !== ''): ?>
+    <meta name="google-site-verification" content="<?= e($googleVerification) ?>">
+<?php endif; ?>
+<?php if ($bingVerification !== ''): ?>
+    <meta name="msvalidate.01" content="<?= e($bingVerification) ?>">
+<?php endif; ?>
 
     <!-- Open Graph / Social Media -->
     <meta property="og:site_name" content="<?= e($storeName) ?>">
@@ -63,17 +76,8 @@ if ($ogImage !== '' && !preg_match('~^https?://~i', $ogImage)) {
     <!-- Modern Landing Bundle Stylesheet -->
     <link rel="stylesheet" href="/assets/dist/landing/landing.bundle.css">
 
-    <!-- Schema.org Store JSON-LD -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "ClothingStore",
-        "name": <?= json_encode($storeName, JSON_UNESCAPED_UNICODE) ?>,
-        "description": <?= json_encode($metaDescription, JSON_UNESCAPED_UNICODE) ?>,
-        "url": <?= json_encode($canonicalUrl, JSON_UNESCAPED_UNICODE) ?>,
-        "telephone": <?= json_encode($landingInitialData['store']['phone'] ?? '', JSON_UNESCAPED_UNICODE) ?>
-    }
-    </script>
+    <!-- Schema.org Store & WebSite JSON-LD -->
+    <?= seoRenderJsonLd([seoBuildOrganizationJsonLd()]) ?>
 </head>
 <body class="bg-[#fbf7ee] text-[#221510] font-sans antialiased">
     <!-- React Storefront Root Container -->

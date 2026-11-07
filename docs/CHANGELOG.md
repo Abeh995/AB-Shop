@@ -3,9 +3,37 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.37.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.38.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
 
 ---
+
+## 1.40.0 — 2026-11-07
+
+### Search Engine Optimization (SEO) & Generative Engine Optimization (GEO/AI) Master Infrastructure
+
+- **301 URL Redirection & Slug Authority Preservation (`url_redirects`, `app/services/SeoService.php`, `index.php`)**:
+  - Created `url_redirects` table to store source/target paths, HTTP status codes (301/302), and visit counters.
+  - Implemented automatic 301 redirect registration whenever a product or category slug is modified in the admin panel, eliminating broken indexed links (Soft-404) and preserving domain authority.
+  - Added early redirect resolution middleware in `index.php` with hit metric logging.
+- **AI Search & Generative Engine Optimization (`robots.php`, `app/controllers/site/llms.php`, `llms.txt`)**:
+  - Implemented dynamic endpoints for `/llms.txt` and `/llms-full.txt` according to the https://llmstxt.org open standard, serving clean, high-density Markdown catalogs, material specs, sizing, and care guides for ChatGPT Search, Perplexity, Claude, and Gemini.
+  - Updated `robots.php` to explicitly welcome LLM crawlers (`GPTBot`, `ChatGPT-User`, `PerplexityBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`) while guarding private admin, cart, and checkout paths.
+- **Rich Merchant Structured Data (`app/services/SeoService.php`, `views/layout/header.php`, `views/site/home.php`, `views/site/product.php`, `views/site/category.php`)**:
+  - Comprehensive `schema.org/Product` generation with Rial pricing, real-time stock availability, `sku`, `brand`, 7-day merchant return policy (`MerchantReturnPolicy`), and shipping lead time (`OfferShippingDetails`).
+  - Added `schema.org/BreadcrumbList` JSON-LD coupled with accessible visual breadcrumbs on product and category pages.
+  - Built `ClothingStore` and `WebSite` Schema on homepage with `SearchAction` (enabling Google Sitelinks SearchBox).
+  - Built `CollectionPage`, `ItemList`, and `FAQPage` schemas for category hubs.
+- **Image Sitemap Namespace Extension (`sitemap.php`)**:
+  - Upgraded XML sitemap to support Google Image Sitemap namespace (`xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"`), indexing product main images with Persian captions, category hubs, and active tags with accurate `<lastmod>` timestamps.
+- **Admin Workstations & Webmaster Management (`views/admin/settings_partials/_tab_seo_social.php`, `views/admin/product_edit.php`, `views/admin/categories.php`)**:
+  - Added Google Search Console and Bing Webmaster meta tag configuration fields in store settings.
+  - Added live Google SERP Snippet Preview card and dedicated SEO inputs (title, description, canonical override, material specs) in product edit workstation.
+  - Added category SEO title, meta description, top introduction (`seo_intro`), and rich buyer guide (`seo_guide`) editors.
+  - Published comprehensive operational guide at `docs/SEO-ADMIN-GUIDE.md`.
+- **Automated Quality Gate & Git Privacy Guard (`tools/verify.php`, `.gitignore`, `AGENTS.md`, `.agents/skills/ab-socks-seo/SKILL.md`)**:
+  - Added Section 8 (SEO, AI Search & Machine Invariant Guard) to `tools/verify.php` with 7 automated checks: Head/Meta contracts, Schema.org JSON-LD wiring, strict single `<h1>` hierarchy, 301 redirect middleware, AI bot crawler permissions, Google Image sitemap namespace, and Git privacy protection.
+  - Enforced git ignore on operational admin playbooks (`*-ADMIN-GUIDE.md`, `/docs/local/`) and added hard verification failures (`Errors: 1`) preventing accidental staging or commits of internal docs.
+  - Enacted Rule 13 (SEO & GEO Invariant Discipline) in `AGENTS.md` and created project skill `ab-socks-seo`.
 
 ## 1.39.2 — 2026-11-07
 
@@ -118,25 +146,6 @@ The footer was the one section the Studio could only *rename*; now the whole sec
 - **Empty-field chip got its own id (`#lbEmptyFixChip`)** and the collapse-all chip is now `#lbCollapseAllChip`, so the smoke suite can target them unambiguously.
 - **Config version** bumped to `1.38.0` in both `defaultLandingConfig` and `app/data/landing-defaults.json`; existing drafts are merged forward on load, so no migration step is needed.
 
-## 1.37.1 — 2026-11-01
 
-### Landing Studio — Layout & Responsiveness Fixes, Editor Affordance Pass
-
-- **Layout correctness (`assets/css/admin-landing.css`, `assets/js/landing-studio.js`, `views/admin/landing.php`)**:
-  - Fixed the dead band under the editor: the shell was capped at `54rem`, so tall windows showed a bare page-canvas strip below the studio. `syncStudioHeight()` now measures the offset under the admin chrome and sizes the shell to the fold (CSS `calc()` fallback retained), so the page never scrolls and the three panes scroll internally.
-  - Fixed container-query dead code: `container-type` lived on `.lb-studio` itself, so every `@container lb-studio` rule that restyled the shell was silently ignored. The query now resolves against a new `.lb-studio-shell` wrapper, which makes all breakpoints work.
-  - Re-tuned the breakpoints so the live preview survives on laptops: three panes down to 52rem (was 78rem, which dropped the preview on a 1366px laptop), tighter rail/panel widths at 84rem and 62rem, tabbed editor/preview only below 52rem, single column below 40rem.
-  - Section rail: the drag handle is now overlaid on hover instead of reserving column width, so long Persian section names no longer collapse to "بخش اصلی (…".
-- **Editor affordance (`assets/css/admin-landing.css`)**:
-  - Inputs, textareas and selects get a visible border (mixed from `--text-muted`), a hover state and a primary focus ring; font size moved to `--text-sm`. Empty-looking field rows were the main readability complaint on high-DPI/low-zoom screens.
-  - Group headers gained a field-count chip; scroll areas (`rail`, `panel`, `stage`) got `overscroll-behavior: contain` and tokenised scrollbars; visible `:focus-visible` outlines added across rail items, chips and icon buttons.
-- **Editor UX (`assets/js/landing-studio.js`)**:
-  - Panel head now shows the section's field count plus two new controls: a **«فقط تغییرات»** filter (fields that differ from the factory default, stable across autosaves) and a **collapse/expand all** toggle; an empty state explains the filter when a section is untouched.
-  - The preview auto-fits the device to the pane (mobile under 430px, tablet under 620px) so the emulated page is never squeezed to an unreadable scale; picking a device manually disables auto-fit.
-  - Switching the mobile editor/preview tab now re-measures the shell and rescales the frame (the preview used to stay collapsed at its hidden size).
-- **Admin shell (`assets/css/admin-shell.css`)**:
-  - Fixed a pre-existing horizontal overflow of the topic-tab strip between 1024px and 1220px. The tabs widened the document, and because the admin is RTL the page opened scrolled sideways, clipping the right-hand pane of the studio (and the classic appearance page). The strip now scrolls inside itself.
-- **Quality gates (`tools/ui-test/test-landing-studio.mjs`)**:
-  - Suite grown to 24 checks: fold-fill assertion, changed-only filter, collapse-all, zen mode, a dedicated 1366×768 laptop pass (preview must stay mounted, no sideways/fold overflow) and a fresh `studio-laptop.png` baseline.
 
 

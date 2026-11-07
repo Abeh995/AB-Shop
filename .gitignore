@@ -117,6 +117,9 @@ folder.ico
 *.rar
 opencode.json
 README-DEPLOY.md
+*-ADMIN-GUIDE.md
+docs/*-ADMIN-GUIDE.md
+/docs/local/
 *_bug.png
 showing_table_*.png
 

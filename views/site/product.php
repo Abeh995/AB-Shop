@@ -1,6 +1,19 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 
 <div class="container">
+    <?php if (!empty($breadcrumbs)): ?>
+    <nav class="breadcrumb-trail" aria-label="مسیر صفحه" style="margin: 1rem 0; font-size: 0.85rem; color: var(--color-muted);">
+        <?php foreach ($breadcrumbs as $bi => $bc): ?>
+            <?php if ($bi > 0): ?><span style="margin: 0 6px; opacity: 0.6;">/</span><?php endif; ?>
+            <?php if ($bi === count($breadcrumbs) - 1): ?>
+                <span style="color: var(--color-text); font-weight: 600;"><?= e($bc['name']) ?></span>
+            <?php else: ?>
+                <a href="<?= e($bc['url']) ?>" style="color: inherit; text-decoration: none;"><?= e($bc['name']) ?></a>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    </nav>
+    <?php endif; ?>
+
     <div class="product-detail">
 
         <div class="product-gallery">
@@ -92,6 +105,17 @@
             <?php if ($product['description']): ?>
             <div class="product-description">
                 <?= nl2br(e($product['description'])) ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($materialSpecs)): ?>
+            <div class="product-specs" style="margin-top: 1.25rem; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 16px; background: rgba(0,0,0,0.01);">
+                <h3 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 8px;">مشخصات الیاف و بافت</h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 0.85rem;">
+                    <?php foreach ($materialSpecs as $specKey => $specVal): ?>
+                        <li><span style="color: var(--color-muted);"><?= e($specKey) ?>:</span> <strong><?= e($specVal) ?></strong></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
             <?php endif; ?>
 

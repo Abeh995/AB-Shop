@@ -19,6 +19,10 @@ foreach ($categories as $c) {
         'is_active'     => (int)$c['is_active'],
         'product_count' => (int)$c['product_count'],
         'depth'         => (int)$c['depth'],
+        'seo_title'     => $c['seo_title'] ?? '',
+        'seo_description' => $c['seo_description'] ?? '',
+        'seo_intro'     => $c['seo_intro'] ?? '',
+        'seo_guide'     => $c['seo_guide'] ?? '',
     ];
 }
 ?>
@@ -188,9 +192,34 @@ foreach ($categories as $c) {
                 <!-- 6. Short Description -->
                 <div class="cat-form-group">
                     <label class="cat-label" for="catTextareaDesc">
-                        <span>توضیحات سئو و آرشیو</span>
+                        <span>توضیحات کوتاه پیش‌فرض</span>
                     </label>
-                    <textarea class="cat-textarea" name="description" id="catTextareaDesc" rows="3" placeholder="توضیحات کوتاه جهت نمایش در سربرگ صفحه آرشیو..."></textarea>
+                    <textarea class="cat-textarea" name="description" id="catTextareaDesc" rows="2" placeholder="توضیحات کوتاه جهت نمایش در پیش‌نمایش‌ها..."></textarea>
+                </div>
+
+                <!-- 7. Advanced SEO & Content Guide -->
+                <div class="cat-seo-box">
+                    <span class="cat-seo-title">🌐 سئو، رتبه‌بندی و راهنمای خرید دسته:</span>
+                    
+                    <div class="cat-form-group cat-seo-group">
+                        <label class="cat-label cat-seo-label" for="catInputSeoTitle">عنوان سئو (SEO Title):</label>
+                        <input class="cat-input" type="text" name="seo_title" id="catInputSeoTitle" placeholder="جوراب مچی مردانه | خرید آنلاین با تخفیف">
+                    </div>
+
+                    <div class="cat-form-group cat-seo-group">
+                        <label class="cat-label cat-seo-label" for="catInputSeoDesc">توضیحات متا (Meta Description):</label>
+                        <input class="cat-input" type="text" name="seo_description" id="catInputSeoDesc" placeholder="توضیحات جذاب سرپ گوگل (۱۲۰-۱۶۰ حرف)...">
+                    </div>
+
+                    <div class="cat-form-group cat-seo-group">
+                        <label class="cat-label cat-seo-label" for="catTextareaIntro">متن مقدمه سربرگ (بالای محصولات):</label>
+                        <textarea class="cat-textarea" name="seo_intro" id="catTextareaIntro" rows="2" placeholder="متن معرفی کوتاه که دقیقا بالای گرید محصولات نمایش داده می‌شود..."></textarea>
+                    </div>
+
+                    <div class="cat-form-group cat-seo-group-last">
+                        <label class="cat-label cat-seo-label" for="catTextareaGuide">راهنمای جامع خرید و سئو (پایین صفحه):</label>
+                        <textarea class="cat-textarea" name="seo_guide" id="catTextareaGuide" rows="3" placeholder="متن راهنمای جامع انتخاب جوراب، الیاف و استایل برای انتهای صفحه دسته..."></textarea>
+                    </div>
                 </div>
 
                 <!-- 7. Active Status Switch -->

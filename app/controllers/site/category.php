@@ -15,7 +15,11 @@ if (!$category) {
     return;
 }
 
-$pageTitle = $category['name'];
+$pageTitle = !empty($category['seo_title']) ? $category['seo_title'] : $category['name'];
+$metaDescription = !empty($category['seo_description']) 
+    ? $category['seo_description'] 
+    : ($category['description'] ? seoCleanText($category['description'], 160) : ('خرید انواع ' . $category['name'] . ' در ' . SITE_NAME . ' با ارسال سریع و ضمانت کیفیت.'));
+$canonicalUrl = rtrim(SITE_URL, '/') . '/category/' . $category['slug'];
 
 // If this category has subcategories, their products are shown on this page too
 $subCategories = db()->prepare("SELECT id, name, slug, image FROM categories WHERE parent_id = ? AND is_active = 1 ORDER BY sort_order ASC");
@@ -56,4 +60,20 @@ $stmt = db()->prepare("SELECT *, $stockSql AS effective_stock FROM products WHER
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 
-renderView('site/category', compact('pageTitle', 'category', 'slug', 'sort', 'onlyAvailable', 'products', 'totalPages', 'page', 'subCategories'));
+// Breadcrumbs & Multi-schema Structured Data (CollectionPage + BreadcrumbList + FAQPage)
+$breadcrumbs = [
+    ['name' => 'خانه', 'url' => '/'],
+    ['name' => 'دسته‌بندی‌ها', 'url' => '/categories'],
+    ['name' => $category['name'], 'url' => '/category/' . $category['slug']],
+];
+$faqItems = seoParseJsonList($category['seo_faq'] ?? null);
+$jsonLd = array_filter([
+    seoBuildCategoryJsonLd($category, $products),
+    seoBuildBreadcrumbsJsonLd($breadcrumbs),
+    seoBuildFaqJsonLd($faqItems),
+]);
+
+renderView('site/category', compact(
+    'pageTitle', 'metaDescription', 'canonicalUrl', 'category', 'slug', 'sort', 'onlyAvailable',
+    'products', 'totalPages', 'page', 'subCategories', 'breadcrumbs', 'faqItems', 'jsonLd'
+));

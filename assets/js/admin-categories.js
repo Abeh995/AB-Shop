@@ -26,6 +26,10 @@
     var selectParent = document.getElementById('catSelectParent');
     var inputSort = document.getElementById('catInputSort');
     var textareaDesc = document.getElementById('catTextareaDesc');
+    var inputSeoTitle = document.getElementById('catInputSeoTitle');
+    var inputSeoDesc = document.getElementById('catInputSeoDesc');
+    var textareaIntro = document.getElementById('catTextareaIntro');
+    var textareaGuide = document.getElementById('catTextareaGuide');
     var checkboxActive = document.getElementById('catCheckboxActive');
     var btnSubmit = document.getElementById('catBtnSubmit');
     var btnCancel = document.getElementById('catBtnCancel');
@@ -80,6 +84,10 @@
         if (selectParent) selectParent.value = c.parent_id !== null ? c.parent_id : '';
         if (inputSort) inputSort.value = c.sort_order || 0;
         if (textareaDesc) textareaDesc.value = c.description || '';
+        if (inputSeoTitle) inputSeoTitle.value = c.seo_title || '';
+        if (inputSeoDesc) inputSeoDesc.value = c.seo_description || '';
+        if (textareaIntro) textareaIntro.value = c.seo_intro || '';
+        if (textareaGuide) textareaGuide.value = c.seo_guide || '';
         if (checkboxActive) checkboxActive.checked = !!c.is_active;
 
         // Image preview
@@ -123,6 +131,10 @@
         if (selectParent) selectParent.value = '';
         if (inputSort) inputSort.value = '0';
         if (textareaDesc) textareaDesc.value = '';
+        if (inputSeoTitle) inputSeoTitle.value = '';
+        if (inputSeoDesc) inputSeoDesc.value = '';
+        if (textareaIntro) textareaIntro.value = '';
+        if (textareaGuide) textareaGuide.value = '';
         if (checkboxActive) checkboxActive.checked = true;
 
         // Reset image

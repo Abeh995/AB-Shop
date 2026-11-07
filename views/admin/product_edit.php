@@ -233,6 +233,81 @@
                 </small>
             </div>
 
+            <!-- 5. SEO & AI Grounding Card -->
+            <?php $pSpecs = seoParseJsonList($product['material_specs'] ?? null); ?>
+            <div class="admin-card seo-ai-card">
+                <div class="seo-card-header">
+                    <h3 class="seo-card-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        تنظیمات سئو (SEO) و هوش مصنوعی (GEO)
+                    </h3>
+                    <span class="serp-badge">رتبه ۱ گوگل و AI</span>
+                </div>
+
+                <!-- Google SERP Snippet Preview Box -->
+                <div class="serp-preview-box">
+                    <span class="serp-preview-meta">پیش‌نمایش در نتایج گوگل (SERP Preview):</span>
+                    <div class="serp-preview-content">
+                        <div class="serp-url">
+                            <span>ab-socks.ir</span>
+                            <span class="serp-url-sub">› product › <?= e($product['slug'] ?? 'sock-slug') ?></span>
+                        </div>
+                        <div class="serp-title">
+                            <?= e(!empty($product['seo_title']) ? $product['seo_title'] : (($product['name'] ?? 'نام محصول') . ' | ' . SITE_NAME)) ?>
+                        </div>
+                        <div class="serp-desc">
+                            <?= e(!empty($product['seo_description']) ? $product['seo_description'] : seoCleanText($product['description'] ?? '', 140)) ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group seo-field-mb">
+                    <label for="seoTitleInput" class="cat-label">عنوان اختصاصی سئو (SEO Title):</label>
+                    <input type="text" id="seoTitleInput" name="seo_title" class="form-control" value="<?= e($product['seo_title'] ?? '') ?>" placeholder="<?= e($product['name'] ?? '') ?> | <?= e(SITE_NAME) ?>">
+                    <small class="seo-hint">طول بهینه بین ۵۰ تا ۶۰ کاراکتر (در صورت خالی بودن، از نام محصول استفاده می‌شود).</small>
+                </div>
+
+                <div class="form-group seo-field-mb">
+                    <label for="productSlugInput" class="cat-label">نامک صفحه (URL Slug):</label>
+                    <input type="text" id="productSlugInput" name="slug" class="form-control" dir="ltr" value="<?= e($product['slug'] ?? '') ?>" placeholder="socks-crew-cotton">
+                    <small class="seo-hint">💡 در صورت ویرایش نامک، سیستم به صورت خودکار یک <strong>ریدایرکت ۳۰۱</strong> از آدرس قبلی به آدرس جدید ثبت می‌کند تا رتبه گوگل حفظ شود.</small>
+                </div>
+
+                <div class="form-group seo-field-mb">
+                    <label for="seoDescInput" class="cat-label">توضیحات متا (Meta Description):</label>
+                    <textarea id="seoDescInput" name="seo_description" class="form-control" rows="2" placeholder="توضیحات جذاب و خلاصه برای جذب کلیک در گوگل و بینگ (۱۲-۱۶۰ حرف)..."><?= e($product['seo_description'] ?? '') ?></textarea>
+                    <small class="seo-hint">طول بهینه ۱۲۰ تا ۱۶۰ کاراکتر.</small>
+                </div>
+
+                <div class="form-group seo-field-mb">
+                    <label for="canonicalUrlInput" class="cat-label">آدرس کنونیکال اختصاصی (Canonical URL - اختیاری):</label>
+                    <input type="text" id="canonicalUrlInput" name="canonical_url" class="form-control" dir="ltr" value="<?= e($product['canonical_url'] ?? '') ?>" placeholder="https://ab-socks.ir/product/main-color">
+                </div>
+
+                <!-- Structured Facts for AI Grounding -->
+                <div class="seo-specs-box">
+                    <span class="seo-specs-title">🤖 مشخصات ساختاریافته الیاف و مدل (سیگنال‌های قطعی هوش مصنوعی):</span>
+                    <div class="seo-specs-grid">
+                        <div>
+                            <label class="seo-specs-label">درصد پنبه / الیاف:</label>
+                            <input type="text" name="material_specs[درصد پنبه]" class="form-control form-control-sm" value="<?= e($pSpecs['درصد پنبه'] ?? '۱۰۰٪ نخ‌پنبه سوپر شانه شده') ?>">
+                        </div>
+                        <div>
+                            <label class="seo-specs-label">ارتفاع ساق جوراب:</label>
+                            <input type="text" name="material_specs[ارتفاع ساق]" class="form-control form-control-sm" value="<?= e($pSpecs['ارتفاع ساق'] ?? 'ساق‌دار') ?>" placeholder="ساق‌دار / نیم‌ساق / مچی / کالج">
+                        </div>
+                        <div>
+                            <label class="seo-specs-label">ضخامت و فصل مناسب:</label>
+                            <input type="text" name="material_specs[فصل و ضخامت]" class="form-control form-control-sm" value="<?= e($pSpecs['فصل و ضخامت'] ?? 'چهارفصل') ?>">
+                        </div>
+                        <div>
+                            <label class="seo-specs-label">کاربرد و استایل:</label>
+                            <input type="text" name="material_specs[کاربرد]" class="form-control form-control-sm" value="<?= e($pSpecs['کاربرد'] ?? 'روزمره و رسمی') ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- ============================================== -->

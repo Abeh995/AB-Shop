@@ -9,6 +9,14 @@
 
 require_once __DIR__ . '/app/bootstrap.php';
 
+// --- 301/302 URL Redirect Resolver (SEO preservation for slug changes) ---
+$redirectRule = seoResolveRedirect($_SERVER['REQUEST_URI'] ?? '/');
+if ($redirectRule) {
+    http_response_code($redirectRule['status_code'] ?? 301);
+    header('Location: ' . $redirectRule['target_url']);
+    exit;
+}
+
 $route = trim($_GET['route'] ?? '', '/');
 $segments = $route === '' ? [] : explode('/', $route);
 $page = $segments[0] ?? 'home';
@@ -115,6 +123,12 @@ switch ($page) {
 
     case 'search':
         require $controllersDir . '/search.php';
+        break;
+
+    case 'llms.txt':
+    case 'llms-full.txt':
+        $_GET['format'] = ($page === 'llms-full.txt') ? 'full' : 'standard';
+        require $controllersDir . '/llms.php';
         break;
 
     default:

@@ -146,6 +146,12 @@ them silently is worse than asking first.
     - **Explicit Trigger**: User prompts containing `/focus`, `[focus]`, or `focus:` explicitly mandate Focus Mode regardless of size.
     - **Sequential Pipeline Mandate**: Complex tasks must NOT be implemented in a single unstructured turn. Decompose into the sequential stage gate: Phase 0 Requirement Snapshot Matrix → Phase 1 Discovery (`DeepInvestigator`) → Phase 2..k Domain Slices (`DeepCoder`) → Phase k+1 Quality Gate (`php tools/verify.php`). Refer to `.agents/skills/ab-socks-focus/SKILL.md` for full execution rules and templates.
     - **Zero-Collision Parent Hibernation**: Subagents execute strictly sequentially with `Workspace='inherit'`. Parallel agent spawns and concurrent workspace edits are strictly forbidden. The orchestrator must hibernate while a child runs and wait for its completion report before proceeding to the next slice, preventing file overwrite collisions and git race conditions.
+13. **SEO, AI Discovery (GEO) & Machine Invariant Discipline.**
+    - **Quality Gate Enforcement (Section 8)**: `php tools/verify.php` guards against regressions in SEO meta tags, Open Graph, Twitter Cards, Google Image Sitemap namespaces, Schema.org JSON-LD wiring, 301 redirect middleware, single `<h1>` hierarchy, AI bot permissions, and Git privacy. Any regression will fail the build immediately.
+    - **Schema & Structured Data Integrity**: All Product, Category, and Breadcrumbs views must pass valid Schema.org JSON-LD. Never break or remove Merchant return policy (`hasMerchantReturnPolicy`), currency (`IRR`), or stock availability attributes.
+    - **Single H1 Rule**: Storefront templates (`views/site/home.php`, `views/site/product.php`, `views/site/category.php`, `views/site/tag.php`) must contain strictly ONE `<h1>` tag representing the primary entity.
+    - **AI Search (GEO) Accessibility**: Never disallow or block legitimate AI engine bots (`GPTBot`, `PerplexityBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`) in `robots.php`. Always maintain `/llms.txt` and `/llms-full.txt` feeds.
+    - **Local Documentation Isolation**: Internal admin training guides (matching `*-ADMIN-GUIDE.md` or `/docs/local/`) must strictly remain local and uncommitted. Never stage, commit, tag, or push admin guides to GitHub.
 
 
 ## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")
@@ -225,7 +231,7 @@ Documentation must remain compact, modular, and token-efficient for AI agents:
   direction (read before writing any CSS/HTML for the redesign effort).
 - `docs/SEO.md` — SEO standards and what's implemented vs. planned.
 - `docs/AI_SKILLS.md` — recommended Agent Skills for this project's stack.
-- `.agents/skills/` — project skills (`ab-socks-focus`, `ab-socks-admin-page`, `ab-socks-refactor`, `ab-socks-ui-kit`, `ab-socks-workflow`, `backlog`).
+- `.agents/skills/` — project skills (`ab-socks-focus`, `ab-socks-admin-page`, `ab-socks-refactor`, `ab-socks-ui-kit`, `ab-socks-workflow`, `ab-socks-seo`, `backlog`).
 - `SECURITY.md` — security posture, what's covered, what's open.
 - `CONTRIBUTING.md` — commit conventions, branch/PR expectations.
 - `README-DEPLOY.md` — gitignored, deployment runbook for the human owner.

@@ -13,7 +13,8 @@ if (!$product) {
     return;
 }
 
-$pageTitle = $product['name'];
+$pageTitle = !empty($product['seo_title']) ? $product['seo_title'] : $product['name'];
+$canonicalUrl = !empty($product['canonical_url']) ? $product['canonical_url'] : (rtrim(SITE_URL, '/') . '/product/' . $product['slug']);
 
 $imgStmt = db()->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY sort_order ASC");
 $imgStmt->execute([$product['id']]);
@@ -38,20 +39,26 @@ $initialMaxQty = min(max(1, $initialVariantStock), 20);
 $initialPrice = ($selectedVariant && $selectedVariant['price_override'] !== null) ? (float)$selectedVariant['price_override'] : (float)$finalPrice;
 
 $tags = (getSetting('show_product_tags', '1') === '1') ? getProductTags($product['id']) : [];
-$metaDescription = $product['description'] ? mb_substr(strip_tags($product['description']), 0, 160) : ($product['name'] . ' — ' . SITE_NAME);
+$metaDescription = !empty($product['seo_description']) 
+    ? $product['seo_description'] 
+    : ($product['description'] ? seoCleanText($product['description'], 160) : ($product['name'] . ' — ' . SITE_NAME));
 $ogImage = rtrim(SITE_URL, '/') . $mainImage;
-$jsonLd = [
-    '@context' => 'https://schema.org', '@type' => 'Product', 'name' => $product['name'], 'image' => $ogImage,
-    'description' => $metaDescription, 'sku' => $product['sku'],
-    'offers' => [
-        '@type' => 'Offer', 'priceCurrency' => 'IRR', 'price' => (string) ((int) $finalPrice * 10),
-        'availability' => $totalStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        'url' => rtrim(SITE_URL, '/') . '/product/' . $product['slug'],
-    ],
+
+// Structured Data: BreadcrumbList + Full Merchant Product Schema
+$breadcrumbs = [
+    ['name' => 'خانه', 'url' => '/'],
+    ['name' => $product['category_name'], 'url' => '/category/' . $product['category_slug']],
+    ['name' => $product['name'], 'url' => '/product/' . $product['slug']],
 ];
+$jsonLd = [
+    seoBuildProductJsonLd($product, $variants, $finalPrice, $totalStock),
+    seoBuildBreadcrumbsJsonLd($breadcrumbs)
+];
+
+$materialSpecs = seoParseJsonList($product['material_specs'] ?? null);
 
 renderView('site/product', compact(
     'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice', 'tags',
     'defaultVariantId', 'selectedVariant', 'selectedVariantLabel', 'initialVariantStock', 'initialMaxQty', 'initialPrice',
-    'metaDescription', 'ogImage', 'jsonLd'
+    'metaDescription', 'ogImage', 'canonicalUrl', 'breadcrumbs', 'materialSpecs', 'jsonLd'
 ));

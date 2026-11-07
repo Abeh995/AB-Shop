@@ -1,9 +1,30 @@
-# Changelog Archive (v1.0.0 — v1.37.0)
+# Changelog Archive (v1.0.0 — v1.37.1)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.37.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.37.1.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
 
 ---
+
+## 1.37.1 — 2026-11-01
+
+### Landing Studio — Layout & Responsiveness Fixes, Editor Affordance Pass
+
+- **Layout correctness (`assets/css/admin-landing.css`, `assets/js/landing-studio.js`, `views/admin/landing.php`)**:
+  - Fixed the dead band under the editor: the shell was capped at `54rem`, so tall windows showed a bare page-canvas strip below the studio. `syncStudioHeight()` now measures the offset under the admin chrome and sizes the shell to the fold (CSS `calc()` fallback retained), so the page never scrolls and the three panes scroll internally.
+  - Fixed container-query dead code: `container-type` lived on `.lb-studio` itself, so every `@container lb-studio` rule that restyled the shell was silently ignored. The query now resolves against a new `.lb-studio-shell` wrapper, which makes all breakpoints work.
+  - Re-tuned the breakpoints so the live preview survives on laptops: three panes down to 52rem (was 78rem, which dropped the preview on a 1366px laptop), tighter rail/panel widths at 84rem and 62rem, tabbed editor/preview only below 52rem, single column below 40rem.
+  - Section rail: the drag handle is now overlaid on hover instead of reserving column width, so long Persian section names no longer collapse to "بخش اصلی (…".
+- **Editor affordance (`assets/css/admin-landing.css`)**:
+  - Inputs, textareas and selects get a visible border (mixed from `--text-muted`), a hover state and a primary focus ring; font size moved to `--text-sm`. Empty-looking field rows were the main readability complaint on high-DPI/low-zoom screens.
+  - Group headers gained a field-count chip; scroll areas (`rail`, `panel`, `stage`) got `overscroll-behavior: contain` and tokenised scrollbars; visible `:focus-visible` outlines added across rail items, chips and icon buttons.
+- **Editor UX (`assets/js/landing-studio.js`)**:
+  - Panel head now shows the section's field count plus two new controls: a **«فقط تغییرات»** filter (fields that differ from the factory default, stable across autosaves) and a **collapse/expand all** toggle; an empty state explains the filter when a section is untouched.
+  - The preview auto-fits the device to the pane (mobile under 430px, tablet under 620px) so the emulated page is never squeezed to an unreadable scale; picking a device manually disables auto-fit.
+  - Switching the mobile editor/preview tab now re-measures the shell and rescales the frame (the preview used to stay collapsed at its hidden size).
+- **Admin shell (`assets/css/admin-shell.css`)**:
+  - Fixed a pre-existing horizontal overflow of the topic-tab strip between 1024px and 1220px. The tabs widened the document, and because the admin is RTL the page opened scrolled sideways, clipping the right-hand pane of the studio (and the classic appearance page). The strip now scrolls inside itself.
+- **Quality gates (`tools/ui-test/test-landing-studio.mjs`)**:
+  - Suite grown to 24 checks: fold-fill assertion, changed-only filter, collapse-all, zen mode, a dedicated 1366×768 laptop pass (preview must stay mounted, no sideways/fold overflow) and a fresh `studio-laptop.png` baseline.
 
 ## 1.37.0 — 2026-10-31
 

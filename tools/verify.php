@@ -10,6 +10,7 @@
  * 5. Version synchronization check (app/bootstrap.php vs docs/CHANGELOG*.md)
  * 6. Git release tag check
  * 7. Anti-Duplication & Front-end Ratchet Baseline check (DRY / SSoT)
+ * 8. SEO, AI Search (GEO) & Machine Invariant check
  *
  * Usage:
  *   php tools/verify.php
@@ -777,11 +778,205 @@ if (!file_exists($baselineFile)) {
     }
 }
 
+// -------------------------------------------------------------
+// 8. SEO, AI Search (GEO) & Machine Invariant Guard
+// -------------------------------------------------------------
+section("8. SEO, AI Search (GEO) & Machine Invariant Guard");
+
+// 8.1 Head & Meta Tag Contract Guard
+$headerPath = $root . '/views/layout/header.php';
+$homePath = $root . '/views/site/home.php';
+$headerContent = file_exists($headerPath) ? file_get_contents($headerPath) : '';
+$homeContent = file_exists($homePath) ? file_get_contents($homePath) : '';
+
+$criticalMetaTokens = [
+    '<meta name="robots"',
+    '<link rel="canonical"',
+    '<meta property="og:site_name"',
+    '<meta property="og:title"',
+    '<meta property="og:description"',
+    '<meta property="og:type"',
+    '<meta property="og:url"',
+    '<meta name="twitter:card"',
+    '<meta name="google-site-verification"',
+    '<meta name="msvalidate.01"',
+    'seoRenderJsonLd',
+];
+
+$missingHeaderTokens = [];
+foreach ($criticalMetaTokens as $token) {
+    if (!str_contains($headerContent, $token)) {
+        $missingHeaderTokens[] = $token;
+    }
+}
+
+if (!empty($missingHeaderTokens)) {
+    fail("views/layout/header.php missing critical SEO tag contract: " . implode(', ', $missingHeaderTokens));
+    $errors++;
+} elseif (!str_contains($homeContent, '$seoIndexingEnabled') || !str_contains($homeContent, 'seoBuildOrganizationJsonLd')) {
+    fail("views/site/home.php missing critical indexing or organization schema contract.");
+    $errors++;
+} else {
+    pass("Head & Meta Tag contracts verified (header.php & home.php).");
+}
+
+// 8.2 Schema.org JSON-LD Wiring Guard
+$productCtrl = file_exists($root . '/app/controllers/site/product.php') ? file_get_contents($root . '/app/controllers/site/product.php') : '';
+$categoryCtrl = file_exists($root . '/app/controllers/site/category.php') ? file_get_contents($root . '/app/controllers/site/category.php') : '';
+$seoService = file_exists($root . '/app/services/SeoService.php') ? file_get_contents($root . '/app/services/SeoService.php') : '';
+
+$schemaErrors = [];
+if (!str_contains($productCtrl, 'seoBuildProductJsonLd') || !str_contains($productCtrl, 'seoBuildBreadcrumbsJsonLd')) {
+    $schemaErrors[] = "app/controllers/site/product.php missing Product or Breadcrumb JSON-LD calls";
+}
+if (!str_contains($categoryCtrl, 'seoBuildCategoryJsonLd') || !str_contains($categoryCtrl, 'seoBuildBreadcrumbsJsonLd')) {
+    $schemaErrors[] = "app/controllers/site/category.php missing Category or Breadcrumb JSON-LD calls";
+}
+if (!str_contains($seoService, "'priceCurrency'") || !str_contains($seoService, "'IRR'") || !str_contains($seoService, 'hasMerchantReturnPolicy') || !str_contains($seoService, "'availability'")) {
+    $schemaErrors[] = "app/services/SeoService.php missing Google Merchant Return Policy, IRR currency, or availability specification";
+}
+
+if (!empty($schemaErrors)) {
+    foreach ($schemaErrors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("Schema.org JSON-LD structured data wiring verified across controllers and SeoService.");
+}
+
+// 8.3 Strict Single <h1> Hierarchy Guard
+$h1Views = [
+    'views/site/home.php',
+    'views/site/product.php',
+    'views/site/category.php',
+    'views/site/tag.php',
+];
+
+$h1Errors = [];
+foreach ($h1Views as $vPath) {
+    $fullPath = $root . '/' . $vPath;
+    if (!file_exists($fullPath)) {
+        continue;
+    }
+    $vContent = file_get_contents($fullPath);
+    preg_match_all('/<h1\b/i', $vContent, $h1Matches);
+    $count = count($h1Matches[0]);
+    if ($count !== 1) {
+        $h1Errors[] = "{$vPath} must have exactly 1 <h1> tag for SEO hierarchy, found {$count}";
+    }
+}
+
+if (!empty($h1Errors)) {
+    foreach ($h1Errors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("Strict single <h1> hierarchy verified across storefront views (home, product, category, tag).");
+}
+
+// 8.4 301 URL Redirection & Slug Authority Guard
+$indexContent = file_exists($root . '/index.php') ? file_get_contents($root . '/index.php') : '';
+$productServiceContent = file_exists($root . '/app/services/ProductService.php') ? file_get_contents($root . '/app/services/ProductService.php') : '';
+$schemaSqlContent = file_exists($root . '/database/schema.sql') ? file_get_contents($root . '/database/schema.sql') : '';
+
+$redirectErrors = [];
+if (!str_contains($indexContent, 'seoResolveRedirect')) {
+    $redirectErrors[] = "index.php missing seoResolveRedirect early middleware invocation";
+}
+if (!str_contains($productServiceContent, 'seoRegisterRedirect')) {
+    $redirectErrors[] = "app/services/ProductService.php missing seoRegisterRedirect calls on slug transition";
+}
+if (!str_contains($schemaSqlContent, 'url_redirects')) {
+    $redirectErrors[] = "database/schema.sql missing url_redirects table definition";
+}
+
+if (!empty($redirectErrors)) {
+    foreach ($redirectErrors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("301 URL redirection middleware and slug transition tracker verified.");
+}
+
+// 8.5 AI Search (GEO) Endpoints & Robots Guard
+$robotsContent = file_exists($root . '/robots.php') ? file_get_contents($root . '/robots.php') : '';
+$llmsCtrlPath = $root . '/app/controllers/site/llms.php';
+$llmsCtrlContent = file_exists($llmsCtrlPath) ? file_get_contents($llmsCtrlPath) : '';
+
+$geoErrors = [];
+$requiredAiBots = ['GPTBot', 'PerplexityBot', 'ClaudeBot', 'Google-Extended'];
+foreach ($requiredAiBots as $bot) {
+    if (!str_contains($robotsContent, $bot)) {
+        $geoErrors[] = "robots.php missing AI crawler authorization: {$bot}";
+    }
+}
+if (!str_contains($robotsContent, 'llms.txt')) {
+    $geoErrors[] = "robots.php missing llms.txt reference";
+}
+if (!str_contains($indexContent, "'llms.txt'")) {
+    $geoErrors[] = "index.php missing route dispatch for llms.txt";
+}
+if (!file_exists($llmsCtrlPath) || !str_contains($llmsCtrlContent, 'seoRenderLlmsText')) {
+    $geoErrors[] = "app/controllers/site/llms.php missing or not delegating to seoRenderLlmsText";
+}
+
+if (!empty($geoErrors)) {
+    foreach ($geoErrors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("AI Search crawler permissions (GEO) and /llms.txt feed verified.");
+}
+
+// 8.6 Google Image Sitemap XML Namespace Guard
+$sitemapContent = file_exists($root . '/sitemap.php') ? file_get_contents($root . '/sitemap.php') : '';
+
+if (!str_contains($sitemapContent, 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"') ||
+    !str_contains($sitemapContent, '<image:image>') ||
+    !str_contains($sitemapContent, '<image:loc>')) {
+    fail("sitemap.php missing Google Image Sitemap namespace (xmlns:image) or image tags");
+    $errors++;
+} else {
+    pass("Google Image Sitemap XML namespace and <image:image> tags verified.");
+}
+
+// 8.7 Git Privacy & Untracked Admin Guide Guard
+$gitignoreContent = file_exists($root . '/.gitignore') ? file_get_contents($root . '/.gitignore') : '';
+$gitPrivacyErrors = [];
+
+if (!str_contains($gitignoreContent, '*-ADMIN-GUIDE.md')) {
+    $gitPrivacyErrors[] = ".gitignore missing '*-ADMIN-GUIDE.md' exclusion pattern";
+}
+
+$trackedGuides = trim((string) shell_exec('git ls-files "*ADMIN-GUIDE*" 2>' . $gitNullSink));
+if ($trackedGuides !== '') {
+    $gitPrivacyErrors[] = "Untracked violation: Admin guide file is tracked in git index: {$trackedGuides}";
+}
+
+$stagedFiles = trim((string) shell_exec('git diff --name-only --cached 2>' . $gitNullSink));
+if ($stagedFiles !== '') {
+    foreach (preg_split('/\r\n|\r|\n/', $stagedFiles) as $sf) {
+        $sf = trim($sf);
+        if ($sf !== '' && (fnmatch('*ADMIN-GUIDE*', $sf) || str_starts_with($sf, 'docs/local/'))) {
+            $gitPrivacyErrors[] = "Git staged security violation: Admin guide file is staged for commit: {$sf}";
+        }
+    }
+}
+
+if (!empty($gitPrivacyErrors)) {
+    foreach ($gitPrivacyErrors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("Git privacy guard verified: Admin guides (*-ADMIN-GUIDE.md) are strictly excluded from git tracking/releases.");
+}
 
 
-// -------------------------------------------------------------
-// Summary
-// -------------------------------------------------------------
 section("Verification Summary");
 echo "Errors:   " . ($errors > 0 ? color((string)$errors, 'red') : color("0", 'green')) . PHP_EOL;
 echo "Warnings: " . ($warnings > 0 ? color((string)$warnings, 'yellow') : color("0", 'green')) . PHP_EOL;

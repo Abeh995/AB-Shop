@@ -2184,4 +2184,221 @@ input:checked + .switch-slider:before {
     }
 }
 
+/* ============================================================
+   SEO & GEO Infrastructure Workstation Styles
+   ============================================================ */
+.seo-ai-card .serp-preview-box {
+    background: var(--c-neutral-0);
+    border: 1px solid var(--c-line-200);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+.seo-ai-card .serp-preview-meta {
+    font-size: 0.72rem;
+    color: var(--c-ink-500);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.seo-ai-card .serp-preview-content {
+    direction: ltr;
+    text-align: left; /* physical */
+    font-family: sans-serif;
+    margin-top: 6px;
+}
+.seo-ai-card .serp-url {
+    font-size: 0.78rem;
+    color: var(--c-ink-900);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.seo-ai-card .serp-url-sub {
+    color: var(--c-ink-500);
+}
+.seo-ai-card .serp-title {
+    font-size: 1.05rem;
+    color: var(--c-blue-500);
+    font-weight: 500;
+    margin: 3px 0;
+    direction: rtl;
+    text-align: right; /* physical */
+}
+.seo-ai-card .serp-desc {
+    font-size: 0.84rem;
+    color: var(--c-ink-900);
+    line-height: 1.4;
+    direction: rtl;
+    text-align: right; /* physical */
+}
+.seo-ai-card .serp-badge {
+    font-size: 0.75rem;
+    background: rgba(196,108,70,0.12);
+    color: var(--color-primary);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+.seo-ai-card .seo-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.seo-ai-card .seo-card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.seo-ai-card .seo-specs-box {
+    background: var(--color-surface);
+    border: 1px solid var(--c-line-200);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+}
+.seo-ai-card .seo-specs-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 8px;
+}
+.seo-ai-card .seo-specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.seo-ai-card .seo-specs-label {
+    font-size: 0.76rem;
+    color: var(--c-ink-500);
+}
+.seo-ai-card .seo-hint {
+    color: var(--c-ink-500);
+    font-size: 0.75rem;
+}
+.seo-ai-card .seo-field-mb {
+    margin-bottom: 12px;
+}
+
+/* Category SEO Box */
+.cat-seo-box {
+    background: rgba(196,108,70,0.06);
+    border: 1px solid rgba(196,108,70,0.2);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 14px;
+}
+.cat-seo-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    display: block;
+    margin-bottom: 8px;
+}
+.cat-seo-group {
+    margin-bottom: 8px;
+}
+.cat-seo-group-last {
+    margin-bottom: 4px;
+}
+.cat-seo-label {
+    font-size: 0.78rem;
+}
+
+/* Settings SEO Partial */
+.seo-diag-bar {
+    background: var(--color-surface);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    padding: 12px 16px;
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.seo-diag-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+.seo-diag-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.seo-diag-btn {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    background: var(--c-neutral-0);
+    color: var(--set-text);
+    text-decoration: none;
+    font-weight: 600;
+}
+.seo-redirect-add-card {
+    background: var(--c-neutral-0);
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+.seo-redirect-add-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 10px;
+}
+.seo-redirect-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 100px;
+    gap: 10px;
+    align-items: end;
+}
+.seo-redirect-label {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+}
+.seo-redirect-table-wrap {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+}
+.seo-redirect-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    text-align: start;
+}
+.seo-redirect-table thead {
+    background: var(--color-surface);
+    position: sticky;
+    top: 0;
+}
+.seo-redirect-table th,
+.seo-redirect-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--set-border);
+}
+.seo-redirect-table td.url-cell {
+    direction: ltr;
+    text-align: left; /* physical */
+}
+.seo-redirect-table td.center-cell,
+.seo-redirect-table th.center-cell {
+    text-align: center;
+}
+.seo-btn-del {
+    background: none;
+    border: none;
+    color: var(--c-rose-500);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+
 

@@ -10,10 +10,12 @@ $flash = getFlash();
 // Top-level categories for the main nav (subcategories are shown inside the parent category page)
 $navCategories = getNavCategories();
 
-// ---------- SEO: control search-engine indexing from the admin settings ----------
+// ---------- SEO: control search-engine indexing & webmaster verification ----------
 $seoIndexingEnabled = getSetting('seo_indexing_enabled', '0') === '1';
-$canonicalUrl = rtrim(SITE_URL, '/') . strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+$canonicalUrl = $canonicalUrl ?? (rtrim(SITE_URL, '/') . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
 $metaDescription = $metaDescription ?? 'فروشگاه اینترنتی جوراب؛ خرید آنلاین جوراب مردانه، زنانه و بچگانه با ارسال سریع';
+$googleVerification = getSetting('google_site_verification', '');
+$bingVerification = getSetting('bing_site_verification', '');
 
 $logoUrl = siteLogoUrl();
 $announcementBarEnabled = getSetting('announcement_bar_enabled', '0') === '1';
@@ -31,17 +33,39 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 <title><?= e($pageTitle) ?> | <?= e(SITE_NAME) ?></title>
 <meta name="description" content="<?= e($metaDescription) ?>">
 <?php if ($seoIndexingEnabled): ?>
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <link rel="canonical" href="<?= e($canonicalUrl) ?>">
 <?php else: ?>
 <meta name="robots" content="noindex, nofollow">
 <?php endif; ?>
+
+<?php if ($googleVerification !== ''): ?>
+<meta name="google-site-verification" content="<?= e($googleVerification) ?>">
+<?php endif; ?>
+<?php if ($bingVerification !== ''): ?>
+<meta name="msvalidate.01" content="<?= e($bingVerification) ?>">
+<?php endif; ?>
+
+<!-- Open Graph / Facebook -->
 <meta property="og:site_name" content="<?= e(SITE_NAME) ?>">
+<meta property="og:locale" content="fa_IR">
 <meta property="og:title" content="<?= e($pageTitle) ?>">
 <meta property="og:description" content="<?= e($metaDescription) ?>">
 <meta property="og:type" content="<?= isset($ogImage) ? 'product' : 'website' ?>">
 <meta property="og:url" content="<?= e($canonicalUrl) ?>">
-<?php if (!empty($ogImage)): ?><meta property="og:image" content="<?= e($ogImage) ?>"><?php endif; ?>
+<?php if (!empty($ogImage)): ?>
+<meta property="og:image" content="<?= e($ogImage) ?>">
+<meta property="og:image:alt" content="<?= e($pageTitle) ?>">
+<?php endif; ?>
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= e($pageTitle) ?>">
+<meta name="twitter:description" content="<?= e($metaDescription) ?>">
+<?php if (!empty($ogImage)): ?>
+<meta name="twitter:image" content="<?= e($ogImage) ?>">
+<?php endif; ?>
+
 <?php $siteFavicon = siteFaviconUrl(); ?>
 <?php if ($siteFavicon): ?>
 <link rel="icon" href="<?= e($siteFavicon) ?>">
@@ -60,9 +84,17 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 <?php $themeCss = activeThemeCssVars(); if ($themeCss !== ''): ?>
 <style id="active-theme-vars"><?= $themeCss ?></style>
 <?php endif; ?>
-<?php if (!empty($jsonLd)): ?>
-<script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
-<?php endif; ?>
+
+<?php
+// Multi-schema JSON-LD Injection
+if (!empty($jsonLd)) {
+    if (isset($jsonLd['@context'])) {
+        echo "<script type=\"application/ld+json\">\n" . json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n</script>\n";
+    } elseif (is_array($jsonLd)) {
+        echo seoRenderJsonLd($jsonLd);
+    }
+}
+?>
 </head>
 <body>
 

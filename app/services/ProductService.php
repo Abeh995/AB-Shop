@@ -349,8 +349,12 @@ function saveProduct(array $data, array $files, int $adminId): array
         return ['ok' => false, 'errors' => $errors];
     }
 
-    // Generate unique slug
-    $slug = slugify($name);
+    // Generate or sanitize unique slug
+    $slugRaw = trim($data['slug'] ?? '');
+    $slug = $slugRaw !== '' ? slugify($slugRaw) : slugify($name);
+    if ($slug === '') {
+        $slug = 'product-' . time();
+    }
     $slugCheck = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
     $slugCheck->execute([$slug, $id]);
     if ($slugCheck->fetch()) {
@@ -360,14 +364,37 @@ function saveProduct(array $data, array $files, int $adminId): array
     $productId = $id;
     $useGlobalVariantStrategy = isset($data['use_global_variant_strategy']) ? 1 : 0;
 
+    // SEO & Generative Engine Optimization Metadata
+    $seoTitle = trim($data['seo_title'] ?? '') ?: null;
+    $seoDescription = trim($data['seo_description'] ?? '') ?: null;
+    $canonicalUrl = trim($data['canonical_url'] ?? '') ?: null;
+
+    $materialSpecs = null;
+    if (isset($data['material_specs'])) {
+        if (is_array($data['material_specs'])) {
+            $filtered = array_filter($data['material_specs'], fn($v) => $v !== '' && $v !== null);
+            $materialSpecs = !empty($filtered) ? json_encode($filtered, JSON_UNESCAPED_UNICODE) : null;
+        } elseif (is_string($data['material_specs']) && trim($data['material_specs']) !== '') {
+            $materialSpecs = trim($data['material_specs']);
+        }
+    }
+
     if ($existingProduct) {
+        // Automatic 301 redirect if slug was modified
+        if (!empty($existingProduct['slug']) && $existingProduct['slug'] !== $slug) {
+            seoRegisterRedirect('/product/' . $existingProduct['slug'], '/product/' . $slug, 301);
+        }
+
         // Update product metadata (price & cost are recorded via PricingService below)
         $stmt = $pdo->prepare("
             UPDATE products 
-            SET category_id=?, name=?, slug=?, description=?, discount_price=?, sku=?, stock=?, use_global_variant_strategy=?, image=?, is_active=?, is_featured=? 
+            SET category_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, canonical_url=?, discount_price=?, sku=?, material_specs=?, stock=?, use_global_variant_strategy=?, image=?, is_active=?, is_featured=? 
             WHERE id=?
         ");
-        $stmt->execute([$categoryId, $name, $slug, $description, $discountPrice, $sku, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured, $id]);
+        $stmt->execute([
+            $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
+            $discountPrice, $sku, $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured, $id
+        ]);
 
         // Audit price changes if changed
         $oldPrice = (int) $existingProduct['price'];
@@ -386,10 +413,13 @@ function saveProduct(array $data, array $files, int $adminId): array
     } else {
         // Insert new product
         $stmt = $pdo->prepare("
-            INSERT INTO products (category_id, name, slug, description, price, discount_price, cost_price, sku, stock, use_global_variant_strategy, image, is_active, is_featured) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO products (category_id, name, seo_title, slug, description, seo_description, canonical_url, price, discount_price, cost_price, sku, material_specs, stock, use_global_variant_strategy, image, is_active, is_featured) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ");
-        $stmt->execute([$categoryId, $name, $slug, $description, $price, $discountPrice, $costPrice, $sku, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured]);
+        $stmt->execute([
+            $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
+            $price, $discountPrice, $costPrice, $sku, $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured
+        ]);
         $productId = (int) $pdo->lastInsertId();
 
         // Rename temporary uploaded image if it was a new creation
@@ -788,12 +818,14 @@ function saveCategory(array $data, ?array $imageFile = null): array
         $slug .= '-' . substr(md5(uniqid('', true)), 0, 4);
     }
 
-    // Existing image lookup
+    // Existing category lookup for slug change redirect and image cleanup
+    $existingCategory = null;
     $existingImage = null;
     if ($id > 0) {
-        $imgStmt = $pdo->prepare("SELECT image FROM categories WHERE id = ?");
-        $imgStmt->execute([$id]);
-        $existingImage = $imgStmt->fetchColumn() ?: null;
+        $catStmt = $pdo->prepare("SELECT slug, image FROM categories WHERE id = ?");
+        $catStmt->execute([$id]);
+        $existingCategory = $catStmt->fetch(PDO::FETCH_ASSOC);
+        $existingImage = $existingCategory['image'] ?? null;
     }
 
     $image = $existingImage;
@@ -823,12 +855,53 @@ function saveCategory(array $data, ?array $imageFile = null): array
         $newImageUploaded = true;
     }
 
+    // SEO, Rich Content & FAQ Metadata
+    $seoTitle = trim($data['seo_title'] ?? '') ?: null;
+    $seoDescription = trim($data['seo_description'] ?? '') ?: null;
+    $seoIntro = trim($data['seo_intro'] ?? '') ?: null;
+    $seoGuide = trim($data['seo_guide'] ?? '') ?: null;
+
+    $seoFaq = null;
+    if (isset($data['seo_faq'])) {
+        if (is_array($data['seo_faq'])) {
+            $cleanFaq = [];
+            foreach ($data['seo_faq'] as $item) {
+                $q = trim($item['q'] ?? '');
+                $a = trim($item['a'] ?? '');
+                if ($q !== '' && $a !== '') {
+                    $cleanFaq[] = ['q' => $q, 'a' => $a];
+                }
+            }
+            $seoFaq = !empty($cleanFaq) ? json_encode($cleanFaq, JSON_UNESCAPED_UNICODE) : null;
+        } elseif (is_string($data['seo_faq']) && trim($data['seo_faq']) !== '') {
+            $seoFaq = trim($data['seo_faq']);
+        }
+    }
+
     if ($id > 0) {
-        $stmt = $pdo->prepare("UPDATE categories SET parent_id=?, name=?, slug=?, description=?, image=?, sort_order=?, is_active=? WHERE id=?");
-        $stmt->execute([$parentId, $name, $slug, $description, $image, $sortOrder, $isActive, $id]);
+        // Auto-register 301 redirect if slug was updated
+        if ($existingCategory && !empty($existingCategory['slug']) && $existingCategory['slug'] !== $slug) {
+            seoRegisterRedirect('/category/' . $existingCategory['slug'], '/category/' . $slug, 301);
+        }
+
+        $stmt = $pdo->prepare("
+            UPDATE categories 
+            SET parent_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, seo_intro=?, seo_guide=?, seo_faq=?, image=?, sort_order=?, is_active=? 
+            WHERE id=?
+        ");
+        $stmt->execute([
+            $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
+            $image, $sortOrder, $isActive, $id
+        ]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO categories (parent_id, name, slug, description, image, sort_order, is_active) VALUES (?,?,?,?,?,?,?)");
-        $stmt->execute([$parentId, $name, $slug, $description, $image, $sortOrder, $isActive]);
+        $stmt = $pdo->prepare("
+            INSERT INTO categories (parent_id, name, seo_title, slug, description, seo_description, seo_intro, seo_guide, seo_faq, image, sort_order, is_active) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        ");
+        $stmt->execute([
+            $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
+            $image, $sortOrder, $isActive
+        ]);
         $id = (int) $pdo->lastInsertId();
 
         // If new category with temporary upload, rename to standard name

@@ -96,8 +96,13 @@ CREATE TABLE IF NOT EXISTS categories (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     parent_id INT UNSIGNED DEFAULT NULL,
     name VARCHAR(120) NOT NULL,
+    seo_title VARCHAR(190) DEFAULT NULL,
     slug VARCHAR(140) NOT NULL UNIQUE,
     description TEXT,
+    seo_description VARCHAR(255) DEFAULT NULL,
+    seo_intro TEXT DEFAULT NULL,
+    seo_guide TEXT DEFAULT NULL,
+    seo_faq JSON DEFAULT NULL,
     image VARCHAR(255) DEFAULT NULL,
     sort_order INT DEFAULT 0,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -114,12 +119,16 @@ CREATE TABLE IF NOT EXISTS products (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id INT UNSIGNED NOT NULL,
     name VARCHAR(180) NOT NULL,
+    seo_title VARCHAR(190) DEFAULT NULL,
     slug VARCHAR(200) NOT NULL UNIQUE,
     description TEXT,
+    seo_description VARCHAR(255) DEFAULT NULL,
+    canonical_url VARCHAR(255) DEFAULT NULL,
     price DECIMAL(12,0) NOT NULL,              -- تومان، بدون اعشار
     discount_price DECIMAL(12,0) DEFAULT NULL,  -- اگر تخفیف دارد
     cost_price DECIMAL(12,0) DEFAULT NULL,      -- قیمت تمام‌شده؛ مستقل از قیمت فروش
     sku VARCHAR(60) DEFAULT NULL UNIQUE,
+    material_specs JSON DEFAULT NULL,           -- مشخصات ساختاریافته الیاف و مدل مناسب هوش مصنوعی و اسکیما
     stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
     use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1,
     image VARCHAR(255) DEFAULT NULL,            -- تصویر اصلی
@@ -522,7 +531,11 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('trust_item_4_desc', 'مناسب برای کادو با بسته‌بندی استاندارد'),
     ('site_favicon', ''),
     ('home_featured_limit', '6'),
-    ('home_newest_limit', '6');
+    ('home_newest_limit', '6'),
+    ('google_site_verification', ''),
+    ('bing_site_verification', ''),
+    ('return_policy_days', '7'),
+    ('shipping_lead_time_days', '2');
 
 -- ------------------------------------------------------------
 -- Faraz SMS registered patterns & event mappings
@@ -686,3 +699,20 @@ CREATE TABLE IF NOT EXISTS landing_config_revisions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO landing_config (id) VALUES (1);
+
+-- ------------------------------------------------------------
+-- URL Redirects (v1.40.0) — 301/302 redirects for slug changes & legacy paths
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS url_redirects (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    source_url VARCHAR(255) NOT NULL,
+    target_url VARCHAR(255) NOT NULL,
+    status_code SMALLINT UNSIGNED NOT NULL DEFAULT 301,
+    hits INT UNSIGNED NOT NULL DEFAULT 0,
+    last_hit_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_source (source_url),
+    INDEX idx_source (source_url)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

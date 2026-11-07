@@ -45,6 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'stock' => (int) ($_POST['stock'] ?? 0),
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
             'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
+            'seo_title' => trim($_POST['seo_title'] ?? ''),
+            'seo_description' => trim($_POST['seo_description'] ?? ''),
+            'canonical_url' => trim($_POST['canonical_url'] ?? ''),
+            'slug' => trim($_POST['slug'] ?? ''),
+            'material_specs' => $_POST['material_specs'] ?? null,
         ]);
         $hasVariantsInitial = isset($_POST['has_variants']);
         $productTagIds = array_map('intval', $_POST['tag_ids'] ?? []);

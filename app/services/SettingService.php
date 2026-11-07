@@ -59,6 +59,11 @@ function getStoreSettingsData(): array
         'showProductTags'        => getSetting('show_product_tags', '1') === '1',
         'defaultVariantStrategy' => getSetting('default_variant_strategy', 'highest_stock'),
         'seoIndexingEnabled'     => getSetting('seo_indexing_enabled', '0') === '1',
+        'googleSiteVerification' => getSetting('google_site_verification', ''),
+        'bingSiteVerification'   => getSetting('bing_site_verification', ''),
+        'returnPolicyDays'       => (int) getSetting('return_policy_days', '7'),
+        'shippingLeadTimeDays'   => (int) getSetting('shipping_lead_time_days', '2'),
+        'seoRedirects'           => seoGetRedirects(50, 0),
 
         // Live Search
         'searchLiveEnabled'       => getSetting('search_live_enabled', '1') === '1',
@@ -243,7 +248,20 @@ function saveStoreSection(string $section, array $post, array $files = []): arra
             }
             setSetting('enamad_enabled', isset($post['enamad_enabled']) ? '1' : '0');
             setSetting('enamad_embed_code', trim($post['enamad_embed_code'] ?? ''));
-            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات شبکه‌های اجتماعی و نمادها ذخیره شد.'];
+            setSetting('seo_indexing_enabled', isset($post['seo_indexing_enabled']) ? '1' : '0');
+            setSetting('google_site_verification', trim($post['google_site_verification'] ?? ''));
+            setSetting('bing_site_verification', trim($post['bing_site_verification'] ?? ''));
+            setSetting('return_policy_days', (string) max(1, (int) ($post['return_policy_days'] ?? 7)));
+            setSetting('shipping_lead_time_days', (string) max(1, (int) ($post['shipping_lead_time_days'] ?? 2)));
+
+            if (!empty($post['new_redirect_source']) && !empty($post['new_redirect_target'])) {
+                seoRegisterRedirect($post['new_redirect_source'], $post['new_redirect_target'], (int) ($post['new_redirect_status'] ?? 301));
+            }
+            if (!empty($post['delete_redirect_id'])) {
+                seoDeleteRedirect((int) $post['delete_redirect_id']);
+            }
+
+            return ['ok' => true, 'error' => null, 'message' => 'تنظیمات سئو، موتورهای جستجو و شبکه‌ها ذخیره شد.'];
 
         case 'seo':
             setSetting('seo_indexing_enabled', isset($post['seo_indexing_enabled']) ? '1' : '0');
