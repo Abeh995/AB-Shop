@@ -7,6 +7,33 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.41.0 — 2026-11-07
+
+### Master SEO, AI Discovery (GEO) & Product Catalog Infrastructure Expansion
+
+- **English Slug Architecture & Domain Taxonomy Helper (`ab-kit.js`, `SeoService.php`, `ProductService.php`, `admin-product-edit.js`, `admin-categories.js`)**:
+  - Implemented client-side real-time `input` and `paste` character filtering enforcing strictly `[a-z0-9-]`, instantly converting uppercase to lowercase and stripping invalid characters.
+  - Ported sock domain dictionary (`seoGetDomainDictionary()`) into `SeoService.php` to enable intelligent server-side slug generation even when slug input is left blank.
+  - Protected against pure-numeric slugs (e.g. `20`) by automatically prefixing domain descriptor (`socks-20`).
+  - Added strict duplicate slug prevention halting product and category saves with validation errors instead of silent hash appending.
+  - Added 1-click intelligent slug suggestion button (`.ab-slug-suggest-btn`) in product edit and categories workstations with real-time SERP preview synchronization.
+- **Unified Storefront Routing & 301 Redirection (`index.php`, `views/admin/`)**:
+  - Corrected legacy `/product.php?slug=` and `/category.php?slug=` links across admin workstations to canonical `/product/{slug}` and `/category/{slug}`.
+  - Added early 301 backward-compatibility redirects in `index.php` for `product.php` and `category.php` to eliminate 404 errors from legacy bookmarks or external crawlers.
+- **Product Entity Enrichment for Google Merchant Center & Schema.org (`database/migrations/031_v1.41.0_product_entity_enrichment.sql`, `database/schema.sql`, `views/admin/product_edit.php`)**:
+  - Enriched `products` table schema with dedicated columns: `barcode` (GTIN/EAN-13/UPC), `mpn` (Manufacturer Part Number), `brand_name` (custom workshop/label), `gender` (`unisex`, `men`, `women`, `kids`), `pattern` (`solid`, `striped`, `graphic`, `novelty`, `geometric`, `floral`, `plaid`), and `cuff_height` (`crew`, `ankle`, `no-show`, `knee-high`, `quarter`, `tights`), indexed via `idx_product_entities`.
+  - Added "اطلاعات تجاری و طبقه‌بندی هوشمند (Google Merchant & Schema)" card in product edit workstation.
+  - Enhanced `seoBuildProductJsonLd()` in `SeoService.php` to inject `gtin13`, `mpn`, custom `brand`, `audience` (suggestedGender), `pattern`, and physical dimensions into JSON-LD payload.
+- **Advanced Technical On-Page SEO, FAQ Rich Snippets & CWV LCP Preloading (`views/layout/header.php`, `views/site/product.php`, `app/controllers/site/product.php`)**:
+  - Implemented `seoBuildImageAttributes()` in `SeoService.php` generating descriptive, keyword-optimized `alt` and `title` tags combining Persian name, English slug, and sequential index for all gallery images.
+  - Implemented `seoBuildProductFaqJsonLd()` generating factual, product-grounded FAQ schemas (washing care, elastic/cuff durability, fabric shrinkage/pilling resistance, and shoe size fit) and rendered an accessible `<details>` accordion on product pages.
+  - Added `<link rel="preload" as="image" ... type="image/webp" fetchpriority="high">` in `header.php` for hero product images, eliminating Largest Contentful Paint delays.
+  - Standardized Open Graph image dimension tags (1200x630).
+- **LLM/GEO Caching, AI Agent Protocol & CLI Migration Runner (`app/controllers/site/llms.php`, `.well-known/ai-plugin.json`, `.well-known/openapi.yaml`, `robots.php`, `tools/migrate.php`)**:
+  - Added Conditional GET support with strong ETag computation and `HTTP 304 Not Modified` fast-exit in `/llms.txt` and `/llms-full.txt` alongside `Cache-Control` headers to protect shared hosting bandwidth against aggressive AI bot polling.
+  - Deployed standard AI agent manifest (`.well-known/ai-plugin.json`) and OpenAPI 3.0 specification (`.well-known/openapi.yaml`) for autonomous AI catalog queries.
+  - Introduced `tools/migrate.php` CLI migration runner for safe, idempotent schema updates with `schema_migrations` tracking.
+
 ## 1.40.1 — 2026-11-07
 
 ### Dynamic Technical Product Specification Presets & Taxonomy (`product_spec_presets`)

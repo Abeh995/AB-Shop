@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: AB-Socks Catalog & AI Knowledge API
+  description: Public read-only endpoints for autonomous AI agents and LLM crawlers to access catalog inventory, technical sock specifications, and store policies.
+  version: 1.41.0
+servers:
+  - url: https://ab-socks.ir
+    description: Production Server
+paths:
+  /llms.txt:
+    get:
+      summary: Retrieve standard AI knowledge base & featured catalog
+      description: Returns concise Markdown document containing brand overview, shipping/return policies, category taxonomy, and featured products.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain; charset=utf-8:
+              schema:
+                type: string
+        '304':
+          description: Content not modified (ETag match)
+  /llms-full.txt:
+    get:
+      summary: Retrieve full catalog with comprehensive fiber and pricing specifications
+      description: Returns extended Markdown directory listing active products, exact prices, stock statuses, and technical yarn compositions.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/plain; charset=utf-8:
+              schema:
+                type: string
+        '304':
+          description: Content not modified (ETag match)
+  /search:
+    get:
+      summary: Search sock products by query
+      description: Search catalog by keyword, pattern, material, or color.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search keywords (Persian or English)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML search results page
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+

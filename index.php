@@ -38,10 +38,28 @@ switch ($page) {
         require $controllersDir . '/category.php';
         break;
 
+    case 'category.php':
+        $legacyCatSlug = trim($_GET['slug'] ?? '');
+        if ($legacyCatSlug !== '') {
+            header('Location: /category/' . rawurlencode($legacyCatSlug), true, 301);
+            exit;
+        }
+        header('Location: /categories', true, 301);
+        exit;
+
     case 'product':
         $_GET['slug'] = $segments[1] ?? '';
         require $controllersDir . '/product.php';
         break;
+
+    case 'product.php':
+        $legacyProdSlug = trim($_GET['slug'] ?? '');
+        if ($legacyProdSlug !== '') {
+            header('Location: /product/' . rawurlencode($legacyProdSlug), true, 301);
+            exit;
+        }
+        header('Location: /', true, 301);
+        exit;
 
     case 'cart':
         require $controllersDir . '/cart.php';

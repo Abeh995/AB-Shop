@@ -49,15 +49,17 @@
 
 
     // ==========================================
-    // 2. Persian Slug Generator
+    // 2. English Slug Generator
     // ==========================================
     function slugify(text) {
-        return text
-            .toString()
-            .trim()
+        if (window.AB && window.AB.slugHelper) {
+            return window.AB.slugHelper.generate(text);
+        }
+        return String(text || '')
             .toLowerCase()
-            .replace(/[\s\-_]+/g, '-')
-            .replace(/[^\u0600-\u06FFa-z0-9\-]/g, '')
+            .trim()
+            .replace(/[^a-z0-9\-]/g, '-')
+            .replace(/-+/g, '-')
             .replace(/^-+|-+$/g, '');
     }
 

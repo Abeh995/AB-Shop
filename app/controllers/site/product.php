@@ -44,21 +44,26 @@ $metaDescription = !empty($product['seo_description'])
     : ($product['description'] ? seoCleanText($product['description'], 160) : ($product['name'] . ' — ' . SITE_NAME));
 $ogImage = rtrim(SITE_URL, '/') . $mainImage;
 
-// Structured Data: BreadcrumbList + Full Merchant Product Schema
+// Structured Data: BreadcrumbList + Full Merchant Product Schema + FAQ Schema
+$materialSpecs = seoParseJsonList($product['material_specs'] ?? null);
 $breadcrumbs = [
     ['name' => 'خانه', 'url' => '/'],
     ['name' => $product['category_name'], 'url' => '/category/' . $product['category_slug']],
     ['name' => $product['name'], 'url' => '/product/' . $product['slug']],
 ];
+$productFaq = seoBuildProductFaqJsonLd($product, $materialSpecs);
 $jsonLd = [
     seoBuildProductJsonLd($product, $variants, $finalPrice, $totalStock),
-    seoBuildBreadcrumbsJsonLd($breadcrumbs)
+    seoBuildBreadcrumbsJsonLd($breadcrumbs),
 ];
+if ($productFaq) {
+    $jsonLd[] = $productFaq;
+}
 
-$materialSpecs = seoParseJsonList($product['material_specs'] ?? null);
+$preloadHeroImage = $mainImage;
 
 renderView('site/product', compact(
     'pageTitle', 'product', 'gallery', 'mainImage', 'variants', 'hasVariants', 'totalStock', 'discount', 'finalPrice', 'tags',
     'defaultVariantId', 'selectedVariant', 'selectedVariantLabel', 'initialVariantStock', 'initialMaxQty', 'initialPrice',
-    'metaDescription', 'ogImage', 'canonicalUrl', 'breadcrumbs', 'materialSpecs', 'jsonLd'
+    'metaDescription', 'ogImage', 'canonicalUrl', 'breadcrumbs', 'materialSpecs', 'jsonLd', 'preloadHeroImage', 'productFaq'
 ));

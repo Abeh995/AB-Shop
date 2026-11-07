@@ -143,10 +143,15 @@ foreach ($categories as $c) {
 
                 <!-- 2. Slug & Live Preview -->
                 <div class="cat-form-group">
-                    <label class="cat-label" for="catInputSlug">
-                        <span>نامک انگلیسی / اسلاگ</span>
-                    </label>
-                    <input class="cat-input" type="text" name="slug" id="catInputSlug" placeholder="men-socks" dir="ltr" autocomplete="off">
+                    <div class="cat-label-row">
+                        <label class="cat-label" for="catInputSlug">
+                            <span>نامک انگلیسی / اسلاگ</span>
+                        </label>
+                        <button type="button" class="ab-slug-suggest-btn" data-ab-slug-suggest="#catInputName" data-ab-slug-target="#catInputSlug">
+                            ⚡ پیشنهاد نامک انگلیسی
+                        </button>
+                    </div>
+                    <input class="cat-input" type="text" name="slug" id="catInputSlug" placeholder="men-socks" dir="ltr" pattern="[a-z0-9\-]+" inputmode="latin" autocomplete="off" spellcheck="false" data-ab-slug-clean>
                     <div class="cat-slug-preview-box">
                         <span class="cat-slug-prefix">ab-socks.ir/category/</span>
                         <span class="cat-slug-text" id="catSlugPreviewText">category-name</span>
@@ -456,7 +461,7 @@ foreach ($categories as $c) {
                                 </button>
 
                                 <!-- View in Storefront -->
-                                <a href="/category.php?slug=<?= urlencode($slug) ?>" target="_blank" class="cat-act-btn" title="مشاهده در فروشگاه">
+                                <a href="/category/<?= rawurlencode($slug) ?>" target="_blank" class="cat-act-btn" title="مشاهده در فروشگاه">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </a>
 

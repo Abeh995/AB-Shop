@@ -1077,6 +1077,209 @@
         }
     };
 
+    // =========================================================================
+    // 8. English Slug Helper & Sock Domain Mapping (AB.slugHelper)
+    // =========================================================================
+    AB.slugHelper = {
+        /**
+         * Curated English mappings for common sock industry terms.
+         * Multi-word phrases are listed first so they match before single words.
+         */
+        dictionary: [
+            // Multi-word phrases
+            { fa: 'بالای زانو', en: 'over-knee-socks' },
+            { fa: 'بالازانو', en: 'over-knee-socks' },
+            { fa: 'جوراب شلواری', en: 'tights' },
+            { fa: 'نیم ساق', en: 'quarter-socks' },
+            { fa: 'نیم‌ساق', en: 'quarter-socks' },
+            { fa: 'ساق بلند', en: 'crew-socks' },
+            { fa: 'ساق‌بلند', en: 'crew-socks' },
+            { fa: 'ساق دار', en: 'crew-socks' },
+            { fa: 'ساق‌دار', en: 'crew-socks' },
+            { fa: 'ساقدار', en: 'crew-socks' },
+            { fa: 'بدون درز', en: 'seamless' },
+            { fa: 'پنجه گیری', en: 'seamless' },
+            { fa: 'پنجه‌گیری', en: 'seamless' },
+            { fa: 'راه راه', en: 'striped' },
+            { fa: 'راه‌راه', en: 'striped' },
+            { fa: 'طرح دار', en: 'patterned' },
+            { fa: 'طرح‌دار', en: 'patterned' },
+            { fa: 'طرحدار', en: 'patterned' },
+            { fa: 'خال خالی', en: 'polka-dot' },
+            { fa: 'خال‌خالی', en: 'polka-dot' },
+            { fa: 'تا به تا', en: 'mismatched' },
+            { fa: 'لنگه به لنگه', en: 'mismatched' },
+            { fa: 'بچه گانه', en: 'kids' },
+            { fa: 'بچگانه', en: 'kids' },
+            { fa: 'نخ پنبه', en: 'cotton' },
+            { fa: 'نخ‌پنبه', en: 'cotton' },
+            { fa: 'پشم مرینوس', en: 'merino-wool' },
+
+            // Sock Heights / Types
+            { fa: 'کالج', en: 'no-show-socks' },
+            { fa: 'پاپوش', en: 'no-show-socks' },
+            { fa: 'مچی', en: 'ankle-socks' },
+            { fa: 'شلواری', en: 'tights' },
+            { fa: 'ورزشی', en: 'athletic-socks' },
+            { fa: 'اسپرت', en: 'athletic' },
+            { fa: 'واریس', en: 'compression-socks' },
+            { fa: 'فشرده', en: 'compression' },
+            { fa: 'حوله ای', en: 'cushioned' },
+            { fa: 'حوله‌ای', en: 'cushioned' },
+            { fa: 'توری', en: 'fishnet' },
+            { fa: 'گیپور', en: 'lace' },
+
+            // Fibers / Materials
+            { fa: 'پنبه', en: 'cotton' },
+            { fa: 'نخی', en: 'cotton' },
+            { fa: 'پنبه‌ای', en: 'cotton' },
+            { fa: 'پشم', en: 'wool' },
+            { fa: 'پشمی', en: 'wool' },
+            { fa: 'مرینوس', en: 'merino' },
+            { fa: 'بامبو', en: 'bamboo' },
+            { fa: 'اسپندکس', en: 'spandex' },
+            { fa: 'لایکرا', en: 'lycra' },
+            { fa: 'ابریشم', en: 'silk' },
+            { fa: 'ابریشمی', en: 'silk' },
+            { fa: 'لمه', en: 'glitter' },
+            { fa: 'شاین', en: 'shimmer' },
+
+            // Gender / Audience
+            { fa: 'مردانه', en: 'men' },
+            { fa: 'زنانه', en: 'women' },
+            { fa: 'دخترانه', en: 'girls' },
+            { fa: 'پسرانه', en: 'boys' },
+            { fa: 'کودک', en: 'kids' },
+            { fa: 'نوزادی', en: 'baby' },
+            { fa: 'مشترک', en: 'unisex' },
+
+            // Patterns & Visual Themes
+            { fa: 'ساده', en: 'solid' },
+            { fa: 'چهارخانه', en: 'plaid' },
+            { fa: 'شطرنجی', en: 'checkerboard' },
+            { fa: 'فانتزی', en: 'novelty' },
+            { fa: 'عروسکی', en: 'cartoon' },
+            { fa: 'گوزن', en: 'deer' },
+            { fa: 'خرسی', en: 'bear' },
+            { fa: 'هندسی', en: 'geometric' },
+            { fa: 'گلدار', en: 'floral' },
+            { fa: 'گل‌دار', en: 'floral' },
+            { fa: 'کریسمس', en: 'christmas' },
+            { fa: 'یلدا', en: 'yalda' },
+            { fa: 'قلب', en: 'heart' },
+            { fa: 'ستاره', en: 'star' },
+
+            // Colors
+            { fa: 'مشکی', en: 'black' },
+            { fa: 'سیاه', en: 'black' },
+            { fa: 'سفید', en: 'white' },
+            { fa: 'طوسی', en: 'grey' },
+            { fa: 'خاکستری', en: 'grey' },
+            { fa: 'سرمه ای', en: 'navy' },
+            { fa: 'سرمه‌ای', en: 'navy' },
+            { fa: 'آبی', en: 'blue' },
+            { fa: 'قرمز', en: 'red' },
+            { fa: 'سرخ', en: 'red' },
+            { fa: 'سبز', en: 'green' },
+            { fa: 'زرد', en: 'yellow' },
+            { fa: 'قهوه ای', en: 'brown' },
+            { fa: 'قهوه‌ای', en: 'brown' },
+            { fa: 'کرم', en: 'beige' },
+            { fa: 'بژ', en: 'beige' },
+            { fa: 'صورتی', en: 'pink' },
+            { fa: 'بنفش', en: 'purple' },
+            { fa: 'نارنجی', en: 'orange' },
+            { fa: 'زرشکی', en: 'maroon' },
+            { fa: 'یشمی', en: 'olive' }
+        ],
+
+        /**
+         * Words to completely strip out of slug generation.
+         */
+        stopWords: [
+            'جوراب', 'مدل', 'کد', 'نوع', 'یک', 'جفت', 'خرید', 'فروش',
+            'با', 'و', 'های', 'ها', 'از', 'در', 'برای', 'ویژه', 'اعلا', 'اصل'
+        ],
+
+        /**
+         * Sanitizes a string into strictly lowercase ASCII kebab-case [a-z0-9-].
+         * Prevents pure numeric slugs by prefixing 'socks-'.
+         * @param {string} str
+         * @returns {string}
+         */
+        sanitize: function (str) {
+            if (!str) return '';
+            let s = String(str);
+            if (AB.fmt && typeof AB.fmt.toEnDigits === 'function') {
+                s = AB.fmt.toEnDigits(s);
+            }
+            s = s.toLowerCase()
+                .trim()
+                .replace(/%[0-9a-f]{2}/gi, '-')
+                .replace(/[\s_/\\]+/g, '-')
+                .replace(/[^a-z0-9\-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '');
+
+            if (/^[0-9]+$/.test(s)) {
+                s = 'socks-' + s;
+            }
+            return s;
+        },
+
+        /**
+         * Generates a suggested English slug from Persian text using the sock domain dictionary.
+         * @param {string} persianText
+         * @returns {string}
+         */
+        generate: function (persianText) {
+            if (!persianText || typeof persianText !== 'string') return '';
+
+            let text = ' ' + AB.fmt.normalizeText(persianText) + ' ';
+
+            // Remove stop words
+            this.stopWords.forEach(function (sw) {
+                const re = new RegExp('\\s+' + sw + '\\s+', 'gu');
+                text = text.replace(re, ' ');
+            });
+
+            const tokens = [];
+
+            // Replace dictionary matches
+            this.dictionary.forEach(function (entry) {
+                const normFa = AB.fmt.normalizeText(entry.fa);
+                const re = new RegExp('(^|\\s)' + normFa + '($|\\s)', 'gu');
+                if (re.test(text)) {
+                    tokens.push(entry.en);
+                    text = text.replace(re, ' ');
+                }
+            });
+
+            // Extract any existing English words or numbers from the original text
+            let convertedText = AB.fmt && typeof AB.fmt.toEnDigits === 'function' ? AB.fmt.toEnDigits(persianText) : persianText;
+            const englishTokens = convertedText.match(/[a-zA-Z0-9]+/g) || [];
+            englishTokens.forEach(function (token) {
+                const lower = token.toLowerCase();
+                if (!tokens.includes(lower)) {
+                    tokens.push(lower);
+                }
+            });
+
+            // Combine tokens and sanitize
+            let rawSlug = tokens.join('-');
+            let finalSlug = this.sanitize(rawSlug);
+
+            // If empty, fallback to generic socks tag with timestamp
+            if (!finalSlug) {
+                finalSlug = 'socks-' + Math.floor(Date.now() / 1000);
+            } else if (/^[0-9]+$/.test(finalSlug)) {
+                finalSlug = 'socks-' + finalSlug;
+            }
+
+            return finalSlug;
+        }
+    };
+
     // Delegated click handler for SEO Help Toggles [data-ab-seo-help-toggle]
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('[data-ab-seo-help-toggle]');
@@ -1130,6 +1333,94 @@
             }
         }
     });
+
+    // Delegated click handler for Slug Suggest Button [data-ab-slug-suggest]
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-ab-slug-suggest]');
+        if (!btn) return;
+        e.preventDefault();
+
+        const sourceSelector = btn.getAttribute('data-ab-slug-suggest') || '#name';
+        const targetSelector = btn.getAttribute('data-ab-slug-target') || '#productSlugInput';
+
+        const sourceEl = document.querySelector(sourceSelector);
+        const targetEl = document.querySelector(targetSelector);
+
+        if (!sourceEl || !targetEl) return;
+
+        const sourceVal = sourceEl.value.trim();
+        if (!sourceVal) {
+            if (window.AB && window.AB.toast) {
+                window.AB.toast.show('لطفاً ابتدا عنوان را وارد کنید.', 'error');
+            }
+            sourceEl.focus();
+            return;
+        }
+
+        const suggested = AB.slugHelper.generate(sourceVal);
+        targetEl.value = suggested;
+        targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+        targetEl.focus();
+
+        if (window.AB && window.AB.toast) {
+            window.AB.toast.show('نامک انگلیسی بر اساس واژگان جوراب پیشنهاد شد: ' + suggested, 'success');
+        }
+    });
+
+    // Strict real-time character filter on slug inputs: allows ONLY [a-z0-9-] while typing
+    document.addEventListener('input', function (e) {
+        const input = e.target.closest('input[data-ab-slug-clean], #productSlugInput, #catInputSlug');
+        if (!input) return;
+
+        const original = input.value;
+        let s = original;
+        if (AB.fmt && typeof AB.fmt.toEnDigits === 'function') {
+            s = AB.fmt.toEnDigits(s);
+        }
+        // Force lowercase, convert spaces/underscores/slashes to hyphens, purge all non [a-z0-9-]
+        s = s.toLowerCase()
+            .replace(/[\s_/\\]+/g, '-')
+            .replace(/[^a-z0-9\-]/g, '')
+            .replace(/-+/g, '-');
+
+        // Prevent leading hyphen while actively typing
+        if (s.startsWith('-')) {
+            s = s.replace(/^-+/, '');
+        }
+
+        if (s !== original) {
+            const start = input.selectionStart;
+            input.value = s;
+            if (typeof input.setSelectionRange === 'function') {
+                const newPos = Math.min(start, s.length);
+                input.setSelectionRange(newPos, newPos);
+            }
+        }
+    }, true);
+
+    // Enforce full sanitization on paste
+    document.addEventListener('paste', function (e) {
+        const input = e.target.closest('input[data-ab-slug-clean], #productSlugInput, #catInputSlug');
+        if (!input) return;
+        setTimeout(function () {
+            const cleaned = AB.slugHelper.sanitize(input.value);
+            if (cleaned !== input.value) {
+                input.value = cleaned;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, 0);
+    }, true);
+
+    // Enforce English kebab-case sanitization on slug inputs on blur [data-ab-slug-clean]
+    document.addEventListener('blur', function (e) {
+        const input = e.target.closest('input[data-ab-slug-clean], #productSlugInput, #catInputSlug');
+        if (!input) return;
+        const cleaned = AB.slugHelper.sanitize(input.value);
+        if (cleaned !== input.value) {
+            input.value = cleaned;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }, true);
 
     // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {

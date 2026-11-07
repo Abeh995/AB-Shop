@@ -170,6 +170,8 @@ function seoBuildProductJsonLd(array $product, array $variants = [], ?float $fin
     $returnDays = (int) getSetting('return_policy_days', '7');
     $shippingDays = (int) getSetting('shipping_lead_time_days', '2');
 
+    $brandName = !empty($product['brand_name']) ? $product['brand_name'] : SITE_NAME;
+
     $schema = [
         '@context'    => 'https://schema.org',
         '@type'       => 'Product',
@@ -180,9 +182,10 @@ function seoBuildProductJsonLd(array $product, array $variants = [], ?float $fin
             ? $product['seo_description'] 
             : seoCleanText($product['description'] ?? '', 160),
         'sku'         => $product['sku'] ?: ('SKU-' . $product['id']),
+        'mpn'         => !empty($product['mpn']) ? $product['mpn'] : ($product['sku'] ?: ('MPN-' . $product['id'])),
         'brand'       => [
             '@type' => 'Brand',
-            'name'  => SITE_NAME,
+            'name'  => $brandName,
         ],
         'offers'      => [
             '@type'                   => 'Offer',
@@ -220,10 +223,52 @@ function seoBuildProductJsonLd(array $product, array $variants = [], ?float $fin
         ],
     ];
 
-    // Structured Entity grounding for AI and search engines (material specs)
+    // Google Merchant Center & Schema Barcode (GTIN)
+    if (!empty($product['barcode'])) {
+        $cleanBarcode = preg_replace('/\D/', '', (string) $product['barcode']);
+        if (strlen($cleanBarcode) === 13) {
+            $schema['gtin13'] = $cleanBarcode;
+        } elseif ($cleanBarcode !== '') {
+            $schema['gtin'] = $cleanBarcode;
+        }
+    }
+
+    // Demographic Target & Pattern Specifications
+    if (!empty($product['gender'])) {
+        $genderMap = [
+            'men'    => 'male',
+            'women'  => 'female',
+            'unisex' => 'unisex',
+            'kids'   => 'kids',
+        ];
+        $schema['audience'] = [
+            '@type'           => 'PeopleAudience',
+            'suggestedGender' => $genderMap[$product['gender']] ?? 'unisex',
+        ];
+    }
+    if (!empty($product['pattern'])) {
+        $schema['pattern'] = $product['pattern'];
+    }
+
+    // Structured Entity grounding for AI and search engines (material specs + physical sock entities)
+    $props = [];
+    if (!empty($product['cuff_height'])) {
+        $props[] = [
+            '@type' => 'PropertyValue',
+            'name'  => 'ارتفاع ساق',
+            'value' => (string) $product['cuff_height'],
+        ];
+    }
+    if (!empty($product['gender'])) {
+        $props[] = [
+            '@type' => 'PropertyValue',
+            'name'  => 'گروه کاربری / جنسیت',
+            'value' => (string) $product['gender'],
+        ];
+    }
+
     $specs = seoParseJsonList($product['material_specs'] ?? null);
     if (!empty($specs)) {
-        $props = [];
         foreach ($specs as $key => $val) {
             if ($val !== '' && $val !== null) {
                 $props[] = [
@@ -233,9 +278,10 @@ function seoBuildProductJsonLd(array $product, array $variants = [], ?float $fin
                 ];
             }
         }
-        if (!empty($props)) {
-            $schema['additionalProperty'] = $props;
-        }
+    }
+
+    if (!empty($props)) {
+        $schema['additionalProperty'] = $props;
     }
 
     return $schema;
@@ -314,6 +360,50 @@ function seoBuildFaqJsonLd(array $faqItems): ?array
 }
 
 /**
+ * Build factual, product-grounded FAQPage Schema for product detail page.
+ * Covers washing instructions, elastic durability, fabric shrinkage/pilling, and shoe size fit.
+ */
+function seoBuildProductFaqJsonLd(array $product, array $materialSpecs = []): ?array
+{
+    $name = trim((string)($product['name'] ?? 'این محصول'));
+    $cuffHeight = $product['cuff_height'] ?? 'crew';
+
+    $cuffMap = [
+        'crew'       => 'ساق‌دار',
+        'ankle'      => 'مچی',
+        'no-show'    => 'کالج (بدون ساق)',
+        'knee-high'  => 'بالای زانو',
+        'quarter'    => 'نیم‌ساق',
+        'tights'     => 'جوراب شلواری',
+    ];
+    $cuffFa = $cuffMap[$cuffHeight] ?? 'ساق';
+
+    $washCare = $materialSpecs['دستور شستشو'] ?? 'شستشو با آب سرد یا ولرم (حداکثر ۳۰ درجه سانتی‌گراد) با شوینده ملایم، بدون استفاده از مایع سفیدکننده و خشک‌کن حرارتی.';
+    $fiberDesc = $materialSpecs['درصد پنبه'] ?? 'نخ‌پنبه طبیعی سوپر شانه‌شده با بالاترین لطافت و تنفس‌پذیری';
+
+    $faqItems = [
+        [
+            'q' => 'دستور شستشو و دمای مناسب شستشوی ' . $name . ' چیست؟',
+            'a' => 'جهت حفظ حداکثر لطافت و عمر مفید کش جوراب، ' . $washCare . ' توصیه می‌شود جوراب‌ها را پشت و رو کرده و در مجاورت هوای آزاد خشک نمایید.',
+        ],
+        [
+            'q' => 'کشسانی و دوام کش قسمت ' . $cuffFa . ' جوراب چگونه است؟',
+            'a' => 'در بافت کش و لبه‌های جوراب از کش اسپندکس/لایکرا استاندارد با تراکم دوبل استفاده شده است که مانع از سر خوردن جوراب روی پا شده و در عین حال هیچ‌گونه فشار نامتعارفی به گردش خون ساق پا وارد نمی‌کند.',
+        ],
+        [
+            'q' => 'آیا الیاف این جوراب پس از شستشو دچار آبرفت یا پرزدهی می‌شود؟',
+            'a' => 'خیر؛ به دلیل استفاده از ' . $fiberDesc . ' و عملیات تکمیلی تثبیت حرارتی، آبرفت در محدوده استاندارد بافندگی (زیر ۳٪) کنترل شده و در برابر سایش و پرزدهی (Pilling) مقاومت بسیار بالایی دارد.',
+        ],
+        [
+            'q' => 'این جوراب مناسب چه سایز پای کفش است؟',
+            'a' => 'این مدل دارای سایزبندی استاندارد فری‌سایز کشسان بوده و برای سایز پای ۳۶ تا ۴۲ کاملاً جذب و منطبق بر قالب ارگونومیک پا است.',
+        ],
+    ];
+
+    return seoBuildFaqJsonLd($faqItems);
+}
+
+/**
  * Build Store & WebSite Schema with Sitelinks SearchBox.
  */
 function seoBuildOrganizationJsonLd(): array
@@ -360,6 +450,259 @@ function seoBuildOrganizationJsonLd(): array
 // ============================================================
 // 3. String & Structured Helpers
 // ============================================================
+
+/**
+ * Automatically generate semantic, keyword-optimized alt and title attributes
+ * for product gallery images combining Persian product title, English slug, and sequential index.
+ */
+function seoBuildImageAttributes(array $product, int $index = 1, bool $isMain = false): array
+{
+    $name = trim((string)($product['name'] ?? 'جوراب'));
+    $slug = trim((string)($product['slug'] ?? ''));
+    $brand = !empty($product['brand_name']) ? $product['brand_name'] : SITE_NAME;
+
+    if ($isMain) {
+        return [
+            'alt'   => $name . ($slug !== '' ? ' — ' . $slug : ''),
+            'title' => $name . ' | تولید شده از نخ‌پنبه سوپر اعلا — ' . $brand,
+        ];
+    }
+
+    $idxFa = toPersianDigits((string)$index);
+    return [
+        'alt'   => $name . ' — نمای ' . $idxFa . ($slug !== '' ? ' (' . $slug . '-' . $index . ')' : ''),
+        'title' => $name . ' — تصویر گالری شماره ' . $idxFa,
+    ];
+}
+
+/**
+ * Sock domain dictionary for translating Persian product & category terms to English tokens.
+ * Single Source of Truth matching client-side dictionary in ab-kit.js.
+ */
+function seoGetDomainDictionary(): array
+{
+    static $dict = null;
+    if ($dict !== null) {
+        return $dict;
+    }
+    $dict = [
+        // Heights & Sock cuts
+        'بالای زانو'   => 'over-knee-socks',
+        'بالازانو'     => 'over-knee-socks',
+        'جوراب شلواری' => 'tights',
+        'نیم ساق'      => 'quarter-socks',
+        'نیم‌ساق'      => 'quarter-socks',
+        'ساق بلند'     => 'crew-socks',
+        'ساق‌بلند'     => 'crew-socks',
+        'ساق دار'      => 'crew-socks',
+        'ساق‌دار'      => 'crew-socks',
+        'ساقدار'       => 'crew-socks',
+        'بدون درز'     => 'seamless',
+        'پنجه گیری'    => 'seamless',
+        'پنجه‌گیری'    => 'seamless',
+        'راه راه'      => 'striped',
+        'راه‌راه'      => 'striped',
+        'طرح دار'      => 'patterned',
+        'طرح‌دار'      => 'patterned',
+        'طرحدار'       => 'patterned',
+        'خال خالی'     => 'polka-dot',
+        'خال‌خالی'     => 'polka-dot',
+        'تا به تا'     => 'mismatched',
+        'لنگه به لنگه' => 'mismatched',
+        'بچه گانه'     => 'kids',
+        'بچگانه'       => 'kids',
+        'نخ پنبه'      => 'cotton',
+        'نخ‌پنبه'      => 'cotton',
+        'پشم مرینوس'   => 'merino-wool',
+        'کالج'         => 'no-show-socks',
+        'پاپوش'        => 'no-show-socks',
+        'مچی'          => 'ankle-socks',
+        'شلواری'       => 'tights',
+        'ورزشی'        => 'athletic-socks',
+        'اسپرت'        => 'athletic',
+        'واریس'        => 'compression-socks',
+        'فشرده'        => 'compression',
+        'حوله ای'      => 'cushioned',
+        'حوله‌ای'      => 'cushioned',
+        'توری'         => 'fishnet',
+        'گیپور'        => 'lace',
+
+        // Fibers / Materials
+        'پنبه'         => 'cotton',
+        'نخی'          => 'cotton',
+        'پنبه‌ای'      => 'cotton',
+        'پشم'          => 'wool',
+        'پشمی'         => 'wool',
+        'مرینوس'       => 'merino',
+        'بامبو'        => 'bamboo',
+        'اسپندکس'      => 'spandex',
+        'لایکرا'       => 'lycra',
+        'ابریشم'       => 'silk',
+        'ابریشمی'      => 'silk',
+        'لمه'          => 'glitter',
+        'شاین'         => 'shimmer',
+
+        // Gender / Audience
+        'مردانه'       => 'men',
+        'زنانه'        => 'women',
+        'دخترانه'      => 'girls',
+        'پسرانه'       => 'boys',
+        'کودک'         => 'kids',
+        'نوزادی'       => 'baby',
+        'مشترک'        => 'unisex',
+
+        // Patterns & Themes
+        'ساده'         => 'solid',
+        'چهارخانه'     => 'plaid',
+        'شطرنجی'       => 'checkerboard',
+        'فانتزی'       => 'novelty',
+        'عروسکی'       => 'cartoon',
+        'گوزن'         => 'deer',
+        'خرسی'         => 'bear',
+        'هندسی'        => 'geometric',
+        'گلدار'        => 'floral',
+        'گل‌دار'       => 'floral',
+        'کریسمس'       => 'christmas',
+        'یلدا'         => 'yalda',
+        'قلب'          => 'heart',
+        'ستاره'        => 'star',
+
+        // Colors
+        'مشکی'         => 'black',
+        'سیاه'         => 'black',
+        'سفید'         => 'white',
+        'طوسی'         => 'grey',
+        'خاکستری'      => 'grey',
+        'سرمه ای'      => 'navy',
+        'سرمه‌ای'      => 'navy',
+        'آبی'          => 'blue',
+        'قرمز'         => 'red',
+        'سرخ'          => 'red',
+        'سبز'          => 'green',
+        'زرد'          => 'yellow',
+        'قهوه ای'      => 'brown',
+        'قهوه‌ای'      => 'brown',
+        'کرم'          => 'beige',
+        'بژ'           => 'beige',
+        'صورتی'        => 'pink',
+        'بنفش'         => 'purple',
+        'نارنجی'       => 'orange',
+        'زرشکی'        => 'maroon',
+        'یشمی'         => 'olive',
+    ];
+    return $dict;
+}
+
+/**
+ * Stopwords to strip during slug derivation.
+ */
+function seoGetStopWords(): array
+{
+    return [
+        'جوراب', 'مدل', 'کد', 'نوع', 'یک', 'جفت', 'خرید', 'فروش',
+        'با', 'و', 'های', 'ها', 'از', 'در', 'برای', 'ویژه', 'اعلا', 'اصل'
+    ];
+}
+
+/**
+ * Generates an intelligent English slug from Persian title using domain dictionary.
+ */
+function seoGenerateEnglishSlug(string $persianText): string
+{
+    $text = trim($persianText);
+    if ($text === '') {
+        return '';
+    }
+
+    // Convert Persian & Arabic digits to English digits
+    $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    $textWithEnDigits = str_replace($persianDigits, $englishDigits, $text);
+
+    // Normalize characters (Arabic yeh/kaf to Persian)
+    $textNormalized = str_replace(['ي', 'ك'], ['ی', 'ک'], $textWithEnDigits);
+    $paddedText = ' ' . preg_replace('/\s+/u', ' ', $textNormalized) . ' ';
+
+    // Strip stop words
+    foreach (seoGetStopWords() as $sw) {
+        $paddedText = preg_replace('/(\s+)' . preg_quote($sw, '/') . '(\s+)/u', ' ', $paddedText);
+    }
+
+    $tokens = [];
+    $dict = seoGetDomainDictionary();
+    foreach ($dict as $fa => $en) {
+        $pattern = '/(^|\s)' . preg_quote($fa, '/') . '($|\s)/u';
+        if (preg_match($pattern, $paddedText)) {
+            $tokens[] = $en;
+            $paddedText = preg_replace($pattern, ' ', $paddedText);
+        }
+    }
+
+    // Extract any existing English words or numbers from original title
+    if (preg_match_all('/[a-zA-Z0-9]+/u', $textWithEnDigits, $matches)) {
+        foreach ($matches[0] as $token) {
+            $lower = strtolower($token);
+            if (!in_array($lower, $tokens, true)) {
+                $tokens[] = $lower;
+            }
+        }
+    }
+
+    $rawSlug = implode('-', $tokens);
+    $slug = sanitizeEnglishSlug($rawSlug);
+
+    if ($slug === '' || ctype_digit($slug)) {
+        if ($slug !== '' && ctype_digit($slug)) {
+            return 'socks-' . $slug;
+        }
+        return '';
+    }
+
+    return $slug;
+}
+
+/**
+ * Strict English kebab-case slug sanitizer.
+ * Forces lowercase ASCII [a-z0-9-], eliminates duplicate hyphens, and trims edges.
+ * Prevents pure numeric slugs by prefixing with 'socks-'.
+ */
+function sanitizeEnglishSlug(string $slug, string $fallback = ''): string
+{
+    $slug = trim($slug);
+
+    // Convert Persian & Arabic digits to English digits
+    $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    $slug = str_replace($persianDigits, $englishDigits, $slug);
+
+    $slug = strtolower($slug);
+    // Strip percent-encoded sequences
+    $slug = preg_replace('/%[0-9a-f]{2}/i', '-', $slug);
+    // Replace whitespace, slashes, and underscores with hyphen
+    $slug = preg_replace('/[\s_\/\\\\]+/u', '-', $slug);
+    // Keep strictly lowercase ASCII letters, digits, and hyphens
+    $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
+    $slug = preg_replace('/-+/', '-', $slug);
+    $slug = trim($slug, '-');
+
+    if ($slug === '') {
+        $fallback = trim($fallback);
+        if ($fallback !== '') {
+            $generated = seoGenerateEnglishSlug($fallback);
+            if ($generated !== '') {
+                return $generated;
+            }
+        }
+        return 'socks-' . time();
+    }
+
+    // Prevent pure numeric slug (e.g. "20" or "42")
+    if (ctype_digit($slug)) {
+        $slug = 'socks-' . $slug;
+    }
+
+    return $slug;
+}
 
 /**
  * Clean HTML and truncate text safely for meta tags.

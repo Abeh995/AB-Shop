@@ -165,3 +165,24 @@ To strictly uphold Rule 11 (Reuse-First Protocol & Anti-Duplication Invariant) a
    - Centralized `:root` design tokens in `assets/css/admin.css` and shared UI kit `assets/css/admin-components.css`.
    - Asset helpers `asset()` and `assetUrl()` appending mtime timestamps (`?v=1.32.2.<mtime>`) for reliable browser cache invalidation without server-side build steps.
 
+---
+
+## 8. SEO, Generative Engine Optimization (GEO) & Machine Protocols
+
+To ensure maximum organic search visibility and full discoverability across modern AI search engines (ChatGPT Search, Perplexity, Claude, Gemini):
+1. **English Slug Architecture & Domain Mapping Helper (`ab-kit.js`, `SeoService.php`)**:
+   - Standardizes product and category URLs to clean, lowercase ASCII kebab-case (`/product/cotton-crew-socks-deer-navy`).
+   - Domain dictionary in `assets/js/ab-kit.js` automatically maps Persian sock terms (cuff heights, fibers, demographics, patterns, colors) to standard English terms with 1-click suggestion in admin workstations.
+   - Server-side sanitizer `sanitizeEnglishSlug()` prevents non-ASCII and percent-encoded characters from persisting to database.
+   - Automatic 301 redirection tracking (`url_redirects`) seamlessly preserves link equity on slug transitions.
+2. **Product Entity Enrichment & Schema.org / Merchant Center (`SeoService.php`)**:
+   - `products` schema enriched with `barcode` (GTIN-13/UPC), `mpn`, `brand_name`, `gender`, `cuff_height`, and `pattern`.
+   - Injected into `schema.org/Product` JSON-LD with Rial pricing (`IRR`), real-time stock availability, 7-day merchant return policy (`hasMerchantReturnPolicy`), and shipping lead time.
+   - Injected `schema.org/FAQPage` structured data grounded in product facts (washing temperatures, cuff elastic durability, shrinkage, shoe size conversion) paired with accessible HTML `<details>` accordions on storefront product views.
+3. **Core Web Vitals & LCP Preloading (`views/layout/header.php`)**:
+   - Injects `<link rel="preload" as="image" href="..." type="image/webp" fetchpriority="high">` for the hero product image, eliminating Largest Contentful Paint delays.
+   - Enforces standardized Open Graph social share dimensions (1200x630).
+4. **GEO Rate Protection & AI Agent Manifest (`app/controllers/site/llms.php`, `.well-known/`)**:
+   - `/llms.txt` and `/llms-full.txt` serve high-density Markdown catalogs for AI engines with conditional GET support (`ETag` and `HTTP 304 Not Modified`) plus `Cache-Control` headers, protecting shared hosting bandwidth.
+   - Deploys `.well-known/ai-plugin.json` and `.well-known/openapi.yaml` for autonomous AI agents to query live stock and product specs programmatically.
+

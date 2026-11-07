@@ -56,6 +56,8 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 <?php if (!empty($ogImage)): ?>
 <meta property="og:image" content="<?= e($ogImage) ?>">
 <meta property="og:image:alt" content="<?= e($pageTitle) ?>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <?php endif; ?>
 
 <!-- Twitter Card -->
@@ -64,6 +66,11 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 <meta name="twitter:description" content="<?= e($metaDescription) ?>">
 <?php if (!empty($ogImage)): ?>
 <meta name="twitter:image" content="<?= e($ogImage) ?>">
+<?php endif; ?>
+
+<?php if (!empty($preloadHeroImage)): ?>
+<!-- Core Web Vitals: Preload LCP Candidate Image -->
+<link rel="preload" as="image" href="<?= e($preloadHeroImage) ?>" type="image/webp" fetchpriority="high">
 <?php endif; ?>
 
 <?php $siteFavicon = siteFaviconUrl(); ?>

@@ -16,12 +16,15 @@
 
     <div class="product-detail">
 
+        <?php $mainImgAttrs = seoBuildImageAttributes($product, 1, true); ?>
         <div class="product-gallery">
-            <img id="mainProductImage" src="<?= $mainImage ?>" alt="<?= e($product['name']) ?>">
+            <img id="mainProductImage" src="<?= $mainImage ?>" alt="<?= e($mainImgAttrs['alt']) ?>" title="<?= e($mainImgAttrs['title']) ?>">
             <?php if (count($gallery) > 1): ?>
             <div class="gallery-thumbs">
-                <?php foreach ($gallery as $i => $img): ?>
-                    <img src="<?= UPLOAD_URL . e($img) ?>" data-full="<?= UPLOAD_URL . e($img) ?>" class="<?= $i === 0 ? 'active' : '' ?>">
+                <?php foreach ($gallery as $i => $img): 
+                    $thumbAttrs = seoBuildImageAttributes($product, $i + 1, false);
+                ?>
+                    <img src="<?= UPLOAD_URL . e($img) ?>" data-full="<?= UPLOAD_URL . e($img) ?>" class="<?= $i === 0 ? 'active' : '' ?>" alt="<?= e($thumbAttrs['alt']) ?>" title="<?= e($thumbAttrs['title']) ?>">
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
@@ -128,6 +131,27 @@
             <?php endif; ?>
         </div>
     </div>
+
+    <?php if (!empty($productFaq['mainEntity'])): ?>
+    <div class="product-faq-section" style="margin-top: 2.5rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem;">
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            پرسش‌های متداول مشتریان درباره <?= e($product['name']) ?>
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <?php foreach ($productFaq['mainEntity'] as $faq): ?>
+                <details style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                    <summary style="font-weight: 600; font-size: 0.95rem; color: var(--color-text); outline: none;">
+                        <?= e($faq['name']) ?>
+                    </summary>
+                    <div style="margin-top: 8px; font-size: 0.88rem; line-height: 1.7; color: var(--color-muted);">
+                        <?= nl2br(e($faq['acceptedAnswer']['text'])) ?>
+                    </div>
+                </details>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

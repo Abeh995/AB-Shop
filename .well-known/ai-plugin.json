@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "ab_socks_catalog",
+  "name_for_human": "AB-Socks Store",
+  "description_for_model": "Plugin for accessing product catalog, live stock availability, fiber specifications, sock heights, pricing, and return policies for AB-Socks Iran.",
+  "description_for_human": "جستجو و بررسی مشخصات الیاف و موجودی جوراب‌های فروشگاه AB-Socks",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://ab-socks.ir/.well-known/openapi.yaml"
+  },
+  "logo_url": "https://ab-socks.ir/assets/img/logo.png",
+  "contact_email": "info@absocks.ir",
+  "legal_info_url": "https://ab-socks.ir/terms"
+}
+

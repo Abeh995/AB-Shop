@@ -128,6 +128,12 @@ CREATE TABLE IF NOT EXISTS products (
     discount_price DECIMAL(12,0) DEFAULT NULL,  -- اگر تخفیف دارد
     cost_price DECIMAL(12,0) DEFAULT NULL,      -- قیمت تمام‌شده؛ مستقل از قیمت فروش
     sku VARCHAR(60) DEFAULT NULL UNIQUE,
+    barcode VARCHAR(32) DEFAULT NULL,           -- بارکد بین‌المللی GTIN / EAN-13 / UPC برای گوگل مرچنت سنتر
+    mpn VARCHAR(64) DEFAULT NULL,               -- شماره فنی کارگاه یا پارت‌نامبر سازنده (MPN)
+    brand_name VARCHAR(120) DEFAULT NULL,       -- نام برند اختصاصی یا کارگاه تولیدی
+    gender ENUM('unisex', 'men', 'women', 'kids') NOT NULL DEFAULT 'unisex',
+    pattern ENUM('solid', 'striped', 'graphic', 'novelty', 'geometric', 'floral', 'plaid') NOT NULL DEFAULT 'solid',
+    cuff_height ENUM('crew', 'ankle', 'no-show', 'knee-high', 'quarter', 'tights') NOT NULL DEFAULT 'crew',
     material_specs JSON DEFAULT NULL,           -- مشخصات ساختاریافته الیاف و مدل مناسب هوش مصنوعی و اسکیما
     stock INT NOT NULL DEFAULT 0,               -- موجودی کلی (وقتی واریانت ندارد)
     use_global_variant_strategy TINYINT(1) NOT NULL DEFAULT 1,
@@ -138,7 +144,8 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
     INDEX idx_active_featured (is_active, is_featured),
-    INDEX idx_category (category_id)
+    INDEX idx_category (category_id),
+    INDEX idx_product_entities (gender, cuff_height, pattern)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------

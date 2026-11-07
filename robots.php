@@ -41,6 +41,7 @@ if ($indexingEnabled) {
     // 3. Sitemaps and Knowledge Resources
     echo "Sitemap: {$baseUrl}/sitemap.xml\n";
     echo "# AI Knowledge Base: {$baseUrl}/llms.txt\n";
+    echo "# AI Agent Manifest: {$baseUrl}/.well-known/ai-plugin.json\n";
 } else {
     echo "User-agent: *\n";
     echo "Disallow: /\n";

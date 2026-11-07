@@ -349,211 +349,226 @@ function saveProduct(array $data, array $files, int $adminId): array
         return ['ok' => false, 'errors' => $errors];
     }
 
-    // Generate or sanitize unique slug
-    $slugRaw = trim($data['slug'] ?? '');
-    $slug = $slugRaw !== '' ? slugify($slugRaw) : slugify($name);
-    if ($slug === '') {
-        $slug = 'product-' . time();
-    }
-    $slugCheck = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
-    $slugCheck->execute([$slug, $id]);
-    if ($slugCheck->fetch()) {
-        $slug .= '-' . substr(md5(uniqid('', true)), 0, 4);
-    }
-
-    $productId = $id;
-    $useGlobalVariantStrategy = isset($data['use_global_variant_strategy']) ? 1 : 0;
-
-    // SEO & Generative Engine Optimization Metadata
-    $seoTitle = trim($data['seo_title'] ?? '') ?: null;
-    $seoDescription = trim($data['seo_description'] ?? '') ?: null;
-    $canonicalUrl = trim($data['canonical_url'] ?? '') ?: null;
-
-    $materialSpecs = null;
-    if (isset($data['material_specs'])) {
-        if (is_array($data['material_specs'])) {
-            $filtered = array_filter($data['material_specs'], fn($v) => $v !== '' && $v !== null);
-            $materialSpecs = !empty($filtered) ? json_encode($filtered, JSON_UNESCAPED_UNICODE) : null;
-        } elseif (is_string($data['material_specs']) && trim($data['material_specs']) !== '') {
-            $materialSpecs = trim($data['material_specs']);
-        }
-    }
-
-    if ($existingProduct) {
-        // Automatic 301 redirect if slug was modified
-        if (!empty($existingProduct['slug']) && $existingProduct['slug'] !== $slug) {
-            seoRegisterRedirect('/product/' . $existingProduct['slug'], '/product/' . $slug, 301);
-        }
-
-        // Update product metadata (price & cost are recorded via PricingService below)
-        $stmt = $pdo->prepare("
-            UPDATE products 
-            SET category_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, canonical_url=?, discount_price=?, sku=?, material_specs=?, stock=?, use_global_variant_strategy=?, image=?, is_active=?, is_featured=? 
-            WHERE id=?
-        ");
-        $stmt->execute([
-            $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
-            $discountPrice, $sku, $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured, $id
-        ]);
-
-        // Audit price changes if changed
-        $oldPrice = (int) $existingProduct['price'];
-        if ($price !== $oldPrice) {
-            recordPriceChange($productId, null, 'sale_price', 'direct_value', (float) $price, $adminId);
-        }
-
-        $oldCostPrice = $existingProduct['cost_price'] !== null ? (int) $existingProduct['cost_price'] : null;
-        if ($costPrice !== $oldCostPrice) {
-            if ($costPrice === null) {
-                $pdo->prepare("UPDATE products SET cost_price = NULL WHERE id = ?")->execute([$productId]);
-            } else {
-                recordPriceChange($productId, null, 'cost_price', 'direct_value', (float) $costPrice, $adminId);
-            }
-        }
-    } else {
-        // Insert new product
-        $stmt = $pdo->prepare("
-            INSERT INTO products (category_id, name, seo_title, slug, description, seo_description, canonical_url, price, discount_price, cost_price, sku, material_specs, stock, use_global_variant_strategy, image, is_active, is_featured) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        ");
-        $stmt->execute([
-            $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
-            $price, $discountPrice, $costPrice, $sku, $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured
-        ]);
-        $productId = (int) $pdo->lastInsertId();
-
-        // Rename temporary uploaded image if it was a new creation
-        if ($newImageName) {
-            $renamed = renameUploadedImage($newImageName, 'product', $productId, 'main');
-            if ($renamed) {
-                $newImageName = $renamed;
-                $pdo->prepare("UPDATE products SET image = ? WHERE id = ?")->execute([$renamed, $productId]);
-            }
-        }
-
-        // Record initial price creation in price_history
-        recordPriceChange($productId, null, 'sale_price', 'direct_value', (float) $price, $adminId, 'قیمت‌گذاری اولیه محصول');
-        if ($costPrice !== null) {
-            recordPriceChange($productId, null, 'cost_price', 'direct_value', (float) $costPrice, $adminId, 'ثبت اولیه قیمت تمام‌شده');
-        }
-    }
-
-    // ------------------------------------------
-    // Variants: Upsert in place (Rule 2 invariant)
-    // ------------------------------------------
-    $existingVariantsStmt = $pdo->prepare("SELECT * FROM product_variants WHERE product_id = ?");
-    $existingVariantsStmt->execute([$productId]);
-    $oldVariantsById = [];
-    foreach ($existingVariantsStmt->fetchAll() as $v) {
-        $oldVariantsById[(int) $v['id']] = $v;
-    }
-
-    $submittedVariantIds = [];
-    if ($hasVariants) {
-        $variantIdsIn = $data['variant_id'] ?? [];
-        $sizes = $data['variant_size'] ?? [];
-        $colors = $data['variant_color'] ?? [];
-        $vstocks = $data['variant_stock'] ?? [];
-        $vcostPrices = $data['variant_cost_price'] ?? [];
-        $defaultVariantIdx = isset($data['default_variant_index']) ? (int) $data['default_variant_index'] : 0;
-
-        for ($i = 0; $i < count($sizes); $i++) {
-            $sz = trim($sizes[$i] ?? '');
-            $cl = trim($colors[$i] ?? '');
-            $st = (int) ($vstocks[$i] ?? 0);
-            $vcpRaw = trim($vcostPrices[$i] ?? '');
-            $vcp = $vcpRaw === '' ? null : (int) preg_replace('/\D/', '', $vcpRaw);
-            $existingId = (int) ($variantIdsIn[$i] ?? 0);
-            $isDefault = ($defaultVariantIdx === $i) ? 1 : 0;
-
-            if ($sz === '' && $cl === '') continue;
-
-            if ($existingId && isset($oldVariantsById[$existingId])) {
-                $pdo->prepare("UPDATE product_variants SET size=?, color=?, stock=?, is_default=? WHERE id=? AND product_id=?")
-                    ->execute([$sz ?: null, $cl ?: null, $st, $isDefault, $existingId, $productId]);
-
-                $oldVariant = $oldVariantsById[$existingId];
-                $oldVcp = $oldVariant['cost_price'] !== null ? (int) $oldVariant['cost_price'] : null;
-                if ($vcp !== $oldVcp) {
-                    if ($vcp === null) {
-                        $pdo->prepare("UPDATE product_variants SET cost_price = NULL WHERE id = ?")->execute([$existingId]);
-                    } else {
-                        recordPriceChange($productId, $existingId, 'cost_price', 'direct_value', (float) $vcp, $adminId);
-                    }
-                }
-                $submittedVariantIds[] = $existingId;
-            } else {
-                $vstmt = $pdo->prepare("INSERT INTO product_variants (product_id, size, color, stock, cost_price, is_default) VALUES (?,?,?,?,?,?)");
-                $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st, $vcp, $isDefault]);
-                $newVId = (int) $pdo->lastInsertId();
-                if ($vcp !== null) {
-                    recordPriceChange($productId, $newVId, 'cost_price', 'direct_value', (float) $vcp, $adminId, 'ثبت اولیه قیمت تمام‌شده واریانت');
-                }
-                $submittedVariantIds[] = $newVId;
-            }
-        }
-    }
-
-    // Delete removed variants
-    $idsToDelete = array_diff(array_keys($oldVariantsById), $submittedVariantIds);
-    if ($idsToDelete) {
-        $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
-        $pdo->prepare("DELETE FROM product_variants WHERE id IN ($placeholders) AND product_id = ?")
-            ->execute([...$idsToDelete, $productId]);
-    }
-
-    // ------------------------------------------
-    // Tags Synchronization
-    // ------------------------------------------
-    $selectedTagIds = array_map('intval', $data['tag_ids'] ?? []);
-    $newTagsRaw = trim($data['new_tags'] ?? '');
-    syncProductTags($productId, $selectedTagIds, $newTagsRaw);
-
-    // ------------------------------------------
-    // Gallery Images Deletion & Additions
-    // ------------------------------------------
-    $deleteImageIds = array_map('intval', $data['delete_image_ids'] ?? []);
-    if ($deleteImageIds) {
-        $placeholders = implode(',', array_fill(0, count($deleteImageIds), '?'));
-        $imgStmt = $pdo->prepare("SELECT id, image_path FROM product_images WHERE id IN ($placeholders) AND product_id = ?");
-        $imgStmt->execute([...$deleteImageIds, $productId]);
-        foreach ($imgStmt->fetchAll() as $img) {
-            if (file_exists(UPLOAD_DIR . $img['image_path'])) {
-                @unlink(UPLOAD_DIR . $img['image_path']);
-            }
-        }
-        $pdo->prepare("DELETE FROM product_images WHERE id IN ($placeholders) AND product_id = ?")
-            ->execute([...$deleteImageIds, $productId]);
-    }
-
-    if (!empty($files['gallery_images']['name'][0])) {
-        $maxSortStmt = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM product_images WHERE product_id = ?");
-        $maxSortStmt->execute([$productId]);
-        $maxSort = (int) $maxSortStmt->fetchColumn();
-        $galleryFiles = $files['gallery_images'];
-        $fileCount = count($galleryFiles['name']);
-
-        for ($i = 0; $i < $fileCount; $i++) {
-            if ($galleryFiles['error'][$i] !== UPLOAD_ERR_OK) continue;
-
-            $singleFile = [
-                'name' => $galleryFiles['name'][$i],
-                'type' => $galleryFiles['type'][$i],
-                'tmp_name' => $galleryFiles['tmp_name'][$i],
-                'error' => $galleryFiles['error'][$i],
-                'size' => $galleryFiles['size'][$i],
+    try {
+        // Generate or sanitize unique English kebab-case slug
+        $slugRaw = trim($data['slug'] ?? '');
+        $slug = sanitizeEnglishSlug($slugRaw, $name);
+        $slugCheck = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
+        $slugCheck->execute([$slug, $id]);
+        if ($slugCheck->fetch()) {
+            return [
+                'ok' => false,
+                'errors' => ['نامک (URL Slug) «' . $slug . '» تکراری است و قبلاً برای محصول دیگری ثبت شده است. لطفاً یک نامک یکتا وارد کنید.']
             ];
+        }
 
-            $uploadResult = handleProductImageUpload($singleFile, 'product', $productId, 'g' . ($maxSort + 1));
-            if ($uploadResult['ok']) {
-                $maxSort++;
-                $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
-                    ->execute([$productId, $uploadResult['filename'], $maxSort]);
+        $productId = $id;
+        $useGlobalVariantStrategy = isset($data['use_global_variant_strategy']) ? 1 : 0;
+
+        // SEO & Generative Engine Optimization Metadata
+        $seoTitle = trim($data['seo_title'] ?? '') ?: null;
+        $seoDescription = trim($data['seo_description'] ?? '') ?: null;
+        $canonicalUrl = trim($data['canonical_url'] ?? '') ?: null;
+
+        // Google Merchant Center & Structured Physical Entity Specifications
+        $barcode = trim($data['barcode'] ?? '') ?: null;
+        $mpn = trim($data['mpn'] ?? '') ?: null;
+        $brandName = trim($data['brand_name'] ?? '') ?: null;
+        $gender = in_array($data['gender'] ?? '', ['unisex', 'men', 'women', 'kids'], true) ? $data['gender'] : 'unisex';
+        $pattern = in_array($data['pattern'] ?? '', ['solid', 'striped', 'graphic', 'novelty', 'geometric', 'floral', 'plaid'], true) ? $data['pattern'] : 'solid';
+        $cuffHeight = in_array($data['cuff_height'] ?? '', ['crew', 'ankle', 'no-show', 'knee-high', 'quarter', 'tights'], true) ? $data['cuff_height'] : 'crew';
+
+        $materialSpecs = null;
+        if (isset($data['material_specs'])) {
+            if (is_array($data['material_specs'])) {
+                $filtered = array_filter($data['material_specs'], fn($v) => $v !== '' && $v !== null);
+                $materialSpecs = !empty($filtered) ? json_encode($filtered, JSON_UNESCAPED_UNICODE) : null;
+            } elseif (is_string($data['material_specs']) && trim($data['material_specs']) !== '') {
+                $materialSpecs = trim($data['material_specs']);
             }
         }
-    }
 
-    return ['ok' => true, 'product_id' => $productId];
+        if ($existingProduct) {
+            // Automatic 301 redirect if slug was modified
+            if (!empty($existingProduct['slug']) && $existingProduct['slug'] !== $slug) {
+                seoRegisterRedirect('/product/' . $existingProduct['slug'], '/product/' . $slug, 301);
+            }
+
+            // Update product metadata (price & cost are recorded via PricingService below)
+            $stmt = $pdo->prepare("
+                UPDATE products 
+                SET category_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, canonical_url=?, discount_price=?, sku=?, barcode=?, mpn=?, brand_name=?, gender=?, pattern=?, cuff_height=?, material_specs=?, stock=?, use_global_variant_strategy=?, image=?, is_active=?, is_featured=? 
+                WHERE id=?
+            ");
+            $stmt->execute([
+                $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
+                $discountPrice, $sku, $barcode, $mpn, $brandName, $gender, $pattern, $cuffHeight,
+                $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured, $id
+            ]);
+
+            // Audit price changes if changed
+            $oldPrice = (int) $existingProduct['price'];
+            if ($price !== $oldPrice) {
+                recordPriceChange($productId, null, 'sale_price', 'direct_value', (float) $price, $adminId);
+            }
+
+            $oldCostPrice = $existingProduct['cost_price'] !== null ? (int) $existingProduct['cost_price'] : null;
+            if ($costPrice !== $oldCostPrice) {
+                if ($costPrice === null) {
+                    $pdo->prepare("UPDATE products SET cost_price = NULL WHERE id = ?")->execute([$productId]);
+                } else {
+                    recordPriceChange($productId, null, 'cost_price', 'direct_value', (float) $costPrice, $adminId);
+                }
+            }
+        } else {
+            // Insert new product
+            $stmt = $pdo->prepare("
+                INSERT INTO products (category_id, name, seo_title, slug, description, seo_description, canonical_url, price, discount_price, cost_price, sku, barcode, mpn, brand_name, gender, pattern, cuff_height, material_specs, stock, use_global_variant_strategy, image, is_active, is_featured) 
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ");
+            $stmt->execute([
+                $categoryId, $name, $seoTitle, $slug, $description, $seoDescription, $canonicalUrl,
+                $price, $discountPrice, $costPrice, $sku, $barcode, $mpn, $brandName, $gender, $pattern, $cuffHeight,
+                $materialSpecs, $stock, $useGlobalVariantStrategy, $newImageName, $isActive, $isFeatured
+            ]);
+            $productId = (int) $pdo->lastInsertId();
+
+            // Rename temporary uploaded image if it was a new creation
+            if ($newImageName) {
+                $renamed = renameUploadedImage($newImageName, 'product', $productId, 'main');
+                if ($renamed) {
+                    $newImageName = $renamed;
+                    $pdo->prepare("UPDATE products SET image = ? WHERE id = ?")->execute([$renamed, $productId]);
+                }
+            }
+
+            // Record initial price creation in price_history
+            recordPriceChange($productId, null, 'sale_price', 'direct_value', (float) $price, $adminId, 'قیمت‌گذاری اولیه محصول');
+            if ($costPrice !== null) {
+                recordPriceChange($productId, null, 'cost_price', 'direct_value', (float) $costPrice, $adminId, 'ثبت اولیه قیمت تمام‌شده');
+            }
+        }
+
+        // ------------------------------------------
+        // Variants: Upsert in place (Rule 2 invariant)
+        // ------------------------------------------
+        $existingVariantsStmt = $pdo->prepare("SELECT * FROM product_variants WHERE product_id = ?");
+        $existingVariantsStmt->execute([$productId]);
+        $oldVariantsById = [];
+        foreach ($existingVariantsStmt->fetchAll() as $v) {
+            $oldVariantsById[(int) $v['id']] = $v;
+        }
+
+        $submittedVariantIds = [];
+        if ($hasVariants) {
+            $variantIdsIn = $data['variant_id'] ?? [];
+            $sizes = $data['variant_size'] ?? [];
+            $colors = $data['variant_color'] ?? [];
+            $vstocks = $data['variant_stock'] ?? [];
+            $vcostPrices = $data['variant_cost_price'] ?? [];
+            $defaultVariantIdx = isset($data['default_variant_index']) ? (int) $data['default_variant_index'] : 0;
+
+            for ($i = 0; $i < count($sizes); $i++) {
+                $sz = trim($sizes[$i] ?? '');
+                $cl = trim($colors[$i] ?? '');
+                $st = (int) ($vstocks[$i] ?? 0);
+                $vcpRaw = trim($vcostPrices[$i] ?? '');
+                $vcp = $vcpRaw === '' ? null : (int) preg_replace('/\D/', '', $vcpRaw);
+                $existingId = (int) ($variantIdsIn[$i] ?? 0);
+                $isDefault = ($defaultVariantIdx === $i) ? 1 : 0;
+
+                if ($sz === '' && $cl === '') continue;
+
+                if ($existingId && isset($oldVariantsById[$existingId])) {
+                    $pdo->prepare("UPDATE product_variants SET size=?, color=?, stock=?, is_default=? WHERE id=? AND product_id=?")
+                        ->execute([$sz ?: null, $cl ?: null, $st, $isDefault, $existingId, $productId]);
+
+                    $oldVariant = $oldVariantsById[$existingId];
+                    $oldVcp = $oldVariant['cost_price'] !== null ? (int) $oldVariant['cost_price'] : null;
+                    if ($vcp !== $oldVcp) {
+                        if ($vcp === null) {
+                            $pdo->prepare("UPDATE product_variants SET cost_price = NULL WHERE id = ?")->execute([$existingId]);
+                        } else {
+                            recordPriceChange($productId, $existingId, 'cost_price', 'direct_value', (float) $vcp, $adminId);
+                        }
+                    }
+                    $submittedVariantIds[] = $existingId;
+                } else {
+                    $vstmt = $pdo->prepare("INSERT INTO product_variants (product_id, size, color, stock, cost_price, is_default) VALUES (?,?,?,?,?,?)");
+                    $vstmt->execute([$productId, $sz ?: null, $cl ?: null, $st, $vcp, $isDefault]);
+                    $newVId = (int) $pdo->lastInsertId();
+                    if ($vcp !== null) {
+                        recordPriceChange($productId, $newVId, 'cost_price', 'direct_value', (float) $vcp, $adminId, 'ثبت اولیه قیمت تمام‌شده واریانت');
+                    }
+                    $submittedVariantIds[] = $newVId;
+                }
+            }
+        }
+
+        // Delete removed variants
+        $idsToDelete = array_diff(array_keys($oldVariantsById), $submittedVariantIds);
+        if ($idsToDelete) {
+            $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+            $pdo->prepare("DELETE FROM product_variants WHERE id IN ($placeholders) AND product_id = ?")
+                ->execute([...$idsToDelete, $productId]);
+        }
+
+        // ------------------------------------------
+        // Tags Synchronization
+        // ------------------------------------------
+        $selectedTagIds = array_map('intval', $data['tag_ids'] ?? []);
+        $newTagsRaw = trim($data['new_tags'] ?? '');
+        syncProductTags($productId, $selectedTagIds, $newTagsRaw);
+
+        // ------------------------------------------
+        // Gallery Images Deletion & Additions
+        // ------------------------------------------
+        $deleteImageIds = array_map('intval', $data['delete_image_ids'] ?? []);
+        if ($deleteImageIds) {
+            $placeholders = implode(',', array_fill(0, count($deleteImageIds), '?'));
+            $imgStmt = $pdo->prepare("SELECT id, image_path FROM product_images WHERE id IN ($placeholders) AND product_id = ?");
+            $imgStmt->execute([...$deleteImageIds, $productId]);
+            foreach ($imgStmt->fetchAll() as $img) {
+                if (file_exists(UPLOAD_DIR . $img['image_path'])) {
+                    @unlink(UPLOAD_DIR . $img['image_path']);
+                }
+            }
+            $pdo->prepare("DELETE FROM product_images WHERE id IN ($placeholders) AND product_id = ?")
+                ->execute([...$deleteImageIds, $productId]);
+        }
+
+        if (!empty($files['gallery_images']['name'][0])) {
+            $maxSortStmt = $pdo->prepare("SELECT COALESCE(MAX(sort_order), -1) FROM product_images WHERE product_id = ?");
+            $maxSortStmt->execute([$productId]);
+            $maxSort = (int) $maxSortStmt->fetchColumn();
+            $galleryFiles = $files['gallery_images'];
+            $fileCount = count($galleryFiles['name']);
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                if ($galleryFiles['error'][$i] !== UPLOAD_ERR_OK) continue;
+
+                $singleFile = [
+                    'name' => $galleryFiles['name'][$i],
+                    'type' => $galleryFiles['type'][$i],
+                    'tmp_name' => $galleryFiles['tmp_name'][$i],
+                    'error' => $galleryFiles['error'][$i],
+                    'size' => $galleryFiles['size'][$i],
+                ];
+
+                $uploadResult = handleProductImageUpload($singleFile, 'product', $productId, 'g' . ($maxSort + 1));
+                if ($uploadResult['ok']) {
+                    $maxSort++;
+                    $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
+                        ->execute([$productId, $uploadResult['filename'], $maxSort]);
+                }
+            }
+        }
+
+        return ['ok' => true, 'product_id' => $productId];
+    } catch (Throwable $e) {
+        error_log('Failed to save product: ' . $e->getMessage());
+        return ['ok' => false, 'errors' => ['خطای ذخیره‌سازی در پایگاه داده: ' . $e->getMessage()]];
+    }
 }
 
 /**
@@ -807,15 +822,12 @@ function saveCategory(array $data, ?array $imageFile = null): array
         $parentId = null;
     }
 
-    // Slug: use provided slug or derive from name
-    $slug = $slugRaw !== '' ? slugify($slugRaw) : slugify($name);
-    if ($slug === '') {
-        $slug = 'category-' . time();
-    }
+    // Slug: use provided English slug or derive from name
+    $slug = sanitizeEnglishSlug($slugRaw, $name);
     $check = $pdo->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
     $check->execute([$slug, $id]);
     if ($check->fetch()) {
-        $slug .= '-' . substr(md5(uniqid('', true)), 0, 4);
+        return ['ok' => false, 'error' => 'نامک «' . $slug . '» تکراری است و قبلاً برای دسته‌بندی دیگری ثبت شده است. لطفاً یک نامک یکتا وارد کنید.'];
     }
 
     // Existing category lookup for slug change redirect and image cleanup
@@ -878,43 +890,48 @@ function saveCategory(array $data, ?array $imageFile = null): array
         }
     }
 
-    if ($id > 0) {
-        // Auto-register 301 redirect if slug was updated
-        if ($existingCategory && !empty($existingCategory['slug']) && $existingCategory['slug'] !== $slug) {
-            seoRegisterRedirect('/category/' . $existingCategory['slug'], '/category/' . $slug, 301);
-        }
+    try {
+        if ($id > 0) {
+            // Auto-register 301 redirect if slug was updated
+            if ($existingCategory && !empty($existingCategory['slug']) && $existingCategory['slug'] !== $slug) {
+                seoRegisterRedirect('/category/' . $existingCategory['slug'], '/category/' . $slug, 301);
+            }
 
-        $stmt = $pdo->prepare("
-            UPDATE categories 
-            SET parent_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, seo_intro=?, seo_guide=?, seo_faq=?, image=?, sort_order=?, is_active=? 
-            WHERE id=?
-        ");
-        $stmt->execute([
-            $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
-            $image, $sortOrder, $isActive, $id
-        ]);
-    } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO categories (parent_id, name, seo_title, slug, description, seo_description, seo_intro, seo_guide, seo_faq, image, sort_order, is_active) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-        ");
-        $stmt->execute([
-            $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
-            $image, $sortOrder, $isActive
-        ]);
-        $id = (int) $pdo->lastInsertId();
+            $stmt = $pdo->prepare("
+                UPDATE categories 
+                SET parent_id=?, name=?, seo_title=?, slug=?, description=?, seo_description=?, seo_intro=?, seo_guide=?, seo_faq=?, image=?, sort_order=?, is_active=? 
+                WHERE id=?
+            ");
+            $stmt->execute([
+                $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
+                $image, $sortOrder, $isActive, $id
+            ]);
+        } else {
+            $stmt = $pdo->prepare("
+                INSERT INTO categories (parent_id, name, seo_title, slug, description, seo_description, seo_intro, seo_guide, seo_faq, image, sort_order, is_active) 
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ");
+            $stmt->execute([
+                $parentId, $name, $seoTitle, $slug, $description, $seoDescription, $seoIntro, $seoGuide, $seoFaq,
+                $image, $sortOrder, $isActive
+            ]);
+            $id = (int) $pdo->lastInsertId();
 
-        // If new category with temporary upload, rename to standard name
-        if ($newImageUploaded && $image) {
-            $renamed = renameUploadedImage($image, 'category', $id, 'icon');
-            if ($renamed) {
-                $image = $renamed;
-                $pdo->prepare("UPDATE categories SET image = ? WHERE id = ?")->execute([$image, $id]);
+            // If new category with temporary upload, rename to standard name
+            if ($newImageUploaded && $image) {
+                $renamed = renameUploadedImage($image, 'category', $id, 'icon');
+                if ($renamed) {
+                    $image = $renamed;
+                    $pdo->prepare("UPDATE categories SET image = ? WHERE id = ?")->execute([$image, $id]);
+                }
             }
         }
-    }
 
-    return ['ok' => true, 'id' => $id, 'image' => $image];
+        return ['ok' => true, 'id' => $id, 'image' => $image];
+    } catch (Throwable $e) {
+        error_log('Failed to save category: ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'خطای پایگاه داده: ' . $e->getMessage()];
+    }
 }
 
 /**

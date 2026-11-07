@@ -34,22 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $errors = $saveResult['errors'] ?? ['خطا در ذخیره‌سازی محصول.'];
         // Preserve user input on validation error
-        $product = array_merge($product ?? [], [
-            'name' => trim($_POST['name'] ?? ''),
+        $product = array_merge($product ?? [], $_POST, [
             'category_id' => (int) ($_POST['category_id'] ?? 0),
-            'description' => trim($_POST['description'] ?? ''),
-            'price' => trim($_POST['price'] ?? ''),
-            'discount_price' => trim($_POST['discount_price'] ?? ''),
-            'cost_price' => trim($_POST['cost_price'] ?? ''),
-            'sku' => trim($_POST['sku'] ?? ''),
             'stock' => (int) ($_POST['stock'] ?? 0),
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
             'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
-            'seo_title' => trim($_POST['seo_title'] ?? ''),
-            'seo_description' => trim($_POST['seo_description'] ?? ''),
-            'canonical_url' => trim($_POST['canonical_url'] ?? ''),
-            'slug' => trim($_POST['slug'] ?? ''),
-            'material_specs' => $_POST['material_specs'] ?? null,
         ]);
         $hasVariantsInitial = isset($_POST['has_variants']);
         $productTagIds = array_map('intval', $_POST['tag_ids'] ?? []);

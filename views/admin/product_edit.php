@@ -29,7 +29,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label style="font-weight: 600;">نام کامل محصول <span style="color: var(--color-danger);">*</span></label>
-                        <input class="form-control" type="text" name="name" value="<?= e($product['name'] ?? '') ?>" placeholder="مثلاً: جوراب ساق‌دار نخی اعلا طرح آلیس" required>
+                        <input class="form-control" type="text" id="productNameInput" name="name" value="<?= e($product['name'] ?? '') ?>" placeholder="مثلاً: جوراب ساق‌دار نخی اعلا طرح آلیس" required>
                     </div>
                     <div class="form-group" style="flex: 1.2;">
                         <label style="font-weight: 600;">دسته‌بندی <span style="color: var(--color-danger);">*</span></label>
@@ -53,6 +53,70 @@
                 <div class="form-group" style="margin-bottom: 0;">
                     <label style="font-weight: 600;">توضیحات و معرفی محصول</label>
                     <textarea class="form-control" name="description" rows="5" placeholder="ویژگی‌ها، جنس پارچه، الیاف و نحوه نگهداری..."><?= e($product['description'] ?? '') ?></textarea>
+                </div>
+            </div>
+
+            <!-- 2. Google Merchant & Physical Entity Specs Card -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    <h3 class="admin-card-title">اطلاعات تجاری و طبقه‌بندی هوشمند (Google Merchant & Schema)</h3>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>بارکد بین‌المللی (GTIN / EAN-13)</label>
+                        <input class="form-control" type="text" name="barcode" dir="ltr" inputmode="numeric" value="<?= e($product['barcode'] ?? '') ?>" placeholder="مثلاً: 6260123456789">
+                        <p class="form-hint">کد بین‌المللی جهت نمایش در Google Shopping و موتورهای هوش مصنوعی.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>پارت‌نامبر سازنده (MPN)</label>
+                        <input class="form-control" type="text" name="mpn" dir="ltr" value="<?= e($product['mpn'] ?? '') ?>" placeholder="مثلاً: ABS-CRW-01">
+                        <p class="form-hint">شناسه تولیدی کارگاه برای قطعه یا مدل جوراب.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>برند یا کارگاه تولیدی</label>
+                        <input class="form-control" type="text" name="brand_name" value="<?= e($product['brand_name'] ?? '') ?>" placeholder="پیش‌فرض: <?= e(SITE_NAME) ?>">
+                        <p class="form-hint">در صورت خالی بودن، نام فروشگاه به عنوان برند ثبت می‌شود.</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>گروه کاربری / جنسیت هدف</label>
+                        <?php $currentGender = $product['gender'] ?? 'unisex'; ?>
+                        <select class="form-control" name="gender">
+                            <option value="unisex" <?= $currentGender === 'unisex' ? 'selected' : '' ?>>مشترک / همگانی (Unisex)</option>
+                            <option value="men" <?= $currentGender === 'men' ? 'selected' : '' ?>>مردانه (Men)</option>
+                            <option value="women" <?= $currentGender === 'women' ? 'selected' : '' ?>>زنانه (Women)</option>
+                            <option value="kids" <?= $currentGender === 'kids' ? 'selected' : '' ?>>کودک و بچگانه (Kids)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ارتفاع ساق جوراب (Cuff Height)</label>
+                        <?php $currentHeight = $product['cuff_height'] ?? 'crew'; ?>
+                        <select class="form-control" name="cuff_height">
+                            <option value="crew" <?= $currentHeight === 'crew' ? 'selected' : '' ?>>ساق‌دار (Crew)</option>
+                            <option value="ankle" <?= $currentHeight === 'ankle' ? 'selected' : '' ?>>مچی (Ankle)</option>
+                            <option value="no-show" <?= $currentHeight === 'no-show' ? 'selected' : '' ?>>کالج / بدون ساق (No-show)</option>
+                            <option value="quarter" <?= $currentHeight === 'quarter' ? 'selected' : '' ?>>نیم‌ساق (Quarter)</option>
+                            <option value="knee-high" <?= $currentHeight === 'knee-high' ? 'selected' : '' ?>>بالای زانو (Knee-high)</option>
+                            <option value="tights" <?= $currentHeight === 'tights' ? 'selected' : '' ?>>جوراب شلواری (Tights)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>طرح ظاهری (Pattern)</label>
+                        <?php $currentPattern = $product['pattern'] ?? 'solid'; ?>
+                        <select class="form-control" name="pattern">
+                            <option value="solid" <?= $currentPattern === 'solid' ? 'selected' : '' ?>>ساده / تک‌رنگ (Solid)</option>
+                            <option value="striped" <?= $currentPattern === 'striped' ? 'selected' : '' ?>>راه‌راه (Striped)</option>
+                            <option value="graphic" <?= $currentPattern === 'graphic' ? 'selected' : '' ?>>گرافیکی / تایپوگرافی (Graphic)</option>
+                            <option value="novelty" <?= $currentPattern === 'novelty' ? 'selected' : '' ?>>فانتزی و کارتونی (Novelty)</option>
+                            <option value="geometric" <?= $currentPattern === 'geometric' ? 'selected' : '' ?>>هندسی و لوزی (Geometric)</option>
+                            <option value="floral" <?= $currentPattern === 'floral' ? 'selected' : '' ?>>گل‌دار و بوته‌جقه (Floral)</option>
+                            <option value="plaid" <?= $currentPattern === 'plaid' ? 'selected' : '' ?>>چهارخانه و شطرنجی (Plaid)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -316,15 +380,25 @@
                 <div class="ab-seo-field-wrap">
                     <div class="ab-seo-field-header">
                         <label for="productSlugInput" class="cat-label">نامک صفحه (URL Slug):</label>
-                        <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpProductSlug" aria-expanded="false">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>راهنما و نمونه</span>
-                        </button>
+                        <div class="ab-seo-actions">
+                            <button type="button" class="ab-slug-suggest-btn" data-ab-slug-suggest="#productNameInput" data-ab-slug-target="#productSlugInput">
+                                ⚡ پیشنهاد نامک انگلیسی
+                            </button>
+                            <button type="button" class="ab-seo-help-btn" data-ab-seo-help-toggle="helpProductSlug" aria-expanded="false">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>راهنما و نمونه</span>
+                            </button>
+                        </div>
                     </div>
 
                     <input type="text" id="productSlugInput" name="slug" class="form-control" dir="ltr"
                            value="<?= e($product['slug'] ?? '') ?>"
-                           placeholder="socks-crew-cotton"
+                           placeholder="crew-socks-cotton"
+                           pattern="[a-z0-9\-]+"
+                           inputmode="latin"
+                           autocomplete="off"
+                           spellcheck="false"
+                           data-ab-slug-clean
                            data-ab-seo-counter
                            data-ab-min="3"
                            data-ab-optimal-min="5"
@@ -573,7 +647,7 @@
 
                 <?php if (!empty($product['id'])): ?>
                 <div style="border-top: 1px solid var(--color-border); margin-top: 16px; padding-top: 12px; text-align: center;">
-                    <a href="/product.php?slug=<?= urlencode($product['slug']) ?>" target="_blank" style="font-size: 0.82rem; color: var(--color-primary); display: inline-flex; align-items: center; gap: 4px;">
+                    <a href="/product/<?= rawurlencode($product['slug']) ?>" target="_blank" style="font-size: 0.82rem; color: var(--color-primary); display: inline-flex; align-items: center; gap: 4px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         مشاهده پیش‌نمایش در فروشگاه
                     </a>

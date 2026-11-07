@@ -154,7 +154,7 @@ component('data_table', [
                 . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
                 . '</a>';
 
-            $storeBtn = '<a href="/product.php?slug=' . urlencode($p['slug']) . '" target="_blank" rel="noopener" class="ab-icon-btn ab-icon-btn--sm" title="مشاهده در فروشگاه" aria-label="مشاهده در فروشگاه">'
+            $storeBtn = '<a href="/product/' . rawurlencode($p['slug']) . '" target="_blank" rel="noopener" class="ab-icon-btn ab-icon-btn--sm" title="مشاهده در فروشگاه" aria-label="مشاهده در فروشگاه">'
                 . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
                 . '</a>';
 
