@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(__dirname, "../../assets/dist/landing"),
+    outDir: path.resolve(__dirname, "../assets/dist/landing"),
     emptyOutDir: true,
     rollupOptions: {
       output: {

@@ -31,6 +31,7 @@ $rawCategories = $catalog['categories'];
 
 $landingInitialData = [
     'products'      => $catalog['cards'],
+    'cartItems'     => $catalog['cartItems'],
     'landingConfig' => $landingConfig,
     'previewMode'   => $landingPreviewMode,
     'categories'    => $catalog['categories'],

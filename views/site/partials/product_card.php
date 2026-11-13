@@ -11,9 +11,9 @@ $finalPrice = effectivePrice($p);
 $imgSrc = $p['image'] ? UPLOAD_URL . e($p['image']) : '/assets/img/placeholder-sock.svg';
 $stockForBadge = array_key_exists('effective_stock', $p) ? (int) $p['effective_stock'] : (int) $p['stock'];
 ?>
-<a href="/product/<?= e($p['slug']) ?>" class="product-card">
+<a href="/product/<?= e($p['slug']) ?>" class="product-card catalog-product-item" data-cat-slug="<?= e($p['category_slug'] ?? '') ?>">
     <?php if ($discount > 0): ?>
-        <span class="badge-discount"><?= toPersianDigits($discount) ?>%-</span>
+        <span class="badge-discount"><?= toPersianDigits((string)$discount) ?>%-</span>
     <?php elseif ($stockForBadge <= 0): ?>
         <span class="badge-outofstock">ناموجود</span>
     <?php endif; ?>
@@ -21,6 +21,9 @@ $stockForBadge = array_key_exists('effective_stock', $p) ? (int) $p['effective_s
         <img src="<?= $imgSrc ?>" alt="<?= e($p['name']) ?>" loading="lazy">
     </div>
     <div class="body">
+        <?php if (!empty($p['category_name'])): ?>
+            <span class="category-pill-label" style="font-size: 0.72rem; color: #e85d1f; font-weight: 700; margin-bottom: 4px;"><?= e($p['category_name']) ?></span>
+        <?php endif; ?>
         <div class="name"><?= e($p['name']) ?></div>
         <div class="price-row">
             <span class="price-current"><?= formatPrice($finalPrice) ?></span>

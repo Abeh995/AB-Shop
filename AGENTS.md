@@ -152,6 +152,12 @@ them silently is worse than asking first.
     - **Single H1 Rule**: Storefront templates (`views/site/home.php`, `views/site/product.php`, `views/site/category.php`, `views/site/tag.php`) must contain strictly ONE `<h1>` tag representing the primary entity.
     - **AI Search (GEO) Accessibility**: Never disallow or block legitimate AI engine bots (`GPTBot`, `PerplexityBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`) in `robots.php`. Always maintain `/llms.txt` and `/llms-full.txt` feeds.
     - **Local Documentation Isolation**: Internal admin training guides (matching `*-ADMIN-GUIDE.md` or `/docs/local/`) must strictly remain local and uncommitted. Never stage, commit, tag, or push admin guides to GitHub.
+14. **AB-Client-Kit Architecture, Fast Registers & The Universal Write-Gate Protocol (Front & Back).**
+    - **Dual Customer Registers (SSoT)**: All customer-facing primitives and components are cataloged in `docs/registers/client-front.json`. All customer-facing PHP services and functions are cataloged in `docs/registers/client-back.json`. Before writing or importing any code for the customer side, agents MUST check these registers first. Never guess styles, parameters, or reimplement functionality.
+    - **Universal Client Write-Gate (Stop & Emit RFC)**:
+      - If a required frontend component/prop is missing or needs alteration: STOP IMMEDIATELY. Output a structured `Front RFC Ticket` (Component, Target File, TypeScript Props, Visual States, Glassmorphism Tokens, Test Criteria). Do NOT write ad-hoc styles or edit component files on the fly.
+      - If a required backend service/query/function is missing or needs alteration: STOP IMMEDIATELY. Output a structured `Back RFC Ticket` (Function Name, Target File, Signature, Return Types, Concurrency/Locking, Test Criteria). Do NOT write inline SQL or casual service logic inside controllers.
+    - **Standardized Client Source (`client_src/`)**: All React storefront code lives in `client_src/` with dedicated scaffolding for all customer pages (`pages/home`, `pages/product`, `pages/category`, `pages/cart`, `pages/checkout`, `pages/track`, `pages/tag`). Build output is compiled to `assets/dist/landing/` via `cd client_src && npm run build`.
 
 
 ## Mandatory Commit & Release Workflow (WHEN USER SAYS "کامیت کن" OR "COMMIT")

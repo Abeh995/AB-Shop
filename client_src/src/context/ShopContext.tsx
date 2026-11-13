@@ -14,9 +14,11 @@ export interface CartItem {
   qty: number;
   productId?: number;
   productIds?: number[];
+  variantId?: number;
   colorIndex?: number;
   color?: string;
   size?: string;
+  image?: string;
   note?: string;
   isPack?: boolean;
 }
@@ -46,7 +48,12 @@ interface ShopContextValue {
 const ShopContext = createContext<ShopContextValue | null>(null);
 
 export function ShopProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window !== "undefined" && window.__AB_INITIAL_DATA__?.cartItems?.length) {
+      return window.__AB_INITIAL_DATA__.cartItems;
+    }
+    return [];
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [modal, setModal] = useState<ModalState>({ name: null });
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -66,7 +73,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     (item: Omit<CartItem, "key" | "qty">, qty = 1) => {
       const key = item.isPack
         ? `pack-${Date.now()}`
-        : `p-${item.productId}-${item.color ?? ""}-${item.size ?? ""}`;
+        : (item.variantId ? `${item.productId}-${item.variantId}` : `p-${item.productId}-${item.color ?? ""}-${item.size ?? ""}`);
+
       setCart((c) => {
         const existing = c.find((x) => x.key === key);
         if (existing) return c.map((x) => (x.key === key ? { ...x, qty: x.qty + qty } : x));
@@ -96,6 +104,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
             .catch(() => {});
         } else if (item.productId) {
           fd.append("product_id", String(item.productId));
+          if (item.variantId) {
+            fd.append("variant_id", String(item.variantId));
+          }
           fd.append("qty", String(qty));
           fetch("/ajax/cart_add.php", { method: "POST", body: fd })
             .then((r) => r.json())
@@ -115,14 +126,59 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = useCallback((key: string) => {
     setCart((c) => c.filter((x) => x.key !== key));
+    const csrf = (typeof window !== "undefined" && window.__AB_INITIAL_DATA__?.csrfToken) || "";
+    if (csrf) {
+      const fd = new FormData();
+      fd.append("csrf_token", csrf);
+      fd.append("key", key);
+      fd.append("ajax", "1");
+      fetch("/ajax/cart_remove.php", { method: "POST", body: fd })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.ok && typeof res.cartCount === "number") {
+            setServerCartCount(res.cartCount);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const updateQty = useCallback((key: string, delta: number) => {
-    setCart((c) =>
-      c
-        .map((x) => (x.key === key ? { ...x, qty: Math.max(0, x.qty + delta) } : x))
-        .filter((x) => x.qty > 0)
-    );
+    let nextQty = 0;
+    setCart((c) => {
+      const target = c.find((x) => x.key === key);
+      nextQty = target ? Math.max(0, target.qty + delta) : 0;
+      if (nextQty <= 0) return c.filter((x) => x.key !== key);
+      return c.map((x) => (x.key === key ? { ...x, qty: nextQty } : x));
+    });
+
+    const csrf = (typeof window !== "undefined" && window.__AB_INITIAL_DATA__?.csrfToken) || "";
+    if (csrf) {
+      const fd = new FormData();
+      fd.append("csrf_token", csrf);
+      fd.append("key", key);
+      fd.append("ajax", "1");
+      if (nextQty > 0) {
+        fd.append("qty", String(nextQty));
+        fetch("/ajax/cart_update.php", { method: "POST", body: fd })
+          .then((r) => r.json())
+          .then((res) => {
+            if (res.ok && typeof res.cartCount === "number") {
+              setServerCartCount(res.cartCount);
+            }
+          })
+          .catch(() => {});
+      } else {
+        fetch("/ajax/cart_remove.php", { method: "POST", body: fd })
+          .then((r) => r.json())
+          .then((res) => {
+            if (res.ok && typeof res.cartCount === "number") {
+              setServerCartCount(res.cartCount);
+            }
+          })
+          .catch(() => {});
+      }
+    }
   }, []);
 
   const openModal = useCallback(

@@ -1,7 +1,7 @@
 <?php
 /**
  * Modern Storefront Landing Page View.
- * Renders SEO-optimized HTML with server fallback, injected data, and client bundle mounting.
+ * Renders SEO-optimized HTML with server fallback, injected live data, 5-Hub navigation dock, and client bundle mounting.
  * Zero database queries or form processing allowed in view per architecture rules.
  */
 $siteFavicon = siteFaviconUrl();
@@ -73,8 +73,9 @@ if ($ogImage !== '' && !preg_match('~^https?://~i', $ogImage)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Modern Landing Bundle Stylesheet -->
+    <!-- Modern Landing Bundle & 5-Hub Stylesheets -->
     <link rel="stylesheet" href="/assets/dist/landing/landing.bundle.css">
+    <link rel="stylesheet" href="/assets/css/storefront-hubs.css">
 
     <!-- Schema.org Store & WebSite JSON-LD -->
     <?= seoRenderJsonLd([seoBuildOrganizationJsonLd()]) ?>

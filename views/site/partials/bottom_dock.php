@@ -1,7 +1,8 @@
 <?php
 /**
  * 5-Hub Floating Liquid Glass Navigation Dock for Mobile & Tablet (FEAT-C004)
- * Items: 1- خانه 2- دسته‌بندی 3- سبد خرید 4- جستجو 5- حساب کاربری
+ * Based on deckmobile_liquid.html specification with Warm Craft brand tokens.
+ * Items: 1- خانه (0) 2- دسته‌بندی‌ها (1) 3- سبد خرید (2) 4- جستجو (3) 5- حساب کاربری (4)
  */
 $reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $activeHub = 'home';
@@ -23,65 +24,51 @@ if (str_starts_with($reqPath, '/categories') || str_starts_with($reqPath, '/cate
 
 $cartQty = cartCount();
 ?>
-<nav class="bottom-dock-nav" aria-label="ناوبری اصلی کلاینت">
-    <div class="bottom-dock-inner">
+<div class="dock-container">
+    <nav class="dock" id="liquidDock" aria-label="ناوبری اصلی فروشگاه">
+        <div class="liquid-drop" id="liquidDrop"></div>
+
         <!-- 1. خانه -->
-        <a href="/" class="dock-item <?= $activeHub === 'home' ? 'is-active' : '' ?>">
-            <div class="dock-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-            </div>
+        <a href="/" class="dock-item <?= $activeHub === 'home' ? 'active' : '' ?>" data-index="0">
+            <svg width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"></path>
+            </svg>
             <span class="dock-label">خانه</span>
         </a>
 
-        <!-- 2. دسته‌بندی -->
-        <a href="/categories" class="dock-item <?= $activeHub === 'categories' ? 'is-active' : '' ?>">
-            <div class="dock-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                </svg>
-            </div>
+        <!-- 2. دسته‌بندی‌ها -->
+        <a href="/categories" class="dock-item <?= $activeHub === 'categories' ? 'active' : '' ?>" data-index="1">
+            <svg width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
             <span class="dock-label">دسته‌ها</span>
         </a>
 
-        <!-- 3. سبد خرید (مرکز) -->
-        <a href="/cart" class="dock-item dock-item-cart <?= $activeHub === 'cart' ? 'is-active' : '' ?>">
-            <div class="dock-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="9" cy="21" r="1"/>
-                    <circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                </svg>
-                <span class="dock-badge <?= $cartQty > 0 ? 'has-items' : '' ?>" id="dockCartBadge"><?= toPersianDigits((string)$cartQty) ?></span>
-            </div>
+        <!-- 3. سبد خرید (مرکز با بج تعداد) -->
+        <a href="/cart" class="dock-item <?= $activeHub === 'cart' ? 'active' : '' ?>" data-index="2">
+            <?php if ($cartQty > 0): ?>
+                <span class="dock-cart-badge" id="dockCartBadge"><?= toPersianDigits((string)$cartQty) ?></span>
+            <?php endif; ?>
+            <svg width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
             <span class="dock-label">سبد خرید</span>
         </a>
 
         <!-- 4. جستجو -->
-        <a href="/search" class="dock-item <?= $activeHub === 'search' ? 'is-active' : '' ?>" id="dockSearchBtn">
-            <div class="dock-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-            </div>
+        <a href="/search" class="dock-item <?= $activeHub === 'search' ? 'active' : '' ?>" data-index="3">
+            <svg width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
             <span class="dock-label">جستجو</span>
         </a>
 
         <!-- 5. حساب کاربری -->
-        <a href="<?= isCustomerLoggedIn() ? '/account' : '/login' ?>" class="dock-item <?= $activeHub === 'account' ? 'is-active' : '' ?>">
-            <div class="dock-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-            </div>
+        <a href="<?= isCustomerLoggedIn() ? '/account' : '/login' ?>" class="dock-item <?= $activeHub === 'account' ? 'active' : '' ?>" data-index="4">
+            <svg width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
             <span class="dock-label"><?= isCustomerLoggedIn() ? 'حساب من' : 'ورود' ?></span>
         </a>
-    </div>
-</nav>
+    </nav>
+</div>

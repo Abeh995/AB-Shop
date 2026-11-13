@@ -2009,3 +2009,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 }
 
 [hidden] { display: none !important; }
+
+/* 5-Hub Liquid Glass Dock Desktop Failsafe */
+@media (min-width: 769px) {
+    .dock-container { display: none !important; }
+}
+.dock-item svg { width: 22px !important; height: 22px !important; max-width: 22px !important; }
+

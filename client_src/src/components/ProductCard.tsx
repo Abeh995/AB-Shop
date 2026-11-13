@@ -24,15 +24,22 @@ export function ProductCard({ product, layout = "comfort" }: { product: Product;
 
   const quickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const matchingVariant = product.variants?.find(
+      (v) => (v.color === cw.name || !v.color) && v.stock > 0
+    ) || product.variants?.[0];
+
     addToCart({
       name: (cfg?.productNameTemplate || "جوراب {title}").replace("{title}", product.title),
-      price: product.price,
+      price: matchingVariant?.price || product.price,
       productId: product.id,
+      variantId: matchingVariant?.id,
       colorIndex,
-      color: cw.name,
-      size: sizes[0],
+      color: matchingVariant?.color || cw.name,
+      size: matchingVariant?.size || sizes[0],
+      image: product.image,
     });
   };
+
   const openDetail = () => openModal("product", { productId: product.id, colorIndex });
 
   const swatches = (
@@ -98,19 +105,23 @@ export function ProductCard({ product, layout = "comfort" }: { product: Product;
 
   /* ---------------- grid layouts ---------------- */
   const dense = layout === "dense";
+
   return (
     <motion.article
       layout
       onClick={openDetail}
-      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[1.75rem] border border-coffee-900/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+      className={cn(
+        "group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-coffee-900/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+        dense ? "p-2" : "p-3"
+      )}
     >
-      {/* art stage */}
-      <div className="relative overflow-hidden bg-cream-100 p-4" style={{ aspectRatio: dense ? "1/0.92" : "1/0.98" }}>
-        <div className="dot-grid absolute inset-0 opacity-40" />
+      {/* art side */}
+      <div className={cn("relative flex items-center justify-center overflow-hidden rounded-2xl bg-cream-100", dense ? "h-40" : "h-56")}>
+        <div className="dot-grid absolute inset-0 opacity-40 transition-opacity duration-300 group-hover:opacity-70" />
         <ProductArt
           product={product}
           colorIndex={colorIndex}
-          className="relative mx-auto h-full w-full max-w-[220px] transition-transform duration-500 ease-out group-hover:scale-110 group-hover:-rotate-3"
+          className={cn("w-full transition-transform duration-500 ease-out group-hover:scale-110", dense ? "max-w-[120px]" : "max-w-[170px]")}
         />
 
         <span className="absolute right-3 top-3 rounded-full bg-coffee-900/90 px-2.5 py-1 text-[10px] font-extrabold text-cream-50 backdrop-blur">

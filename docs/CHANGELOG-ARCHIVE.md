@@ -1,7 +1,43 @@
-# Changelog Archive (v1.0.0 — v1.38.0)
+# Changelog Archive (v1.0.0 — v1.39.0)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.38.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.39.0.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+## 1.39.0 — 2026-11-02
+
+### Landing Studio — Full design control over the footer
+
+The footer was the one section the Studio could only *rename*; now the whole section is design-driven.
+`editorial.footer` grew by **51 keys** and the section in the rail went from 4 groups / 21 fields to
+**8 groups / 77 fields**.
+
+- **Layout** — `layoutPreset` (three-column / two-column / stacked), `align` (start / center),
+  `contentWidth`, `columnGap`, `paddingTop`, `paddingBottom`, `showTopDivider`, `bottomAlign`.
+- **Colour & surface** — `backgroundStyle` (solid / gradient / mesh glow), `backgroundFrom`,
+  `backgroundTo`, `textColor`, `mutedOpacity`, `accentColor`, `buttonColor`, `borderColor`,
+  `dividerOpacity`, `cardRadius`, `decorStyle` (none / dot grid / glow). Colours are real colour
+  pickers and every derived tone (muted text, hairlines, hover surfaces) is computed from them.
+- **Block visibility** — `showBrand`, `showSocial`, `showLinks`, `showNewsletter`, `showBadges`,
+  `showSlogan`, `showCopyright`, `showBackToTop`, plus `logoSize`, `socialShape`, `socialSize`,
+  `badgeLayout` (2-col / 1-col / row), `badgeStyle` (soft / solid), `newsletterStyle` (pill / card)
+  and `backToTopText`.
+- **Three editable link columns** — `col1/2/3Enabled`, `col1/2/3Title` and `col1/2/3Links`, where each
+  entry is `برچسب|#مقصد`; an entry with no target renders as plain muted text (that is how
+  «تعویض ۷ روزه بی‌قیدوشرط» and the support-hours line are modelled now). The columns are no longer
+  hardcoded `navItems`.
+- **Four configurable trust badges** — per-badge `badgeNEnabled` + `badgeNIcon` (shield / badge /
+  card / bank) alongside the existing title / subtitle / click-message copy.
+- **`Footer.tsx` rewritten** to read every one of those values: blocks render conditionally, colours
+  are applied through a hex→rgba helper so opacity controls work on any brand colour, and the layout
+  is a real CSS grid (`gridTemplateColumns` from `layoutPreset`) instead of fixed Tailwind
+  `lg:col-span-*` classes — dynamic Tailwind class names never survive the build.
+- Verified live in the preview: switching to two columns + centered + mesh gradient + row badges
+  updates the iframe without a reload; `alignment`, `gridTemplateColumns` and `backgroundImage`
+  were asserted from the preview DOM, and the fixture was reset afterwards.
+- Schema/self-test: 543 / 302 → **599 leaves / 353 fields / 619 assertions OK**; config version and
+  `APP_VERSION` both bumped to `1.39.0`.
 
 ---
 

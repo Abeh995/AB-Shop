@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "kit": "ab-client-back",
+  "description": "Single Source of Truth Service & Function Registry for AB-Socks Customer Operations (PHP)",
+  "services": [
+    {
+      "module": "Storefront",
+      "path": "app/services/StorefrontService.php",
+      "description": "سرویس آماده‌سازی داده‌های نمایشی ویترین فروشگاه و تزریق پلود اولیه",
+      "functions": [
+        {
+          "name": "getLandingCategoryOptions",
+          "params": [],
+          "returns": "array<int, array{id: string, label: string}>",
+          "description": "دریافت دسته‌بندی‌های فعال ریشه به عنوان چیپ‌های فیلتر کاتالوگ"
+        },
+        {
+          "name": "getLandingProducts",
+          "params": ["int $limit = 24"],
+          "returns": "array",
+          "description": "دریافت محصولات فعال و دارای موجودی جهت تغذیه فرانت و فال‌بک سئو"
+        },
+        {
+          "name": "formatLandingProduct",
+          "params": ["array $product", "array $variants = []"],
+          "returns": "array",
+          "description": "تبدیل دیتای خام محصول دیتابیس به ساختار استاندارد مورد نیاز فرانت کلاینت"
+        },
+        {
+          "name": "getLandingCartPayload",
+          "params": [],
+          "returns": "array",
+          "description": "استخراج پلود سبد خرید جاری سشن کاربر برای مقداردهی اولیه فرانت"
+        },
+        {
+          "name": "getLandingCatalogPayload",
+          "params": ["int $limit = 24"],
+          "returns": "array",
+          "description": "تولید پلود کامل محصولات کاتالوگ همراه با اطلاعات تخفیف و واریانت‌ها"
+        }
+      ]
+    },
+    {
+      "module": "Cart",
+      "path": "app/core/cart.php",
+      "description": "توابع هسته مدیریت سبد خرید سمت مشتری، محاسبه اقلام و همگام‌سازی",
+      "functions": [
+        {
+          "name": "cartKey",
+          "params": ["int $productId", "?int $variantId"],
+          "returns": "string",
+          "description": "تولید کلید یکتا برای شناسایی قلم سبد بر اساس شناسه محصول و واریانت"
+        },
+        {
+          "name": "cartAdd",
+          "params": ["int $productId", "?int $variantId", "int $qty"],
+          "returns": "void",
+          "description": "افزودن محصول/واریانت به سبد خرید سشن با اعتبارسنجی موجودی"
+        },
+        {
+          "name": "cartUpdateQty",
+          "params": ["string $key", "int $qty"],
+          "returns": "void",
+          "description": "به‌روزرسانی تعداد یک قلم در سبد خرید یا حذف آن در صورت صفر بودن"
+        },
+        {
+          "name": "cartRemove",
+          "params": ["string $key"],
+          "returns": "void",
+          "description": "حذف یک قلم مشخص از سبد خرید سشن بر اساس کلید یکتا"
+        },
+        {
+          "name": "cartClear",
+          "params": [],
+          "returns": "void",
+          "description": "خالی کردن کامل سبد خرید سشن پس از ثبت نهایی سفارش"
+        },
+        {
+          "name": "cartCount",
+          "params": [],
+          "returns": "int",
+          "description": "شمارش مجموع تعداد اقلام فیزیکی موجود در سبد خرید مشتری"
+        },
+        {
+          "name": "getLiveUnitPrice",
+          "params": ["int $productId", "?int $variantId"],
+          "returns": "float",
+          "description": "دریافت قیمت زنده واحد محصول یا واریانت با احتساب تخفیف معتبر"
+        },
+        {
+          "name": "cartDetails",
+          "params": [],
+          "returns": "array",
+          "description": "محاسبه و بازگرداندن اقلام، قیمت جزء، تخفیف، هزینه ارسال و مبلغ کل سبد"
+        },
+        {
+          "name": "mergeGuestCartIntoCustomerCart",
+          "params": ["int $customerId"],
+          "returns": "void",
+          "description": "ادغام سبد خرید مهمان در سبد خرید مشتری پس از لاگین"
+        }
+      ]
+    },
+    {
+      "module": "CustomerAuth",
+      "path": "app/core/customer_auth.php",
+      "description": "توابع احراز هویت و مدیریت سشن مشتریان فروشگاه",
+      "functions": [
+        {
+          "name": "currentCustomer",
+          "params": [],
+          "returns": "?array",
+          "description": "دریافت اطلاعات مشتری جاری وارد شده به سیستم یا نال"
+        },
+        {
+          "name": "isCustomerLoggedIn",
+          "params": [],
+          "returns": "bool",
+          "description": "بررسی وضعیت ورود مشتری به حساب کاربری"
+        },
+        {
+          "name": "customerLogin",
+          "params": ["int $customerId"],
+          "returns": "void",
+          "description": "ایجاد سشن امن ورود مشتری و چرخش توکن سشن"
+        },
+        {
+          "name": "customerLogout",
+          "params": [],
+          "returns": "void",
+          "description": "خروج مشتری از حساب کاربری و پاکسازی داده‌های حساس سشن"
+        }
+      ]
+    },
+    {
+      "module": "PaymentAndC2C",
+      "path": "app/services/CardToCardReceiptService.php",
+      "description": "سرویس ثبت فیش واریز کارت به کارت توسط مشتری",
+      "functions": [
+        {
+          "name": "submitReceipt",
+          "params": ["int $orderId", "array $postData", "array $files"],
+          "returns": "array{ok: bool, error?: string}",
+          "description": "اعتبارسنجی تصویر فیش، ذخیره و انتقال وضعیت سفارش به بررسی پرداخت"
+        }
+      ]
+    }
+  ]
+}
+

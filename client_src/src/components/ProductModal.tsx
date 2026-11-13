@@ -32,7 +32,7 @@ export function ProductModal() {
   useEffect(() => {
     if (modal.name === "product" && found) {
       setColorIndex(Math.min(modal.payload?.colorIndex ?? 0, found.colors.length - 1));
-      setSize(found.sizes[0]);
+      setSize(found.sizes[0] || null);
       setQty(1);
     }
   }, [modal.name, modal.payload?.colorIndex, found]);
@@ -40,8 +40,14 @@ export function ProductModal() {
   const open = modal.name === "product" && !!product;
   if (!product) return <Modal open={false} onClose={closeModal}>{null}</Modal>;
 
-  const cw = product.colors[colorIndex];
+  const cw = product.colors[colorIndex] || product.colors[0];
   const discount = product.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+
+  const matchingVariant = product.variants?.find(
+    (v) => (v.color === cw?.name || !v.color) && (v.size === size || !v.size)
+  ) || product.variants?.find((v) => v.color === cw?.name) || product.variants?.[0];
+
+  const currentPrice = matchingVariant?.price || product.price;
 
   return (
     <Modal open={open} onClose={closeModal} size="lg">
@@ -98,26 +104,28 @@ export function ProductModal() {
           </ul>
 
           {/* color */}
-          <div>
-            <p className="mb-2 text-xs font-extrabold text-coffee-800">
-              رنگ: <span className="text-brand-600">{cw.name}</span>
-            </p>
-            <div className="flex gap-2">
-              {product.colors.map((c, i) => (
-                <button
-                  key={c.name}
-                  onClick={() => setColorIndex(i)}
-                  aria-label={c.name}
-                  title={c.name}
-                  className={cn(
-                    "h-8 w-8 rounded-full border-[3px] transition-all",
-                    i === colorIndex ? "scale-110 border-coffee-900 shadow-lg" : "border-white shadow hover:scale-105"
-                  )}
-                  style={{ backgroundColor: c.hex }}
-                />
-              ))}
+          {product.colors.length > 1 && (
+            <div>
+              <p className="mb-2 text-xs font-extrabold text-coffee-800">
+                رنگ: <span className="text-brand-600">{cw.name}</span>
+              </p>
+              <div className="flex gap-2">
+                {product.colors.map((c, i) => (
+                  <button
+                    key={c.name}
+                    onClick={() => setColorIndex(i)}
+                    aria-label={c.name}
+                    title={c.name}
+                    className={cn(
+                      "h-8 w-8 rounded-full border-[3px] transition-all",
+                      i === colorIndex ? "scale-110 border-coffee-900 shadow-lg" : "border-white shadow hover:scale-105"
+                    )}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* size + qty */}
           <div className="flex flex-wrap items-center gap-3">
@@ -152,13 +160,22 @@ export function ProductModal() {
               <div>
                 {product.oldPrice && <p className="text-xs text-coffee-400 line-through">{faPrice(product.oldPrice)} تومان</p>}
                 <p className="text-2xl font-black text-brand-600">
-                  {faPrice(product.price)} <span className="text-xs font-bold text-coffee-500">تومان</span>
+                  {faPrice(currentPrice)} <span className="text-xs font-bold text-coffee-500">تومان</span>
                 </p>
               </div>
               <button
                 onClick={() => {
                   addToCart(
-                    { name: (cfg?.productNameTemplate || "جوراب {title}").replace("{title}", product.title), price: product.price, productId: product.id, colorIndex, color: cw.name, size: size ?? undefined },
+                    {
+                      name: (cfg?.productNameTemplate || "جوراب {title}").replace("{title}", product.title),
+                      price: currentPrice,
+                      productId: product.id,
+                      variantId: matchingVariant?.id,
+                      colorIndex,
+                      color: matchingVariant?.color || cw.name,
+                      size: matchingVariant?.size || size || undefined,
+                      image: product.image,
+                    },
                     qty
                   );
                   closeModal();
@@ -169,6 +186,16 @@ export function ProductModal() {
                 افزودن به سبد
               </button>
             </div>
+
+            {product.slug && (
+              <a
+                href={`/product/${product.slug}`}
+                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-coffee-900/15 py-2.5 text-xs font-extrabold text-coffee-800 transition-colors hover:bg-cream-100"
+              >
+                مشاهده صفحه کامل و مشخصات فنی محصول ←
+              </a>
+            )}
+
             <div className="mt-3 flex items-center justify-between rounded-xl bg-cream-100 px-3 py-2 text-[10px] font-bold text-coffee-500">
               <span className="flex items-center gap-1">
                 <Truck className="h-3.5 w-3.5 text-brand-500" /> ارسال ۲۴-۷۲ ساعته به سراسر ایران

@@ -3,7 +3,27 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.39.0 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.39.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+
+---
+
+## 1.42.0 — 2026-11-14
+
+### AB-Client-Kit Architecture, Fast Registries & Universal Write-Gate Protocol
+
+- **Client Source Standardization (`client_src/`, `vite.config.ts`, `.gitignore`)**:
+  - Reorganized client React codebase from temporary `landing_src/NEW_LandingPage` into canonical root directory `client_src/`.
+  - Configured Vite build pipeline to compile bundles (`landing.bundle.js` and `landing.bundle.css`) directly into `assets/dist/landing/`.
+  - Established dedicated TypeScript scaffolding for all customer storefront pages in `client_src/src/pages/`: `home/`, `product/`, `category/`, `cart/`, `checkout/`, `track/`, and `tag/`.
+- **Fast Machine-Readable Dual Registers (`docs/registers/`)**:
+  - `docs/registers/client-front.json`: Cataloged all existing React components, primitives (`Modal`, `Marquee`, `SectionHeading`, `Reveal`), Glassmorphism props, and page routes as a Single Source of Truth.
+  - `docs/registers/client-back.json`: Cataloged customer-facing PHP services and functions (`StorefrontService`, `cart.php`, `CustomerAuth`, `CardToCardReceiptService`) with signatures, parameters, and return types to eliminate context waste and code reading overhead for agents.
+- **Universal Write-Gate Protocol & Front/Back RFC Tickets (`AGENTS.md`, `.agents/skills/`)**:
+  - Enacted Rule 14 in `AGENTS.md` mandating fast registry lookups before writing any storefront code.
+  - Established strict Stop & Emit RFC Ticket protocol: agents needing un-registered components or functions must pause immediately and submit structured specifications (Front RFC Ticket for components, Back RFC Ticket for services) rather than hacking inline styles or casual logic.
+  - Created specialized agent skills `.agents/skills/ab-socks-client-front` and `.agents/skills/ab-socks-client-back`.
+- **Automated Quality Gate Section 9 (`tools/verify.php`)**:
+  - Implemented automated architectural verification in `verify.php` ensuring `client-front.json` and `client-back.json` are valid JSON, and every referenced component, primitive, page, and service file exists on disk without ghost references.
 
 ---
 
@@ -125,42 +145,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   1.9rem action buttons, so the panes get the height back.
 - **Suite grown to 29 checks** — slim toolbar height, splitter drag (panel grows / preview shrinks), focus mode hides
   topbar + tabs + sidebar, focus mode still fills the fold, search popover paints above sidebar and studio.
-
-## 1.39.0 — 2026-11-02
-
-### Landing Studio — Full design control over the footer
-
-The footer was the one section the Studio could only *rename*; now the whole section is design-driven.
-`editorial.footer` grew by **51 keys** and the section in the rail went from 4 groups / 21 fields to
-**8 groups / 77 fields**.
-
-- **Layout** — `layoutPreset` (three-column / two-column / stacked), `align` (start / center),
-  `contentWidth`, `columnGap`, `paddingTop`, `paddingBottom`, `showTopDivider`, `bottomAlign`.
-- **Colour & surface** — `backgroundStyle` (solid / gradient / mesh glow), `backgroundFrom`,
-  `backgroundTo`, `textColor`, `mutedOpacity`, `accentColor`, `buttonColor`, `borderColor`,
-  `dividerOpacity`, `cardRadius`, `decorStyle` (none / dot grid / glow). Colours are real colour
-  pickers and every derived tone (muted text, hairlines, hover surfaces) is computed from them.
-- **Block visibility** — `showBrand`, `showSocial`, `showLinks`, `showNewsletter`, `showBadges`,
-  `showSlogan`, `showCopyright`, `showBackToTop`, plus `logoSize`, `socialShape`, `socialSize`,
-  `badgeLayout` (2-col / 1-col / row), `badgeStyle` (soft / solid), `newsletterStyle` (pill / card)
-  and `backToTopText`.
-- **Three editable link columns** — `col1/2/3Enabled`, `col1/2/3Title` and `col1/2/3Links`, where each
-  entry is `برچسب|#مقصد`; an entry with no target renders as plain muted text (that is how
-  «تعویض ۷ روزه بی‌قیدوشرط» and the support-hours line are modelled now). The columns are no longer
-  hardcoded `navItems`.
-- **Four configurable trust badges** — per-badge `badgeNEnabled` + `badgeNIcon` (shield / badge /
-  card / bank) alongside the existing title / subtitle / click-message copy.
-- **`Footer.tsx` rewritten** to read every one of those values: blocks render conditionally, colours
-  are applied through a hex→rgba helper so opacity controls work on any brand colour, and the layout
-  is a real CSS grid (`gridTemplateColumns` from `layoutPreset`) instead of fixed Tailwind
-  `lg:col-span-*` classes — dynamic Tailwind class names never survive the build.
-- Verified live in the preview: switching to two columns + centered + mesh gradient + row badges
-  updates the iframe without a reload; `alignment`, `gridTemplateColumns` and `backgroundImage`
-  were asserted from the preview DOM, and the fixture was reset afterwards.
-- Schema/self-test: 543 / 302 → **599 leaves / 353 fields / 619 assertions OK**; config version and
-  `APP_VERSION` both bumped to `1.39.0`.
-
-
-
-
-

@@ -110,5 +110,6 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
 <?php require APP_ROOT . '/views/site/partials/bottom_dock.php'; ?>
 
 <script src="/assets/js/main.js"></script>
+<script src="/assets/js/storefront-hubs.js"></script>
 </body>
 </html>

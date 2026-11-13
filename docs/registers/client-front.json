@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "kit": "ab-client-front",
+  "description": "Single Source of Truth Component Registry for AB-Socks Customer Storefront (React / Glassmorphism)",
+  "pages": [
+    {
+      "slug": "home",
+      "path": "client_src/src/pages/home/index.tsx",
+      "status": "active",
+      "description": "صفحه اصلی فروشگاه و لندینگ پیج تعاملی"
+    },
+    {
+      "slug": "product",
+      "path": "client_src/src/pages/product/index.tsx",
+      "status": "scaffolded",
+      "description": "صفحه جزئیات و خرید تکی محصول با انتخاب واریانت و گالری"
+    },
+    {
+      "slug": "category",
+      "path": "client_src/src/pages/category/index.tsx",
+      "status": "scaffolded",
+      "description": "آرشیو کاتالوگ دسته‌بندی با فیلتر قیمت و سایز"
+    },
+    {
+      "slug": "cart",
+      "path": "client_src/src/pages/cart/index.tsx",
+      "status": "scaffolded",
+      "description": "صفحه کامل سبد خرید مشتری همراه با پیشنهاد هدیه و کوپن"
+    },
+    {
+      "slug": "checkout",
+      "path": "client_src/src/pages/checkout/index.tsx",
+      "status": "scaffolded",
+      "description": "تسویه حساب، ثبت آدرس و انتخاب شیوه پرداخت کارت‌به‌کارت یا درگاه"
+    },
+    {
+      "slug": "track",
+      "path": "client_src/src/pages/track/index.tsx",
+      "status": "scaffolded",
+      "description": "پیگیری وضعیت سفارش و رهگیری مرسوله پستی"
+    },
+    {
+      "slug": "tag",
+      "path": "client_src/src/pages/tag/index.tsx",
+      "status": "scaffolded",
+      "description": "آرشیو و هاب موضوعی برچسب‌های محصولات"
+    }
+  ],
+  "primitives": [
+    {
+      "name": "Marquee",
+      "path": "client_src/src/components/primitives.tsx",
+      "description": "بنر متحرک افقی پیوسته برای اعلامیه‌ها، تخفیف‌ها و آفرها",
+      "props": ["children", "speed", "reverse", "className", "pauseOnHover"]
+    },
+    {
+      "name": "Reveal",
+      "path": "client_src/src/components/primitives.tsx",
+      "description": "انیمیشن ورود نرم اسکرولی برای المان‌ها با Framer Motion",
+      "props": ["children", "delay", "y", "className"]
+    },
+    {
+      "name": "Modal",
+      "path": "client_src/src/components/primitives.tsx",
+      "description": "پایه مودال شیشه‌ای با افکت بلور، دراوداور و ترنزیشن فنری",
+      "props": ["open", "onClose", "children", "size", "tone"]
+    },
+    {
+      "name": "SectionHeading",
+      "path": "client_src/src/components/primitives.tsx",
+      "description": "سرتیتر استاندارد بخش‌ها همراه با برچسب چشمک‌زن و تایپوگرافی اصیل",
+      "props": ["eyebrow", "title", "desc", "dark", "center", "field"]
+    }
+  ],
+  "components": [
+    {
+      "name": "CartDrawer",
+      "path": "client_src/src/components/CartDrawer.tsx",
+      "description": "دراور سبد خرید کشویی موبایل و دسکتاپ با محاسبه زنده تخفیف و ارسال",
+      "props": ["open", "onClose"]
+    },
+    {
+      "name": "Catalog",
+      "path": "client_src/src/components/Catalog.tsx",
+      "description": "کاتالوگ شبکه‌ای محصولات با چیپ‌های دسته‌بندی و مرتب‌سازی",
+      "props": []
+    },
+    {
+      "name": "FAQ",
+      "path": "client_src/src/components/FAQ.tsx",
+      "description": "آکاردئون پرسش‌های متداول مشتریان با انیمیشن باز و بسته شدن",
+      "props": []
+    },
+    {
+      "name": "Footer",
+      "path": "client_src/src/components/Footer.tsx",
+      "description": "فوتر کامل و غنی فروشگاه با نشان‌های اعتماد، اینماد و شبکه‌های اجتماعی",
+      "props": []
+    },
+    {
+      "name": "Header",
+      "path": "client_src/src/components/Header.tsx",
+      "description": "ناوبار چسبان شیشه‌ای با لوگو، جست‌وجو، شمارنده سبد و منوی موبایل",
+      "props": ["onOpenCart", "onOpenTrack", "onOpenSearch"]
+    },
+    {
+      "name": "Hero",
+      "path": "client_src/src/components/Hero.tsx",
+      "description": "بخش هیرو جذاب بالای صفحه با تیترهای متحرک، برچسب قیمت و دکمه CTA",
+      "props": []
+    },
+    {
+      "name": "LandingPreviewController",
+      "path": "client_src/src/components/LandingPreviewController.tsx",
+      "description": "کنترلر دریافت پیام‌های ریل‌تایم postMessage از پنل مدیریت Landing Studio",
+      "props": []
+    },
+    {
+      "name": "Loader",
+      "path": "client_src/src/components/Loader.tsx",
+      "description": "اسپینر لودینگ اختصاصی و اسکلت پیش‌بارگذاری برند ای‌بی ساکس",
+      "props": ["size", "color"]
+    },
+    {
+      "name": "LuckyWheel",
+      "path": "client_src/src/components/LuckyWheel.tsx",
+      "description": "گردونه شانس گیمیفیکیشن برای دریافت کوپن تخفیف تصادفی",
+      "props": ["open", "onClose", "onWinCoupon"]
+    },
+    {
+      "name": "MobileDeck",
+      "path": "client_src/src/components/MobileDeck.tsx",
+      "description": "داک ۵ هاب شناور پایین صفحه موبایل با ناوبری سریع و نشانگر سبد",
+      "props": ["activeHub", "onSelectHub"]
+    },
+    {
+      "name": "MobileMenu",
+      "path": "client_src/src/components/MobileMenu.tsx",
+      "description": "منوی کشویی ناوبری موبایل با انیمیشن شیشه‌ای",
+      "props": ["open", "onClose"]
+    },
+    {
+      "name": "MotionGallery",
+      "path": "client_src/src/components/MotionGallery.tsx",
+      "description": "گالری تصاویر پویا و شبکه‌ای کارگاه با افکت پارالاکس",
+      "props": []
+    },
+    {
+      "name": "PackBuilder",
+      "path": "client_src/src/components/PackBuilder.tsx",
+      "description": "سازنده آنلاین پک سفارشی هدیه (انتخاب جوراب، جعبه و کارت پستال)",
+      "props": []
+    },
+    {
+      "name": "ProductArt",
+      "path": "client_src/src/components/ProductArt.tsx",
+      "description": "نمایش بزرگ بافت پارچه و جزئیات نخ‌پنبه با زوم کیفیت بالا",
+      "props": ["image", "alt", "title"]
+    },
+    {
+      "name": "ProductCard",
+      "path": "client_src/src/components/ProductCard.tsx",
+      "description": "کارت استاندارد محصول با تصویر، برچسب تخفیف و افزودن سریع به سبد",
+      "props": ["product", "priority", "onQuickView"]
+    },
+    {
+      "name": "ProductModal",
+      "path": "client_src/src/components/ProductModal.tsx",
+      "description": "مودال مشاهده سریع محصول همراه با انتخاب سایز، رنگ و تعداد",
+      "props": ["product", "open", "onClose"]
+    },
+    {
+      "name": "PromiseBox",
+      "path": "client_src/src/components/PromiseBox.tsx",
+      "description": "جعبه ارزش‌های برند شامل ضمانت کیفیت پنبه، ارسال سریع و تعویض آسان",
+      "props": []
+    },
+    {
+      "name": "SizeGuide",
+      "path": "client_src/src/components/SizeGuide.tsx",
+      "description": "جدول راهنمای تعاملی سایز جوراب بر اساس شماره پا و سن",
+      "props": ["open", "onClose"]
+    },
+    {
+      "name": "SocialStyle",
+      "path": "client_src/src/components/SocialStyle.tsx",
+      "description": "بخش اثبات اجتماعی شامل استایل‌های اینستاگرامی خریداران",
+      "props": []
+    },
+    {
+      "name": "Story",
+      "path": "client_src/src/components/Story.tsx",
+      "description": "روایت داستانی تاریخچه کارگاه بافندگی و اصالت برند",
+      "props": []
+    },
+    {
+      "name": "StyleMaker",
+      "path": "client_src/src/components/StyleMaker.tsx",
+      "description": "پیشنهادگر هوشمند ست کردن جوراب با استایل‌های خیابانی و کلاسیک",
+      "props": []
+    },
+    {
+      "name": "TechTrust",
+      "path": "client_src/src/components/TechTrust.tsx",
+      "description": "مشخصات فنی نخ‌پنبه سوپر شانه‌شده و مزایای ضدحساسیت",
+      "props": []
+    },
+    {
+      "name": "Toaster",
+      "path": "client_src/src/components/Toaster.tsx",
+      "description": "رندرکننده نوتیفیکیشن‌های شناور توست (موفقیت، خطا، هشدار)",
+      "props": []
+    },
+    {
+      "name": "TopStrip",
+      "path": "client_src/src/components/TopStrip.tsx",
+      "description": "نوار باریک بالای سایت برای اعلان‌های فوری و تایمر تخفیف",
+      "props": []
+    },
+    {
+      "name": "TrackModal",
+      "path": "client_src/src/components/TrackModal.tsx",
+      "description": "مودال فرم رهگیری سفارش مشتری با کد پیگیری و شماره همراه",
+      "props": ["open", "onClose"]
+    },
+    {
+      "name": "TrustBar",
+      "path": "client_src/src/components/TrustBar.tsx",
+      "description": "نوار نمادهای اعتماد و ویژگی‌های برجسته فروشگاه",
+      "props": []
+    }
+  ]
+}
+

@@ -105,8 +105,10 @@ export function CartDrawer() {
                     exit={{ opacity: 0, x: -40 }}
                     className="flex items-center gap-3 rounded-2xl border border-coffee-900/10 bg-white p-3"
                   >
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-cream-100">
-                      {product ? (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-cream-100 overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="h-14 w-14 object-contain" />
+                      ) : product ? (
                         <ProductArt product={product} colorIndex={item.colorIndex ?? 0} className="h-14 w-14" />
                       ) : (
                         <Gift className="h-7 w-7 text-brand-500" />

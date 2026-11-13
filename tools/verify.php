@@ -976,6 +976,82 @@ if (!empty($gitPrivacyErrors)) {
     pass("Git privacy guard verified: Admin guides (*-ADMIN-GUIDE.md) are strictly excluded from git tracking/releases.");
 }
 
+// === 9. AB-Client-Kit & Register Guard ===
+section("9. AB-Client-Kit Architecture & Register Guard");
+
+$clientRegErrors = [];
+$frontRegPath = $root . '/docs/registers/client-front.json';
+$backRegPath = $root . '/docs/registers/client-back.json';
+
+// 9.1 Check client-front.json
+if (!file_exists($frontRegPath)) {
+    $clientRegErrors[] = "Missing docs/registers/client-front.json registry file.";
+} else {
+    $frontData = json_decode(file_get_contents($frontRegPath), true);
+    if (!is_array($frontData)) {
+        $clientRegErrors[] = "Invalid JSON in docs/registers/client-front.json.";
+    } else {
+        // Verify pages exist
+        foreach ($frontData['pages'] ?? [] as $page) {
+            $pPath = $root . '/' . ltrim($page['path'] ?? '', '/');
+            if (!file_exists($pPath)) {
+                $clientRegErrors[] = "client-front.json references missing page file: " . ($page['path'] ?? 'unknown');
+            }
+        }
+        // Verify primitives exist
+        foreach ($frontData['primitives'] ?? [] as $prim) {
+            $primPath = $root . '/' . ltrim($prim['path'] ?? '', '/');
+            if (!file_exists($primPath)) {
+                $clientRegErrors[] = "client-front.json references missing primitive file: " . ($prim['path'] ?? 'unknown');
+            }
+        }
+        // Verify components exist
+        foreach ($frontData['components'] ?? [] as $comp) {
+            $cPath = $root . '/' . ltrim($comp['path'] ?? '', '/');
+            if (!file_exists($cPath)) {
+                $clientRegErrors[] = "client-front.json references missing component file: " . ($comp['path'] ?? 'unknown');
+            }
+        }
+    }
+}
+
+// 9.2 Check client-back.json
+if (!file_exists($backRegPath)) {
+    $clientRegErrors[] = "Missing docs/registers/client-back.json registry file.";
+} else {
+    $backData = json_decode(file_get_contents($backRegPath), true);
+    if (!is_array($backData)) {
+        $clientRegErrors[] = "Invalid JSON in docs/registers/client-back.json.";
+    } else {
+        // Verify service files exist
+        foreach ($backData['services'] ?? [] as $svc) {
+            $sPath = $root . '/' . ltrim($svc['path'] ?? '', '/');
+            if (!file_exists($sPath)) {
+                $clientRegErrors[] = "client-back.json references missing service file: " . ($svc['path'] ?? 'unknown');
+            }
+        }
+    }
+}
+
+// 9.3 Check Client Skills
+$frontSkill = $root . '/.agents/skills/ab-socks-client-front/SKILL.md';
+$backSkill = $root . '/.agents/skills/ab-socks-client-back/SKILL.md';
+if (!file_exists($frontSkill)) {
+    $clientRegErrors[] = "Missing skill: .agents/skills/ab-socks-client-front/SKILL.md";
+}
+if (!file_exists($backSkill)) {
+    $clientRegErrors[] = "Missing skill: .agents/skills/ab-socks-client-back/SKILL.md";
+}
+
+if (!empty($clientRegErrors)) {
+    foreach ($clientRegErrors as $err) {
+        fail($err);
+        $errors++;
+    }
+} else {
+    pass("Client-Kit Registers and Skills verified: client-front.json, client-back.json, and all referenced files valid.");
+}
+
 
 section("Verification Summary");
 echo "Errors:   " . ($errors > 0 ? color((string)$errors, 'red') : color("0", 'green')) . PHP_EOL;

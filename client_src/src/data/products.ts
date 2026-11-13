@@ -9,6 +9,14 @@ export interface Colorway {
   secondary?: string;
 }
 
+export interface ProductVariant {
+  id: number;
+  size: string;
+  color: string;
+  stock: number;
+  price: number;
+}
+
 export interface Product {
   id: number;
   title: string;
@@ -30,12 +38,14 @@ export interface Product {
   desc: string;
   image?: string;
   slug?: string;
+  variants?: ProductVariant[];
 }
 
 declare global {
   interface Window {
     __AB_INITIAL_DATA__?: {
       products?: Partial<Product>[];
+      cartItems?: any[];
       categories?: { id: CategoryId; label: string }[];
       cartCount?: number;
       csrfToken?: string;
@@ -282,56 +292,37 @@ export function getMergedProducts(): Product[] {
   }
   const serverList = window.__AB_INITIAL_DATA__.products;
   const merged: Product[] = [];
-  const usedIds = new Set<number>();
 
   for (const s of serverList) {
     if (!s.id) continue;
-    usedIds.add(s.id);
-    const existing = initialProducts.find((p) => p.id === s.id);
-    if (existing) {
-      merged.push({
-        ...existing,
-        title: s.title || existing.title,
-        price: s.price ?? existing.price,
-        oldPrice: s.oldPrice ?? existing.oldPrice,
-        image: s.image || existing.image,
-        slug: s.slug || existing.slug,
-      });
-    } else {
-      merged.push({
-        id: s.id,
-        title: s.title || "جوراب اختصاصی AB",
-        category: (s.category as Exclude<CategoryId, "all">) || "crew",
-        categoryLabel: s.categoryLabel || "ساق‌بلند طرح‌دار",
-        price: s.price || 120_000,
-        oldPrice: s.oldPrice ?? null,
-        badge: s.badge || "پیشنهاد ویژه",
-        rating: s.rating ?? 5.0,
-        reviews: s.reviews ?? 42,
-        rank: s.rank ?? merged.length + 1,
-        isNew: s.isNew ?? true,
-        art: (s.art as ArtType) || "sock",
-        pattern: (s.pattern as PatternType) || "checker",
-        colors: s.colors?.length
-          ? s.colors
-          : [
-              { name: "نارنجی اصلی", hex: "#e85d1f", secondary: "#f6efe0" },
-              { name: "مشکی ذغالی", hex: "#221510", secondary: "#e85d1f" },
-            ],
-        sizes: s.sizes?.length ? s.sizes : ["۳۶-۴۰", "۴۱-۴۶"],
-        features: s.features?.length ? s.features : ["۱۰۰٪ نخ‌پنبه شانه‌شده", "پنجه بدون درز"],
-        tags: s.tags?.length ? s.tags : ["روزمره", "کتونی"],
-        desc: s.desc || "طراحی و بافت باکیفیت کارگاه ای‌بی ساکس.",
-        image: s.image,
-        slug: s.slug,
-      });
-    }
-  }
-
-  for (const p of initialProducts) {
-    if (!usedIds.has(p.id)) {
-      merged.push(p);
-    }
+    merged.push({
+      id: s.id,
+      title: s.title || "جوراب اختصاصی AB",
+      category: (s.category as Exclude<CategoryId, "all">) || "crew",
+      categoryLabel: s.categoryLabel || "ساق‌بلند طرح‌دار",
+      price: s.price || 120_000,
+      oldPrice: s.oldPrice ?? null,
+      badge: s.badge || "پیشنهاد ویژه",
+      rating: s.rating ?? 5.0,
+      reviews: s.reviews ?? 42,
+      rank: s.rank ?? merged.length + 1,
+      isNew: s.isNew ?? true,
+      art: (s.art as ArtType) || "sock",
+      pattern: (s.pattern as PatternType) || "checker",
+      colors: s.colors?.length
+        ? s.colors
+        : [
+            { name: "نارنجی اصلی", hex: "#e85d1f", secondary: "#f6efe0" },
+            { name: "مشکی ذغالی", hex: "#221510", secondary: "#e85d1f" },
+          ],
+      sizes: s.sizes?.length ? s.sizes : ["۳۶-۴۰", "۴۱-۴۶"],
+      features: s.features?.length ? s.features : ["۱۰۰٪ نخ‌پنبه شانه‌شده", "پنجه بدون درز"],
+      tags: s.tags?.length ? s.tags : ["روزمره", "کتونی"],
+      desc: s.desc || "طراحی و بافت باکیفیت کارگاه ای‌بی ساکس.",
+      image: s.image,
+      slug: s.slug,
+      variants: s.variants || [],
+    });
   }
 
   return merged;
