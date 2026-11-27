@@ -496,6 +496,119 @@ if (is_dir($compDir)) {
     }
 }
 
+// 7.1.4 Site Component Registry & Call Verification (site_component_registry)
+$siteCompDir = $root . '/views/site/components';
+$frontRegContent = file_exists($root . '/docs/registers/client-front.json')
+    ? file_get_contents($root . '/docs/registers/client-front.json')
+    : '';
+$siteCompMissingDocs = [];
+if (is_dir($siteCompDir)) {
+    foreach (glob($siteCompDir . '/*.php') ?: [] as $scf) {
+        $scName = basename($scf, '.php');
+        if (!str_contains($frontRegContent, "views/site/components/{$scName}.php")) {
+            $siteCompMissingDocs[] = $scName;
+        }
+    }
+}
+if (!empty($siteCompMissingDocs)) {
+    fail("Site component(s) missing from docs/registers/client-front.json: " . implode(', ', $siteCompMissingDocs));
+    $errors++;
+}
+
+$siteCompMissingFiles = [];
+foreach ([$root . '/views/site', $root . '/views/layout', $root . '/ajax'] as $scanDir) {
+    if (!is_dir($scanDir)) continue;
+    $scIter = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($scanDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($scIter as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $vContent = file_get_contents($it->getRealPath());
+            if (preg_match_all('/\b(?:render_)?site_component\(\s*[\'"]([a-zA-Z0-9_\-\/]+)[\'"]/i', $vContent, $mComps)) {
+                foreach ($mComps[1] as $cCall) {
+                    $safeCall = ltrim(str_replace('..', '', $cCall), '/');
+                    if (!file_exists($siteCompDir . '/' . $safeCall . '.php')) {
+                        $siteCompMissingFiles[$cCall][] = normalizeRelPath($it->getRealPath(), $root);
+                    }
+                }
+            }
+        }
+    }
+}
+if (!empty($siteCompMissingFiles)) {
+    foreach ($siteCompMissingFiles as $cCall => $callers) {
+        fail("Undefined site_component '{$cCall}' called in: " . implode(', ', $callers));
+        $errors++;
+    }
+} elseif (empty($siteCompMissingDocs)) {
+    $siteCompCount = is_dir($siteCompDir) ? count(glob($siteCompDir . '/*.php') ?: []) : 0;
+    pass("Site component registry verified ({$siteCompCount} component(s) registered and all site_component() calls valid).");
+}
+
+// 7.1.5 Client Breakpoint Synchronization Guard (client_bp_sync)
+$abClientFile = $root . '/assets/js/ab-client.js';
+$clientTokensFile = $root . '/assets/css/client-tokens.css';
+if (file_exists($abClientFile) && file_exists($clientTokensFile)) {
+    $abClientContent = file_get_contents($abClientFile);
+    $clientTokensContent = file_get_contents($clientTokensFile);
+    $bpClientJs = [];
+    $bpClientCss = [];
+    if (preg_match('/ABClient\.bp\s*=\s*\{\s*sm:\s*(\d+),\s*md:\s*(\d+),\s*lg:\s*(\d+)\s*\}/', $abClientContent, $mJs)) {
+        $bpClientJs = ['sm' => (int)$mJs[1], 'md' => (int)$mJs[2], 'lg' => (int)$mJs[3]];
+    }
+    if (preg_match('/sm:\s*[^(\n]*\((\d+)px\)/', $clientTokensContent, $mSm)) $bpClientCss['sm'] = (int)$mSm[1];
+    if (preg_match('/md:\s*[^(\n]*\((\d+)px\)/', $clientTokensContent, $mMd)) $bpClientCss['md'] = (int)$mMd[1];
+    if (preg_match('/lg:\s*[^(\n]*\((\d+)px\)/', $clientTokensContent, $mLg)) $bpClientCss['lg'] = (int)$mLg[1];
+    if (!empty($bpClientJs) && $bpClientJs === $bpClientCss) {
+        pass("Client breakpoint sync (client_bp_sync) verified: sm={$bpClientJs['sm']}, md={$bpClientJs['md']}, lg={$bpClientJs['lg']}.");
+    } else {
+        fail("Client breakpoint mismatch (client_bp_sync)! ab-client.js (" . json_encode($bpClientJs) . ") does not match client-tokens.css (" . json_encode($bpClientCss) . ").");
+        $errors++;
+    }
+} else {
+    pass("Client breakpoint sync (client_bp_sync) armed (pending ab-client.js & client-tokens.css).");
+}
+
+// 7.1.6 Client / Admin Domain Isolation Guard (client_isolation_guard)
+$isolationViolations = [];
+foreach ([$root . '/views/site', $root . '/views/layout'] as $cDir) {
+    if (!is_dir($cDir)) continue;
+    $cIter = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($cDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($cIter as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $rel = normalizeRelPath($it->getRealPath(), $root);
+            $vContent = file_get_contents($it->getRealPath());
+            if (preg_match('/(?:ab-kit\.js|admin(?:-[a-z0-9-]+)?\.css)/i', $vContent, $mLeak)) {
+                $isolationViolations[] = "Client view '{$rel}' loads admin asset '{$mLeak[0]}'";
+            }
+        }
+    }
+}
+if (is_dir($root . '/views/admin')) {
+    $aIter = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($root . '/views/admin', RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($aIter as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $rel = normalizeRelPath($it->getRealPath(), $root);
+            $vContent = file_get_contents($it->getRealPath());
+            if (preg_match('/(?:ab-client\.js|client-[a-z0-9-]+\.css)/i', $vContent, $mLeak)) {
+                $isolationViolations[] = "Admin view '{$rel}' loads client asset '{$mLeak[0]}'";
+            }
+        }
+    }
+}
+if (!empty($isolationViolations)) {
+    foreach ($isolationViolations as $iv) {
+        fail("Domain isolation leak (client_isolation_guard): {$iv}");
+        $errors++;
+    }
+} else {
+    pass("Client/Admin domain isolation guard passed (zero cross-domain asset leaks).");
+}
+
 // 7.2 Compute Current Front-end Metrics
 $currentMetrics = [];
 
@@ -505,7 +618,10 @@ $bannedFns = [
     'toFaDigits', 'toPersianDigits', 'toPersian', 'closeModal'
 ];
 
-$jsFiles = glob($root . '/assets/js/*.js');
+$jsFiles = array_merge(
+    glob($root . '/assets/js/*.js') ?: [],
+    glob($root . '/assets/js/client/*.js') ?: []
+);
 $viewFiles = [];
 $vIterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root . '/views', RecursiveDirectoryIterator::SKIP_DOTS)
@@ -647,6 +763,57 @@ foreach ($adminViewsIterator as $it) {
     }
 }
 
+// G.2 Client view inline style="" occurrences (views/site + views/layout)
+foreach ([$root . '/views/site', $root . '/views/layout'] as $clientViewRoot) {
+    if (!is_dir($clientViewRoot)) continue;
+    $cvIterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($clientViewRoot, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($cvIterator as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $rel = normalizeRelPath($it->getRealPath(), $root);
+            $content = file_get_contents($it->getRealPath());
+            if (preg_match_all('/style\s*=\s*["\']([^"\']*)["\']/i', $content, $mStyles)) {
+                $count = 0;
+                foreach ($mStyles[1] as $styleVal) {
+                    $trimmed = trim($styleVal);
+                    if (str_starts_with($trimmed, '--')) continue; // allow dynamic CSS variables
+                    $count++;
+                }
+                if ($count > 0) {
+                    $currentMetrics["client_inline_style:{$rel}"] = $count;
+                }
+            }
+        }
+    }
+}
+
+// B.2 Client CSS Guard (all client-*.css except client-tokens.css: 0 :root, 0 #hex, 0 !important, 0 transition: all)
+$allClientCssFiles = glob($root . '/assets/css/client-*.css') ?: [];
+foreach ($allClientCssFiles as $f) {
+    if (basename($f) === 'client-tokens.css') continue;
+    $rel = normalizeRelPath($f, $root);
+    $content = file_get_contents($f);
+    if (preg_match_all('/(?<![a-zA-Z0-9_-]):root\b/', $content, $mRoot)) {
+        if (count($mRoot[0]) > 0) {
+            $currentMetrics["client_css_root:{$rel}"] = count($mRoot[0]);
+        }
+    }
+    if (preg_match_all('/#[0-9a-fA-F]{3,8}\b/', $content, $mHex)) {
+        if (count($mHex[0]) > 0) {
+            $currentMetrics["client_css_hex:{$rel}"] = count($mHex[0]);
+        }
+    }
+    $impCount = preg_match_all('/!important/i', $content);
+    if ($impCount > 0) {
+        $currentMetrics["client_css_important:{$rel}"] = $impCount;
+    }
+    $transCount = preg_match_all('/transition\s*:[^;]*\ball\b/i', $content);
+    if ($transCount > 0) {
+        $currentMetrics["client_css_transition_all:{$rel}"] = $transCount;
+    }
+}
+
 // H. View legacy class family occurrences
 $legacyClasses = [
     'btn-primary', 'btn-outline', 'fin-btn-outline', 'btn-dash-action',
@@ -785,9 +952,9 @@ section("8. SEO, AI Search (GEO) & Machine Invariant Guard");
 
 // 8.1 Head & Meta Tag Contract Guard
 $headerPath = $root . '/views/layout/header.php';
-$homePath = $root . '/views/site/home.php';
+$homeCtrlPath = $root . '/app/controllers/site/home.php';
 $headerContent = file_exists($headerPath) ? file_get_contents($headerPath) : '';
-$homeContent = file_exists($homePath) ? file_get_contents($homePath) : '';
+$homeCtrlContent = file_exists($homeCtrlPath) ? file_get_contents($homeCtrlPath) : '';
 
 $criticalMetaTokens = [
     '<meta name="robots"',
@@ -813,11 +980,11 @@ foreach ($criticalMetaTokens as $token) {
 if (!empty($missingHeaderTokens)) {
     fail("views/layout/header.php missing critical SEO tag contract: " . implode(', ', $missingHeaderTokens));
     $errors++;
-} elseif (!str_contains($homeContent, '$seoIndexingEnabled') || !str_contains($homeContent, 'seoBuildOrganizationJsonLd')) {
-    fail("views/site/home.php missing critical indexing or organization schema contract.");
+} elseif (!str_contains($headerContent, '$seoIndexingEnabled') || !str_contains($homeCtrlContent, 'seoBuildOrganizationJsonLd')) {
+    fail("Storefront head or home controller missing critical indexing or organization schema contract.");
     $errors++;
 } else {
-    pass("Head & Meta Tag contracts verified (header.php & home.php).");
+    pass("Head & Meta Tag contracts verified (header.php & site/home.php).");
 }
 
 // 8.2 Schema.org JSON-LD Wiring Guard
@@ -998,18 +1165,34 @@ if (!file_exists($frontRegPath)) {
                 $clientRegErrors[] = "client-front.json references missing page file: " . ($page['path'] ?? 'unknown');
             }
         }
-        // Verify primitives exist
+        // Verify primitives exist & optional type valid
+        $allowedFrontTypes = ['layout', 'php_primitive', 'php_partial', 'php_component', 'css_module', 'js_module', 'js_behavior'];
         foreach ($frontData['primitives'] ?? [] as $prim) {
             $primPath = $root . '/' . ltrim($prim['path'] ?? '', '/');
             if (!file_exists($primPath)) {
                 $clientRegErrors[] = "client-front.json references missing primitive file: " . ($prim['path'] ?? 'unknown');
             }
+            if (!empty($prim['type']) && !in_array($prim['type'], $allowedFrontTypes, true)) {
+                $clientRegErrors[] = "client-front.json invalid primitive type '" . $prim['type'] . "' for " . ($prim['name'] ?? 'unknown');
+            }
         }
-        // Verify components exist
+        // Verify components exist & optional type valid
         foreach ($frontData['components'] ?? [] as $comp) {
             $cPath = $root . '/' . ltrim($comp['path'] ?? '', '/');
             if (!file_exists($cPath)) {
                 $clientRegErrors[] = "client-front.json references missing component file: " . ($comp['path'] ?? 'unknown');
+            }
+            if (!empty($comp['type']) && !in_array($comp['type'], $allowedFrontTypes, true)) {
+                $clientRegErrors[] = "client-front.json invalid component type '" . $comp['type'] . "' for " . ($comp['name'] ?? 'unknown');
+            }
+        }
+        // Verify behaviors files exist if defined
+        foreach ($frontData['behaviors'] ?? [] as $beh) {
+            if (!empty($beh['path'])) {
+                $bPath = $root . '/' . ltrim($beh['path'], '/');
+                if (!file_exists($bPath)) {
+                    $clientRegErrors[] = "client-front.json references missing behavior file: " . $beh['path'];
+                }
             }
         }
     }
@@ -1028,6 +1211,13 @@ if (!file_exists($backRegPath)) {
             $sPath = $root . '/' . ltrim($svc['path'] ?? '', '/');
             if (!file_exists($sPath)) {
                 $clientRegErrors[] = "client-back.json references missing service file: " . ($svc['path'] ?? 'unknown');
+            }
+        }
+        // Verify AJAX endpoint files exist
+        foreach ($backData['ajax'] ?? [] as $ajaxEp) {
+            $aPath = $root . '/' . ltrim($ajaxEp['path'] ?? '', '/');
+            if (!file_exists($aPath)) {
+                $clientRegErrors[] = "client-back.json references missing AJAX endpoint file: " . ($ajaxEp['path'] ?? 'unknown');
             }
         }
     }

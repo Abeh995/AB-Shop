@@ -1,235 +1,168 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "kit": "ab-client-front",
-  "description": "Single Source of Truth Component Registry for AB-Socks Customer Storefront (React / Glassmorphism)",
+  "description": "Single Source of Truth Component Registry for AB-Socks Customer Storefront (Pure PHP / HTML / CSS / Vanilla JS)",
+  "tokens": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 860,
+      "lg": 1180
+    }
+  },
   "pages": [
     {
       "slug": "home",
-      "path": "client_src/src/pages/home/index.tsx",
+      "path": "views/site/home.php",
       "status": "active",
-      "description": "صفحه اصلی فروشگاه و لندینگ پیج تعاملی"
+      "description": "صفحه اصلی فروشگاه شامل بنر هیرو، نوار اعتماد، شبکه‌ی دسته‌بندی و کاروسل محصولات"
     },
     {
       "slug": "product",
-      "path": "client_src/src/pages/product/index.tsx",
-      "status": "scaffolded",
-      "description": "صفحه جزئیات و خرید تکی محصول با انتخاب واریانت و گالری"
+      "path": "views/site/product.php",
+      "status": "active",
+      "description": "صفحه جزئیات محصول با انتخاب واریانت رنگ/سایز، گالری، سئو اسکیما و سوالات متداول"
     },
     {
       "slug": "category",
-      "path": "client_src/src/pages/category/index.tsx",
-      "status": "scaffolded",
-      "description": "آرشیو کاتالوگ دسته‌بندی با فیلتر قیمت و سایز"
+      "path": "views/site/category.php",
+      "status": "active",
+      "description": "آرشیو محصولات دسته‌بندی با زیرمجموعه‌ها، راهنمای خرید و صفحه‌بندی"
+    },
+    {
+      "slug": "categories",
+      "path": "views/site/categories.php",
+      "status": "active",
+      "description": "هاب جامع دسته‌بندی‌های فروشگاه با نمایش درختی و شمارشگر محصولات"
     },
     {
       "slug": "cart",
-      "path": "client_src/src/pages/cart/index.tsx",
-      "status": "scaffolded",
-      "description": "صفحه کامل سبد خرید مشتری همراه با پیشنهاد هدیه و کوپن"
+      "path": "views/site/cart.php",
+      "status": "active",
+      "description": "سبد خرید مشتری با بروزرسانی تعداد، کوپن تخفیف و محاسبه ارسال"
     },
     {
       "slug": "checkout",
-      "path": "client_src/src/pages/checkout/index.tsx",
-      "status": "scaffolded",
-      "description": "تسویه حساب، ثبت آدرس و انتخاب شیوه پرداخت کارت‌به‌کارت یا درگاه"
+      "path": "views/site/checkout.php",
+      "status": "active",
+      "description": "تسویه حساب، ثبت آدرس، انتخاب روش ارسال و شیوه پرداخت کارت‌به‌کارت یا درگاه"
     },
     {
-      "slug": "track",
-      "path": "client_src/src/pages/track/index.tsx",
-      "status": "scaffolded",
-      "description": "پیگیری وضعیت سفارش و رهگیری مرسوله پستی"
+      "slug": "card_to_card",
+      "path": "views/site/card_to_card.php",
+      "status": "active",
+      "description": "ثبت و آپلود فیش واریز کارت‌به‌کارت سفارش"
+    },
+    {
+      "slug": "search",
+      "path": "views/site/search.php",
+      "status": "active",
+      "description": "صفحه نتایج جستجوی کامل محصولات و دسته‌بندی‌ها"
     },
     {
       "slug": "tag",
-      "path": "client_src/src/pages/tag/index.tsx",
-      "status": "scaffolded",
+      "path": "views/site/tag.php",
+      "status": "active",
       "description": "آرشیو و هاب موضوعی برچسب‌های محصولات"
+    },
+    {
+      "slug": "account",
+      "path": "views/site/account.php",
+      "status": "active",
+      "description": "حساب کاربری مشتری، پروفایل، اعتبارسنجی و تاریخچه سفارش‌ها"
+    },
+    {
+      "slug": "account_order",
+      "path": "views/site/account_order.php",
+      "status": "active",
+      "description": "جزئیات و رهگیری سفارش در حساب کاربری"
+    },
+    {
+      "slug": "login",
+      "path": "views/site/login.php",
+      "status": "active",
+      "description": "صفحه ورود موبایل‌محور مشتری (OTP و رمز عبور)"
+    },
+    {
+      "slug": "signup",
+      "path": "views/site/signup.php",
+      "status": "active",
+      "description": "ثبت‌نام حساب کاربری مشتری"
     }
   ],
   "primitives": [
     {
-      "name": "Marquee",
-      "path": "client_src/src/components/primitives.tsx",
-      "description": "بنر متحرک افقی پیوسته برای اعلامیه‌ها، تخفیف‌ها و آفرها",
-      "props": ["children", "speed", "reverse", "className", "pauseOnHover"]
+      "name": "SiteHeader",
+      "type": "layout",
+      "path": "views/layout/header.php",
+      "description": "هدر مشترک ویترین با منوی ناوبری، جستجوی زنده، شمارنده سبد، تگ‌های سئو/OG و JSON-LD",
+      "props": ["$pageTitle", "$metaDescription", "$canonicalUrl", "$ogImage", "$jsonLd", "$preloadHeroImage"]
     },
     {
-      "name": "Reveal",
-      "path": "client_src/src/components/primitives.tsx",
-      "description": "انیمیشن ورود نرم اسکرولی برای المان‌ها با Framer Motion",
-      "props": ["children", "delay", "y", "className"]
+      "name": "SiteFooter",
+      "type": "layout",
+      "path": "views/layout/footer.php",
+      "description": "فوتر مشترک فروشگاه با برندینگ، لینک‌های دسترسی سریع، شبکه‌های اجتماعی، اینماد و اسکریپت‌ها",
+      "props": []
     },
     {
-      "name": "Modal",
-      "path": "client_src/src/components/primitives.tsx",
-      "description": "پایه مودال شیشه‌ای با افکت بلور، دراوداور و ترنزیشن فنری",
-      "props": ["open", "onClose", "children", "size", "tone"]
+      "name": "Pagination",
+      "type": "php_partial",
+      "path": "views/site/partials/pagination.php",
+      "description": "کامپوننت صفحه‌بندی با ارقام فارسی و حفظ پارامترهای فیلتر",
+      "props": ["$totalPages", "$page", "$paginationParams"]
     },
     {
-      "name": "SectionHeading",
-      "path": "client_src/src/components/primitives.tsx",
-      "description": "سرتیتر استاندارد بخش‌ها همراه با برچسب چشمک‌زن و تایپوگرافی اصیل",
-      "props": ["eyebrow", "title", "desc", "dark", "center", "field"]
+      "name": "StorefrontDesignTokens",
+      "type": "css_module",
+      "path": "assets/css/style.css",
+      "description": "شیرازه طراحی ویترین، متغیرهای رنگی :root، گریدها، فرم‌ها، کارت‌ها و ریسپانسیو RTL",
+      "props": ["--color-bg", "--color-surface", "--color-primary", "--color-accent", "--radius-md"]
+    },
+    {
+      "name": "LiquidGlassTokens",
+      "type": "css_module",
+      "path": "assets/css/storefront-hubs.css",
+      "description": "توکن‌ها و استایل‌های افکت شیشه‌ای داک ناوبری ۵ هاب موبایل و دسکتاپ",
+      "props": ["--dock-bg", "--dock-border", "--drop-bg", "--drop-shadow", "--dock-active"]
     }
   ],
   "components": [
     {
-      "name": "CartDrawer",
-      "path": "client_src/src/components/CartDrawer.tsx",
-      "description": "دراور سبد خرید کشویی موبایل و دسکتاپ با محاسبه زنده تخفیف و ارسال",
-      "props": ["open", "onClose"]
-    },
-    {
-      "name": "Catalog",
-      "path": "client_src/src/components/Catalog.tsx",
-      "description": "کاتالوگ شبکه‌ای محصولات با چیپ‌های دسته‌بندی و مرتب‌سازی",
-      "props": []
-    },
-    {
-      "name": "FAQ",
-      "path": "client_src/src/components/FAQ.tsx",
-      "description": "آکاردئون پرسش‌های متداول مشتریان با انیمیشن باز و بسته شدن",
-      "props": []
-    },
-    {
-      "name": "Footer",
-      "path": "client_src/src/components/Footer.tsx",
-      "description": "فوتر کامل و غنی فروشگاه با نشان‌های اعتماد، اینماد و شبکه‌های اجتماعی",
-      "props": []
-    },
-    {
-      "name": "Header",
-      "path": "client_src/src/components/Header.tsx",
-      "description": "ناوبار چسبان شیشه‌ای با لوگو، جست‌وجو، شمارنده سبد و منوی موبایل",
-      "props": ["onOpenCart", "onOpenTrack", "onOpenSearch"]
-    },
-    {
-      "name": "Hero",
-      "path": "client_src/src/components/Hero.tsx",
-      "description": "بخش هیرو جذاب بالای صفحه با تیترهای متحرک، برچسب قیمت و دکمه CTA",
-      "props": []
-    },
-    {
-      "name": "LandingPreviewController",
-      "path": "client_src/src/components/LandingPreviewController.tsx",
-      "description": "کنترلر دریافت پیام‌های ریل‌تایم postMessage از پنل مدیریت Landing Studio",
-      "props": []
-    },
-    {
-      "name": "Loader",
-      "path": "client_src/src/components/Loader.tsx",
-      "description": "اسپینر لودینگ اختصاصی و اسکلت پیش‌بارگذاری برند ای‌بی ساکس",
-      "props": ["size", "color"]
-    },
-    {
-      "name": "LuckyWheel",
-      "path": "client_src/src/components/LuckyWheel.tsx",
-      "description": "گردونه شانس گیمیفیکیشن برای دریافت کوپن تخفیف تصادفی",
-      "props": ["open", "onClose", "onWinCoupon"]
-    },
-    {
-      "name": "MobileDeck",
-      "path": "client_src/src/components/MobileDeck.tsx",
-      "description": "داک ۵ هاب شناور پایین صفحه موبایل با ناوبری سریع و نشانگر سبد",
-      "props": ["activeHub", "onSelectHub"]
-    },
-    {
-      "name": "MobileMenu",
-      "path": "client_src/src/components/MobileMenu.tsx",
-      "description": "منوی کشویی ناوبری موبایل با انیمیشن شیشه‌ای",
-      "props": ["open", "onClose"]
-    },
-    {
-      "name": "MotionGallery",
-      "path": "client_src/src/components/MotionGallery.tsx",
-      "description": "گالری تصاویر پویا و شبکه‌ای کارگاه با افکت پارالاکس",
-      "props": []
-    },
-    {
-      "name": "PackBuilder",
-      "path": "client_src/src/components/PackBuilder.tsx",
-      "description": "سازنده آنلاین پک سفارشی هدیه (انتخاب جوراب، جعبه و کارت پستال)",
-      "props": []
-    },
-    {
-      "name": "ProductArt",
-      "path": "client_src/src/components/ProductArt.tsx",
-      "description": "نمایش بزرگ بافت پارچه و جزئیات نخ‌پنبه با زوم کیفیت بالا",
-      "props": ["image", "alt", "title"]
-    },
-    {
       "name": "ProductCard",
-      "path": "client_src/src/components/ProductCard.tsx",
-      "description": "کارت استاندارد محصول با تصویر، برچسب تخفیف و افزودن سریع به سبد",
-      "props": ["product", "priority", "onQuickView"]
+      "type": "php_partial",
+      "path": "views/site/partials/product_card.php",
+      "description": "کارت استاندارد محصول با تصویر تنبل، برچسب تخفیف/ناموجود، دسته‌بندی و قیمت مؤثر",
+      "props": ["$p"]
     },
     {
-      "name": "ProductModal",
-      "path": "client_src/src/components/ProductModal.tsx",
-      "description": "مودال مشاهده سریع محصول همراه با انتخاب سایز، رنگ و تعداد",
-      "props": ["product", "open", "onClose"]
-    },
-    {
-      "name": "PromiseBox",
-      "path": "client_src/src/components/PromiseBox.tsx",
-      "description": "جعبه ارزش‌های برند شامل ضمانت کیفیت پنبه، ارسال سریع و تعویض آسان",
+      "name": "BottomDock",
+      "type": "php_partial",
+      "path": "views/site/partials/bottom_dock.php",
+      "description": "داک ۵ هاب شناور شیشه‌ای پایین صفحه موبایل (خانه، دسته‌ها، سبد، جستجو، حساب کاربری)",
       "props": []
     },
     {
-      "name": "SizeGuide",
-      "path": "client_src/src/components/SizeGuide.tsx",
-      "description": "جدول راهنمای تعاملی سایز جوراب بر اساس شماره پا و سن",
-      "props": ["open", "onClose"]
+      "name": "StorefrontMainScript",
+      "type": "js_module",
+      "path": "assets/js/main.js",
+      "description": "اسکریپت وانیلا برای منوی موبایل، جستجوی زنده autocomplete، کاروسل، انتخاب واریانت، گالری و افزودن به سبد",
+      "props": ["toPersianDigits", "escapeHtml"]
     },
     {
-      "name": "SocialStyle",
-      "path": "client_src/src/components/SocialStyle.tsx",
-      "description": "بخش اثبات اجتماعی شامل استایل‌های اینستاگرامی خریداران",
+      "name": "StorefrontHubsScript",
+      "type": "js_module",
+      "path": "assets/js/storefront-hubs.js",
+      "description": "انیمیشن قطره داک شیشه‌ای، فیلتر لحظه‌ای کاتالوگ و آکاردئون پرسش‌های متداول",
       "props": []
     },
     {
-      "name": "Story",
-      "path": "client_src/src/components/Story.tsx",
-      "description": "روایت داستانی تاریخچه کارگاه بافندگی و اصالت برند",
-      "props": []
-    },
-    {
-      "name": "StyleMaker",
-      "path": "client_src/src/components/StyleMaker.tsx",
-      "description": "پیشنهادگر هوشمند ست کردن جوراب با استایل‌های خیابانی و کلاسیک",
-      "props": []
-    },
-    {
-      "name": "TechTrust",
-      "path": "client_src/src/components/TechTrust.tsx",
-      "description": "مشخصات فنی نخ‌پنبه سوپر شانه‌شده و مزایای ضدحساسیت",
-      "props": []
-    },
-    {
-      "name": "Toaster",
-      "path": "client_src/src/components/Toaster.tsx",
-      "description": "رندرکننده نوتیفیکیشن‌های شناور توست (موفقیت، خطا، هشدار)",
-      "props": []
-    },
-    {
-      "name": "TopStrip",
-      "path": "client_src/src/components/TopStrip.tsx",
-      "description": "نوار باریک بالای سایت برای اعلان‌های فوری و تایمر تخفیف",
-      "props": []
-    },
-    {
-      "name": "TrackModal",
-      "path": "client_src/src/components/TrackModal.tsx",
-      "description": "مودال فرم رهگیری سفارش مشتری با کد پیگیری و شماره همراه",
-      "props": ["open", "onClose"]
-    },
-    {
-      "name": "TrustBar",
-      "path": "client_src/src/components/TrustBar.tsx",
-      "description": "نوار نمادهای اعتماد و ویژگی‌های برجسته فروشگاه",
+      "name": "CardToCardUploader",
+      "type": "js_module",
+      "path": "assets/js/card-to-card.js",
+      "description": "مدیریت انتخاب، پیش‌نمایش و ارسال فیش واریز کارت‌به‌کارت",
       "props": []
     }
-  ]
+  ],
+  "behaviors": []
 }
-

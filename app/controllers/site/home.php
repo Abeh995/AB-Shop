@@ -1,50 +1,64 @@
 <?php
 /**
- * Home page controller — assembles the storefront landing payload.
- *
- * Soft ceiling 80 lines. All queries/transformations live in
- * StorefrontService and LandingService (Rule 7); this file only wires data into
- * the view.
+ * Home page controller — data fetching and SEO wiring only; no HTML here.
+ * Respects section visibility settings, hero promo banner, and trust items configured in admin/appearance.php.
  */
 
-// 0. Landing content: the Studio draft is served inside the Studio preview
-//    iframe only; every visitor gets the published snapshot.
-$landingPreviewMode = (($_GET['lb_preview'] ?? '') === '1') && isAdminLoggedIn();
-$landingConfig = $landingPreviewMode ? getLandingDraftConfig() : getLandingPublishedConfig();
+$pageTitle = 'خانه';
+$canonicalUrl = rtrim(SITE_URL, '/') . '/';
+$metaDescription = getSetting(
+    'meta_description',
+    'فروشگاه آنلاین جوراب‌های دست‌باف و خاص ای‌بی ساکس؛ خرید اینترنتی جوراب مردانه، زنانه و بچگانه با ارسال سریع.'
+);
+$jsonLd = [seoBuildOrganizationJsonLd()];
 
-$hero = $landingConfig['hero'] ?? [];
-$seo = $landingConfig['seo'] ?? [];
+$homeIntroEnabled = getSetting('home_intro_enabled', '0') === '1';
+$homeIntroTitle = getSetting('home_intro_title', 'جوراب‌هایی که هر روزتان را راحت‌تر می‌کنند');
+$homeIntroSubtitle = getSetting('home_intro_subtitle', 'کیفیت پارچه، دوخت مقاوم و طرح‌های به‌روز؛ مستقیم درِ خانه شما.');
 
-$pageTitle = trim((string) ($seo['title'] ?? ''));
-if ($pageTitle === '') {
-    $pageTitle = 'ای‌بی ساکس | AB SOCKS — هر قدم، یه اثر هنریه';
+$heroBannerEnabled = getSetting('hero_banner_enabled', '0') === '1';
+$heroBannerImage = heroBannerImageUrl();
+$heroBannerBadge = getSetting('hero_banner_badge', 'پیشنهاد ویژه این فصل');
+$heroBannerTitle = getSetting('hero_banner_title', 'کالکشن جدید و خاص جوراب‌های AB');
+$heroBannerSubtitle = getSetting('hero_banner_subtitle', 'تنوع بی‌نظیر طرح‌ها و رنگ‌ها با الیاف ۱۰۰٪ نخ‌پنبه و بالاترین دوام');
+$heroBannerCtaText = getSetting('hero_banner_cta_text', 'مشاهده همه محصولات');
+$heroBannerCtaUrl = getSetting('hero_banner_cta_url', '/categories');
+
+$trustBarEnabled = getSetting('trust_bar_enabled', '1') === '1';
+$trustItems = [];
+if ($trustBarEnabled) {
+    for ($i = 1; $i <= 4; $i++) {
+        $trustItems[] = [
+            'title' => getSetting("trust_item_{$i}_title", ''),
+            'desc'  => getSetting("trust_item_{$i}_desc", ''),
+        ];
+    }
 }
-$metaDescription = trim((string) ($seo['description'] ?? ''));
-if ($metaDescription === '') {
-    $metaDescription = getSetting('meta_description', 'فروشگاه آنلاین جوراب‌های دست‌باف و خاص ای‌بی ساکس. هر قدم، یه اثر هنریه.');
-}
 
-// 1. Catalog data for both the SEO fallback markup and the React island.
-$catalog = getLandingCatalogPayload();
-$products = $catalog['raw'];
-$rawCategories = $catalog['categories'];
+$homeCategoriesEnabled = getSetting('home_categories_enabled', '0') === '1';
+$homeCategoriesTitle = getSetting('home_categories_title', 'دسته‌بندی‌ها');
+$homeFeaturedEnabled = getSetting('home_featured_enabled', '1') === '1';
+$homeFeaturedTitle = getSetting('home_featured_title', 'پیشنهاد ویژه');
+$homeFeaturedLimit = max(2, min(24, (int) getSetting('home_featured_limit', '6')));
+$homeNewestEnabled = getSetting('home_newest_enabled', '1') === '1';
+$homeNewestTitle = getSetting('home_newest_title', 'آخرین محصولات');
+$homeNewestLimit = max(2, min(24, (int) getSetting('home_newest_limit', '6')));
+$homeCategoryStripEnabled = getSetting('home_category_strip_enabled', '1') === '1';
+$homeCategoryStripTitle = getSetting('home_category_strip_title', 'دسته‌بندی‌ها را از همین‌جا هم می‌بینید');
 
-$landingInitialData = [
-    'products'      => $catalog['cards'],
-    'cartItems'     => $catalog['cartItems'],
-    'landingConfig' => $landingConfig,
-    'previewMode'   => $landingPreviewMode,
-    'categories'    => $catalog['categories'],
-    'cartCount'     => cartCount(),
-    'csrfToken'     => csrfToken(),
-    'store'         => [
-        'name'         => SITE_NAME,
-        'phone'        => getSiteContent('store_phone') ?: '۰۲۱-۹۱۰۰۸۴۲۰',
-        'email'        => getSiteContent('store_email') ?: 'info@absocks.ir',
-        'supportHours' => getSiteContent('store_support_hours') ?: 'شنبه تا پنجشنبه، ۹ صبح تا ۶ عصر',
-    ],
-];
+$categories = ($homeCategoriesEnabled || $homeCategoryStripEnabled) ? getHomeCategories() : [];
+$featured = $homeFeaturedEnabled ? getHomeFeaturedProducts($homeFeaturedLimit) : [];
+$newest = $homeNewestEnabled ? getHomeNewestProducts($homeNewestLimit) : [];
 
 renderView('site/home', compact(
-    'pageTitle', 'metaDescription', 'products', 'rawCategories', 'landingInitialData', 'landingConfig', 'hero', 'seo'
+    'pageTitle', 'canonicalUrl', 'metaDescription', 'jsonLd',
+    'categories', 'featured', 'newest',
+    'homeIntroEnabled', 'homeIntroTitle', 'homeIntroSubtitle',
+    'heroBannerEnabled', 'heroBannerImage', 'heroBannerBadge',
+    'heroBannerTitle', 'heroBannerSubtitle', 'heroBannerCtaText', 'heroBannerCtaUrl',
+    'trustBarEnabled', 'trustItems',
+    'homeCategoriesEnabled', 'homeCategoriesTitle',
+    'homeFeaturedEnabled', 'homeFeaturedTitle',
+    'homeNewestEnabled', 'homeNewestTitle',
+    'homeCategoryStripEnabled', 'homeCategoryStripTitle'
 ));

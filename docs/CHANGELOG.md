@@ -7,6 +7,24 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 1.43.0 — 2026-11-28
+
+### Pure PHP Storefront Consolidation & AB-Client-Kit Phase 0 Foundation
+
+- **Storefront Consolidation (`client_src/`, Landing Studio Removal, `AGENTS.md`)**:
+  - Removed the experimental React `client_src/` build tree and Landing Studio admin/dist artifacts (`admin/landing.php`, `app/controllers/admin/landing.php`, `LandingService`, `LandingSchemaService`, `ajax/landing_studio.php`, `ajax/cart_pack_add.php`, `assets/dist/landing/`).
+  - Consolidated `app/controllers/site/home.php`, `app/services/StorefrontService.php`, and `views/site/home.php` cleanly on the Pure PHP architecture with zero Node/Vite production dependencies.
+- **Component Engine (`app/core/functions.php`)**:
+  - Added `site_component()` and `render_site_component()` targeting `views/site/components/` with isolated closure scope and `EXTR_SKIP`, keeping storefront components completely separated from admin `component()`.
+- **Registers & Quality Gate Expansion (`docs/registers/`, `tools/verify.php`, `tools/verify-baseline.json`)**:
+  - Upgraded `docs/registers/client-front.json` (v2.1.0) with breakpoint tokens, `type` metadata, and `behaviors` schema; upgraded `docs/registers/client-back.json` (v1.2.0) with storefront `ajax` endpoint contracts.
+  - Added Section 7 guards (`site_component_registry`, `client_bp_sync`, `client_isolation_guard`, `client_css_*` zero-debt ratchet, `client_inline_style` ratchet covering 20 client view templates) and Section 9 validation for `ajax` and `behaviors` paths.
+  - Updated `.agents/skills/ab-socks-client-front/SKILL.md` to reflect modern-browser target baseline.
+- **AJAX Flash Leak Fix (`ajax/cart_remove.php`)**:
+  - Moved `setFlash()` below the AJAX JSON response branch so asynchronous removals do not persist a stale flash banner until the next full page load.
+
+---
+
 ## 1.42.0 — 2026-11-14
 
 ### AB-Client-Kit Architecture, Fast Registries & Universal Write-Gate Protocol

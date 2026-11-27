@@ -1,43 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "kit": "ab-client-back",
-  "description": "Single Source of Truth Service & Function Registry for AB-Socks Customer Operations (PHP)",
+  "description": "Single Source of Truth Service & Function Registry for AB-Socks Customer Operations (Pure PHP)",
   "services": [
     {
       "module": "Storefront",
       "path": "app/services/StorefrontService.php",
-      "description": "سرویس آماده‌سازی داده‌های نمایشی ویترین فروشگاه و تزریق پلود اولیه",
+      "description": "سرویس کوئری‌های ویترین فروشگاه برای صفحه اصلی (دسته‌بندی‌ها، محصولات ویژه و جدیدترین‌ها)",
       "functions": [
         {
-          "name": "getLandingCategoryOptions",
+          "name": "getHomeCategories",
           "params": [],
-          "returns": "array<int, array{id: string, label: string}>",
-          "description": "دریافت دسته‌بندی‌های فعال ریشه به عنوان چیپ‌های فیلتر کاتالوگ"
+          "returns": "array<int, array<string, mixed>>",
+          "description": "دریافت دسته‌بندی‌های فعال ریشه جهت نمایش در گرید و نوار دسته‌بندی صفحه اصلی"
         },
         {
-          "name": "getLandingProducts",
-          "params": ["int $limit = 24"],
-          "returns": "array",
-          "description": "دریافت محصولات فعال و دارای موجودی جهت تغذیه فرانت و فال‌بک سئو"
+          "name": "getHomeFeaturedProducts",
+          "params": ["int $limit = 6"],
+          "returns": "array<int, array<string, mixed>>",
+          "description": "دریافت محصولات ویژه فعال همراه با موجودی مؤثر برای کاروسل پیشنهاد ویژه"
         },
         {
-          "name": "formatLandingProduct",
-          "params": ["array $product", "array $variants = []"],
-          "returns": "array",
-          "description": "تبدیل دیتای خام محصول دیتابیس به ساختار استاندارد مورد نیاز فرانت کلاینت"
-        },
-        {
-          "name": "getLandingCartPayload",
-          "params": [],
-          "returns": "array",
-          "description": "استخراج پلود سبد خرید جاری سشن کاربر برای مقداردهی اولیه فرانت"
-        },
-        {
-          "name": "getLandingCatalogPayload",
-          "params": ["int $limit = 24"],
-          "returns": "array",
-          "description": "تولید پلود کامل محصولات کاتالوگ همراه با اطلاعات تخفیف و واریانت‌ها"
+          "name": "getHomeNewestProducts",
+          "params": ["int $limit = 6"],
+          "returns": "array<int, array<string, mixed>>",
+          "description": "دریافت جدیدترین محصولات فعال همراه با موجودی مؤثر برای کاروسل آخرین محصولات"
         }
       ]
     },
@@ -146,6 +134,87 @@
         }
       ]
     }
+  ],
+  "ajax": [
+    {
+      "name": "cartAdd",
+      "path": "ajax/cart_add.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["int $product_id", "?int $variant_id", "int $qty"],
+      "response": "json{ok: bool, cartCount?: int, message?: string}"
+    },
+    {
+      "name": "cartUpdate",
+      "path": "ajax/cart_update.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["string $key", "int $qty"],
+      "response": "json{ok: bool, cartCount: int} | redirect('/cart')"
+    },
+    {
+      "name": "cartRemove",
+      "path": "ajax/cart_remove.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["string $key"],
+      "response": "json{ok: bool, cartCount: int} | redirect('/cart')"
+    },
+    {
+      "name": "couponApply",
+      "path": "ajax/coupon_apply.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["string $coupon_code"],
+      "response": "redirect('/cart')"
+    },
+    {
+      "name": "couponRemove",
+      "path": "ajax/coupon_remove.php",
+      "method": "POST",
+      "csrf": true,
+      "params": [],
+      "response": "redirect('/cart')"
+    },
+    {
+      "name": "postOrderAdd",
+      "path": "ajax/post_order_add.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["int $gift_item_id", "int $quantity"],
+      "response": "redirect('/cart')"
+    },
+    {
+      "name": "postOrderRemove",
+      "path": "ajax/post_order_remove.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["int $gift_item_id"],
+      "response": "redirect('/cart')"
+    },
+    {
+      "name": "shippingEstimate",
+      "path": "ajax/shipping_estimate.php",
+      "method": "POST",
+      "csrf": false,
+      "params": ["string $province"],
+      "response": "json{ok: bool, cost: float, cost_formatted: string, method_name: string, estimated_delivery: ?string, is_free: bool, grand_total_formatted: string}"
+    },
+    {
+      "name": "searchSuggest",
+      "path": "ajax/search_suggest.php",
+      "method": "GET",
+      "csrf": false,
+      "params": ["string $q"],
+      "response": "json{categories: array, results: array}"
+    },
+    {
+      "name": "cardToCardReceiptUpload",
+      "path": "ajax/card_to_card_receipt_upload.php",
+      "method": "POST",
+      "csrf": true,
+      "params": ["int $order_id", "file $receipt"],
+      "response": "json{ok: bool, message?: string}"
+    }
   ]
 }
-

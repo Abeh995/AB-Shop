@@ -5,7 +5,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     $key = $_POST['key'] ?? '';
     cartRemove($key);
-    setFlash('success', 'محصول از سبد خرید حذف شد.');
 
     $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
         || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')
@@ -16,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['ok' => true, 'cartCount' => cartCount()]);
         exit;
     }
+
+    setFlash('success', 'محصول از سبد خرید حذف شد.');
 }
 
 redirect('/cart');

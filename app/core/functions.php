@@ -722,6 +722,39 @@ function render_component(string $_componentName, array $_componentProps = []): 
 }
 
 /**
+ * Renders an isolated storefront presentation component from views/site/components/.
+ * Strictly separate from admin component() to enforce client/admin boundary isolation.
+ *
+ * @param string $_componentName Component name without .php extension
+ * @param array  $_componentProps Explicit associative parameters passed to the component
+ */
+function site_component(string $_componentName, array $_componentProps = []): void
+{
+    $safeName = ltrim(str_replace('..', '', $_componentName), '/');
+    $_componentFile = APP_ROOT . '/views/site/components/' . $safeName . '.php';
+    if (file_exists($_componentFile)) {
+        (static function (string $__file, array $__props): void {
+            extract($__props, EXTR_SKIP);
+            require $__file;
+        })($_componentFile, $_componentProps);
+    }
+}
+
+/**
+ * Renders a storefront presentation component and captures its HTML output as a string.
+ *
+ * @param string $_componentName Component name in views/site/components/
+ * @param array  $_componentProps Component property values
+ * @return string Rendered HTML
+ */
+function render_site_component(string $_componentName, array $_componentProps = []): string
+{
+    ob_start();
+    site_component($_componentName, $_componentProps);
+    return (string) ob_get_clean();
+}
+
+/**
  * Generates an asset URL with automated cache-busting based on file modification time.
  *
  * @param string $path Relative path from web root (e.g. '/assets/css/admin.css' or 'assets/js/ab-kit.js')
