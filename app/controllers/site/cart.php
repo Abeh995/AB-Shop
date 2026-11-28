@@ -4,35 +4,6 @@
  */
 
 $pageTitle = 'سبد خرید';
-$cart = cartDetails();
-$appliedCoupon = $_SESSION['coupon'] ?? null;
+$workspace = getStorefrontCartWorkspaceData();
 
-// Re-validate an already-applied coupon in case it no longer matches the current cart (e.g. the total dropped)
-$discount = 0;
-if ($appliedCoupon) {
-    $cust = currentCustomer();
-    $phone = $cust['phone'] ?? null;
-    $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal'], $phone, null, $cart['items'] ?? []);
-    if ($check['ok']) {
-        $discount = $check['discount'];
-    } else {
-        unset($_SESSION['coupon']);
-        $appliedCoupon = null;
-    }
-}
-
-// Post-order add-ons: what the customer has selected so far (re-validated
-// against the live catalog) plus what else is currently offerable
-$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
-$selectedPostOrderIds = array_column($postOrderResult['lines'], 'gift_item_id');
-$cartSubtotal = (int) ($cart['subtotal'] ?? 0);
-$availablePostOrderItems = array_filter(
-    getAvailablePostOrderItems($cartSubtotal),
-    fn($item) => !in_array((int) $item['id'], $selectedPostOrderIds, true)
-);
-
-$storeOrderStatus = getSetting('store_order_status', 'active');
-$storePausedMessage = getSetting('store_paused_message', 'ثبت سفارش موقتاً به دلیل انبارگردانی یا تعطیلات متوقف شده است.');
-$minOrderAmount = (int) getSetting('min_order_amount', '0');
-
-renderView('site/cart', compact('pageTitle', 'cart', 'appliedCoupon', 'discount', 'postOrderResult', 'availablePostOrderItems', 'storeOrderStatus', 'storePausedMessage', 'minOrderAmount'));
+renderView('site/cart', array_merge(['pageTitle' => $pageTitle], $workspace));

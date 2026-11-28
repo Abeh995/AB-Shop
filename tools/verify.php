@@ -826,6 +826,7 @@ $legacyClasses = [
     'cat-kpi-card', 'prod-kpi-card', 'fin-kpi-card', 'kpi-card'
 ];
 $legacyRegex = '/\b(' . implode('|', array_map('preg_quote', $legacyClasses)) . ')\b/';
+foreach ([$adminViewsIterator] as $dummyUnused) {}
 foreach ($adminViewsIterator as $it) {
     if ($it->isFile() && $it->getExtension() === 'php') {
         $rel = normalizeRelPath($it->getRealPath(), $root);
@@ -839,6 +840,33 @@ foreach ($adminViewsIterator as $it) {
             }
             if ($count > 0) {
                 $currentMetrics["view_legacy_class:{$rel}"] = $count;
+            }
+        }
+    }
+}
+
+// H.2 Client View legacy class occurrences (views/site + views/layout)
+$clientLegacyClasses = ['btn', 'btn-primary', 'btn-outline', 'btn-sm', 'btn-block', 'form-group', 'form-control', 'form-row', 'alert-success', 'alert-error', 'alert-danger'];
+$clientLegacyRegex = '/(?<![a-zA-Z0-9_-])(' . implode('|', array_map('preg_quote', $clientLegacyClasses)) . ')(?![a-zA-Z0-9_-])/';
+foreach ([$root . '/views/site', $root . '/views/layout'] as $cvRoot) {
+    if (!is_dir($cvRoot)) continue;
+    $cvIter = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($cvRoot, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($cvIter as $it) {
+        if ($it->isFile() && $it->getExtension() === 'php') {
+            $rel = normalizeRelPath($it->getRealPath(), $root);
+            $content = file_get_contents($it->getRealPath());
+            if (preg_match_all('/class\s*=\s*["\']([^"\']*)["\']/i', $content, $mClasses)) {
+                $count = 0;
+                foreach ($mClasses[1] as $classVal) {
+                    if (preg_match_all($clientLegacyRegex, $classVal, $mMatches)) {
+                        $count += count($mMatches[0]);
+                    }
+                }
+                if ($count > 0) {
+                    $currentMetrics["client_view_legacy_class:{$rel}"] = $count;
+                }
             }
         }
     }
@@ -1158,11 +1186,20 @@ if (!file_exists($frontRegPath)) {
     if (!is_array($frontData)) {
         $clientRegErrors[] = "Invalid JSON in docs/registers/client-front.json.";
     } else {
-        // Verify pages exist
+        // Verify pages exist and every top-level views/site/*.php page is registered
+        $registeredPagePaths = [];
         foreach ($frontData['pages'] ?? [] as $page) {
-            $pPath = $root . '/' . ltrim($page['path'] ?? '', '/');
+            $relPage = ltrim($page['path'] ?? '', '/');
+            $pPath = $root . '/' . $relPage;
+            $registeredPagePaths[$relPage] = true;
             if (!file_exists($pPath)) {
                 $clientRegErrors[] = "client-front.json references missing page file: " . ($page['path'] ?? 'unknown');
+            }
+        }
+        foreach (glob($root . '/views/site/*.php') ?: [] as $sitePageFile) {
+            $relSitePage = normalizeRelPath($sitePageFile, $root);
+            if (!isset($registeredPagePaths[$relSitePage])) {
+                $clientRegErrors[] = "Storefront page missing from docs/registers/client-front.json: {$relSitePage}";
             }
         }
         // Verify primitives exist & optional type valid

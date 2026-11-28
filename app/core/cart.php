@@ -25,6 +25,19 @@ function cartKey(int $productId, ?int $variantId): string
     return $productId . '-' . ($variantId ?? 0);
 }
 
+function cartGetItemQty(int $productId, ?int $variantId): int
+{
+    $variantIdNorm = $variantId ?? 0;
+    if (isCustomerLoggedIn()) {
+        $stmt = db()->prepare("SELECT quantity FROM cart_items WHERE customer_id = ? AND product_id = ? AND variant_id = ?");
+        $stmt->execute([(int) $_SESSION['customer_id'], $productId, $variantIdNorm]);
+        return max(0, (int) $stmt->fetchColumn());
+    }
+
+    $key = cartKey($productId, $variantId);
+    return max(0, (int) ($_SESSION['cart'][$key]['qty'] ?? 0));
+}
+
 function cartAdd(int $productId, ?int $variantId, int $qty): void
 {
     if ($qty < 1) $qty = 1;
@@ -171,7 +184,7 @@ function cartDetailsForGuest(): array
     $subtotal = 0;
 
     foreach ($_SESSION['cart'] ?? [] as $key => $entry) {
-        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
+        $stmt = db()->prepare("SELECT id, category_id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
         $stmt->execute([$entry['product_id']]);
         $product = $stmt->fetch();
         if (!$product || !$product['is_active']) continue;
@@ -231,7 +244,7 @@ function cartDetailsForCustomer(int $customerId): array
     $expiresAt = date('Y-m-d H:i:s', strtotime($cartStartedAt) + $guaranteeDays * 86400);
 
     foreach ($rows as $row) {
-        $stmt = db()->prepare("SELECT id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
+        $stmt = db()->prepare("SELECT id, category_id, name, slug, price, discount_price, cost_price, stock, image, is_active FROM products WHERE id = ?");
         $stmt->execute([$row['product_id']]);
         $product = $stmt->fetch();
         if (!$product || !$product['is_active']) continue;

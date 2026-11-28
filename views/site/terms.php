@@ -1,8 +1,10 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 <div class="container">
-    <div class="static-page">
+    <section class="c-section static-page">
         <h1>قوانین و مقررات</h1>
-        <?= renderSiteContent($termsContent) ?>
-    </div>
+        <div class="c-card">
+            <?= renderSiteContent($termsContent) ?>
+        </div>
+    </section>
 </div>
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

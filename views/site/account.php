@@ -33,11 +33,7 @@ require APP_ROOT . '/views/layout/header.php';
         </a>
     </div>
 
-    <?php if ($errors): ?>
-        <div class="alert alert-error">
-            <?php foreach ($errors as $err): ?><div><?= e($err) ?></div><?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+    <?php site_component('alert', ['state' => 'error', 'messages' => $errors ?? []]); ?>
 
     <div class="account-hub-grid">
         <div class="account-main-col">
@@ -49,10 +45,12 @@ require APP_ROOT . '/views/layout/header.php';
                 </div>
 
                 <?php if (!$orders): ?>
-                    <div class="empty-state" style="padding: 24px 0;">
-                        هنوز سفارشی ثبت نکرده‌اید.<br><br>
-                        <a href="/" class="btn btn-primary btn-sm">مشاهده و خرید محصولات</a>
-                    </div>
+                    <?php site_component('empty_state', [
+                        'message' => 'هنوز سفارشی ثبت نکرده‌اید.',
+                        'actionUrl' => '/',
+                        'actionLabel' => 'مشاهده و خرید محصولات',
+                        'compact' => true,
+                    ]); ?>
                 <?php else: ?>
                     <div class="customer-orders-list">
                         <?php foreach ($orders as $o): ?>
@@ -77,7 +75,7 @@ require APP_ROOT . '/views/layout/header.php';
                                 </div>
                             </div>
                             <div class="customer-order-footer">
-                                <a href="/account/order/<?= e($o['order_code']) ?>" class="btn btn-sm btn-outline customer-order-btn">
+                                <a href="/account/order/<?= e($o['order_code']) ?>" class="c-btn c-btn--sm c-btn--outline customer-order-btn">
                                     مشاهده جزئیات و فاکتور &larr;
                                 </a>
                             </div>
@@ -88,25 +86,25 @@ require APP_ROOT . '/views/layout/header.php';
             </div>
 
             <!-- 2. Profile Edit Card -->
-            <div class="customer-card" style="margin-top: 24px;">
+            <div class="customer-card c-mt-6">
                 <div class="customer-card-header">
                     <h3>اطلاعات حساب کاربری</h3>
                 </div>
                 <form method="post" action="/account">
                     <?= csrfField() ?>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>نام و نام‌خانوادگی</label>
-                            <input class="form-control" type="text" name="full_name" value="<?= e($customer['full_name'] ?? '') ?>" placeholder="نام خود را وارد کنید">
+                    <div class="c-form-row">
+                        <div class="c-form-group">
+                            <label for="accFullName">نام و نام‌خانوادگی</label>
+                            <input class="c-form-control" id="accFullName" type="text" name="full_name" value="<?= e($customer['full_name'] ?? '') ?>" placeholder="نام خود را وارد کنید">
                         </div>
-                        <div class="form-group">
-                            <label>شماره موبایل</label>
-                            <input class="form-control" type="text" dir="ltr" value="<?= e($customer['phone']) ?>" disabled>
+                        <div class="c-form-group">
+                            <label for="accPhone">شماره موبایل</label>
+                            <input class="c-form-control" id="accPhone" type="text" dir="ltr" value="<?= e($customer['phone']) ?>" disabled>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>ایمیل</label>
-                        <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($customer['email'] ?? '') ?>" placeholder="example@email.com">
+                    <div class="c-form-group">
+                        <label for="accEmail">ایمیل</label>
+                        <input class="c-form-control" id="accEmail" type="email" name="email" dir="ltr" value="<?= e($customer['email'] ?? '') ?>" placeholder="example@email.com">
                         <?php if (!empty($customer['email'])): ?>
                             <?php if (!empty($customer['email_verified_at'])): ?>
                                 <span class="customer-field-note note-success">✓ ایمیل تایید شده است</span>
@@ -117,7 +115,7 @@ require APP_ROOT . '/views/layout/header.php';
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
-                    <button type="submit" class="btn btn-primary">ذخیره تغییرات مشخصات</button>
+                    <button type="submit" class="c-btn c-btn--primary">ذخیره تغییرات مشخصات</button>
                 </form>
             </div>
         </div>
@@ -129,7 +127,7 @@ require APP_ROOT . '/views/layout/header.php';
                     <h3>سبد خرید فعلی</h3>
                 </div>
                 <?php if (empty($cart['items'])): ?>
-                    <p style="color:var(--color-muted); font-size:.88rem; margin: 0;">سبد خرید شما در حال حاضر خالی است.</p>
+                    <p class="c-text-muted c-text-sm c-mb-0">سبد خرید شما در حال حاضر خالی است.</p>
                 <?php else: ?>
                     <div class="account-cart-items">
                         <?php foreach ($cart['items'] as $item): ?>
@@ -143,7 +141,7 @@ require APP_ROOT . '/views/layout/header.php';
                         <span>جمع کل کالاها:</span>
                         <strong><?= formatPrice($cart['subtotal']) ?></strong>
                     </div>
-                    <a href="/cart" class="btn btn-primary btn-block" style="margin-top:14px;">تکمیل و نهایی کردن خرید</a>
+                    <a href="/cart" class="c-btn c-btn--primary c-btn--block c-mt-3">تکمیل و نهایی کردن خرید</a>
                 <?php endif; ?>
             </div>
         </aside>

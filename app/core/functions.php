@@ -730,7 +730,10 @@ function render_component(string $_componentName, array $_componentProps = []): 
  */
 function site_component(string $_componentName, array $_componentProps = []): void
 {
-    $safeName = ltrim(str_replace('..', '', $_componentName), '/');
+    $safeName = ltrim(str_replace(['..', '\\'], ['', '/'], $_componentName), '/');
+    if ($safeName === '' || !preg_match('/^[a-z0-9_\/-]+$/i', $safeName)) {
+        return;
+    }
     $_componentFile = APP_ROOT . '/views/site/components/' . $safeName . '.php';
     if (file_exists($_componentFile)) {
         (static function (string $__file, array $__props): void {

@@ -1,11 +1,11 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 <div class="container">
-    <div class="static-page">
+    <section class="c-section static-page">
         <h1>درباره ما</h1>
         <?= renderSiteContent($aboutContent) ?>
 
         <h2>اطلاعات و راه‌های ارتباطی</h2>
-        <div class="contact-details">
+        <div class="c-card contact-details">
             <p><strong>نام کسب‌وکار:</strong> <?= e(SITE_NAME) ?></p>
             <p><strong>وب‌سایت:</strong> <span dir="ltr"><?= e(SITE_URL) ?></span></p>
             <?php if ($storeEmail !== ''): ?>
@@ -30,6 +30,6 @@
                 <p><strong>تاریخ شروع فعالیت:</strong> <?= e($storeStartDate) ?></p>
             <?php endif; ?>
         </div>
-    </div>
+    </section>
 </div>
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

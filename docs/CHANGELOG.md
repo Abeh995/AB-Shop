@@ -3,7 +3,28 @@
 All notable changes to the AB-Socks project.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-> **Looking for older releases?** Releases prior to v1.39.1 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+> **Looking for older releases?** Releases prior to v1.39.2 are archived in [CHANGELOG-ARCHIVE.md](./CHANGELOG-ARCHIVE.md).
+
+---
+
+## 1.44.0 — 2026-11-28
+
+### AB-Client-Kit Architecture Rollout, Progressive Cart & Legacy Storefront Debt Elimination
+
+- **Core Client Runtime & Layered Token CSS (`assets/js/ab-client.js`, `assets/css/client-*.css`, `views/layout/`)**:
+  - Replaced monolithic `main.js`, `storefront-hubs.js`, `style.css`, and `storefront-hubs.css` with isolated `ABClient` runtime (`bp`, `fmt`, `events`, `toast`, `api`, `clipboard`, WeakSet `behavior` mount) and `@layer` stylesheets (`client-tokens.css`, `client-base.css`, `client-layout.css`, `client-components.css`, `client-patterns.css`, `client-utilities.css`, `client-c2c.css`).
+  - Bound `<meta name="theme-color">` and `:root` tokens dynamically via `activeThemeCssVars()`; moved `[hidden]` into `@layer utilities`; unified the mobile drawer & liquid dock breakpoint at `860px`; enforced `>= 44px` touch targets, `:focus-visible` keyboard rings, `100dvh`, and `visibility: hidden` for closed mobile navigation.
+  - Fixed live search `highlight()` to split raw strings before escaping (preventing HTML entity splitting) and synced `#liquidDrop` positioning to `document.fonts.ready` with reduced-motion support.
+- **Pure PHP Component Library & Full View Migration (`views/site/components/`, `views/site/*.php`)**:
+  - Extracted 10 isolated Pure PHP components (`product_card`, `pagination`, `bottom_dock`, `breadcrumb`, `alert`, `empty_state`, `qty_stepper`, `order_summary`, `faq_accordion`, `cart_workspace`) and removed `views/site/partials/` and all legacy inline `<style>`/`<script>` debt across storefront views.
+  - Migrated all `.btn*` and legacy `.form-*` classes (including Batch 5C informational pages `contact.php`, `about.php`, `privacy.php`, `terms.php`), added explicit image `width`/`height` + `fetchpriority="high"` + hero preloading (`controllers/site/home.php`), and wired dock search to `search:toggle`.
+- **Page-Scoped Client JS Modules (`assets/js/client/`)**:
+  - Extracted lazy modules `product.js` (with `price_override` old-price/discount badge sync and guarded `WeakMap` form feedback), `checkout.js`, `verify-phone.js` (WebOTP + Persian/Arabic digit normalization), and `card-to-card.js` (server receipt discard on remove, retryable cache-busted HEIC loader, 45s upload timeout).
+- **Cart SSoT, Progressive Enhancement & Coupon/Stock Parity (`StorefrontService.php`, `cart.php`, `GiftService.php`, `csrf.php`, `ajax/*`)**:
+  - Added `getStorefrontCartWorkspaceData()`, `isStorefrontAjaxRequest()`, and `respondCartMutation()` enabling HTML-over-the-Wire swaps with JS and full redirect/flash fallback without JS across cart, coupon, and post-order endpoints plus `ajax/cart_add.php` (with cumulative `cartGetItemQty()` stock check).
+  - Enforced `verifyCsrf()` unconditionally on `ajax/shipping_estimate.php` with JSON 403 error responses on AJAX calls (`app/core/csrf.php`), selected `products.category_id` in `cartDetails*()`, rendered `free_shipping` coupons in `order_summary.php`, aligned `CouponService::validate()` arguments across Cart/Shipping Estimate/Checkout/Card-to-Card, and enforced/pruned `min_cart_total` on post-order add-ons.
+- **Registers, Docs & Quality Gate (`docs/DESIGN.md`, `docs/registers/`, `.agents/skills/ab-socks-client-front/SKILL.md`, `tools/verify.php`)**:
+  - Synced `docs/DESIGN.md` to modern-browser glass guardrails (`contain: layout paint style`, `prefers-reduced-motion`), registered all 22 storefront pages in `client-front.json` (v2.5.0), corrected `CardToCardReceiptService` and AJAX contracts in `client-back.json` (v1.3.0), updated `ab-socks-client-front/SKILL.md`, added `client_view_legacy_class` and full page-coverage checks to `tools/verify.php`, and cleared all client baseline debt.
 
 ---
 
@@ -138,28 +159,3 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Form submission guard with unconfirmed images (`assets/js/admin-image-optimizer.js`)**:
   - Fixed form submit handler so confirming the unapproved images modal warning does NOT automatically approve and upload unconfirmed images.
   - Only explicitly approved images are synced to the form submission payload, discarding unapproved uploads.
-
-## 1.39.1 — 2026-11-02
-
-### Landing Studio — popover stacking, focus mode and resizable panes
-
-- **Global-search popover was clipped by the admin sidebar (`assets/css/admin.css`, `admin-tokens.css`, `assets/js/admin.js`)**:
-  the results panel declares `z-index: var(--z-overlay)` but lives inside the sticky `.dash-topbar`, whose own stacking
-  context was pinned at `--z-sticky` (20) — below the sidebar (40) and the studio toolbar (40), so the open menu slid
-  under them and looked cut in half. The topbar now lifts itself to a dedicated `--z-dropdown` layer (50) only while the
-  popover is open (`is-search-open`), and the base `.dash-topbar` rule was removed from `admin.css`: it was **unlayered**,
-  and unlayered rules beat every `@layer`, so no layered rule could ever override it. The shell copy in
-  `admin-shell.css` (`@layer layout`) is now the single definition.
-- **`ajax/admin_search.php` returned 500 on every request** — it guarded on `isAdmin()`, a function that does not exist
-  (the helper is `isAdminLoggedIn()`). The endpoint answered 500 with an empty body, so the menu never opened at all.
-- **Focus mode now hides the whole admin chrome** — `.admin-subnav-container` (the topic tabs) joins the topbar, sidebar
-  and bottom nav in `html.lb-focus-mode`, and the shell grows to `100dvh - 1.5rem` so the studio owns the entire window.
-- **Resizable panes** — the two workspace gaps are now real grid tracks that host drag handles
-  (`#lbSplitRail`, `#lbSplitPanel`): drag to resize the rail or the editor, the preview always takes the remaining
-  `1fr`. Pointer capture + `requestAnimationFrame` re-fit keep the emulated device responsive *during* the drag;
-  widths persist in `localStorage`, double-click or `Home` restores the default and arrow keys nudge by 16px
-  (48px with Shift). Handles are hidden in zen mode and below the 52rem tabbed breakpoint.
-- **Slimmer studio toolbar** — 76px → ~42px: tighter padding, 1.75rem mark, `--text-sm` title, 1.85rem icon buttons and
-  1.9rem action buttons, so the panes get the height back.
-- **Suite grown to 29 checks** — slim toolbar height, splitter drag (panel grows / preview shrinks), focus mode hides
-  topbar + tabs + sidebar, focus mode still fills the fold, search popover paints above sidebar and studio.

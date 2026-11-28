@@ -59,10 +59,10 @@ This document describes the request lifecycle, lightweight routing, directory la
    - The view includes `views/layout/header.php` and `views/layout/footer.php` to emit standard semantic HTML, Open Graph tags, JSON-LD structured data, and CSS token links.
 
 ### Storefront 5-Hub Information Architecture
-The client interface is structured around 5 core hubs, accessible via the desktop header and the mobile/tablet Liquid Glass floating dock (`views/site/partials/bottom_dock.php`):
+The client interface is structured around 5 core hubs, accessible via the desktop header and the mobile/tablet Liquid Glass floating dock (`views/site/components/bottom_dock.php`):
 1. **Home Hub (`/`)**: Landing catalog, promotional announcements, and mobile horizontal carousel (`[FEAT-C003]`) optimized for ~3 cards per viewport.
 2. **Categories Hub (`/categories`)**: Category hierarchy catalog tree, active product counters, and direct subcategory chips (`app/controllers/site/categories.php`).
-3. **Cart & Checkout Hub (`/cart`, `/checkout`)**: Cart line item management, price guarantee locks, post-order gifts, and card-to-card receipt upload (`assets/js/card-to-card.js`).
+3. **Cart & Checkout Hub (`/cart`, `/checkout`)**: Cart line item management via HTML-over-the-Wire progressive enhancement (`views/site/components/cart_workspace.php` + `StorefrontService.php`), price guarantee locks, post-order gifts, and card-to-card receipt upload (`assets/js/client/card-to-card.js`).
 4. **Search Hub (`/search`)**: Real-time autocomplete suggestions modal and full-text search results page.
 5. **Account Hub (`/account`)**: Customer identity profile, verified credentials, real-time active cart summary, and historical order tracking via `CustomerService` (`[BUG-C005]`).
 

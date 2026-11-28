@@ -16,7 +16,7 @@ if (getSetting('store_order_status', 'active') === 'paused') { setFlash('error',
 $minOrderAmount = (int) getSetting('min_order_amount', '0');
 if ($minOrderAmount > 0 && $cart['subtotal'] < $minOrderAmount) { setFlash('error', 'حداقل مبلغ سفارش ' . number_format($minOrderAmount) . ' تومان است.'); redirect('/cart'); }
 
-$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
+$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? [], (int) ($cart['subtotal'] ?? 0));
 $zarinpalEnabled = getSetting('payment_zarinpal_enabled', '1') === '1';
 $cardToCardConfigured = getSetting('card_to_card_number', '') !== '' && getSetting('card_to_card_holder', '') !== '';
 $paymentMethodsAvailable = $zarinpalEnabled || $cardToCardConfigured;

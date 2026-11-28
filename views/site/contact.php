@@ -1,10 +1,10 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 <div class="container">
-    <div class="static-page">
+    <section class="c-section static-page">
         <h1>تماس با ما</h1>
         <p><?= e($contactIntro) ?></p>
 
-        <div class="contact-details">
+        <div class="c-card contact-details">
             <?php if ($storePhone !== ''): ?>
                 <p><strong>تلفن ثابت:</strong> <a href="tel:<?= e($storePhone) ?>" dir="ltr"><?= e($storePhone) ?></a></p>
             <?php endif; ?>
@@ -26,23 +26,25 @@
         </div>
 
         <?php if ($contactFormAvailable): ?>
-            <form method="post" action="/contact">
-                <?= csrfField() ?>
-                <div class="form-group">
-                    <label>نام</label>
-                    <input class="form-control" type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>ایمیل یا شماره تماس</label>
-                    <input class="form-control" type="text" name="contact" required>
-                </div>
-                <div class="form-group">
-                    <label>پیام</label>
-                    <textarea class="form-control" name="message" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">ارسال پیام</button>
-            </form>
+            <div class="c-card">
+                <form method="post" action="/contact">
+                    <?= csrfField() ?>
+                    <div class="c-form-group">
+                        <label for="contactName">نام</label>
+                        <input class="c-form-control" id="contactName" type="text" name="name" required>
+                    </div>
+                    <div class="c-form-group">
+                        <label for="contactTarget">ایمیل یا شماره تماس</label>
+                        <input class="c-form-control" id="contactTarget" type="text" name="contact" required>
+                    </div>
+                    <div class="c-form-group">
+                        <label for="contactMessage">پیام</label>
+                        <textarea class="c-form-control" id="contactMessage" name="message" required></textarea>
+                    </div>
+                    <button type="submit" class="c-btn c-btn--primary">ارسال پیام</button>
+                </form>
+            </div>
         <?php endif; ?>
-    </div>
+    </section>
 </div>
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

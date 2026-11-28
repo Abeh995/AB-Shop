@@ -24,7 +24,6 @@ $showBottomNav = function_exists('shouldShowAdminBottomNav') ? shouldShowAdminBo
     </nav>
 <?php endif; ?>
 
-<script src="<?= e(asset('/assets/js/main.js')) ?>"></script>
 <script src="<?= e(asset('/assets/js/admin-image-optimizer.js')) ?>"></script>
 <script src="<?= e(asset('/assets/js/admin.js')) ?>"></script>
 <?php if (!empty($pageScripts)): ?>

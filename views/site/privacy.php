@@ -1,8 +1,10 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 <div class="container">
-    <div class="static-page">
+    <section class="c-section static-page">
         <h1>حریم خصوصی و امنیت</h1>
-        <?= renderSiteContent($privacyContent) ?>
-    </div>
+        <div class="c-card">
+            <?= renderSiteContent($privacyContent) ?>
+        </div>
+    </section>
 </div>
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

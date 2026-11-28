@@ -15,6 +15,11 @@ if (!isCustomerLoggedIn()) {
 
 try {
     verifyCsrf();
+    if (($_POST['action'] ?? '') === 'discard') {
+        CardToCardReceiptService::discardPending();
+        echo json_encode(['ok' => true, 'discarded' => true], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $result = CardToCardReceiptService::upload($_FILES['receipt'] ?? []);
     if (!$result['ok']) {
         http_response_code(422);

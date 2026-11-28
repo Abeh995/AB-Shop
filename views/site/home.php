@@ -21,7 +21,7 @@ $h1Text = $hasHeroBanner
     <?php if ($hasHeroBanner): ?>
         <section class="hero-promo-banner" aria-label="پیشنهاد ویژه فروشگاه">
             <?php if (!empty($heroBannerImage)): ?>
-                <img src="<?= e($heroBannerImage) ?>" alt="<?= e($h1Text) ?>" class="hero-promo-bg" loading="eager">
+                <img src="<?= e($heroBannerImage) ?>" alt="<?= e($h1Text) ?>" class="hero-promo-bg" width="1200" height="420" loading="eager" fetchpriority="high">
             <?php endif; ?>
             <div class="hero-promo-content">
                 <?php if (!empty($heroBannerBadge)): ?>
@@ -30,7 +30,7 @@ $h1Text = $hasHeroBanner
     <?php elseif ($hasPageIntro): ?>
         <div class="page-intro">
     <?php endif; ?>
-                <h1<?= (!$hasHeroBanner && !$hasPageIntro) ? ' style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"' : '' ?>><?= e($h1Text) ?></h1>
+                <h1<?= (!$hasHeroBanner && !$hasPageIntro) ? ' class="sr-only"' : '' ?>><?= e($h1Text) ?></h1>
     <?php if ($hasHeroBanner): ?>
                 <?php if (!empty($heroBannerSubtitle)): ?>
                     <p class="hero-promo-sub"><?= e($heroBannerSubtitle) ?></p>
@@ -80,14 +80,14 @@ $h1Text = $hasHeroBanner
 
     <!-- 3. Category Grid -->
     <?php if ($homeCategoriesEnabled && $categories): ?>
-    <section class="section" style="padding-top:12px;">
+    <section class="section c-pt-3">
         <div class="section-title"><h2><?= e($homeCategoriesTitle ?: 'دسته‌بندی‌ها') ?></h2></div>
         <div class="category-grid">
             <?php foreach ($categories as $cat): ?>
                 <a href="/category/<?= e($cat['slug']) ?>" class="category-card">
                     <span class="cat-icon">
                         <?php if (!empty($cat['image'])): ?>
-                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" class="cat-icon-img" loading="lazy">
+                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" width="48" height="48" class="cat-icon-img" loading="lazy">
                         <?php else: ?>
                             <?= $catIcon ?>
                         <?php endif; ?>
@@ -103,9 +103,9 @@ $h1Text = $hasHeroBanner
     <?php if ($homeFeaturedEnabled && $featured): ?>
     <section class="section">
         <div class="section-title"><h2><?= e($homeFeaturedTitle ?: 'پیشنهاد ویژه') ?></h2></div>
-        <div class="carousel-wrap">
+        <div class="carousel-wrap" data-ab-carousel>
             <div class="carousel-track">
-                <?php foreach ($featured as $p): require APP_ROOT . '/views/site/partials/product_card.php'; endforeach; ?>
+                <?php foreach ($featured as $p): site_component('product_card', ['product' => $p]); endforeach; ?>
             </div>
             <?php if (count($featured) > 3): ?>
                 <button type="button" class="carousel-nav prev" aria-label="محصولات قبلی">
@@ -123,9 +123,9 @@ $h1Text = $hasHeroBanner
     <?php if ($homeNewestEnabled && $newest): ?>
     <section class="section">
         <div class="section-title"><h2><?= e($homeNewestTitle ?: 'آخرین محصولات') ?></h2></div>
-        <div class="carousel-wrap">
+        <div class="carousel-wrap" data-ab-carousel>
             <div class="carousel-track">
-                <?php foreach ($newest as $p): require APP_ROOT . '/views/site/partials/product_card.php'; endforeach; ?>
+                <?php foreach ($newest as $p): site_component('product_card', ['product' => $p]); endforeach; ?>
             </div>
             <?php if (count($newest) > 3): ?>
                 <button type="button" class="carousel-nav prev" aria-label="محصولات قبلی">
@@ -150,7 +150,7 @@ $h1Text = $hasHeroBanner
                 <a href="/category/<?= e($cat['slug']) ?>" class="category-pill">
                     <span class="cat-icon">
                         <?php if (!empty($cat['image'])): ?>
-                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" class="cat-icon-img" loading="lazy">
+                            <img src="<?= UPLOAD_URL . e($cat['image']) ?>" alt="<?= e($cat['name']) ?>" width="48" height="48" class="cat-icon-img" loading="lazy">
                         <?php else: ?>
                             <?= $catIcon ?>
                         <?php endif; ?>

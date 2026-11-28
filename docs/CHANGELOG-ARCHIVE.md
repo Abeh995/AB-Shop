@@ -1,7 +1,34 @@
-# Changelog Archive (v1.0.0 — v1.39.0)
+# Changelog Archive (v1.0.0 — v1.39.1)
 
-Historical release notes for AB-Socks versions 1.0.0 through 1.39.0.
+Historical release notes for AB-Socks versions 1.0.0 through 1.39.1.
 For recent and active releases, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+## 1.39.1 — 2026-11-02
+
+### Landing Studio — popover stacking, focus mode and resizable panes
+
+- **Global-search popover was clipped by the admin sidebar (`assets/css/admin.css`, `admin-tokens.css`, `assets/js/admin.js`)**:
+  the results panel declares `z-index: var(--z-overlay)` but lives inside the sticky `.dash-topbar`, whose own stacking
+  context was pinned at `--z-sticky` (20) — below the sidebar (40) and the studio toolbar (40), so the open menu slid
+  under them and looked cut in half. The topbar now lifts itself to a dedicated `--z-dropdown` layer (50) only while the
+  popover is open (`is-search-open`), and the base `.dash-topbar` rule was removed from `admin.css`: it was **unlayered**,
+  and unlayered rules beat every `@layer`, so no layered rule could ever override it. The shell copy in
+  `admin-shell.css` (`@layer layout`) is now the single definition.
+- **`ajax/admin_search.php` returned 500 on every request** — it guarded on `isAdmin()`, a function that does not exist
+  (the helper is `isAdminLoggedIn()`). The endpoint answered 500 with an empty body, so the menu never opened at all.
+- **Focus mode now hides the whole admin chrome** — `.admin-subnav-container` (the topic tabs) joins the topbar, sidebar
+  and bottom nav in `html.lb-focus-mode`, and the shell grows to `100dvh - 1.5rem` so the studio owns the entire window.
+- **Resizable panes** — the two workspace gaps are now real grid tracks that host drag handles
+  (`#lbSplitRail`, `#lbSplitPanel`): drag to resize the rail or the editor, the preview always takes the remaining
+  `1fr`. Pointer capture + `requestAnimationFrame` re-fit keep the emulated device responsive *during* the drag;
+  widths persist in `localStorage`, double-click or `Home` restores the default and arrow keys nudge by 16px
+  (48px with Shift). Handles are hidden in zen mode and below the 52rem tabbed breakpoint.
+- **Slimmer studio toolbar** — 76px → ~42px: tighter padding, 1.75rem mark, `--text-sm` title, 1.85rem icon buttons and
+  1.9rem action buttons, so the panes get the height back.
+- **Suite grown to 29 checks** — slim toolbar height, splitter drag (panel grows / preview shrinks), focus mode hides
+  topbar + tabs + sidebar, focus mode still fills the fold, search popover paints above sidebar and studio.
 
 ---
 

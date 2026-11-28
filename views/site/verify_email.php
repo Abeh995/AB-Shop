@@ -1,31 +1,35 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 
-<div class="container section" style="max-width:420px;">
-    <h1 style="margin-bottom:8px;">احراز ایمیل</h1>
-    <p style="color:var(--color-muted); margin-bottom:20px;">
-        کد ۶ رقمی ارسال‌شده به <span dir="ltr" style="font-weight:600;"><?= e($customer['email']) ?></span> را وارد کنید.
-    </p>
+<div class="c-auth-shell">
+    <div class="c-auth-card">
+        <h1 class="c-mb-2">احراز ایمیل</h1>
+        <p class="c-text-muted c-mb-4">
+            کد ۶ رقمی ارسال‌شده به <span dir="ltr" class="c-fw-bold"><?= e($customer['email']) ?></span> را وارد کنید.
+        </p>
 
-    <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
-    <?php if ($info): ?><div class="alert alert-success"><?= e($info) ?></div><?php endif; ?>
+        <?php site_component('alert', ['state' => 'error', 'message' => $error ?? '']); ?>
+        <?php site_component('alert', ['state' => 'success', 'message' => $info ?? '']); ?>
 
-    <form method="post">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="verify">
-        <div class="form-group">
-            <label>کد تایید</label>
-            <input class="form-control" type="text" inputmode="numeric" name="code" dir="ltr" maxlength="6" style="letter-spacing:4px; font-size:1.2rem; text-align:center;" required autofocus>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">تایید</button>
-    </form>
+        <form method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="verify">
+            <div class="c-form-group">
+                <label for="email-otp-code">کد تایید</label>
+                <input class="c-form-control c-tracking-otp" id="email-otp-code" type="text" inputmode="numeric" name="code" dir="ltr" maxlength="6" required autofocus>
+            </div>
+            <button type="submit" class="c-btn c-btn--primary c-btn--block">تایید</button>
+        </form>
 
-    <form method="post" style="margin-top:14px;">
-        <?= csrfField() ?>
-        <input type="hidden" name="action" value="resend">
-        <button type="submit" class="btn btn-outline btn-block">ارسال مجدد کد</button>
-    </form>
+        <form method="post" class="c-mt-3">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="resend">
+            <button type="submit" class="c-btn c-btn--outline c-btn--block">ارسال مجدد کد</button>
+        </form>
 
-    <p style="text-align:center; margin-top:16px;"><a href="/account" style="color:var(--color-muted); font-size:.9rem;">فعلاً رد شو، بعداً تایید می‌کنم</a></p>
+        <p class="c-text-center c-mt-4 c-mb-0">
+            <a href="/account" class="c-text-muted c-text-sm">فعلاً رد شو، بعداً تایید می‌کنم</a>
+        </p>
+    </div>
 </div>
 
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>

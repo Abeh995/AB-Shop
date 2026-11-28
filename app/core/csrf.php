@@ -22,6 +22,10 @@ function verifyCsrf(): void
 {
     $token = $_POST['csrf_token'] ?? '';
     if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        if (function_exists('isStorefrontAjaxRequest') && isStorefrontAjaxRequest()) {
+            $msg = 'نشست شما منقضی شده است؛ لطفاً صفحه را تازه‌سازی کنید.';
+            jsonResponse(['ok' => false, 'message' => $msg, 'error' => $msg], 403);
+        }
         http_response_code(403);
         die('درخواست نامعتبر است (CSRF). لطفاً صفحه را رفرش کرده و دوباره تلاش کنید.');
     }

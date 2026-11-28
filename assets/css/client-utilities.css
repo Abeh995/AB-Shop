@@ -1,0 +1,96 @@
+/**
+ * AB-Socks Storefront Utility Classes (assets/css/client-utilities.css)
+ * Spacing, layout primitives, typography, and color utilities.
+ * Replaces inline style="" attributes in views/site/*.
+ * Layered in @layer utilities; 100% token-driven.
+ */
+
+@layer utilities {
+  /* Vertical Stack */
+  .c-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--c-stack-gap, var(--space-3));
+  }
+
+  .c-stack--xs { --c-stack-gap: var(--space-1); }
+  .c-stack--sm { --c-stack-gap: var(--space-2); }
+  .c-stack--md { --c-stack-gap: var(--space-4); }
+  .c-stack--lg { --c-stack-gap: var(--space-6); }
+
+  /* Horizontal Cluster */
+  .c-cluster {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--c-cluster-gap, var(--space-2));
+  }
+
+  .c-cluster--xs { --c-cluster-gap: var(--space-1); }
+  .c-cluster--sm { --c-cluster-gap: var(--space-2); }
+  .c-cluster--md { --c-cluster-gap: var(--space-4); }
+  .c-cluster--between { justify-content: space-between; }
+  .c-cluster--center { justify-content: center; }
+  .c-cluster--end { justify-content: flex-end; }
+  .c-cluster--nowrap { flex-wrap: nowrap; }
+
+  /* Typography & Numeric */
+  .c-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: isolate;
+  }
+
+  .c-nowrap { white-space: nowrap; }
+  .c-fw-bold { font-weight: 700; }
+  .c-text-xs { font-size: var(--text-xs); }
+  .c-text-sm { font-size: var(--text-sm); }
+  .c-text-md { font-size: var(--text-md); }
+  .c-text-lg { font-size: var(--text-lg); }
+
+  .c-text-center { text-align: center; }
+  .c-text-start { text-align: start; }
+  .c-text-end { text-align: end; }
+
+  .c-text-muted { color: var(--color-muted); }
+  .c-text-primary { color: var(--color-primary-dark); }
+  .c-text-success { color: var(--color-success); }
+  .c-text-warning { color: var(--color-warning); }
+  .c-text-danger { color: var(--color-danger); }
+
+  /* Spacing Utilities */
+  .c-mt-1 { margin-top: var(--space-1); }
+  .c-mt-2 { margin-top: var(--space-2); }
+  .c-mt-3 { margin-top: var(--space-3); }
+  .c-mt-4 { margin-top: var(--space-4); }
+  .c-mt-6 { margin-top: var(--space-6); }
+
+  .c-mb-0 { margin-bottom: 0; }
+  .c-mb-1 { margin-bottom: var(--space-1); }
+  .c-mb-2 { margin-bottom: var(--space-2); }
+  .c-mb-3 { margin-bottom: var(--space-3); }
+  .c-mb-4 { margin-bottom: var(--space-4); }
+  .c-mb-6 { margin-bottom: var(--space-6); }
+
+  .c-pt-3 { padding-top: var(--space-3); }
+  .c-mx-auto { margin-inline: auto; }
+  .c-max-w-xs { max-width: 420px; }
+  .c-max-w-sm { max-width: 460px; }
+  .c-max-w-md { max-width: 600px; }
+  .c-text-2xl { font-size: 2.5rem; }
+  .c-tracking-otp {
+    letter-spacing: 4px;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .c-w-full { width: 100%; }
+
+  [hidden] {
+    display: none;
+  }
+}
+}

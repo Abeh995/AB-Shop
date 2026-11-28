@@ -70,7 +70,7 @@ class OrderService
             }
         }
 
-        $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
+        $postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? [], (int) ($cart['subtotal'] ?? 0));
         $giftItemsTotal = $postOrderResult['total'];
         $shipping = calculateShippingCost($data['province'], $cart['subtotal']);
         $shippingCost = $shipping['cost'];

@@ -1,36 +1,40 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 
-header('Content-Type: application/json; charset=utf-8');
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['ok' => false]);
-    exit;
+    jsonResponse(['ok' => false, 'message' => 'روش درخواست نامعتبر است'], 405);
 }
+
+verifyCsrf();
 
 $province = trim($_POST['province'] ?? '');
 
 // Recompute every part of the total server-side — subtotal, an applied
-// coupon, and post-order add-ons — the same way checkout.php itself does,
-// so the JSON response can hand back one ready-to-display grand total
-// instead of the client trying to reproduce formatPrice()'s formatting.
+// coupon, and post-order add-ons — using identical parameters to checkout.php.
 $cart = cartDetails();
-$subtotal = $cart['subtotal'];
+$subtotal = (float) ($cart['subtotal'] ?? 0);
+$shipping = calculateShippingCost($province, $subtotal);
 
 $discount = 0;
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 if ($appliedCoupon) {
-    $check = CouponService::validate($appliedCoupon['code'], $subtotal);
+    $cust = currentCustomer();
+    $phone = $cust['phone'] ?? null;
+    $check = CouponService::validate(
+        $appliedCoupon['code'],
+        $subtotal,
+        $phone,
+        (int) ($shipping['cost'] ?? 0),
+        $cart['items'] ?? []
+    );
     if ($check['ok']) {
-        $discount = $check['discount'];
+        $discount = (int) $check['discount'];
     }
 }
 
-$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
-$shipping = calculateShippingCost($province, $subtotal);
-$grandTotal = max(0, $subtotal - $discount + $shipping['cost'] + $postOrderResult['total']);
-echo json_encode([
+$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? [], (int) $subtotal);
+$grandTotal = max(0, $subtotal - $discount + (float) ($shipping['cost'] ?? 0) + (float) ($postOrderResult['total'] ?? 0));
+jsonResponse([
     'ok' => true,
     'cost' => $shipping['cost'],
     'cost_formatted' => formatPrice($shipping['cost']),
@@ -38,4 +42,4 @@ echo json_encode([
     'estimated_delivery' => $shipping['estimated_delivery'] ?? null,
     'is_free' => $shipping['is_free'],
     'grand_total_formatted' => formatPrice($grandTotal),
-], JSON_UNESCAPED_UNICODE);
+]);

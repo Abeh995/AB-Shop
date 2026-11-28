@@ -46,7 +46,7 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
         <div class="footer-col footer-col-brand">
             <a href="/" class="footer-logo">
                 <?php if ($footerLogoUrl): ?>
-                    <img src="<?= e($footerLogoUrl) ?>" alt="<?= e(SITE_NAME) ?>">
+                    <img src="<?= e($footerLogoUrl) ?>" alt="<?= e(SITE_NAME) ?>" width="108" height="36" loading="lazy">
                 <?php else: ?>
                     <?= e(SITE_NAME) ?>
                 <?php endif; ?>
@@ -107,9 +107,13 @@ $enamadEmbedCode = getSetting('enamad_embed_code', '');
     </div>
 </footer>
 
-<?php require APP_ROOT . '/views/site/partials/bottom_dock.php'; ?>
+<?php site_component('bottom_dock'); ?>
 
-<script src="/assets/js/main.js"></script>
-<script src="/assets/js/storefront-hubs.js"></script>
+<script src="<?= e(asset('/assets/js/ab-client.js')) ?>" defer></script>
+<?php if (!empty($pageScripts)): ?>
+    <?php foreach ((array)$pageScripts as $script): ?>
+        <script src="<?= e(asset($script)) ?>" defer></script>
+    <?php endforeach; ?>
+<?php endif; ?>
 </body>
 </html>

@@ -83,13 +83,30 @@ $searchMinChars = max(1, min(5, (int) getSetting('search_min_chars', '2')));
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <?php endif; ?>
+<?php
+$themeCss = activeThemeCssVars();
+$themeColorHex = '#582B1C';
+if ($themeCss !== '' && preg_match('/--color-primary:\s*([^;}\s]+)/', $themeCss, $mThemeColor)) {
+    $themeColorHex = $mThemeColor[1];
+}
+?>
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#582B1C">
+<meta name="theme-color" content="<?= e($themeColorHex) ?>">
+<meta name="csrf-token" content="<?= e(csrfToken()) ?>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css">
-<link rel="stylesheet" href="<?= e(asset('/assets/css/style.css')) ?>">
-<link rel="stylesheet" href="<?= e(asset('/assets/css/storefront-hubs.css')) ?>">
-<?php $themeCss = activeThemeCssVars(); if ($themeCss !== ''): ?>
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-tokens.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-base.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-layout.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-components.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-patterns.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('/assets/css/client-utilities.css')) ?>">
+<?php if (!empty($pageStylesheets)): ?>
+    <?php foreach ((array)$pageStylesheets as $cssFile): ?>
+        <link rel="stylesheet" href="<?= e(asset($cssFile)) ?>">
+    <?php endforeach; ?>
+<?php endif; ?>
+<?php if ($themeCss !== ''): ?>
 <style id="active-theme-vars"><?= $themeCss ?></style>
 <?php endif; ?>
 
@@ -108,13 +125,13 @@ if (!empty($jsonLd)) {
 
 <header class="site-header">
     <div class="container header-inner">
-        <button class="nav-toggle" id="navToggle" aria-label="باز کردن منو">
+        <button class="nav-toggle" id="navToggle" data-ab-nav-toggle="#mainNav" aria-label="باز کردن منو" aria-expanded="false" aria-controls="mainNav">
             <span></span><span></span><span></span>
         </button>
 
         <a href="/" class="logo">
             <?php if ($logoUrl): ?>
-                <img src="<?= e($logoUrl) ?>" alt="<?= e(SITE_NAME) ?>" class="logo-img">
+                <img src="<?= e($logoUrl) ?>" alt="<?= e(SITE_NAME) ?>" width="120" height="40" class="logo-img">
             <?php else: ?>
                 <?= e(SITE_NAME) ?>
             <?php endif; ?>
@@ -130,7 +147,7 @@ if (!empty($jsonLd)) {
             <a href="/contact">تماس با ما</a>
         </nav>
 
-        <button class="search-toggle" id="searchToggle" aria-label="جستجو" aria-expanded="false" aria-controls="searchBarPanel">
+        <button class="search-toggle" id="searchToggle" data-ab-search-toggle aria-label="جستجو" aria-expanded="false" aria-controls="searchBarPanel">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
 
@@ -153,19 +170,20 @@ if (!empty($jsonLd)) {
     <div class="search-bar-panel" id="searchBarPanel">
         <div class="container">
             <form action="/search" method="get" role="search" id="headerSearchForm" autocomplete="off"
+                  data-ab-live-search
                   data-live-enabled="<?= $searchLiveEnabled ? '1' : '0' ?>"
                   data-min-chars="<?= (int) $searchMinChars ?>">
                 <div class="search-input-wrap">
-                    <input type="search" name="q" class="form-control" value="<?= e($searchQuery) ?>"
+                    <input type="search" name="q" class="c-form-control" value="<?= e($searchQuery) ?>"
                            placeholder="نام محصول یا دسته‌بندی را جستجو کنید…"
                            aria-label="جستجوی محصول" id="searchBarInput"
                            role="combobox" aria-autocomplete="list" aria-expanded="false"
                            aria-controls="searchSuggestions" aria-haspopup="listbox" autocomplete="off">
-                    <span class="search-spinner" id="searchSpinner" aria-hidden="true" style="display:none;"></span>
-                    <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="پاک کردن متن" style="display:none;">✕</button>
-                    <div class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="پیشنهادات جستجو" style="display:none;"></div>
+                    <span class="search-spinner" id="searchSpinner" aria-hidden="true" hidden></span>
+                    <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="پاک کردن متن" hidden>✕</button>
+                    <div class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="پیشنهادات جستجو" hidden></div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm">جستجو</button>
+                <button type="submit" class="c-btn c-btn--primary c-btn--sm">جستجو</button>
             </form>
         </div>
     </div>
@@ -185,7 +203,10 @@ if (!empty($jsonLd)) {
 
 <?php if ($flash): ?>
     <div class="container">
-        <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+        <?php site_component('alert', [
+            'state' => $flash['type'] ?? 'info',
+            'message' => $flash['message'] ?? '',
+        ]); ?>
     </div>
 <?php endif; ?>
 

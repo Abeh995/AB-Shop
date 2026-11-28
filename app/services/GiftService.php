@@ -61,7 +61,7 @@ function getGiftableItems(): array
  * @param array<int,int> $selection
  * @return array{ok:bool, lines:array, total:int, errors:string[]}
  */
-function validatePostOrderSelection(array $selection): array
+function validatePostOrderSelection(array $selection, ?int $cartSubtotal = null): array
 {
     $lines = [];
     $errors = [];
@@ -77,6 +77,11 @@ function validatePostOrderSelection(array $selection): array
 
         if (!$item) {
             $errors[] = 'یکی از محصولات جانبی انتخابی دیگر در دسترس نیست.';
+            continue;
+        }
+        $minTotal = (float) ($item['min_cart_total'] ?? 0);
+        if ($cartSubtotal !== null && $minTotal > 0 && $cartSubtotal < $minTotal) {
+            unset($_SESSION['post_order_selection'][$giftItemId]);
             continue;
         }
         if ($qty > (int) $item['stock']) {

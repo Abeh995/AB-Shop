@@ -79,14 +79,15 @@ Native images (JPG, PNG, GIF, SVG) are served directly by the web server without
 The visual style of AB-Socks is driven by design tokens rather than ad-hoc inline styles.
 
 ### Single Source of Truth
-- Base tokens are defined in the `:root` block of `assets/css/style.css`:
+- Base storefront tokens are defined in `@layer tokens` `:root` inside `assets/css/client-tokens.css` (plus derived `color-mix()` semantic surfaces and 5-hub glass dock variables):
   ```css
   --color-bg, --color-surface, --color-text, --color-muted, --color-border,
   --color-primary, --color-primary-dark, --color-primary-light, --color-accent,
-  --color-success, --color-danger,
-  --radius-sm, --radius-md, --radius-lg,
-  --shadow-sm, --shadow-md
+  --color-success, --color-warning, --color-danger, --color-info,
+  --radius-sm, --radius-md, --radius-lg, --shadow-sm, --shadow-md,
+  --dock-bg, --dock-border, --drop-bg, --glass-blur
   ```
+- Storefront theme overrides (`activeThemeCssVars()`) emit an unlayered `<style id="active-theme-vars">` block in `views/layout/header.php`, automatically cascading above `@layer tokens` without `!important`.
 
 ### Database-Backed Theme Switcher
 - The `themes` table stores named palettes.

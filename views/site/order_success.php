@@ -18,8 +18,8 @@
             <strong><?= $cardToCardPendingReview ? 'در انتظار بررسی رسید' : ($order['payment_status'] === 'paid' ? 'پرداخت شده' : 'در حال بررسی') ?></strong>
         </div>
         <div class="order-code-box" dir="ltr"><?= e($order['order_code']) ?></div>
-        <p style="color:var(--color-muted); font-size:.9rem;">شماره سفارش خود را برای پیگیری ذخیره کنید.</p>
-        <a href="/" class="btn btn-primary" style="margin-top:20px;">بازگشت به فروشگاه</a>
+        <p class="c-text-muted c-text-sm">شماره سفارش خود را برای پیگیری ذخیره کنید.</p>
+        <a href="/" class="c-btn c-btn--primary c-mt-4">بازگشت به فروشگاه</a>
     </div>
 </div>
 

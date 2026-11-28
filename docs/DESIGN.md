@@ -7,8 +7,8 @@ redesign effort described below.
 
 ## Current state (baseline — do not discard)
 
-`assets/css/style.css`'s `:root` block is the single source of truth for
-color. It is also, separately, *data*: `themes`/`theme_tokens`
+`assets/css/client-tokens.css`'s `:root` block is the single source of truth for
+color in the storefront. It is also, separately, *data*: `themes`/`theme_tokens`
 (`docs/ARCHITECTURE.md` §6.10) let an admin store and switch between full
 palettes from the admin panel without a deploy. Four palettes already exist,
 derived from the store's actual logo colors. **The redesign below extends
@@ -120,19 +120,14 @@ explicitly if this path is taken.
 
 ### Required guardrails (non-negotiable, not style preferences)
 
-1. **Feature-detect and fall back.**
-   ```css
-   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-       .glass-surface { background: var(--color-surface); }
-   }
-   ```
-2. **Respect reduced motion and reduced transparency.**
+1. **Modern browser target (no legacy fallbacks required).** Storefront UI
+   targets modern mobile and desktop browsers cleanly; `@supports not` and
+   `prefers-reduced-transparency` fallbacks are intentionally omitted so focus
+   stays on core visual quality and bundle simplicity.
+2. **Respect reduced motion.**
    ```css
    @media (prefers-reduced-motion: reduce) {
        .tilt-card img, .glass-surface { transition: none; }
-   }
-   @media (prefers-reduced-transparency: reduce) {
-       .glass-surface { backdrop-filter: none; background: var(--color-surface); }
    }
    ```
 3. **`contain: layout paint style` on glass surfaces** to isolate their
@@ -144,7 +139,7 @@ explicitly if this path is taken.
 5. **Never apply a heavy filter to more than a handful of simultaneously
    visible elements.** A glass product grid (every card blurred) is the
    canonical way this pattern destroys scroll performance — use it for
-   floating chrome (header, modals, one hero), not for repeated list items.
+   floating chrome (header, modals, dock, hero badges), not for repeated list items.
 
 ### Rollout plan
 
@@ -194,5 +189,21 @@ The administrative workstation interface operates on an 8-layer CSS cascade:
 - **Archetype Patterns (`assets/css/admin-patterns.css`)**: Standardized layouts for List, Dashboard, Form/Edit, and Workstation pages.
 - **Intrinsic Responsiveness**: Layout decisions are decoupled from viewport media queries; components adapt intrinsically to their container inline size (`@container`).
 - **Showcase & Test Harness**: Available at `/admin/ui-kit.php` (linked from Diagnostics).
+
+---
+
+## Storefront Client-Kit Architecture (`AB-Client-Kit`)
+
+The customer-facing storefront is strictly isolated from Admin assets (`ab-kit.js`, `admin-*.css`) and targets modern browsers with zero build step on an 8-layer CSS cascade (`assets/css/client-tokens.css`):
+
+```css
+@layer reset, tokens, base, layout, components, patterns, pages, utilities;
+```
+
+- **Tokens (`assets/css/client-tokens.css`)**: Single source of truth for canonical `--color-*`, `color-mix()` semantic surfaces (`--c-*-soft`), and 5-hub mobile dock glass variables (`--dock-*`, `--drop-*`). Active themes in `header.php` (`<style id="active-theme-vars">`) emit unlayered `:root` variables that naturally override `@layer tokens` without `!important`.
+- **Layered Modules**: `client-base.css` (`@layer reset`, `@layer base`), `client-layout.css` (`@layer layout`), `client-components.css` (`@layer components`), `client-patterns.css` (`@layer patterns`), `client-utilities.css` (`@layer utilities`), and lazy page sheets via `$pageStylesheets` (e.g. `assets/css/client-c2c.css` in `@layer pages`).
+- **Pure PHP Component Library (`views/site/components/`)**: Isolated components rendered via `site_component()` / `render_site_component()` and documented in `docs/registers/client-front.json`.
+- **Vanilla JS Runtime (`assets/js/ab-client.js`) & Page Modules (`assets/js/client/*.js`)**: Declarative `[data-ab-*]` WeakSet-guarded behaviors with CSRF-aware `ABClient.api`, accessible `#abClientToastContainer`, and HTML-over-the-Wire cart workspace progressive enhancement.
+
 
 

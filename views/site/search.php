@@ -1,25 +1,26 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 
 <div class="container">
-    <section class="section">
+    <section class="c-section section">
         <div class="section-title">
-            <h1 style="font-size:1.4rem; margin:0;"><?= $query !== '' ? 'نتایج جستجو برای «' . e($query) . '»' : 'جستجوی محصولات' ?></h1>
+            <h1><?= $query !== '' ? 'نتایج جستجو برای «' . e($query) . '»' : 'جستجوی محصولات' ?></h1>
         </div>
 
         <?php if ($query === ''): ?>
-            <div class="empty-state">عبارتی برای جستجو وارد نشده است.</div>
+            <?php site_component('empty_state', ['message' => 'عبارتی برای جستجو وارد نشده است.']); ?>
         <?php elseif ($products): ?>
-            <p style="color:var(--color-muted); margin-top:-14px; margin-bottom:20px; font-size:.9rem;"><?= toPersianDigits((string)$total) ?> محصول یافت شد.</p>
-            <div class="product-grid">
-                <?php foreach ($products as $p): require APP_ROOT . '/views/site/partials/product_card.php'; endforeach; ?>
+            <p class="c-text-muted c-text-sm c-mb-4"><?= toPersianDigits((string) $total) ?> محصول یافت شد.</p>
+            <div class="c-product-grid product-grid">
+                <?php foreach ($products as $p): site_component('product_card', ['product' => $p]); endforeach; ?>
             </div>
 
-            <?php
-            $paginationParams = ['q' => $query];
-            require APP_ROOT . '/views/site/partials/pagination.php';
-            ?>
+            <?php site_component('pagination', [
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'params' => ['q' => $query],
+            ]); ?>
         <?php else: ?>
-            <div class="empty-state">محصولی مطابق با «<?= e($query) ?>» پیدا نشد.</div>
+            <?php site_component('empty_state', ['message' => 'محصولی مطابق با «' . $query . '» پیدا نشد.']); ?>
         <?php endif; ?>
     </section>
 </div>

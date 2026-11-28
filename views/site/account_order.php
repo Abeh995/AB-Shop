@@ -1,11 +1,11 @@
 <?php require APP_ROOT . '/views/layout/header.php'; ?>
 
-<div class="container section">
-    <a href="/account" style="color:var(--color-muted); font-size:.9rem;">← بازگشت به حساب کاربری</a>
-    <h1 style="margin:14px 0 6px;">سفارش <span dir="ltr"><?= e($order['order_code']) ?></span></h1>
-    <p style="margin-bottom:20px;">
+<div class="container c-section section">
+    <a href="/account" class="c-text-muted c-text-sm">← بازگشت به حساب کاربری</a>
+    <h1 class="c-mt-3 c-mb-2">سفارش <span dir="ltr"><?= e($order['order_code']) ?></span></h1>
+    <p class="c-mb-4 c-cluster c-cluster--sm">
         <span class="status-pill status-<?= e($order['status']) ?>"><?= e($statusLabels[$order['status']] ?? $order['status']) ?></span>
-        <span style="color:var(--color-muted); font-size:.85rem; margin-right:8px;"><?= toPersianDigits(date('Y/m/d H:i', strtotime($order['created_at']))) ?></span>
+        <span class="c-text-muted c-text-sm"><?= toPersianDigits(date('Y/m/d H:i', strtotime($order['created_at']))) ?></span>
     </p>
 
     <div class="order-payment-summary">
@@ -13,37 +13,27 @@
         <div><span>وضعیت پرداخت</span><strong><?= e($paymentLabels[$order['payment_status']] ?? $order['payment_status']) ?></strong></div>
     </div>
 
-    <div class="order-review" style="max-width:600px;">
-        <?php foreach ($items as $it): ?>
-            <div class="item-line">
-                <span><?= e($it['product_name']) ?><?= $it['variant_label'] ? ' (' . e($it['variant_label']) . ')' : '' ?> × <?= toPersianDigits((string)$it['quantity']) ?></span>
-                <span><?= formatPrice($it['line_total']) ?></span>
-            </div>
-        <?php endforeach; ?>
-        <?php foreach ($orderGiftItems as $gi): ?>
-            <div class="item-line">
-                <span><?= e($gi['name']) ?> × <?= toPersianDigits((string)$gi['quantity']) ?></span>
-                <span><?= formatPrice($gi['unit_selling_price'] * $gi['quantity']) ?></span>
-            </div>
-        <?php endforeach; ?>
-        <div class="row" style="margin-top:14px;"><span>جمع کل کالاها</span><span><?= formatPrice($order['subtotal']) ?></span></div>
-        <?php if ($order['discount_total'] > 0): ?>
-        <div class="row" style="color:var(--color-success);"><span>تخفیف</span><span>−<?= formatPrice($order['discount_total']) ?></span></div>
-        <?php endif; ?>
-        <?php if (!empty($order['gift_items_total']) && $order['gift_items_total'] > 0): ?>
-        <div class="row"><span>پیشنهاد بعد از سبد</span><span><?= formatPrice($order['gift_items_total']) ?></span></div>
-        <?php endif; ?>
-        <div class="row">
-            <span>هزینه ارسال<?= !empty($order['shipping_method_name']) ? ' (' . e($order['shipping_method_name']) . ')' : '' ?></span>
-            <span><?= $order['shipping_cost'] > 0 ? formatPrice($order['shipping_cost']) : 'رایگان' ?></span>
-        </div>
-        <div class="row total-row"><span>مبلغ نهایی</span><span><?= formatPrice($order['total']) ?></span></div>
-    </div>
+    <?php
+    $orderShippingLabel = 'هزینه ارسال' . (!empty($order['shipping_method_name']) ? ' (' . $order['shipping_method_name'] . ')' : '');
+    site_component('order_summary', [
+        'title' => 'جزئیات اقلام و فاکتور',
+        'class' => 'c-max-w-md',
+        'items' => $items,
+        'giftLines' => $orderGiftItems,
+        'subtotal' => $order['subtotal'],
+        'discount' => $order['discount_total'],
+        'postOrderTotal' => $order['gift_items_total'] ?? 0,
+        'shippingLabel' => $orderShippingLabel,
+        'shippingCost' => (float) $order['shipping_cost'],
+        'grandTotal' => $order['total'],
+        'totalLabel' => 'مبلغ نهایی',
+    ]);
+    ?>
 
-    <div class="customer-card" style="max-width:600px; margin-top:20px;">
-        <h3 style="margin-bottom:10px;">اطلاعات ارسال</h3>
-        <p><?= e($order['customer_name']) ?> — <span dir="ltr"><?= e($order['phone']) ?></span></p>
-        <p><?= e($order['province']) ?>، <?= e($order['city']) ?>، <?= e($order['address']) ?></p>
+    <div class="customer-card c-max-w-md c-mt-4">
+        <h3 class="c-mb-2">اطلاعات ارسال</h3>
+        <p class="c-mb-1"><?= e($order['customer_name']) ?> — <span dir="ltr"><?= e($order['phone']) ?></span></p>
+        <p class="c-mb-0"><?= e($order['province']) ?>، <?= e($order['city']) ?>، <?= e($order['address']) ?></p>
     </div>
 </div>
 

@@ -1,0 +1,612 @@
+/**
+ * AB-Socks Card-to-Card Payment Page Styles (assets/css/client-c2c.css)
+ * Loaded lazily on /payment/card-to-card via $pageStylesheets.
+ * Layered in @layer pages; 100% token-driven.
+ */
+
+@layer pages {
+  .c2c-wrapper {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  .c2c-header {
+    margin-bottom: 24px;
+  }
+
+  .c2c-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-primary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 12px;
+    transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  }
+
+  .c2c-back-link:hover {
+    color: var(--color-primary-dark);
+    transform: translateX(3px);
+  }
+
+  .c2c-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .c2c-step-done {
+    color: var(--color-success);
+    font-weight: 600;
+  }
+
+  .c2c-step-active {
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    background: var(--color-primary-light);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+  }
+
+  .c2c-step-arrow {
+    color: var(--color-border);
+  }
+
+  .c2c-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    margin: 0 0 6px;
+  }
+
+  .c2c-subtitle {
+    font-size: 0.92rem;
+    color: var(--color-muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .c2c-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* Amount Card */
+  .c2c-amount-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 7%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary-light) 48%, transparent) 100%
+    );
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .c2c-amount-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .c2c-amount-label {
+    font-size: 0.82rem;
+    color: var(--color-muted);
+    font-weight: 600;
+  }
+
+  .c2c-amount-val {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--color-primary-dark);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .c2c-amount-val small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .c2c-btn-copy-amount {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    color: var(--color-primary-dark);
+    padding: 9px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .c2c-btn-copy-amount:hover {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  .c2c-btn-copy-amount.is-copied,
+  .c2c-btn-copy-card.is-copied {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-white);
+  }
+
+  /* Bank Card */
+  .c2c-bank-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary-dark) 82%, var(--color-dark)) 0%,
+      var(--color-primary-dark) 45%,
+      var(--color-dark) 100%
+    );
+    color: var(--color-white);
+    border-radius: 20px;
+    padding: 24px 26px;
+    margin-bottom: 20px;
+    box-shadow:
+      0 16px 36px -8px color-mix(in srgb, var(--color-primary-dark) 42%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-white) 14%, transparent) inset;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .c2c-bank-card::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-white) 8%, transparent) 0%,
+      transparent 65%
+    );
+    pointer-events: none;
+  }
+
+  .c2c-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .c2c-card-brand {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary-light);
+    letter-spacing: 0.5px;
+  }
+
+  .c2c-card-chip-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .c2c-card-chip {
+    width: 42px;
+    height: 30px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-warning) 75%, var(--color-white)) 0%,
+      var(--color-warning) 55%,
+      var(--color-primary-dark) 100%
+    );
+    border-radius: 6px;
+    position: relative;
+    box-shadow:
+      inset 0 1px 2px color-mix(in srgb, var(--color-white) 40%, transparent),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .c2c-card-chip::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
+  .c2c-card-contactless {
+    font-size: 1.25rem;
+    opacity: 0.8;
+  }
+
+  .c2c-card-number-wrap {
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .c2c-card-number-label {
+    font-size: 0.72rem;
+    color: var(--color-accent);
+    margin-bottom: 6px;
+  }
+
+  .c2c-card-number {
+    font-family: var(--font-sans);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--color-white);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+    direction: ltr;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .c2c-card-number span {
+    display: inline-block;
+  }
+
+  .c2c-card-bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+
+  .c2c-card-holder-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .c2c-card-holder-label {
+    font-size: 0.72rem;
+    color: var(--color-accent);
+  }
+
+  .c2c-card-holder-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+
+  .c2c-btn-copy-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: color-mix(in srgb, var(--color-white) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-white) 28%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--dur-med) var(--ease), transform var(--dur-med) var(--ease);
+  }
+
+  .c2c-btn-copy-card:hover {
+    background: color-mix(in srgb, var(--color-white) 30%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .c2c-shaba-row {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed color-mix(in srgb, var(--color-white) 25%, transparent);
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .c2c-shaba-label {
+    opacity: 0.85;
+  }
+
+  .c2c-shaba-code {
+    font-family: monospace;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+
+  /* Note box */
+  .c2c-note-box {
+    background: color-mix(in srgb, var(--color-surface) 80%, var(--color-white));
+    border: 1px solid var(--color-border);
+    border-right: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    font-size: 0.86rem;
+    color: var(--color-text);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .c2c-note-box strong {
+    color: var(--color-primary-dark);
+  }
+
+  /* Receipt Uploader Card */
+  .c2c-upload-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+  }
+
+  .c2c-upload-header {
+    margin-bottom: 16px;
+  }
+
+  .c2c-upload-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    margin: 0 0 4px;
+  }
+
+  .c2c-upload-desc {
+    font-size: 0.84rem;
+    color: var(--color-muted);
+    margin: 0;
+  }
+
+  .c2c-dropzone {
+    border: 2px dashed var(--color-accent);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-white) 45%, transparent);
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--dur-med) var(--ease), background var(--dur-med) var(--ease), box-shadow var(--dur-med) var(--ease);
+    position: relative;
+    outline: none;
+  }
+
+  .c2c-dropzone:hover,
+  .c2c-dropzone.is-dragover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+
+  .c2c-dropzone-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+  }
+
+  .c2c-dropzone-text {
+    font-size: 0.95rem;
+    color: var(--color-primary-dark);
+    margin-bottom: 6px;
+  }
+
+  .c2c-dropzone-text strong {
+    font-weight: 800;
+  }
+
+  .c2c-dropzone-sub {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+
+  .c2c-loading-box:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px;
+  }
+
+  .c2c-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: c2c-spin 0.8s linear infinite;
+  }
+
+  @keyframes c2c-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .c2c-loading-text {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .c2c-preview-card:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    text-align: right;
+  }
+
+  .c2c-preview-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    flex-shrink: 0;
+  }
+
+  .c2c-preview-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .c2c-preview-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .c2c-preview-meta {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+
+  .c2c-preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--color-success);
+  }
+
+  .c2c-btn-remove {
+    background: var(--c-danger-soft);
+    color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+    flex-shrink: 0;
+  }
+
+  .c2c-btn-remove:hover {
+    background: var(--color-danger);
+    color: var(--color-white);
+  }
+
+  .c2c-status-msg {
+    min-height: 22px;
+    font-size: 0.82rem;
+    margin-top: 10px;
+    color: var(--color-danger);
+  }
+
+  .c2c-submit-btn {
+    width: 100%;
+    padding: 15px 24px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background var(--dur-med) var(--ease), transform var(--dur-med) var(--ease), box-shadow var(--dur-med) var(--ease);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .c2c-submit-btn:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  }
+
+  .c2c-submit-btn:disabled {
+    background: var(--color-border);
+    color: var(--color-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .c2c-submit-note {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    text-align: center;
+    margin: 12px 0 0;
+    line-height: 1.5;
+  }
+
+  .c2c-sidebar {
+    position: sticky;
+    top: calc(var(--header-h) + 20px);
+  }
+
+  .c2c-recipient-meta {
+    padding-top: 14px;
+    border-top: 1px dashed var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 860px) {
+    .c2c-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .c2c-sidebar {
+      position: static;
+      order: -1;
+    }
+
+    .c2c-card-number {
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+    }
+
+    .c2c-bank-card {
+      padding: 20px;
+    }
+
+    .c2c-amount-val {
+      font-size: 1.45rem;
+    }
+  }
+}

@@ -31,10 +31,11 @@ if (empty($cart['items'])) {
     redirect('/cart');
 }
 
+$shippingPreview = calculateShippingCost($pending['province'], $cart['subtotal']);
 $appliedCoupon = $_SESSION['coupon'] ?? null;
 $discount = 0;
 if ($appliedCoupon) {
-    $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal']);
+    $check = CouponService::validate($appliedCoupon['code'], $cart['subtotal'], $pending['phone'] ?? null, (int) ($shippingPreview['cost'] ?? 0), $cart['items'] ?? []);
     if ($check['ok']) {
         $discount = $check['discount'];
     } else {
@@ -42,8 +43,7 @@ if ($appliedCoupon) {
         $appliedCoupon = null;
     }
 }
-$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? []);
-$shippingPreview = calculateShippingCost($pending['province'], $cart['subtotal']);
+$postOrderResult = validatePostOrderSelection($_SESSION['post_order_selection'] ?? [], (int) $cart['subtotal']);
 $grandTotal = (int) max(0, $cart['subtotal'] - $discount + $shippingPreview['cost'] + $postOrderResult['total']);
 $receiptUploaded = CardToCardReceiptService::hasPending();
 

@@ -12,7 +12,7 @@ require APP_ROOT . '/views/layout/header.php';
     </div>
 
     <?php if (empty($categories)): ?>
-        <div class="empty-state">هیچ دسته‌بندی فعالی یافت نشد.</div>
+        <?php site_component('empty_state', ['message' => 'هیچ دسته‌بندی فعالی یافت نشد.']); ?>
     <?php else: ?>
         <div class="categories-hub-grid">
             <?php foreach ($categories as $cat):
@@ -23,7 +23,7 @@ require APP_ROOT . '/views/layout/header.php';
                 <a href="/category/<?= e($cat['slug']) ?>" class="category-hub-card-header">
                     <div class="category-hub-icon-wrap">
                         <?php if ($img): ?>
-                            <img src="<?= $img ?>" alt="<?= e($cat['name']) ?>" class="category-hub-img">
+                            <img src="<?= $img ?>" alt="<?= e($cat['name']) ?>" width="56" height="56" loading="lazy" class="category-hub-img">
                         <?php else: ?>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7" rx="1.5"/>

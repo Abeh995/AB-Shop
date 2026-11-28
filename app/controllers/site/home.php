@@ -49,9 +49,10 @@ $homeCategoryStripTitle = getSetting('home_category_strip_title', 'دسته‌ب
 $categories = ($homeCategoriesEnabled || $homeCategoryStripEnabled) ? getHomeCategories() : [];
 $featured = $homeFeaturedEnabled ? getHomeFeaturedProducts($homeFeaturedLimit) : [];
 $newest = $homeNewestEnabled ? getHomeNewestProducts($homeNewestLimit) : [];
+$preloadHeroImage = ($heroBannerEnabled && !empty($heroBannerImage)) ? $heroBannerImage : null;
 
 renderView('site/home', compact(
-    'pageTitle', 'canonicalUrl', 'metaDescription', 'jsonLd',
+    'pageTitle', 'canonicalUrl', 'metaDescription', 'jsonLd', 'preloadHeroImage',
     'categories', 'featured', 'newest',
     'homeIntroEnabled', 'homeIntroTitle', 'homeIntroSubtitle',
     'heroBannerEnabled', 'heroBannerImage', 'heroBannerBadge',

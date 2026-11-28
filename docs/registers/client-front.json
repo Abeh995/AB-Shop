@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "2.1.0",
+  "version": "2.5.0",
   "kit": "ab-client-front",
   "description": "Single Source of Truth Component Registry for AB-Socks Customer Storefront (Pure PHP / HTML / CSS / Vanilla JS)",
   "tokens": {
@@ -88,6 +88,60 @@
       "path": "views/site/signup.php",
       "status": "active",
       "description": "ثبت‌نام حساب کاربری مشتری"
+    },
+    {
+      "slug": "verify_phone",
+      "path": "views/site/verify_phone.php",
+      "status": "active",
+      "description": "احراز هویت شماره موبایل با کد پیامکی و پشتیبانی WebOTP"
+    },
+    {
+      "slug": "verify_email",
+      "path": "views/site/verify_email.php",
+      "status": "active",
+      "description": "احراز آدرس ایمیل مشتری"
+    },
+    {
+      "slug": "order_success",
+      "path": "views/site/order_success.php",
+      "status": "active",
+      "description": "صفحه تایید ثبت و پرداخت موفق سفارش همراه کد پیگیری"
+    },
+    {
+      "slug": "order_failed",
+      "path": "views/site/order_failed.php",
+      "status": "active",
+      "description": "صفحه خطا در پرداخت آنلاین همراه با امکان تلاش مجدد"
+    },
+    {
+      "slug": "about",
+      "path": "views/site/about.php",
+      "status": "active",
+      "description": "صفحه درباره فروشگاه و اطلاعات تماس رسمی"
+    },
+    {
+      "slug": "contact",
+      "path": "views/site/contact.php",
+      "status": "active",
+      "description": "صفحه تماس با ما همراه فرم ارسال پیام"
+    },
+    {
+      "slug": "privacy",
+      "path": "views/site/privacy.php",
+      "status": "active",
+      "description": "سیاست حریم خصوصی و امنیت داده‌های مشتریان"
+    },
+    {
+      "slug": "terms",
+      "path": "views/site/terms.php",
+      "status": "active",
+      "description": "شرایط و قوانین استفاده و خرید از فروشگاه"
+    },
+    {
+      "slug": "not_found",
+      "path": "views/site/404.php",
+      "status": "active",
+      "description": "صفحه خطای ۴۰۴ یافت نشدن مسیر"
     }
   ],
   "primitives": [
@@ -96,73 +150,250 @@
       "type": "layout",
       "path": "views/layout/header.php",
       "description": "هدر مشترک ویترین با منوی ناوبری، جستجوی زنده، شمارنده سبد، تگ‌های سئو/OG و JSON-LD",
-      "props": ["$pageTitle", "$metaDescription", "$canonicalUrl", "$ogImage", "$jsonLd", "$preloadHeroImage"]
+      "props": ["$pageTitle", "$metaDescription", "$canonicalUrl", "$ogImage", "$jsonLd", "$preloadHeroImage", "$pageStylesheets"]
     },
     {
       "name": "SiteFooter",
       "type": "layout",
       "path": "views/layout/footer.php",
       "description": "فوتر مشترک فروشگاه با برندینگ، لینک‌های دسترسی سریع، شبکه‌های اجتماعی، اینماد و اسکریپت‌ها",
+      "props": ["$pageScripts"]
+    },
+    {
+      "name": "ClientTokensCss",
+      "type": "css_module",
+      "path": "assets/css/client-tokens.css",
+      "description": "ترتیب @layer و متغیرهای مرجع ویترین (متصل به activeThemeCssVars و توکن‌های شیشه‌ای داک)",
+      "props": ["--color-bg", "--color-surface", "--color-primary", "--dock-bg", "--drop-bg", "--glass-blur"]
+    },
+    {
+      "name": "ClientBaseCss",
+      "type": "css_module",
+      "path": "assets/css/client-base.css",
+      "description": "لایه @layer reset و @layer base (تایپوگرافی Vazirmatn، فوکوس کیبورد :focus-visible و sr-only)",
       "props": []
     },
     {
-      "name": "Pagination",
-      "type": "php_partial",
-      "path": "views/site/partials/pagination.php",
-      "description": "کامپوننت صفحه‌بندی با ارقام فارسی و حفظ پارامترهای فیلتر",
-      "props": ["$totalPages", "$page", "$paginationParams"]
+      "name": "ClientLayoutCss",
+      "type": "css_module",
+      "path": "assets/css/client-layout.css",
+      "description": "ساختار هدر چسبان، پنل جستجوی زنده، فوتر و داک شیشه‌ای ۵ هاب موبایل",
+      "props": []
     },
     {
-      "name": "StorefrontDesignTokens",
+      "name": "ClientComponentsCss",
       "type": "css_module",
-      "path": "assets/css/style.css",
-      "description": "شیرازه طراحی ویترین، متغیرهای رنگی :root، گریدها، فرم‌ها، کارت‌ها و ریسپانسیو RTL",
-      "props": ["--color-bg", "--color-surface", "--color-primary", "--color-accent", "--radius-md"]
+      "path": "assets/css/client-components.css",
+      "description": "پریمیتیوهای ظاهری .c-btn، .c-alert، .c-badge، .c-card، .c-empty، .c-pagination، .c-qty، .c-toast، .c-faq",
+      "props": []
     },
     {
-      "name": "LiquidGlassTokens",
+      "name": "ClientPatternsCss",
       "type": "css_module",
-      "path": "assets/css/storefront-hubs.css",
-      "description": "توکن‌ها و استایل‌های افکت شیشه‌ای داک ناوبری ۵ هاب موبایل و دسکتاپ",
-      "props": ["--dock-bg", "--dock-border", "--drop-bg", "--drop-shadow", "--dock-active"]
+      "path": "assets/css/client-patterns.css",
+      "description": "الگوهای چیدمان .c-split-summary، .c-auth-shell، .c-product-grid، .c-order-summary و فرم‌ها",
+      "props": []
+    },
+    {
+      "name": "ClientUtilitiesCss",
+      "type": "css_module",
+      "path": "assets/css/client-utilities.css",
+      "description": "کلاس‌های کمکی چینش، تایپوگرافی و فاصله‌گذاری (.c-stack، .c-cluster، .c-num، .c-mt-*)",
+      "props": []
+    },
+    {
+      "name": "ClientC2CCss",
+      "type": "css_module",
+      "path": "assets/css/client-c2c.css",
+      "description": "استایل اختصاصی صفحه پرداخت کارت‌به‌کارت (@layer pages، بارگذاری تنبل با $pageStylesheets)",
+      "props": []
     }
   ],
   "components": [
     {
-      "name": "ProductCard",
-      "type": "php_partial",
-      "path": "views/site/partials/product_card.php",
-      "description": "کارت استاندارد محصول با تصویر تنبل، برچسب تخفیف/ناموجود، دسته‌بندی و قیمت مؤثر",
-      "props": ["$p"]
+      "name": "ABClientRuntime",
+      "type": "js_behavior",
+      "path": "assets/js/ab-client.js",
+      "description": "هسته مستقل Vanilla JS سمت مشتری (fmt, events, toast, api, clipboard, WeakSet behavior registry)",
+      "props": ["ABClient.bp", "ABClient.fmt", "ABClient.events", "ABClient.toast", "ABClient.api", "ABClient.clipboard", "ABClient.behavior"]
     },
     {
-      "name": "BottomDock",
-      "type": "php_partial",
-      "path": "views/site/partials/bottom_dock.php",
-      "description": "داک ۵ هاب شناور شیشه‌ای پایین صفحه موبایل (خانه، دسته‌ها، سبد، جستجو، حساب کاربری)",
+      "name": "SiteProductCard",
+      "type": "php_component",
+      "path": "views/site/components/product_card.php",
+      "description": "کامپوننت خالص کارت محصول و کارت پیشنهاد پس از سبد (با فرم AJAX اختیاری)",
+      "props": ["product", "variant", "badgeText", "badgeTone", "actionForm", "eager"]
+    },
+    {
+      "name": "SitePagination",
+      "type": "php_component",
+      "path": "views/site/components/pagination.php",
+      "description": "کامپوننت خالص صفحه‌بندی با ارقام فارسی و حفظ پارامترهای فیلتر",
+      "props": ["page", "totalPages", "params"]
+    },
+    {
+      "name": "SiteBottomDock",
+      "type": "php_component",
+      "path": "views/site/components/bottom_dock.php",
+      "description": "کامپوننت خالص داک ۵ هاب شیشه‌ای پایین صفحه موبایل (بدون inline SVG style)",
+      "props": ["activeHub", "cartCount", "isLoggedIn"]
+    },
+    {
+      "name": "SiteBreadcrumb",
+      "type": "php_component",
+      "path": "views/site/components/breadcrumb.php",
+      "description": "کامپوننت خالص مسیر راهنمای صفحه با نشانه aria-current",
+      "props": ["items"]
+    },
+    {
+      "name": "SiteAlert",
+      "type": "php_component",
+      "path": "views/site/components/alert.php",
+      "description": "کامپوننت خالص باکس پیام/خطا/هشدار/موفقیت با پشتیبانی آرایه پیام‌ها و عنوان",
+      "props": ["state", "message", "messages", "title", "class"]
+    },
+    {
+      "name": "SiteEmptyState",
+      "type": "php_component",
+      "path": "views/site/components/empty_state.php",
+      "description": "کامپوننت خالص حالت خالی با آیکون و دکمه اقدام اختیاری",
+      "props": ["message", "actionUrl", "actionLabel", "compact", "icon"]
+    },
+    {
+      "name": "SiteQtyStepper",
+      "type": "php_component",
+      "path": "views/site/components/qty_stepper.php",
+      "description": "کامپوننت خالص کنترلر تعداد متصل به رفتار data-ab-qty",
+      "props": ["name", "value", "min", "max", "id", "autoSubmit", "ariaLabel"]
+    },
+    {
+      "name": "SiteOrderSummary",
+      "type": "php_component",
+      "path": "views/site/components/order_summary.php",
+      "description": "کامپوننت خالص خلاصه فاکتور سفارش برای سبد خرید، تسویه، کارت‌به‌کارت و جزئیات سفارش",
+      "props": ["title", "items", "giftLines", "subtotal", "discount", "couponCode", "postOrderTotal", "shippingLabel", "shippingCost", "shippingText", "grandTotal", "totalLabel", "showItems", "shippingRowId", "shippingCostId", "grandTotalId", "couponFormHtml", "footerHtml", "class"]
+    },
+    {
+      "name": "SiteFaqAccordion",
+      "type": "php_component",
+      "path": "views/site/components/faq_accordion.php",
+      "description": "کامپوننت خالص آکاردئون پرسش‌های متداول با پشتیبانی آرایه عادی و Schema.org",
+      "props": ["title", "items", "icon"]
+    },
+    {
+      "name": "SiteCartWorkspace",
+      "type": "php_component",
+      "path": "views/site/components/cart_workspace.php",
+      "description": "بدنه کامل و قابل جایگزینی فضای کاری سبد خرید برای SSR و HTML-over-the-Wire AJAX",
+      "props": ["cart", "appliedCoupon", "discount", "postOrderResult", "availablePostOrderItems", "storeOrderStatus", "storePausedMessage", "minOrderAmount", "isLoggedIn"]
+    },
+    {
+      "name": "SiteProductScript",
+      "type": "js_module",
+      "path": "assets/js/client/product.js",
+      "description": "ماژول اختصاصی صفحه محصول: انتخاب واریانت با انتشار variant:changed، گالری تصویر و فیدبک افزودن به سبد",
       "props": []
     },
     {
-      "name": "StorefrontMainScript",
+      "name": "SiteCheckoutScript",
       "type": "js_module",
-      "path": "assets/js/main.js",
-      "description": "اسکریپت وانیلا برای منوی موبایل، جستجوی زنده autocomplete، کاروسل، انتخاب واریانت، گالری و افزودن به سبد",
-      "props": ["toPersianDigits", "escapeHtml"]
+      "path": "assets/js/client/checkout.js",
+      "description": "محاسبه غیرهمگام هزینه ارسال بر اساس استان با AbortController و ABClient.api",
+      "props": []
     },
     {
-      "name": "StorefrontHubsScript",
+      "name": "SiteVerifyPhoneScript",
       "type": "js_module",
-      "path": "assets/js/storefront-hubs.js",
-      "description": "انیمیشن قطره داک شیشه‌ای، فیلتر لحظه‌ای کاتالوگ و آکاردئون پرسش‌های متداول",
+      "path": "assets/js/client/verify-phone.js",
+      "description": "تکمیل خودکار پیامکی WebOTP روی فرم احراز شماره موبایل",
       "props": []
     },
     {
       "name": "CardToCardUploader",
       "type": "js_module",
-      "path": "assets/js/card-to-card.js",
-      "description": "مدیریت انتخاب، پیش‌نمایش و ارسال فیش واریز کارت‌به‌کارت",
+      "path": "assets/js/client/card-to-card.js",
+      "description": "فشرده‌سازی سمت کلاینت به WebP، تبدیل تنبل HEIC و آپلود رسید کارت‌به‌کارت از طریق ABClient.api",
       "props": []
     }
   ],
-  "behaviors": []
+  "behaviors": [
+    {
+      "name": "nav-drawer",
+      "selector": "[data-ab-nav-toggle]",
+      "path": "assets/js/ab-client.js",
+      "description": "باز و بسته کردن منوی ناوبری موبایل با پشتیبانی Escape"
+    },
+    {
+      "name": "live-search",
+      "selector": "[data-ab-live-search]",
+      "path": "assets/js/ab-client.js",
+      "description": "جستجوی زنده با AbortController، کش و ناوبری کیبورد"
+    },
+    {
+      "name": "liquid-dock",
+      "selector": "[data-ab-dock]",
+      "path": "assets/js/ab-client.js",
+      "description": "فیزیک قطره داک شیشه‌ای ۵ هاب و همگام‌سازی شمارنده سبد با cart:updated"
+    },
+    {
+      "name": "copy-trigger",
+      "selector": "[data-ab-copy]",
+      "path": "assets/js/ab-client.js",
+      "description": "کپی تک‌کلیک کلیپ‌بورد با فیدبک بصری"
+    },
+    {
+      "name": "qty-stepper",
+      "selector": "[data-ab-qty]",
+      "path": "assets/js/ab-client.js",
+      "description": "کنترل افزایش/کاهش تعداد با حداقل و حداکثر و ارسال خودکار اختیاری"
+    },
+    {
+      "name": "async-form",
+      "selector": "[data-ab-async-form]",
+      "path": "assets/js/ab-client.js",
+      "description": "ارسال پیشرفته فرم‌ها با AJAX، جایگزینی DOM، ریمانت رفتارها و Toast"
+    },
+    {
+      "name": "carousel",
+      "selector": "[data-ab-carousel], .carousel-wrap",
+      "path": "assets/js/ab-client.js",
+      "description": "اسکرول راست‌به‌چپ اسلایدرهای محصولات صفحه اصلی"
+    },
+    {
+      "name": "auto-submit",
+      "selector": "[data-ab-auto-submit], .cart-qty-input",
+      "path": "assets/js/ab-client.js",
+      "description": "ارسال خودکار فرم هنگام تغییر فیلتر یا تعداد"
+    },
+    {
+      "name": "variant-selector",
+      "selector": "[data-ab-variant-group], .variant-options",
+      "path": "assets/js/client/product.js",
+      "description": "تغییر واریانت رنگ/سایز محصول، آپدیت قیمت/موجودی و انتشار رویداد variant:changed"
+    },
+    {
+      "name": "product-gallery",
+      "selector": "[data-ab-gallery], .product-gallery",
+      "path": "assets/js/client/product.js",
+      "description": "تعویض تصویر اصلی محصول از طریق تصاویر بندانگشتی گالری"
+    },
+    {
+      "name": "shipping-estimate",
+      "selector": "[data-ab-shipping-estimate]",
+      "path": "assets/js/client/checkout.js",
+      "description": "محاسبه لحظه‌ای هزینه ارسال هنگام تغییر استان در تسویه حساب"
+    },
+    {
+      "name": "webotp",
+      "selector": "[data-ab-webotp]",
+      "path": "assets/js/client/verify-phone.js",
+      "description": "دریافت خودکار کد تایید پیامکی از مرورگرهای دارای WebOTP"
+    },
+    {
+      "name": "c2c-receipt-uploader",
+      "selector": "[data-ab-c2c-uploader], #c2cDropzone",
+      "path": "assets/js/client/card-to-card.js",
+      "description": "درگ‌انددراپ، فشرده‌سازی WebP و ارسال رسید کارت‌به‌کارت"
+    }
+  ]
 }

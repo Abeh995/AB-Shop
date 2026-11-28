@@ -1,45 +1,44 @@
-<?php require APP_ROOT . '/views/layout/header.php'; ?>
+<?php
+$pageScripts = ['/assets/js/client/checkout.js'];
+require APP_ROOT . '/views/layout/header.php';
+?>
 
-<div class="container section">
-    <h1 style="margin-bottom:24px;">تکمیل خرید</h1>
+<div class="container c-section section">
+    <h1 class="c-mb-6">تکمیل خرید</h1>
 
-    <?php if ($errors): ?>
-        <div class="alert alert-error">
-            <?php foreach ($errors as $err): ?><div><?= e($err) ?></div><?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+    <?php site_component('alert', ['state' => 'error', 'messages' => $errors ?? []]); ?>
 
     <div class="checkout-layout">
         <form method="post" action="/checkout">
             <?= csrfField() ?>
 
-            <div class="form-group">
-                <label>نام و نام‌خانوادگی</label>
-                <input class="form-control" type="text" name="customer_name" value="<?= e($formData['customer_name'] ?? '') ?>" required>
+            <div class="c-form-group">
+                <label for="coName">نام و نام‌خانوادگی</label>
+                <input class="c-form-control" id="coName" type="text" name="customer_name" value="<?= e($formData['customer_name'] ?? '') ?>" required>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>شماره موبایل</label>
-                    <input class="form-control" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($formData['phone'] ?? '') ?>" required>
+            <div class="c-form-row">
+                <div class="c-form-group">
+                    <label for="coPhone">شماره موبایل</label>
+                    <input class="c-form-control" id="coPhone" type="tel" name="phone" dir="ltr" placeholder="09123456789" value="<?= e($formData['phone'] ?? '') ?>" required>
                 </div>
-                <div class="form-group">
-                    <label>ایمیل (اختیاری)</label>
-                    <input class="form-control" type="email" name="email" dir="ltr" value="<?= e($formData['email'] ?? '') ?>">
+                <div class="c-form-group">
+                    <label for="coEmail">ایمیل (اختیاری)</label>
+                    <input class="c-form-control" id="coEmail" type="email" name="email" dir="ltr" value="<?= e($formData['email'] ?? '') ?>">
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>استان</label>
-                    <input class="form-control" type="text" name="province" id="provinceInput" value="<?= e($formData['province'] ?? '') ?>" required>
+            <div class="c-form-row">
+                <div class="c-form-group">
+                    <label for="provinceInput">استان</label>
+                    <input class="c-form-control" type="text" name="province" id="provinceInput" data-ab-shipping-estimate value="<?= e($formData['province'] ?? '') ?>" required>
                 </div>
-                <div class="form-group">
-                    <label>شهر</label>
-                    <input class="form-control" type="text" name="city" value="<?= e($formData['city'] ?? '') ?>" required>
+                <div class="c-form-group">
+                    <label for="coCity">شهر</label>
+                    <input class="c-form-control" id="coCity" type="text" name="city" value="<?= e($formData['city'] ?? '') ?>" required>
                 </div>
             </div>
-            <p id="shippingEstimateNote" style="font-size:.85rem; color:var(--color-muted); margin-top:-10px; margin-bottom:16px;">
+            <p id="shippingEstimateNote" class="c-shipping-note">
                 <?php if ($shippingPreview['method_name']): ?>
                     هزینه ارسال (<?= e($shippingPreview['method_name']) ?><?= !empty($shippingPreview['estimated_delivery']) ? ' • ' . e($shippingPreview['estimated_delivery']) : '' ?>): <?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?>
                 <?php else: ?>
@@ -47,22 +46,22 @@
                 <?php endif; ?>
             </p>
 
-            <div class="form-group">
-                <label>آدرس کامل</label>
-                <textarea class="form-control" name="address" required><?= e($formData['address'] ?? '') ?></textarea>
+            <div class="c-form-group">
+                <label for="coAddress">آدرس کامل</label>
+                <textarea class="c-form-control" id="coAddress" name="address" required><?= e($formData['address'] ?? '') ?></textarea>
             </div>
 
-            <div class="form-group">
-                <label>کد پستی (اختیاری)</label>
-                <input class="form-control" type="text" dir="ltr" name="postal_code" value="<?= e($formData['postal_code'] ?? '') ?>">
+            <div class="c-form-group">
+                <label for="coPostal">کد پستی (اختیاری)</label>
+                <input class="c-form-control" id="coPostal" type="text" dir="ltr" name="postal_code" value="<?= e($formData['postal_code'] ?? '') ?>">
             </div>
 
-            <div class="form-group">
-                <label>توضیحات سفارش (اختیاری)</label>
-                <textarea class="form-control" name="notes"><?= e($formData['notes'] ?? '') ?></textarea>
+            <div class="c-form-group">
+                <label for="coNotes">توضیحات سفارش (اختیاری)</label>
+                <textarea class="c-form-control" id="coNotes" name="notes"><?= e($formData['notes'] ?? '') ?></textarea>
             </div>
 
-            <div class="form-group">
+            <div class="c-form-group">
                 <label class="group-label">روش پرداخت</label>
                 <?php if ($paymentMethodsAvailable): ?>
                 <div class="payment-method-options">
@@ -80,101 +79,44 @@
                     <?php endif; ?>
                 </div>
                 <?php else: ?>
-                    <div class="alert alert-error" style="margin:0;">هیچ روش پرداخت فعالی برای فروشگاه تنظیم نشده است.</div>
+                    <?php site_component('alert', [
+                        'state' => 'error',
+                        'message' => 'هیچ روش پرداخت فعالی برای فروشگاه تنظیم نشده است.',
+                        'class' => 'c-mb-0',
+                    ]); ?>
                 <?php endif; ?>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block" <?= !$paymentMethodsAvailable ? 'disabled' : '' ?>>ادامه و پرداخت سفارش</button>
+            <button type="submit" class="c-btn c-btn--primary c-btn--block" <?= !$paymentMethodsAvailable ? 'disabled' : '' ?>>ادامه و پرداخت سفارش</button>
         </form>
 
-        <div class="order-review">
-            <h3 style="margin-bottom:14px;">خلاصه سفارش</h3>
-            <?php foreach ($cart['items'] as $item): ?>
-                <div class="item-line">
-                    <span><?= e($item['product']['name']) ?> × <?= toPersianDigits((string)$item['qty']) ?></span>
-                    <span><?= formatPrice($item['line_total']) ?></span>
-                </div>
-            <?php endforeach; ?>
-            <?php foreach ($postOrderResult['lines'] as $line): ?>
-                <div class="item-line">
-                    <span><?= e($line['name']) ?> × <?= toPersianDigits((string)$line['quantity']) ?></span>
-                    <span><?= formatPrice($line['line_total']) ?></span>
-                </div>
-            <?php endforeach; ?>
+        <?php
+        $shippingSummaryLabel = 'هزینه ارسال' . ($shippingPreview['method_name']
+            ? ' (' . $shippingPreview['method_name'] . (!empty($shippingPreview['estimated_delivery']) ? ' • ' . $shippingPreview['estimated_delivery'] : '') . ')'
+            : '');
+        $checkoutFooterHtml = '<p class="c-text-xs c-text-muted c-mt-3 c-mb-0">'
+            . 'با انتخاب کارت‌به‌کارت، بعد از ثبت اطلاعات به صفحه پرداخت کارت‌به‌کارت منتقل می‌شوید؛ با انتخاب زرین‌پال، به درگاه پرداخت منتقل خواهید شد.'
+            . '</p>';
 
-            <div class="row" style="margin-top:14px;">
-                <span>جمع کل کالاها</span>
-                <span><?= formatPrice($cart['subtotal']) ?></span>
-            </div>
-            <?php if ($appliedCoupon && $discount > 0): ?>
-            <div class="row" style="color:var(--color-success);">
-                <span>تخفیف (<?= e($appliedCoupon['code']) ?>)</span>
-                <span>−<?= formatPrice($discount) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if ($postOrderResult['total'] > 0): ?>
-            <div class="row">
-                <span>پیشنهاد بعد از سبد</span>
-                <span><?= formatPrice($postOrderResult['total']) ?></span>
-            </div>
-            <?php endif; ?>
-            <div class="row" id="shippingRow">
-                <span>هزینه ارسال<?= $shippingPreview['method_name'] ? ' (' . e($shippingPreview['method_name']) . (!empty($shippingPreview['estimated_delivery']) ? ' • ' . e($shippingPreview['estimated_delivery']) : '') . ')' : '' ?></span>
-                <span id="shippingCostValue"><?= $shippingPreview['is_free'] ? 'رایگان' : formatPrice($shippingPreview['cost']) ?></span>
-            </div>
-            <div class="row total-row">
-                <span>مبلغ قابل پرداخت</span>
-                <span id="grandTotalValue"><?= formatPrice($cart['subtotal'] - $discount + $postOrderResult['total'] + $shippingPreview['cost']) ?></span>
-            </div>
-            <p style="font-size:.82rem; color:var(--color-muted); margin-top:14px;">
-                با انتخاب کارت‌به‌کارت، بعد از ثبت اطلاعات به صفحه پرداخت کارت‌به‌کارت منتقل می‌شوید؛ با انتخاب زرین‌پال، به درگاه پرداخت منتقل خواهید شد.
-            </p>
-        </div>
+        site_component('order_summary', [
+            'title' => 'خلاصه سفارش',
+            'items' => $cart['items'],
+            'giftLines' => $postOrderResult['lines'] ?? [],
+            'subtotal' => $cart['subtotal'],
+            'discount' => $appliedCoupon ? $discount : 0,
+            'couponCode' => $appliedCoupon['code'] ?? '',
+            'postOrderTotal' => $postOrderResult['total'] ?? 0,
+            'shippingLabel' => $shippingSummaryLabel,
+            'shippingCost' => (float) ($shippingPreview['cost'] ?? 0),
+            'shippingText' => !empty($shippingPreview['is_free']) ? 'رایگان' : '',
+            'grandTotal' => max(0, (float) $cart['subtotal'] - (float) $discount + (float) ($postOrderResult['total'] ?? 0) + (float) ($shippingPreview['cost'] ?? 0)),
+            'shippingRowId' => 'shippingRow',
+            'shippingCostId' => 'shippingCostValue',
+            'grandTotalId' => 'grandTotalValue',
+            'footerHtml' => $checkoutFooterHtml,
+        ]);
+        ?>
     </div>
 </div>
-
-<script>
-(function () {
-    var provinceInput = document.getElementById('provinceInput');
-    var note = document.getElementById('shippingEstimateNote');
-    var shippingRow = document.getElementById('shippingRow');
-    var shippingCostValue = document.getElementById('shippingCostValue');
-    var grandTotalValue = document.getElementById('grandTotalValue');
-    if (!provinceInput) return;
-
-    var timer = null;
-
-    function refreshShipping() {
-        var fd = new FormData();
-        fd.append('province', provinceInput.value);
-        fetch('/ajax/shipping_estimate.php', { method: 'POST', body: fd })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!data.ok) return;
-                var deliveryText = data.estimated_delivery ? (' • ' + data.estimated_delivery) : '';
-                var label = data.method_name ? ('هزینه ارسال (' + data.method_name + deliveryText + ')') : 'هزینه ارسال';
-                if (shippingRow && shippingRow.querySelector('span')) {
-                    shippingRow.querySelector('span').textContent = label;
-                }
-                if (shippingCostValue) {
-                    shippingCostValue.textContent = data.is_free ? 'رایگان' : data.cost_formatted;
-                }
-                if (note) {
-                    note.textContent = data.method_name
-                        ? (label + ': ' + (data.is_free ? 'رایگان' : data.cost_formatted))
-                        : 'هزینه ارسال بر اساس استانی که وارد می‌کنید محاسبه می‌شود.';
-                }
-                if (grandTotalValue) grandTotalValue.textContent = data.grand_total_formatted;
-            })
-            .catch(function () { /* keep the last known estimate on a network error */ });
-    }
-
-    provinceInput.addEventListener('input', function () {
-        clearTimeout(timer);
-        timer = setTimeout(refreshShipping, 500);
-    });
-    provinceInput.addEventListener('blur', refreshShipping);
-})();
-</script>
 
 <?php require APP_ROOT . '/views/layout/footer.php'; ?>
